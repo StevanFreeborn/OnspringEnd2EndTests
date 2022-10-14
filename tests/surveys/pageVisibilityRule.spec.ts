@@ -32,4 +32,16 @@ test.describe('page visibility rule', () => {
     test('the page visibility rule control supports simple and advanced mode', async ({ page }) => {
 
     });
+
+    test('there is a copy rule to page(s) button displayed when the visibility rule checkbox is checked', async ({ page }) => {
+
+    });
+
+    test('there is not a copy rule to page(s) button displayed when the visibility rule checkbox is unchecked', async ({ page }) => {
+
+    });
+
+    test('the copy rule to page(s) button will be disabled until the page visibility rule is defined', async ({ page }) => {
+        
+    });
 });
