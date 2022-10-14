@@ -1,0 +1,21 @@
+{
+  "name": "onspringend2endtests",
+  "version": "1.0.0",
+  "description": "A suite of automated web app tests for the Onspring platform.",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "onspring",
+    "automation",
+    "testing",
+    "playwright"
+  ],
+  "author": "stevan freeborn",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.27.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}
