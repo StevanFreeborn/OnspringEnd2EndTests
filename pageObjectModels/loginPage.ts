@@ -1,11 +1,18 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 export class LoginPage {
+  static readonly invalidCredentialError = {
+    text: 'Username/Password combination is not valid',
+    color: 'rgb(204, 0, 0)',
+    fontWeight: '700',
+  };
+  
   readonly page: Page;
   readonly path: string;
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
+  readonly validationErrors: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -13,6 +20,7 @@ export class LoginPage {
     this.usernameInput = page.locator('#UserName');
     this.passwordInput = page.locator('#Password');
     this.loginButton = page.locator('.signin');
+    this.validationErrors = page.locator('.validation-summary-errors');
   }
 
   async goto() {
