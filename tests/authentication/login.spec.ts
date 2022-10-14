@@ -4,7 +4,7 @@ import { UserFactory } from '../../factories/userFactory';
 import { DashboardPage } from '../../pageObjectModels/DashboardPage';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 
-test.describe('', () => {
+test.describe('login', () => {
     test('user can login using valid username and password.', async ({ page }) => {
         const loginPage = new LoginPage(page);
         const dashboardPage = new DashboardPage(page);
