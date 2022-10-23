@@ -1,7 +1,8 @@
-import test, { expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { FakeDataFactory } from "../../factories/fakeDataFactory";
 import { UserFactory } from "../../factories/userFactory";
 import { AdminHomePage } from "../../pageObjectModels/adminHomePage";
+import { AppAdminPage } from "../../pageObjectModels/appAdminPage";
 import { DashboardPage } from "../../pageObjectModels/DashboardPage";
 import { LoginPage } from "../../pageObjectModels/loginPage";
 
@@ -17,6 +18,7 @@ test.describe('app', () => {
         await dashboardPage.sharedNavPage.clickAdminGearIcon();
 
         const adminHomePage = new AdminHomePage(page);
+        await adminHomePage.sharedAdminNavPage.page.waitForLoadState();
         await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
         await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
         await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
@@ -27,5 +29,10 @@ test.describe('app', () => {
 
         await adminHomePage.sharedAdminNavPage.nameInput.type(appName);
         await adminHomePage.sharedAdminNavPage.saveButton.click();
+
+        const appAdminPage = new AppAdminPage(page);
+        const pathRegex = new RegExp(`${process.env.INSTANCE_URL}${appAdminPage.path}[0-9]+`)
+        await expect(appAdminPage.page).toHaveURL(pathRegex);
+        await expect(appAdminPage.appName).toHaveText(appName);
     });
 });
