@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { User } from '../models/user';
 
 export class LoginPage {
   static readonly invalidCredentialError = {
@@ -6,7 +7,7 @@ export class LoginPage {
     color: 'rgb(204, 0, 0)',
     fontWeight: '700',
   };
-  
+
   readonly page: Page;
   readonly path: string;
   readonly usernameInput: Locator;
@@ -39,5 +40,12 @@ export class LoginPage {
 
   async clickLoginButton() {
     await this.loginButton.click();
+  }
+
+  async login(user: User) {
+    await this.goto();
+    await this.enterUsername(user.username);
+    await this.enterPassword(user.password);
+    await this.clickLoginButton();
   }
 }

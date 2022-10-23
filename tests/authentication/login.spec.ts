@@ -16,7 +16,7 @@ test.describe('login', () => {
         await loginPage.clickLoginButton();
 
         await expect(dashboardPage.page).toHaveURL(process.env.INSTANCE_URL + dashboardPage.path);
-        await expect(dashboardPage.usersFullName).toHaveText(user.fullName);
+        await expect(dashboardPage.sharedNavPage.usersFullName).toHaveText(user.fullName);
     });
 
     test('user cannot login using invalid username.', async ({ page }) => {

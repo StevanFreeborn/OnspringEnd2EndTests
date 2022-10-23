@@ -1,14 +1,15 @@
-import { Locator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { BasePage } from './basePage';
+import { SharedNavPage } from './sharedNavPage';
 
-export class DashboardPage {
+export class DashboardPage extends BasePage {
   readonly page: Page;
   readonly path: string;
-  readonly usersFullName: Locator;
 
   constructor(page: Page) {
+    super(page);
     this.page = page;
-    this.path = '/Dashboard'
-    this.usersFullName = page.locator('#user-name');
+    this.path = '/Dashboard';
   }
 
   async goto(dashboardId?: number) {
