@@ -18,6 +18,7 @@ test.describe('app', () => {
 
         const adminHomePage = new AdminHomePage(page);
         await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
+        await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
         await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
         await adminHomePage.sharedAdminNavPage.createDialogContinueButton.click();
         await adminHomePage.sharedAdminNavPage.nameInput.click();
