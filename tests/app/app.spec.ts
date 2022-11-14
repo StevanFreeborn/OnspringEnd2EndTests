@@ -18,7 +18,7 @@ test.describe('app', () => {
         await dashboardPage.sharedNavPage.clickAdminGearIcon();
 
         const adminHomePage = new AdminHomePage(page);
-        await adminHomePage.sharedAdminNavPage.page.waitForLoadState();
+        await adminHomePage.page.waitForLoadState();
         await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
         await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
         await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
@@ -31,8 +31,29 @@ test.describe('app', () => {
         await adminHomePage.sharedAdminNavPage.saveButton.click();
 
         const appAdminPage = new AppAdminPage(page);
-        const pathRegex = new RegExp(`${process.env.INSTANCE_URL}${appAdminPage.path}[0-9]+`)
-        await expect(appAdminPage.page).toHaveURL(pathRegex);
+        await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
+        await expect(appAdminPage.appName).toHaveText(appName);
+    });
+
+    test('Create an app via the create button on the Apps tile on the admin home page', async ({ page }) => {
+        const dashboardPage = new DashboardPage(page);
+        await dashboardPage.sharedNavPage.clickAdminGearIcon();
+
+        const adminHomePage = new AdminHomePage(page);
+        await adminHomePage.page.waitForLoadState();
+        await adminHomePage.appTileLink.hover();
+        await adminHomePage.appTileCreateButton.waitFor();
+        await adminHomePage.appTileCreateButton.click();
+        await adminHomePage.sharedAdminNavPage.createDialogContinueButton.click();
+        await adminHomePage.sharedAdminNavPage.nameInput.click();
+
+        const appName = FakeDataFactory.createFakeAppName();
+
+        await adminHomePage.sharedAdminNavPage.nameInput.type(appName);
+        await adminHomePage.sharedAdminNavPage.saveButton.click();
+
+        const appAdminPage = new AppAdminPage(page);
+        await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
         await expect(appAdminPage.appName).toHaveText(appName);
     });
 });
