@@ -22,13 +22,13 @@ test.describe('app', () => {
         await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
         await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
         await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
-        await adminHomePage.sharedAdminNavPage.createDialogContinueButton.click();
-        await adminHomePage.sharedAdminNavPage.nameInput.click();
+        await adminHomePage.createDialogContinueButton.click();
+        await adminHomePage.nameInput.click();
 
         const appName = FakeDataFactory.createFakeAppName();
 
-        await adminHomePage.sharedAdminNavPage.nameInput.type(appName);
-        await adminHomePage.sharedAdminNavPage.saveButton.click();
+        await adminHomePage.nameInput.type(appName);
+        await adminHomePage.saveButton.click();
 
         const appAdminPage = new AppAdminPage(page);
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -44,13 +44,13 @@ test.describe('app', () => {
         await adminHomePage.appTileLink.hover();
         await adminHomePage.appTileCreateButton.waitFor();
         await adminHomePage.appTileCreateButton.click();
-        await adminHomePage.sharedAdminNavPage.createDialogContinueButton.click();
-        await adminHomePage.sharedAdminNavPage.nameInput.click();
+        await adminHomePage.createDialogContinueButton.click();
+        await adminHomePage.nameInput.click();
 
         const appName = FakeDataFactory.createFakeAppName();
 
-        await adminHomePage.sharedAdminNavPage.nameInput.type(appName);
-        await adminHomePage.sharedAdminNavPage.saveButton.click();
+        await adminHomePage.nameInput.type(appName);
+        await adminHomePage.saveButton.click();
 
         const appAdminPage = new AppAdminPage(page);
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
