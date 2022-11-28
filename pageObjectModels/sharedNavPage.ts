@@ -10,8 +10,4 @@ export class SharedNavPage {
     this.usersFullName = page.locator('#user-name');
     this.adminGearIcon = page.locator('#admin-tab');
   }
-
-  async clickAdminGearIcon() {
-    await this.adminGearIcon.click();
-  }
 }
