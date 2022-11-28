@@ -1,8 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { CreateAppDialogComponent } from "../../componentObjectModels/createAppDialogComponent";
+import { CreateAppModalComponent } from "../../componentObjectModels/createAppModalComponent";
 import { FakeDataFactory } from "../../factories/fakeDataFactory";
 import { UserFactory } from "../../factories/userFactory";
 import { AdminHomePage } from "../../pageObjectModels/adminHomePage";
 import { AppAdminPage } from "../../pageObjectModels/appAdminPage";
+import { AppsAdminPage } from "../../pageObjectModels/appsAdminPage";
 import { DashboardPage } from "../../pageObjectModels/DashboardPage";
 import { LoginPage } from "../../pageObjectModels/loginPage";
 
@@ -22,13 +25,17 @@ test.describe('app', () => {
         await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
         await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
         await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
-        await adminHomePage.createDialogContinueButton.click();
-        await adminHomePage.nameInput.click();
+        
+        const createAppDialogComponent = new CreateAppDialogComponent(page);
+        await createAppDialogComponent.continueButton.click();
+
+        const createAppModalComponent = new CreateAppModalComponent(page);
+        await createAppModalComponent.nameInput.click();
 
         const appName = FakeDataFactory.createFakeAppName();
 
-        await adminHomePage.nameInput.type(appName);
-        await adminHomePage.saveButton.click();
+        await createAppModalComponent.nameInput.type(appName);
+        await createAppModalComponent.saveButton.click();
 
         const appAdminPage = new AppAdminPage(page);
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -41,13 +48,17 @@ test.describe('app', () => {
         await adminHomePage.appTileLink.hover();
         await adminHomePage.appTileCreateButton.waitFor();
         await adminHomePage.appTileCreateButton.click();
-        await adminHomePage.createDialogContinueButton.click();
-        await adminHomePage.nameInput.click();
+        
+        const createAppDialogComponent = new CreateAppDialogComponent(page);
+        await createAppDialogComponent.continueButton.click();
+        
+        const createAppModalComponent = new CreateAppModalComponent(page);
+        await createAppModalComponent.nameInput.click();
 
         const appName = FakeDataFactory.createFakeAppName();
 
-        await adminHomePage.nameInput.type(appName);
-        await adminHomePage.saveButton.click();
+        await createAppModalComponent.nameInput.type(appName);
+        await createAppModalComponent.saveButton.click();
 
         const appAdminPage = new AppAdminPage(page);
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -56,5 +67,25 @@ test.describe('app', () => {
 
     test('Create an app via the "Create App" button on the Apps admin page', async ({ page }) => {
         const adminHomePage = new AdminHomePage(page);
+        await adminHomePage.appTileLink.click();
+
+        const appsAdminPage = new AppsAdminPage(page);
+        await appsAdminPage.page.waitForLoadState();
+        await appsAdminPage.createAppButton.click();
+
+        const createAppDialogComponent = new CreateAppDialogComponent(page);
+        await createAppDialogComponent.continueButton.click();
+        
+        const createAppModalComponent = new CreateAppModalComponent(page);
+        await createAppModalComponent.nameInput.click();
+
+        const appName = FakeDataFactory.createFakeAppName();
+
+        await createAppModalComponent.nameInput.type(appName);
+        await createAppModalComponent.saveButton.click();
+
+        const appAdminPage = new AppAdminPage(page);
+        await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
+        await expect(appAdminPage.appName).toHaveText(appName);
     });
 });
