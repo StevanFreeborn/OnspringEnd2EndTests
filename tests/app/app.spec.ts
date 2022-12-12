@@ -112,4 +112,38 @@ test.describe('app', () => {
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
         await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
     })
+
+    test('Create a copy of an app via the create button on the Apps tile on the admin home page.', async ({ page }) => {
+        const adminHomePage = new AdminHomePage(page);
+        const createAppDialogComponent = new CreateAppDialogComponent(page);
+        const createAppModalComponent = new CreateAppModalComponent(page);
+        const appAdminPage = new AppAdminPage(page);
+        const appName = FakeDataFactory.createFakeAppName();
+        const expectedAppCopyName = `${appName} (1)`;
+
+        await adminHomePage.page.waitForLoadState();
+        await adminHomePage.appTileLink.hover();
+        await adminHomePage.appTileCreateButton.waitFor();
+        await adminHomePage.appTileCreateButton.click();
+        await createAppDialogComponent.continueButton.click();
+        await createAppModalComponent.nameInput.click();
+        await createAppModalComponent.nameInput.type(appName);
+        await createAppModalComponent.saveButton.click();
+        await appAdminPage.sharedNavPage.adminGearIcon.click();
+        await adminHomePage.page.waitForLoadState();
+        await adminHomePage.appTileLink.hover();
+        await adminHomePage.appTileCreateButton.waitFor();
+        await adminHomePage.appTileCreateButton.click();
+        await createAppDialogComponent.copyFromRadioButton.click();
+        await createAppDialogComponent.selectAnAppDropdown.click();
+        await createAppDialogComponent.appToCopy(appName).click();
+        await createAppDialogComponent.continueButton.click();
+
+        expect(await createAppModalComponent.nameInput.inputValue()).toBe(expectedAppCopyName);
+        
+        await createAppModalComponent.saveButton.click();
+        
+        await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
+        await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+    })
 });
