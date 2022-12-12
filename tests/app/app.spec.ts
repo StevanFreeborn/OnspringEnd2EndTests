@@ -16,6 +16,7 @@ test.describe('app', () => {
         const dashboardPage = new DashboardPage(page);
 
         await loginPage.login(user);
+        await dashboardPage.page.waitForLoadState();
         await dashboardPage.sharedNavPage.adminGearIcon.click();
     });
 
@@ -142,7 +143,7 @@ test.describe('app', () => {
         expect(await createAppModalComponent.nameInput.inputValue()).toBe(expectedAppCopyName);
         
         await createAppModalComponent.saveButton.click();
-        
+
         await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
         await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
     })

@@ -43,6 +43,18 @@ const config: PlaywrightTestConfig = {
         ...devices['Desktop Safari'],
       },
     },
+    {
+      name: 'android mobile',
+      use: {
+        ...devices['Pixel 5']
+      },
+    },
+    {
+      name: 'iOS mobile',
+      use: {
+        ...devices['iPhone 13 Pro']
+      },
+    }
   ],
 
   outputDir: 'test-results/',
