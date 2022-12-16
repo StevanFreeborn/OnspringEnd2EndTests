@@ -10,7 +10,7 @@ const config: PlaywrightTestConfig = {
   },
   fullyParallel: true,
   forbidOnly: (process.env.CI == 'true'),
-  retries: (process.env.CI == 'true') ? 2 : 0,
+  retries: (process.env.CI == 'true') ? 2 : 1,
   workers: (process.env.CI == 'true') ? 1 : undefined,
   reporter: 'html',
   use: {
