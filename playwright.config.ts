@@ -1,17 +1,17 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { devices } from '@playwright/test';
-require('dotenv').config({ path: './config/.env' })
+import 'dotenv/config';
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
   timeout: 60 * 1000,
   expect: {
-    timeout: 30 * 1000
+    timeout: 30 * 1000,
   },
   fullyParallel: true,
-  forbidOnly: (process.env.CI == 'true'),
-  retries: (process.env.CI == 'true') ? 2 : 1,
-  workers: (process.env.CI == 'true') ? 1 : undefined,
+  forbidOnly: process.env.CI == 'true',
+  retries: process.env.CI == 'true' ? 2 : 1,
+  workers: process.env.CI == 'true' ? 1 : undefined,
   reporter: 'html',
   use: {
     actionTimeout: 0,
@@ -45,15 +45,15 @@ const config: PlaywrightTestConfig = {
     {
       name: 'android mobile',
       use: {
-        ...devices['Pixel 5']
+        ...devices['Pixel 5'],
       },
     },
     {
       name: 'iOS mobile',
       use: {
-        ...devices['iPhone 13 Pro']
+        ...devices['iPhone 13 Pro'],
       },
-    }
+    },
   ],
 
   outputDir: 'test-results/',

@@ -10,7 +10,9 @@ export class CreateAppDialogComponent {
     this.page = page;
     this.continueButton = page.locator('text=Continue');
     this.copyFromRadioButton = page.getByText('Copy from');
-    this.selectAnAppDropdown = page.getByRole('dialog', { name: 'Create App' }).getByText('Select an App');
+    this.selectAnAppDropdown = page
+      .getByRole('dialog', { name: 'Create App' })
+      .getByText('Select an App');
   }
 
   appToCopy(appName: string) {

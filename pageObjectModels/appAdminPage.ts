@@ -11,8 +11,12 @@ export class AppAdminPage extends BaseAdminPage {
     super(page);
     this.page = page;
     this.path = '/Admin/App/';
-    this.pathRegex = new RegExp(`${process.env.INSTANCE_URL}${this.path}[0-9]+`);
-    this.appName = page.locator('td:nth-match(td:right-of(label:has-text("Name")), 1)');
+    this.pathRegex = new RegExp(
+      `${process.env.INSTANCE_URL}${this.path}[0-9]+`
+    );
+    this.appName = page.locator(
+      'td:nth-match(td:right-of(label:has-text("Name")), 1)'
+    );
   }
 
   async goto(appId: number) {

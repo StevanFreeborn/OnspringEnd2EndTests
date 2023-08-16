@@ -11,7 +11,9 @@ export class AdminHomePage extends BaseAdminPage {
     super(page);
     this.page = page;
     this.path = '/Admin/Home';
-    this.appTileLink = page.locator('div.landing-list-item-container:nth-child(1) > div:nth-child(1) > a:nth-child(1)');
+    this.appTileLink = page.locator(
+      'div.landing-list-item-container:nth-child(1) > div:nth-child(1) > a:nth-child(1)'
+    );
     this.appTileCreateButton = page.locator('#card-create-button-Apps');
   }
 
