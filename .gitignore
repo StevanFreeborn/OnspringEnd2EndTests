@@ -3,3 +3,7 @@ node_modules/
 /playwright-report/
 /playwright/.cache/
 config/.env
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
