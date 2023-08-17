@@ -28,7 +28,29 @@ export class AppsAdminPage extends BaseAdminPage {
     await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
   }
 
-  async getAppRow(appName: string) {
-    return this.appGrid.getByRole('row', { name: appName });
+  async createApp(appName: string) {
+    await this.createAppButton.click();
+
+    await this.createAppDialog.continueButton.waitFor();
+    await this.createAppDialog.continueButton.click();
+
+    await this.createAppModal.nameInput.waitFor();
+    await this.createAppModal.nameInput.fill(appName);
+    await this.createAppModal.saveButton.click();
+  }
+
+  async deleteApp(appName: string) {
+    const appRow = this.appGrid.getByRole('row', { name: appName }).first();
+    const appDeleteButton = appRow.getByTitle('Delete App');
+
+    await appRow.hover();
+
+    await appDeleteButton.waitFor();
+    await appDeleteButton.click();
+
+    await this.deleteAppDialog.dialog.waitFor();
+    await this.deleteAppDialog.confirmationInput.focus();
+    await this.deleteAppDialog.confirmationInput.type('OK');
+    await this.deleteAppDialog.deleteButton.click();
   }
 }

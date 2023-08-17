@@ -26,4 +26,30 @@ export class AdminHomePage extends BaseAdminPage {
   async goto() {
     await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
   }
+
+  async createAppUsingHeaderCreateButton(appName: string) {
+    await this.sharedAdminNavPage.adminCreateButton.hover();
+    await this.sharedAdminNavPage.adminCreateMenu.waitFor();
+    await this.sharedAdminNavPage.appCreateMenuOption.click();
+
+    await this.createAppDialog.continueButton.waitFor();
+    await this.createAppDialog.continueButton.click();
+
+    await this.createAppModal.nameInput.waitFor();
+    await this.createAppModal.nameInput.fill(appName);
+    await this.createAppModal.saveButton.click();
+  }
+
+  async createAppUsingAppTileButton(appName: string) {
+    await this.appTileLink.hover();
+    await this.appTileCreateButton.waitFor();
+    await this.appTileCreateButton.click();
+
+    await this.createAppDialog.continueButton.waitFor();
+    await this.createAppDialog.continueButton.click();
+
+    await this.createAppModal.nameInput.waitFor();
+    await this.createAppModal.nameInput.fill(appName);
+    await this.createAppModal.saveButton.click();
+  }
 }

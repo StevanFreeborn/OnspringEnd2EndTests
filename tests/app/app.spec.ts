@@ -25,21 +25,7 @@ test.describe('app', () => {
     await appsAdminPage.goto();
 
     for (const appName of appNames) {
-      const appRow = appsAdminPage.appGrid
-        .getByRole('row', { name: appName })
-        .first();
-      const appDeleteButton = appRow.getByTitle('Delete App');
-
-      await appRow.hover();
-
-      await appDeleteButton.waitFor();
-      await appDeleteButton.click();
-
-      await appsAdminPage.deleteAppDialog.dialog.waitFor();
-      await appsAdminPage.deleteAppDialog.confirmationInput.focus();
-      await appsAdminPage.deleteAppDialog.confirmationInput.type('OK');
-      await appsAdminPage.deleteAppDialog.deleteButton.click();
-
+      await appsAdminPage.deleteApp(appName);
       await appsAdminPage.page.waitForLoadState('networkidle');
     }
 
@@ -55,16 +41,7 @@ test.describe('app', () => {
     appNames.push(appName);
 
     await adminHomePage.page.waitForLoadState();
-    await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
-    await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
-    await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
-
-    await adminHomePage.createAppDialog.continueButton.waitFor();
-    await adminHomePage.createAppDialog.continueButton.click();
-
-    await adminHomePage.createAppModal.nameInput.waitFor();
-    await adminHomePage.createAppModal.nameInput.fill(appName);
-    await adminHomePage.createAppModal.saveButton.click();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -79,16 +56,7 @@ test.describe('app', () => {
     appNames.push(appName);
 
     await adminHomePage.page.waitForLoadState();
-    await adminHomePage.appTileLink.hover();
-    await adminHomePage.appTileCreateButton.waitFor();
-    await adminHomePage.appTileCreateButton.click();
-
-    await adminHomePage.createAppDialog.continueButton.waitFor();
-    await adminHomePage.createAppDialog.continueButton.click();
-
-    await adminHomePage.createAppModal.nameInput.waitFor();
-    await adminHomePage.createAppModal.nameInput.fill(appName);
-    await adminHomePage.createAppModal.saveButton.click();
+    await adminHomePage.createAppUsingAppTileButton(appName);
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -106,14 +74,7 @@ test.describe('app', () => {
     await adminHomePage.appTileLink.click();
 
     await appsAdminPage.page.waitForLoadState();
-    await appsAdminPage.createAppButton.click();
-
-    await appsAdminPage.createAppDialog.continueButton.waitFor();
-    await appsAdminPage.createAppDialog.continueButton.click();
-
-    await appsAdminPage.createAppModal.nameInput.waitFor();
-    await appsAdminPage.createAppModal.nameInput.fill(appName);
-    await appsAdminPage.createAppModal.saveButton.click();
+    await appsAdminPage.createApp(appName);
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -130,16 +91,7 @@ test.describe('app', () => {
     appNames.push(expectedAppCopyName);
 
     await adminHomePage.page.waitForLoadState();
-    await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
-    await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
-    await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
-
-    await adminHomePage.createAppDialog.continueButton.waitFor();
-    await adminHomePage.createAppDialog.continueButton.click();
-
-    await adminHomePage.createAppModal.nameInput.waitFor();
-    await adminHomePage.createAppModal.nameInput.fill(appName);
-    await adminHomePage.createAppModal.saveButton.click();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
 
     await appAdminPage.sharedNavPage.adminGearIcon.click();
 
@@ -177,16 +129,7 @@ test.describe('app', () => {
     appNames.push(expectedAppCopyName);
 
     await adminHomePage.page.waitForLoadState();
-    await adminHomePage.appTileLink.hover();
-    await adminHomePage.appTileCreateButton.waitFor();
-    await adminHomePage.appTileCreateButton.click();
-
-    await adminHomePage.createAppDialog.continueButton.waitFor();
-    await adminHomePage.createAppDialog.continueButton.click();
-
-    await adminHomePage.createAppModal.nameInput.waitFor();
-    await adminHomePage.createAppModal.nameInput.fill(appName);
-    await adminHomePage.createAppModal.saveButton.click();
+    await adminHomePage.createAppUsingAppTileButton(appName);
 
     await appAdminPage.sharedNavPage.adminGearIcon.click();
 
@@ -226,15 +169,7 @@ test.describe('app', () => {
     await adminHomePage.appTileLink.click();
 
     await appsAdminPage.page.waitForLoadState();
-    await appsAdminPage.createAppButton.click();
-
-    await appsAdminPage.createAppDialog.continueButton.waitFor();
-    await appsAdminPage.createAppDialog.continueButton.click();
-
-    await appsAdminPage.createAppModal.nameInput.waitFor();
-    await appsAdminPage.createAppModal.nameInput.fill(appName);
-    await appsAdminPage.createAppModal.saveButton.click();
-
+    await appsAdminPage.createApp(appName);
     await appAdminPage.closeButton.click();
 
     await appsAdminPage.page.waitForLoadState('domcontentloaded');
