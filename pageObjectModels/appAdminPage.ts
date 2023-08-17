@@ -6,6 +6,8 @@ export class AppAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly pathRegex: RegExp;
   readonly appName: Locator;
+  readonly closeButton: Locator;
+  readonly appGrid: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -17,6 +19,7 @@ export class AppAdminPage extends BaseAdminPage {
     this.appName = page.locator(
       'td:nth-match(td:right-of(label:has-text("Name")), 1)'
     );
+    this.closeButton = page.locator('a:has-text("Close")');
   }
 
   async goto(appId: number) {

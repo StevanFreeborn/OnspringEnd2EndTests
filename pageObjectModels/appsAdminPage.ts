@@ -5,16 +5,21 @@ export class AppsAdminPage extends BaseAdminPage {
   readonly page: Page;
   readonly path: string;
   readonly createAppButton: Locator;
+  readonly appGrid: Locator;
 
   constructor(page: Page) {
     super(page);
     this.page = page;
     this.path = '/Admin/App';
     this.createAppButton = page.locator('.create-button');
+    this.appGrid = page.locator('#grid');
   }
 
-  async goto(appId: number) {
-    const path = `${this.path}/${appId}`;
-    await this.page.goto(path);
+  async goto() {
+    await this.page.goto(this.path);
+  }
+
+  async getAppRow(appName: string) {
+    return this.appGrid.getByRole('row', { name: appName });
   }
 }

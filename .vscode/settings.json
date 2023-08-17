@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["endtests", "FULLNAME", "onspringend", "signin"]
+  "cSpell.words": [
+    "domcontentloaded",
+    "endtests",
+    "FULLNAME",
+    "networkidle",
+    "onspringend",
+    "signin"
+  ]
 }
