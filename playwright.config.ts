@@ -16,9 +16,9 @@ const config: PlaywrightTestConfig = {
   use: {
     actionTimeout: 0,
     baseURL: process.env.INSTANCE_URL,
-    trace: 'retain-on-failure',
+    trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: 'on-first-retry',
   },
 
   projects: [

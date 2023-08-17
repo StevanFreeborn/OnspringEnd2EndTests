@@ -9,6 +9,7 @@
     "test:firefox": "npm run test -- --project firefox",
     "test:safari": "npm run test -- --project safari",
     "test:mobile": "npm run test -- --project android --project iOS",
+    "test:all": "npm run test:chrome && npm run test:firefox && npm run test:safari && npm run test:mobile",
     "test:ui": "npx playwright test --ui",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",

@@ -209,7 +209,7 @@ test.describe('app', () => {
     await appsAdminPage.createApp(appName);
     await appAdminPage.closeButton.click();
 
-    await appsAdminPage.page.waitForLoadState('domcontentloaded');
+    await appsAdminPage.page.waitForLoadState();
 
     await appRow.hover();
     await appDeleteButton.waitFor();
