@@ -1,6 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { CreateAppDialogComponent } from '../../componentObjectModels/createAppDialogComponent';
-import { CreateAppModalComponent } from '../../componentObjectModels/createAppModalComponent';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
@@ -8,7 +6,6 @@ import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/appsAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboardPage';
 import { LoginPage } from '../../pageObjectModels/loginPage';
-import { DeleteAppDialogComponent } from './../../componentObjectModels/deleteAppDialogComponent';
 
 test.describe('app', () => {
   let appNames: string[] = [];
@@ -219,9 +216,6 @@ test.describe('app', () => {
   test('Delete an app', async ({ page }) => {
     const adminHomePage = new AdminHomePage(page);
     const appsAdminPage = new AppsAdminPage(page);
-    const deleteAppDialog = new DeleteAppDialogComponent(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appAdminPage = new AppAdminPage(page);
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid
@@ -234,12 +228,12 @@ test.describe('app', () => {
     await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await appsAdminPage.createAppDialog.continueButton.waitFor();
+    await appsAdminPage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await appsAdminPage.createAppModal.nameInput.waitFor();
+    await appsAdminPage.createAppModal.nameInput.fill(appName);
+    await appsAdminPage.createAppModal.saveButton.click();
 
     await appAdminPage.closeButton.click();
 
@@ -252,10 +246,10 @@ test.describe('app', () => {
 
     await appDeleteButton.click();
 
-    await deleteAppDialog.confirmationInput.waitFor();
-    await deleteAppDialog.confirmationInput.focus();
-    await deleteAppDialog.confirmationInput.type('OK');
-    await deleteAppDialog.deleteButton.click();
+    await appsAdminPage.deleteAppDialog.confirmationInput.waitFor();
+    await appsAdminPage.deleteAppDialog.confirmationInput.focus();
+    await appsAdminPage.deleteAppDialog.confirmationInput.type('OK');
+    await appsAdminPage.deleteAppDialog.deleteButton.click();
 
     await expect(appRow).not.toBeAttached();
   });
