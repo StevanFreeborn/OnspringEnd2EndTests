@@ -25,8 +25,6 @@ test.describe('app', () => {
 
   test.afterEach(async ({ page }) => {
     const appsAdminPage = new AppsAdminPage(page);
-    const deleteAppDialog = new DeleteAppDialogComponent(page);
-
     await appsAdminPage.goto();
 
     for (const appName of appNames) {
@@ -40,10 +38,11 @@ test.describe('app', () => {
       await appDeleteButton.waitFor();
       await appDeleteButton.click();
 
-      await deleteAppDialog.dialog.waitFor();
-      await deleteAppDialog.confirmationInput.focus();
-      await deleteAppDialog.confirmationInput.type('OK');
-      await deleteAppDialog.deleteButton.click();
+      await appsAdminPage.deleteAppDialog.dialog.waitFor();
+      await appsAdminPage.deleteAppDialog.confirmationInput.focus();
+      await appsAdminPage.deleteAppDialog.confirmationInput.type('OK');
+      await appsAdminPage.deleteAppDialog.deleteButton.click();
+
       await appsAdminPage.page.waitForLoadState('networkidle');
     }
 
@@ -55,8 +54,6 @@ test.describe('app', () => {
   }) => {
     const adminHomePage = new AdminHomePage(page);
     const appAdminPage = new AppAdminPage(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
 
@@ -65,12 +62,12 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.continueButton.waitFor();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.fill(appName);
+    await adminHomePage.createAppModal.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -81,8 +78,6 @@ test.describe('app', () => {
   }) => {
     const adminHomePage = new AdminHomePage(page);
     const appAdminPage = new AppAdminPage(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
 
@@ -91,12 +86,12 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.continueButton.waitFor();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.fill(appName);
+    await adminHomePage.createAppModal.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -107,8 +102,6 @@ test.describe('app', () => {
   }) => {
     const adminHomePage = new AdminHomePage(page);
     const appsAdminPage = new AppsAdminPage(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appAdminPage = new AppAdminPage(page);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
@@ -118,12 +111,12 @@ test.describe('app', () => {
     await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await appsAdminPage.createAppDialog.continueButton.waitFor();
+    await appsAdminPage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await appsAdminPage.createAppModal.nameInput.waitFor();
+    await appsAdminPage.createAppModal.nameInput.fill(appName);
+    await appsAdminPage.createAppModal.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(appName);
@@ -133,8 +126,6 @@ test.describe('app', () => {
     page,
   }) => {
     const adminHomePage = new AdminHomePage(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appAdminPage = new AppAdminPage(page);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
@@ -146,12 +137,12 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.continueButton.waitFor();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.fill(appName);
+    await adminHomePage.createAppModal.saveButton.click();
 
     await appAdminPage.sharedNavPage.adminGearIcon.click();
 
@@ -160,17 +151,19 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.copyFromRadioButton.waitFor();
-    await createAppDialog.copyFromRadioButton.click();
-    await createAppDialog.selectAnAppDropdown.click();
-    await createAppDialog.appToCopy(appName).click();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.copyFromRadioButton.waitFor();
+    await adminHomePage.createAppDialog.copyFromRadioButton.click();
+    await adminHomePage.createAppDialog.selectAnAppDropdown.click();
+    await adminHomePage.createAppDialog.appToCopy(appName).click();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.waitFor();
 
-    await expect(createAppModal.nameInput).toHaveValue(expectedAppCopyName);
+    await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
+      expectedAppCopyName
+    );
 
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
@@ -180,8 +173,6 @@ test.describe('app', () => {
     page,
   }) => {
     const adminHomePage = new AdminHomePage(page);
-    const createAppDialog = new CreateAppDialogComponent(page);
-    const createAppModal = new CreateAppModalComponent(page);
     const appAdminPage = new AppAdminPage(page);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
@@ -193,12 +184,12 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.continueButton.waitFor();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.continueButton.waitFor();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
-    await createAppModal.nameInput.fill(appName);
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.fill(appName);
+    await adminHomePage.createAppModal.saveButton.click();
 
     await appAdminPage.sharedNavPage.adminGearIcon.click();
 
@@ -207,17 +198,19 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.copyFromRadioButton.waitFor();
-    await createAppDialog.copyFromRadioButton.click();
-    await createAppDialog.selectAnAppDropdown.click();
-    await createAppDialog.appToCopy(appName).click();
-    await createAppDialog.continueButton.click();
+    await adminHomePage.createAppDialog.copyFromRadioButton.waitFor();
+    await adminHomePage.createAppDialog.copyFromRadioButton.click();
+    await adminHomePage.createAppDialog.selectAnAppDropdown.click();
+    await adminHomePage.createAppDialog.appToCopy(appName).click();
+    await adminHomePage.createAppDialog.continueButton.click();
 
-    await createAppModal.nameInput.waitFor();
+    await adminHomePage.createAppModal.nameInput.waitFor();
 
-    await expect(createAppModal.nameInput).toHaveValue(expectedAppCopyName);
+    await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
+      expectedAppCopyName
+    );
 
-    await createAppModal.saveButton.click();
+    await adminHomePage.createAppModal.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
