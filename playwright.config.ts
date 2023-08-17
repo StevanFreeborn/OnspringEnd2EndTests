@@ -12,7 +12,7 @@ const config: PlaywrightTestConfig = {
   forbidOnly: process.env.CI == 'true',
   retries: process.env.CI == 'true' ? 2 : 1,
   workers: process.env.CI == 'true' ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html'], ['list']],
   use: {
     actionTimeout: 0,
     baseURL: process.env.INSTANCE_URL,

@@ -1,6 +1,5 @@
 import { Page } from '@playwright/test';
 import { BasePage } from './basePage';
-import { SharedNavPage } from './sharedNavPage';
 
 export class DashboardPage extends BasePage {
   readonly page: Page;

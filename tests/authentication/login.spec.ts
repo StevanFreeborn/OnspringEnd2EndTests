@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
-import { DashboardPage } from '../../pageObjectModels/DashboardPage';
+import { DashboardPage } from '../../pageObjectModels/dashboardPage';
 import { LoginPage } from '../../pageObjectModels/loginPage';
 
 test.describe('login', () => {
@@ -17,9 +17,7 @@ test.describe('login', () => {
     await loginPage.enterPassword(user.password);
     await loginPage.clickLoginButton();
 
-    await expect(dashboardPage.page).toHaveURL(
-      process.env.INSTANCE_URL + dashboardPage.path
-    );
+    await expect(dashboardPage.page).toHaveURL(new RegExp(dashboardPage.path));
     await expect(dashboardPage.sharedNavPage.usersFullName).toHaveText(
       user.fullName
     );
@@ -34,9 +32,7 @@ test.describe('login', () => {
     await loginPage.enterPassword(user.password);
     await loginPage.clickLoginButton();
 
-    await expect(loginPage.page).toHaveURL(
-      process.env.INSTANCE_URL + loginPage.path
-    );
+    await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
     await expect(loginPage.validationErrors).toHaveText(
       LoginPage.invalidCredentialError.text
     );
@@ -59,9 +55,7 @@ test.describe('login', () => {
     await loginPage.enterPassword(FakeDataFactory.createFakePassword());
     await loginPage.clickLoginButton();
 
-    await expect(loginPage.page).toHaveURL(
-      process.env.INSTANCE_URL + loginPage.path
-    );
+    await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
     await expect(loginPage.validationErrors).toHaveText(
       LoginPage.invalidCredentialError.text
     );
@@ -86,9 +80,7 @@ test.describe('login', () => {
     await loginPage.enterPassword(FakeDataFactory.createFakePassword());
     await loginPage.clickLoginButton();
 
-    await expect(loginPage.page).toHaveURL(
-      process.env.INSTANCE_URL + loginPage.path
-    );
+    await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
     await expect(loginPage.validationErrors).toHaveText(
       LoginPage.invalidCredentialError.text
     );

@@ -18,9 +18,9 @@ export class LoginPage {
   constructor(page: Page) {
     this.page = page;
     this.path = '/Public/Login';
-    this.usernameInput = page.locator('#UserName');
-    this.passwordInput = page.locator('#Password');
-    this.loginButton = page.locator('.signin');
+    this.usernameInput = page.getByPlaceholder('Username');
+    this.passwordInput = page.getByPlaceholder('Password');
+    this.loginButton = page.locator('text=Login');
     this.validationErrors = page.locator('.validation-summary-errors');
   }
 
@@ -29,13 +29,11 @@ export class LoginPage {
   }
 
   async enterUsername(username: string) {
-    await this.usernameInput.click();
-    await this.usernameInput.type(username);
+    await this.usernameInput.fill(username);
   }
 
   async enterPassword(password: string) {
-    await this.passwordInput.click();
-    await this.passwordInput.type(password);
+    await this.passwordInput.fill(password);
   }
 
   async clickLoginButton() {

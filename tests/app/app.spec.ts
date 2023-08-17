@@ -3,10 +3,10 @@ import { CreateAppDialogComponent } from '../../componentObjectModels/createAppD
 import { CreateAppModalComponent } from '../../componentObjectModels/createAppModalComponent';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
-import { DashboardPage } from '../../pageObjectModels/DashboardPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/appsAdminPage';
+import { DashboardPage } from '../../pageObjectModels/dashboardPage';
 import { LoginPage } from '../../pageObjectModels/loginPage';
 
 test.describe('app', () => {
@@ -34,8 +34,7 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
     await createAppDialogComponent.continueButton.click();
-    await createAppModalComponent.nameInput.click();
-    await createAppModalComponent.nameInput.type(appName);
+    await createAppModalComponent.nameInput.fill(appName);
     await createAppModalComponent.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -56,8 +55,7 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
     await createAppDialogComponent.continueButton.click();
-    await createAppModalComponent.nameInput.click();
-    await createAppModalComponent.nameInput.type(appName);
+    await createAppModalComponent.nameInput.fill(appName);
     await createAppModalComponent.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -78,8 +76,7 @@ test.describe('app', () => {
     await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
     await createAppDialogComponent.continueButton.click();
-    await createAppModalComponent.nameInput.click();
-    await createAppModalComponent.nameInput.type(appName);
+    await createAppModalComponent.nameInput.fill(appName);
     await createAppModalComponent.saveButton.click();
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
@@ -101,8 +98,7 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
     await createAppDialogComponent.continueButton.click();
-    await createAppModalComponent.nameInput.click();
-    await createAppModalComponent.nameInput.type(appName);
+    await createAppModalComponent.nameInput.fill(appName);
     await createAppModalComponent.saveButton.click();
     await appAdminPage.sharedNavPage.adminGearIcon.click();
     await adminHomePage.page.waitForLoadState();
@@ -139,8 +135,7 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
     await createAppDialogComponent.continueButton.click();
-    await createAppModalComponent.nameInput.click();
-    await createAppModalComponent.nameInput.type(appName);
+    await createAppModalComponent.nameInput.fill(appName);
     await createAppModalComponent.saveButton.click();
     await appAdminPage.sharedNavPage.adminGearIcon.click();
     await adminHomePage.page.waitForLoadState();
