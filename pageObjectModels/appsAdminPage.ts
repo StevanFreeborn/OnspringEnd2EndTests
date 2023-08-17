@@ -16,7 +16,7 @@ export class AppsAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path);
+    await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
   }
 
   async getAppRow(appName: string) {

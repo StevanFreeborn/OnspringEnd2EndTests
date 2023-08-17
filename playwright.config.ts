@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 60 * 1000,
+  timeout: 120 * 1000,
   expect: {
     timeout: 30 * 1000,
   },
@@ -16,40 +16,38 @@ const config: PlaywrightTestConfig = {
   use: {
     actionTimeout: 0,
     baseURL: process.env.INSTANCE_URL,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
 
   projects: [
     {
-      name: 'chromium',
+      name: 'chrome',
       use: {
         ...devices['Desktop Chrome'],
       },
     },
-
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
       },
     },
-
     {
-      name: 'webkit',
+      name: 'safari',
       use: {
         ...devices['Desktop Safari'],
       },
     },
     {
-      name: 'android mobile',
+      name: 'android',
       use: {
         ...devices['Pixel 5'],
       },
     },
     {
-      name: 'iOS mobile',
+      name: 'iOS',
       use: {
         ...devices['iPhone 13 Pro'],
       },

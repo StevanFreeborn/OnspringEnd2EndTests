@@ -30,7 +30,6 @@ test.describe('app', () => {
     await appsAdminPage.goto();
 
     for (const appName of appNames) {
-      await appsAdminPage.page.waitForLoadState('domcontentloaded');
       const appRow = appsAdminPage.appGrid
         .getByRole('row', { name: appName })
         .first();
@@ -45,6 +44,7 @@ test.describe('app', () => {
       await deleteAppDialog.confirmationInput.focus();
       await deleteAppDialog.confirmationInput.type('OK');
       await deleteAppDialog.deleteButton.click();
+      await appsAdminPage.page.waitForLoadState('networkidle');
     }
 
     appNames = [];
@@ -65,10 +65,10 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 
@@ -91,10 +91,10 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 
@@ -118,10 +118,10 @@ test.describe('app', () => {
     await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 
@@ -146,10 +146,10 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 
@@ -160,11 +160,13 @@ test.describe('app', () => {
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.copyFromRadioButton.waitFor();
     await createAppDialog.copyFromRadioButton.click();
     await createAppDialog.selectAnAppDropdown.click();
     await createAppDialog.appToCopy(appName).click();
     await createAppDialog.continueButton.click();
+
+    await createAppModal.nameInput.waitFor();
 
     await expect(createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
@@ -191,10 +193,10 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 
@@ -205,11 +207,13 @@ test.describe('app', () => {
     await adminHomePage.appTileCreateButton.waitFor();
     await adminHomePage.appTileCreateButton.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.copyFromRadioButton.waitFor();
     await createAppDialog.copyFromRadioButton.click();
     await createAppDialog.selectAnAppDropdown.click();
     await createAppDialog.appToCopy(appName).click();
     await createAppDialog.continueButton.click();
+
+    await createAppModal.nameInput.waitFor();
 
     await expect(createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
@@ -237,10 +241,10 @@ test.describe('app', () => {
     await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
 
-    await createAppDialog.dialog.waitFor();
+    await createAppDialog.continueButton.waitFor();
     await createAppDialog.continueButton.click();
 
-    await createAppModal.dialog.waitFor();
+    await createAppModal.nameInput.waitFor();
     await createAppModal.nameInput.fill(appName);
     await createAppModal.saveButton.click();
 

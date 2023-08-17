@@ -18,6 +18,6 @@ export class AdminHomePage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path);
+    await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
   }
 }

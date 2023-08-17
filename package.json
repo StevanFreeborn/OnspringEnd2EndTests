@@ -5,6 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
+    "test:chrome": "npm run test -- --project chrome",
+    "test:firefox": "npm run test -- --project firefox",
+    "test:safari": "npm run test -- --project safari",
+    "test:mobile": "npm run test -- --project android --project iOS",
     "test:ui": "npx playwright test --ui",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",

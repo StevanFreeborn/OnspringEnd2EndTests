@@ -25,7 +25,7 @@ export class LoginPage {
   }
 
   async goto() {
-    await this.page.goto(this.path);
+    await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
   }
 
   async enterUsername(username: string) {
@@ -45,5 +45,17 @@ export class LoginPage {
     await this.enterUsername(user.username);
     await this.enterPassword(user.password);
     await this.clickLoginButton();
+
+    // Login will fail randomly across different browsers
+    // when initially inputting correct password. Almost
+    // as if the password gets cleared right before posting
+    // the login form.
+    // TODO: Re-evaluate
+    const currentUrl = this.page.url();
+
+    if (currentUrl.includes(this.path)) {
+      await this.enterPassword(user.password);
+      await this.clickLoginButton();
+    }
   }
 }

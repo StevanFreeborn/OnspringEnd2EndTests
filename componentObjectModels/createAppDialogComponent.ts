@@ -2,14 +2,12 @@ import { Locator, Page } from '@playwright/test';
 
 export class CreateAppDialogComponent {
   readonly page: Page;
-  readonly dialog: Locator;
   readonly continueButton: Locator;
   readonly copyFromRadioButton: Locator;
   readonly selectAnAppDropdown: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.dialog = page.getByRole('dialog');
     this.continueButton = page.getByRole('button', { name: 'Continue' });
     this.copyFromRadioButton = page.getByText('Copy from');
     this.selectAnAppDropdown = page
