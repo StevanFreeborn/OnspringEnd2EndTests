@@ -156,6 +156,43 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
   });
 
+  test('Create a copy of an app via the Create App button on the Apps admin page', async ({
+    page,
+  }) => {
+    const adminHomePage = new AdminHomePage(page);
+    const appsAdminPage = new AppsAdminPage(page);
+    const appAdminPage = new AppAdminPage(page);
+    const appName = FakeDataFactory.createFakeAppName();
+    const expectedAppCopyName = `${appName} (1)`;
+    appNames.push(appName);
+    appNames.push(expectedAppCopyName);
+
+    await adminHomePage.appTileLink.click();
+
+    await appsAdminPage.page.waitForLoadState();
+    await appsAdminPage.createApp(appName);
+    await appAdminPage.closeButton.click();
+
+    await appsAdminPage.createAppButton.click();
+
+    await appsAdminPage.createAppDialog.copyFromRadioButton.waitFor();
+    await appsAdminPage.createAppDialog.copyFromRadioButton.click();
+    await appsAdminPage.createAppDialog.selectAnAppDropdown.click();
+    await appsAdminPage.createAppDialog.appToCopy(appName).click();
+    await appsAdminPage.createAppDialog.continueButton.click();
+
+    await appsAdminPage.createAppModal.nameInput.waitFor();
+
+    await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(
+      expectedAppCopyName
+    );
+
+    await appsAdminPage.createAppModal.saveButton.click();
+
+    await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
+    await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+  });
+
   test('Delete an app', async ({ page }) => {
     const adminHomePage = new AdminHomePage(page);
     const appsAdminPage = new AppsAdminPage(page);
