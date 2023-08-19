@@ -2,7 +2,7 @@ name: Playwright Tests
 on:
   workflow_dispatch:
 jobs:
-  playwright:
+  run_tests:
     name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     env:
       SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
@@ -35,9 +35,9 @@ jobs:
           name: all-blob-reports
           path: blob-report
           retention-days: 1
-  merge-reports:
+  merge_reports_and_publish:
     if: always()
-    needs: [playwright]
+    needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -61,3 +61,7 @@ jobs:
           name: html-report--attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 14
+      - name: Publish to gh pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: playwright-report

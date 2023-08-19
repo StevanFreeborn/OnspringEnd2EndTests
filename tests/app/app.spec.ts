@@ -225,6 +225,7 @@ test.describe('app', () => {
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid
       .getByRole('row', { name: appName })
@@ -234,6 +235,9 @@ test.describe('app', () => {
     await adminHomePage.appTileLink.click();
 
     await appsAdminPage.createApp(appName);
+
+    await appAdminPage.page.waitForLoadState();
+    await appAdminPage.closeButton.click();
 
     await appsAdminPage.goto();
 
