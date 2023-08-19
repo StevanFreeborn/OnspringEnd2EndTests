@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 
 export class CreateAppDialogComponent {
-  readonly page: Page;
+  private readonly page: Page;
   readonly continueButton: Locator;
   readonly copyFromRadioButton: Locator;
   readonly selectAnAppDropdown: Locator;

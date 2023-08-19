@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { EditAppGeneralSettingsModalComponent } from '../componentObjectModels/editAppGeneralSettingsModalComponent';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AppAdminPage extends BaseAdminPage {
@@ -6,6 +7,8 @@ export class AppAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly pathRegex: RegExp;
   readonly appName: Locator;
+  readonly editGeneralSettingsLink: Locator;
+  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly closeButton: Locator;
   readonly appGrid: Locator;
 
@@ -18,6 +21,12 @@ export class AppAdminPage extends BaseAdminPage {
     );
     this.appName = page.locator(
       'td:nth-match(td:right-of(label:has-text("Name")), 1)'
+    );
+    this.editGeneralSettingsLink = page
+      .getByRole('heading', { name: 'Edit General Settings' })
+      .getByRole('link');
+    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
+      page
     );
     this.closeButton = page.locator('a:has-text("Close")');
   }

@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 
 export class DeleteAppDialogComponent {
-  readonly page: Page;
+  private readonly page: Page;
   readonly overlay: Locator;
   readonly dialog: Locator;
   readonly confirmationInput: Locator;

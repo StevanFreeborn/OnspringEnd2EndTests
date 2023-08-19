@@ -6,7 +6,7 @@ import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
 import { DashboardPage } from './../../pageObjectModels/dashboardPage';
 
 test.describe('app', () => {
-  let appNames: string[] = [];
+  let appsToDelete: string[] = [];
 
   test.beforeEach(async ({ sysAdminPage }) => {
     const dashboardPage = new DashboardPage(sysAdminPage);
@@ -20,7 +20,7 @@ test.describe('app', () => {
     await appsAdminPage.goto();
     await appsAdminPage.page.waitForLoadState();
 
-    for (const appName of appNames) {
+    for (const appName of appsToDelete) {
       const appRow = appsAdminPage.appGrid
         .getByRole('row', { name: appName })
         .first();
@@ -42,7 +42,7 @@ test.describe('app', () => {
       await appsAdminPage.page.waitForLoadState('networkidle');
     }
 
-    appNames = [];
+    appsToDelete = [];
   });
 
   test('Create an app via the create button on the header of on the admin home page', async ({
@@ -51,7 +51,7 @@ test.describe('app', () => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
-    appNames.push(appName);
+    appsToDelete.push(appName);
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.createAppUsingHeaderCreateButton(appName);
@@ -66,7 +66,7 @@ test.describe('app', () => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
-    appNames.push(appName);
+    appsToDelete.push(appName);
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.createAppUsingAppTileButton(appName);
@@ -82,7 +82,7 @@ test.describe('app', () => {
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
-    appNames.push(appName);
+    appsToDelete.push(appName);
 
     await adminHomePage.appTileLink.click();
 
@@ -100,8 +100,8 @@ test.describe('app', () => {
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
-    appNames.push(appName);
-    appNames.push(expectedAppCopyName);
+    appsToDelete.push(appName);
+    appsToDelete.push(expectedAppCopyName);
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.createAppUsingHeaderCreateButton(appName);
@@ -145,8 +145,8 @@ test.describe('app', () => {
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
-    appNames.push(appName);
-    appNames.push(expectedAppCopyName);
+    appsToDelete.push(appName);
+    appsToDelete.push(expectedAppCopyName);
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.createAppUsingAppTileButton(appName);
@@ -189,8 +189,8 @@ test.describe('app', () => {
     const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
-    appNames.push(appName);
-    appNames.push(expectedAppCopyName);
+    appsToDelete.push(appName);
+    appsToDelete.push(expectedAppCopyName);
 
     await adminHomePage.appTileLink.click();
 
@@ -220,6 +220,29 @@ test.describe('app', () => {
 
     await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+  });
+
+  test("Update an app's name", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    const updatedAppName = `${appName}-updated`;
+    appsToDelete.push(updatedAppName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.nameInput
+    ).toHaveValue(appName);
+
+    await appAdminPage.editAppGeneralSettingsModal.nameInput.fill(
+      updatedAppName
+    );
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appName).toHaveText(updatedAppName);
   });
 
   test('Delete an app', async ({ sysAdminPage }) => {
