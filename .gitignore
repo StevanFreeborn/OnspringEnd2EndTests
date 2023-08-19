@@ -8,3 +8,4 @@ config/.env
 !.env.project
 !.env.vault
 .auth
+blob-report/
