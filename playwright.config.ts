@@ -40,9 +40,9 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
     },
     {
-      name: 'firefox',
+      name: 'safari',
       use: {
-        ...devices['Desktop Firefox'],
+        ...devices['Desktop Safari'],
       },
       dependencies: ['setup'],
     },
