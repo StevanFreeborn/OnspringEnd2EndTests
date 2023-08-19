@@ -24,6 +24,6 @@ export class AppAdminPage extends BaseAdminPage {
 
   async goto(appId: number) {
     const path = `${this.path}/${appId}`;
-    await this.page.goto(path, { waitUntil: 'domcontentloaded' });
+    await this.page.goto(path, { waitUntil: 'load' });
   }
 }

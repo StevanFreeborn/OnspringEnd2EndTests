@@ -2,14 +2,27 @@ import { Locator, Page } from '@playwright/test';
 
 export class DeleteAppDialogComponent {
   readonly page: Page;
+  readonly overlay: Locator;
   readonly dialog: Locator;
   readonly confirmationInput: Locator;
   readonly deleteButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.dialog = page.locator('#extra-confirmation');
-    this.confirmationInput = page.locator('#extra-confirmation input');
+    this.overlay = page.locator('body > div.ui-widget-overlay.ui-front');
+    this.dialog = page.locator(
+      'body > div.ui-dialog.ui-corner-all.ui-widget.ui-widget-content.ui-front.ui-dialog-buttons.ui-draggable.warning-dialog'
+    );
+    this.confirmationInput = page.getByLabel('Delete App').getByRole('textbox');
     this.deleteButton = page.getByRole('button', { name: 'Delete' });
+  }
+
+  async waitForModalToBeDismissed() {
+    await Promise.all([
+      this.dialog.waitFor({
+        state: 'detached',
+      }),
+      this.overlay.waitFor({ state: 'detached' }),
+    ]);
   }
 }

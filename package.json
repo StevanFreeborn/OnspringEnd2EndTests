@@ -6,10 +6,10 @@
   "scripts": {
     "test": "npx playwright test",
     "test:chrome": "npm run test -- --project chrome",
-    "test:firefox": "npm run test -- --project firefox",
     "test:safari": "npm run test -- --project safari",
     "test:mobile": "npm run test -- --project android --project iOS",
-    "test:all": "npm run test:chrome && npm run test:firefox && npm run test:safari && npm run test:mobile",
+    "test:seq": "npm run test:chrome && npm run test:safari && npm run test:mobile",
+    "test:flaky": "npm run test -- --grep @flaky",
     "test:ui": "npx playwright test --ui",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",
@@ -26,7 +26,7 @@
   "license": "ISC",
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@playwright/test": "^1.37.0",
+    "@playwright/test": "^1.37.1",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@typescript-eslint/parser": "^6.4.0",
     "dotenv": "^16.0.3",

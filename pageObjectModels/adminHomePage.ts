@@ -24,7 +24,7 @@ export class AdminHomePage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'domcontentloaded' });
+    await this.page.goto(this.path, { waitUntil: 'load' });
   }
 
   async createAppUsingHeaderCreateButton(appName: string) {
@@ -34,6 +34,8 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();
+
+    await this.page.waitForLoadState('networkidle');
 
     await this.createAppModal.nameInput.waitFor();
     await this.createAppModal.nameInput.fill(appName);
@@ -45,10 +47,13 @@ export class AdminHomePage extends BaseAdminPage {
     await this.appTileCreateButton.waitFor();
     await this.appTileCreateButton.click();
 
+    await this.page.waitForLoadState('networkidle');
+
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();
 
     await this.createAppModal.nameInput.waitFor();
+
     await this.createAppModal.nameInput.fill(appName);
     await this.createAppModal.saveButton.click();
   }

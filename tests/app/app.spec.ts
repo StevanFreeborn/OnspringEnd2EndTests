@@ -1,31 +1,44 @@
-import { expect, test } from '@playwright/test';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { UserFactory } from '../../factories/userFactory';
+import { expect, test } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/appsAdminPage';
-import { DashboardPage } from '../../pageObjectModels/dashboardPage';
-import { LoginPage } from '../../pageObjectModels/loginPage';
+import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
+import { DashboardPage } from './../../pageObjectModels/dashboardPage';
 
 test.describe('app', () => {
   let appNames: string[] = [];
 
-  test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const user = UserFactory.createSysAdminUser();
-    const dashboardPage = new DashboardPage(page);
-
-    await loginPage.login(user);
+  test.beforeEach(async ({ sysAdminPage }) => {
+    const dashboardPage = new DashboardPage(sysAdminPage);
+    await dashboardPage.goto();
     await dashboardPage.page.waitForLoadState();
     await dashboardPage.sharedNavPage.adminGearIcon.click();
   });
 
-  test.afterEach(async ({ page }) => {
-    const appsAdminPage = new AppsAdminPage(page);
+  test.afterEach(async ({ sysAdminPage }) => {
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
     await appsAdminPage.goto();
+    await appsAdminPage.page.waitForLoadState();
 
     for (const appName of appNames) {
-      await appsAdminPage.deleteApp(appName);
+      const appRow = appsAdminPage.appGrid
+        .getByRole('row', { name: appName })
+        .first();
+      const appDeleteButton = appRow.getByTitle('Delete App');
+      await appsAdminPage.page.waitForLoadState('networkidle');
+
+      // eslint-disable-next-line playwright/no-force-option
+      await appRow.hover({ force: true });
+      // eslint-disable-next-line playwright/no-force-option
+      await appDeleteButton.click({ force: true });
+
+      await appsAdminPage.deleteAppDialog.confirmationInput.type('OK', {
+        delay: 100,
+      });
+
+      // eslint-disable-next-line playwright/no-force-option
+      await appsAdminPage.deleteAppDialog.deleteButton.click({ force: true });
+      await appsAdminPage.deleteAppDialog.waitForModalToBeDismissed();
       await appsAdminPage.page.waitForLoadState('networkidle');
     }
 
@@ -33,10 +46,10 @@ test.describe('app', () => {
   });
 
   test('Create an app via the create button on the header of on the admin home page', async ({
-    page,
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
 
@@ -48,10 +61,10 @@ test.describe('app', () => {
   });
 
   test('Create an app via the create button on the Apps tile on the admin home page', async ({
-    page,
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
 
@@ -62,12 +75,12 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(appName);
   });
 
-  test('Create an app via the "Create App" button on the Apps admin page', async ({
-    page,
+  test('Create an app via the Create App button on the Apps admin page', async ({
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appsAdminPage = new AppsAdminPage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appNames.push(appName);
 
@@ -80,11 +93,11 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(appName);
   });
 
-  test('Create a copy of an app via the create button on the header of the admin home page.', async ({
-    page,
+  test('Create a copy of an app via the create button on the header of the admin home page', async ({
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appNames.push(appName);
@@ -97,16 +110,23 @@ test.describe('app', () => {
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
-    await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
+
+    await expect(
+      adminHomePage.sharedAdminNavPage.adminCreateMenu
+    ).toBeVisible();
+
     await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
 
-    await adminHomePage.createAppDialog.copyFromRadioButton.waitFor();
+    await expect(
+      adminHomePage.createAppDialog.copyFromRadioButton
+    ).toBeVisible();
+
     await adminHomePage.createAppDialog.copyFromRadioButton.click();
     await adminHomePage.createAppDialog.selectAnAppDropdown.click();
     await adminHomePage.createAppDialog.appToCopy(appName).click();
     await adminHomePage.createAppDialog.continueButton.click();
 
-    await adminHomePage.createAppModal.nameInput.waitFor();
+    await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
     await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
       expectedAppCopyName
@@ -118,11 +138,11 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
   });
 
-  test('Create a copy of an app via the create button on the Apps tile on the admin home page.', async ({
-    page,
+  test('Create a copy of an app via the create button on the Apps tile on the admin home page', async ({
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appNames.push(appName);
@@ -135,16 +155,21 @@ test.describe('app', () => {
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.appTileLink.hover();
-    await adminHomePage.appTileCreateButton.waitFor();
+
+    await expect(adminHomePage.appTileCreateButton).toBeVisible();
+
     await adminHomePage.appTileCreateButton.click();
 
-    await adminHomePage.createAppDialog.copyFromRadioButton.waitFor();
+    await expect(
+      adminHomePage.createAppDialog.copyFromRadioButton
+    ).toBeVisible();
+
     await adminHomePage.createAppDialog.copyFromRadioButton.click();
     await adminHomePage.createAppDialog.selectAnAppDropdown.click();
     await adminHomePage.createAppDialog.appToCopy(appName).click();
     await adminHomePage.createAppDialog.continueButton.click();
 
-    await adminHomePage.createAppModal.nameInput.waitFor();
+    await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
     await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
       expectedAppCopyName
@@ -157,11 +182,11 @@ test.describe('app', () => {
   });
 
   test('Create a copy of an app via the Create App button on the Apps admin page', async ({
-    page,
+    sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appsAdminPage = new AppsAdminPage(page);
-    const appAdminPage = new AppAdminPage(page);
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appNames.push(appName);
@@ -173,15 +198,19 @@ test.describe('app', () => {
     await appsAdminPage.createApp(appName);
     await appAdminPage.closeButton.click();
 
+    await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createAppButton.click();
 
-    await appsAdminPage.createAppDialog.copyFromRadioButton.waitFor();
+    await expect(
+      appsAdminPage.createAppDialog.copyFromRadioButton
+    ).toBeVisible();
+
     await appsAdminPage.createAppDialog.copyFromRadioButton.click();
     await appsAdminPage.createAppDialog.selectAnAppDropdown.click();
     await appsAdminPage.createAppDialog.appToCopy(appName).click();
     await appsAdminPage.createAppDialog.continueButton.click();
 
-    await appsAdminPage.createAppModal.nameInput.waitFor();
+    await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
     await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(
       expectedAppCopyName
@@ -193,10 +222,9 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
   });
 
-  test('Delete an app', async ({ page }) => {
-    const adminHomePage = new AdminHomePage(page);
-    const appsAdminPage = new AppsAdminPage(page);
-    const appAdminPage = new AppAdminPage(page);
+  test('Delete an app', async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid
       .getByRole('row', { name: appName })
@@ -205,23 +233,30 @@ test.describe('app', () => {
 
     await adminHomePage.appTileLink.click();
 
-    await appsAdminPage.page.waitForLoadState();
     await appsAdminPage.createApp(appName);
-    await appAdminPage.closeButton.click();
 
-    await appsAdminPage.page.waitForLoadState();
+    await appsAdminPage.goto();
+
+    await expect(appRow).toBeVisible();
 
     await appRow.hover();
-    await appDeleteButton.waitFor();
-
-    await expect(appDeleteButton).toBeVisible();
 
     await appDeleteButton.click();
 
-    await appsAdminPage.deleteAppDialog.confirmationInput.waitFor();
-    await appsAdminPage.deleteAppDialog.confirmationInput.focus();
-    await appsAdminPage.deleteAppDialog.confirmationInput.type('OK');
+    await expect(appsAdminPage.deleteAppDialog.confirmationInput).toBeVisible();
+
+    await appsAdminPage.deleteAppDialog.confirmationInput.type('OK', {
+      delay: 100,
+    });
+
+    await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue(
+      'OK'
+    );
+    await expect(appsAdminPage.deleteAppDialog.deleteButton).toBeEnabled();
+
     await appsAdminPage.deleteAppDialog.deleteButton.click();
+    await appsAdminPage.deleteAppDialog.waitForModalToBeDismissed();
+    await appsAdminPage.page.waitForLoadState('networkidle');
 
     await expect(appRow).not.toBeAttached();
   });

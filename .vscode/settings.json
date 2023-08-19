@@ -5,6 +5,7 @@
     "FULLNAME",
     "networkidle",
     "onspringend",
-    "signin"
+    "signin",
+    "textbox"
   ]
 }

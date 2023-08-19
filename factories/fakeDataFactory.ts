@@ -14,6 +14,8 @@ export class FakeDataFactory {
   }
 
   static createFakeAppName() {
-    return `${new Date().getTime().toString()}-app-test`;
+    const timestamp = new Date().getTime().toString();
+    const id = faker.database.mongodbObjectId();
+    return `${timestamp}-${id}-app-test`;
   }
 }
