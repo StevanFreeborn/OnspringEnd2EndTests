@@ -26,16 +26,14 @@ jobs:
         run: npm ci
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
-      - name: Rename blob-report directory
-        run: mv blob-report ${{ matrix.project }}-blob-report
       - name: Rename blob-reports
-        run: for f in ${{ matrix.project }}-blob-report/*; do mv "$f" "${{ matrix.project }}-$f"; done
+        run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: blob-report-${{ matrix.project }}
+          path: blob-report
           retention-days: 1
   merge-reports:
     if: always()
