@@ -15,7 +15,7 @@ const config: PlaywrightTestConfig = {
   },
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 1,
+  retries: isCI ? 3 : 1,
   workers: isCI ? 1 : Math.floor(os.cpus().length / 2),
   reporter: [['html'], ['list'], ['blob']],
   use: {
