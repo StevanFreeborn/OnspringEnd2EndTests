@@ -26,13 +26,15 @@ jobs:
         run: npm ci
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
-      - name: Upload blob report
+      - name: Upload blob report'
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
           path: blob-report
           retention-days: 1
   merge-reports:
+    if: always()
     needs: [playwright]
     runs-on: ubuntu-latest
     steps:
