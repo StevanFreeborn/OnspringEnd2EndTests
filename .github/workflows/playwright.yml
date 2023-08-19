@@ -26,7 +26,9 @@ jobs:
         run: npm ci
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
-      - name: Rename windows-os binary
+      - name: Rename blob-reports
+        run: for f in blob-report/*; do mv "$f" "${{ matrix.project }}-$f"; done
+      - name: Rename blob-report directory
         run: mv blob-report blob-report-${{ matrix.project }}
       - name: Upload blob report'
         if: always()
