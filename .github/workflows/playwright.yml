@@ -26,12 +26,14 @@ jobs:
         run: npm ci
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
+      - name: Rename windows-os binary
+        run: mv blob-report blob-report-${{ matrix.project }}
       - name: Upload blob report'
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: blob-report
+          path: blob-report-${{ matrix.project }}
           retention-days: 1
   merge-reports:
     if: always()
