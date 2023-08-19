@@ -29,7 +29,7 @@ jobs:
       - name: Rename blob-report directory
         run: mv blob-report ${{ matrix.project }}-blob-report
       - name: Rename blob-reports
-        run: for f in blob-report/*; do mv "$f" "${{ matrix.project }}-$f"; done
+        run: for f in ${{ matrix.project }}-blob-report/*; do mv "$f" "${{ matrix.project }}-$f"; done
       - name: Upload blob report'
         if: always()
         uses: actions/upload-artifact@v3
