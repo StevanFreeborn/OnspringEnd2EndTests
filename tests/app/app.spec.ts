@@ -245,6 +245,78 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(updatedAppName);
   });
 
+  test('Disable an app', async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.appStatus).toHaveText('Enabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appStatus).toHaveText('Disabled');
+  });
+
+  test('Enable an app', async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.appStatus).toHaveText('Enabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appStatus).toHaveText('Disabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.statusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appStatus).toHaveText('Enabled');
+  });
+
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);

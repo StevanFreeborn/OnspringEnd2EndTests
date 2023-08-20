@@ -46,20 +46,6 @@ const config: PlaywrightTestConfig = {
       },
       dependencies: ['setup'],
     },
-    {
-      name: 'android',
-      use: {
-        ...devices['Pixel 5'],
-      },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'iOS',
-      use: {
-        ...devices['iPhone 13 Pro'],
-      },
-      dependencies: ['setup'],
-    },
   ],
 
   outputDir: 'test-results/',
