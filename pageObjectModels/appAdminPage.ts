@@ -8,6 +8,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
   readonly appName: Locator;
   readonly appStatus: Locator;
+  readonly appDescription: Locator;
   readonly editGeneralSettingsLink: Locator;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly closeButton: Locator;
@@ -23,6 +24,9 @@ export class AppAdminPage extends BaseAdminPage {
     this.appName = page.locator('td:nth-match(td:has-text("Name") + td, 1)');
     this.appStatus = page.locator(
       'td:nth-match(td:has-text("Status") + td, 1)'
+    );
+    this.appDescription = page.locator(
+      'td:nth-match(td:has-text("Description") + td, 1)'
     );
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })

@@ -317,6 +317,33 @@ test.describe('app', () => {
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
   });
 
+  test("Update an app's description.", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.appDescription).toHaveText('');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.descriptionEditor
+    ).toHaveText('');
+
+    const updatedDescription = 'This is an updated description';
+
+    await appAdminPage.editAppGeneralSettingsModal.descriptionEditor.fill(
+      updatedDescription
+    );
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appDescription).toHaveText(updatedDescription);
+  });
+
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
