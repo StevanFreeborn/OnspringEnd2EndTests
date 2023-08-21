@@ -375,6 +375,11 @@ test.describe('app', () => {
   });
 
   test("Enable an app's content versioning", async ({ sysAdminPage }) => {
+    // TODO: create app to modify
+
+    // TODO: disable then enable app's content versioning
+
+    // TODO: assert that the content's versioning is enabled
     expect(true).toBeTruthy();
   });
 
