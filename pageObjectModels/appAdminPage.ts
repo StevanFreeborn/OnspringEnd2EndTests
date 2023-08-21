@@ -9,6 +9,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly appName: Locator;
   readonly appStatus: Locator;
   readonly appDescription: Locator;
+  readonly appContentVersionStatus: Locator;
   readonly editGeneralSettingsLink: Locator;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly closeButton: Locator;
@@ -27,6 +28,9 @@ export class AppAdminPage extends BaseAdminPage {
     );
     this.appDescription = page.locator(
       'td:nth-match(td:has-text("Description") + td, 1)'
+    );
+    this.appContentVersionStatus = page.locator(
+      'td:nth-match(td:has-text("Content Versioning") + td, 1)'
     );
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })

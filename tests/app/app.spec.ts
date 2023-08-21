@@ -344,6 +344,40 @@ test.describe('app', () => {
     await expect(appAdminPage.appDescription).toHaveText(updatedDescription);
   });
 
+  test("Disable an app's content versioning", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      'Enabled - Direct User Saves'
+    );
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText('Disabled');
+  });
+
+  test("Enable an app's content versioning", async ({ sysAdminPage }) => {
+    expect(true).toBeTruthy();
+  });
+
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);

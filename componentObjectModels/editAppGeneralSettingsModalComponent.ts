@@ -6,6 +6,8 @@ export class EditAppGeneralSettingsModalComponent {
   readonly descriptionEditor: Locator;
   readonly statusToggle: Locator;
   readonly statusSwitch: Locator;
+  readonly contentVersionStatusSwitch: Locator;
+  readonly contentVersionStatusToggle: Locator;
   readonly saveButton: Locator;
 
   constructor(page: Page) {
@@ -15,6 +17,13 @@ export class EditAppGeneralSettingsModalComponent {
     this.statusSwitch = page.getByRole('switch', { name: 'Status' });
     this.statusToggle = page
       .getByRole('switch', { name: 'Status' })
+      .locator('span')
+      .nth(3);
+    this.contentVersionStatusSwitch = page.getByRole('switch', {
+      name: 'Content Versioning',
+    });
+    this.contentVersionStatusToggle = page
+      .getByRole('switch', { name: 'Content Versioning' })
       .locator('span')
       .nth(3);
     this.saveButton = page.getByRole('button', {
