@@ -22,6 +22,9 @@ export class AppAdminPage extends BaseAdminPage {
     this.pathRegex = new RegExp(
       `${process.env.INSTANCE_URL}${this.path}[0-9]+`
     );
+    this.editGeneralSettingsLink = page
+      .getByRole('heading', { name: 'Edit General Settings' })
+      .getByRole('link');
     this.appName = page.locator('td:nth-match(td:has-text("Name") + td, 1)');
     this.appStatus = page.locator(
       'td:nth-match(td:has-text("Status") + td, 1)'
@@ -32,9 +35,6 @@ export class AppAdminPage extends BaseAdminPage {
     this.appContentVersionStatus = page.locator(
       'td:nth-match(td:has-text("Content Versioning") + td, 1)'
     );
-    this.editGeneralSettingsLink = page
-      .getByRole('heading', { name: 'Edit General Settings' })
-      .getByRole('link');
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
       page
     );

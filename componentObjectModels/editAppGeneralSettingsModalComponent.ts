@@ -8,6 +8,11 @@ export class EditAppGeneralSettingsModalComponent {
   readonly statusSwitch: Locator;
   readonly contentVersionStatusSwitch: Locator;
   readonly contentVersionStatusToggle: Locator;
+  readonly contentVersionTypes: Locator;
+  readonly directUserSavesCheckbox: Locator;
+  readonly indirectUserSavesCheckbox: Locator;
+  readonly apiSavesCheckbox: Locator;
+  readonly systemSavesCheckbox: Locator;
   readonly saveButton: Locator;
 
   constructor(page: Page) {
@@ -26,6 +31,15 @@ export class EditAppGeneralSettingsModalComponent {
       .getByRole('switch', { name: 'Content Versioning' })
       .locator('span')
       .nth(3);
+    this.contentVersionTypes = page.locator('#versioning-types');
+    this.directUserSavesCheckbox = page.getByLabel('Direct User Saves', {
+      exact: true,
+    });
+    this.indirectUserSavesCheckbox = page.getByLabel('Indirect User Saves', {
+      exact: true,
+    });
+    this.apiSavesCheckbox = page.getByLabel('API Saves', { exact: true });
+    this.systemSavesCheckbox = page.getByLabel('System Saves', { exact: true });
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });

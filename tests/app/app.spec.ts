@@ -363,11 +363,19 @@ test.describe('app', () => {
       appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
     ).toHaveAttribute('aria-checked', 'true');
 
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeVisible();
+
     await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
 
     await expect(
       appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
     ).toHaveAttribute('aria-checked', 'false');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeHidden();
 
     await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
 
@@ -375,12 +383,117 @@ test.describe('app', () => {
   });
 
   test("Enable an app's content versioning", async ({ sysAdminPage }) => {
-    // TODO: create app to modify
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
 
-    // TODO: disable then enable app's content versioning
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
 
-    // TODO: assert that the content's versioning is enabled
-    expect(true).toBeTruthy();
+    await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      'Enabled - Direct User Saves'
+    );
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeVisible();
+
+    await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeHidden();
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText('Disabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'false');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeHidden();
+
+    await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeVisible();
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      'Enabled - Direct User Saves'
+    );
+  });
+
+  test("Change the save types of an app's content versioning", async ({
+    sysAdminPage,
+  }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      'Enabled - Direct User Saves'
+    );
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
+    ).toHaveAttribute('aria-checked', 'true');
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
+    ).toBeVisible();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.directUserSavesCheckbox
+    ).toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox.check();
+    await appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox.check();
+    await appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox.check();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox
+    ).toBeChecked();
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox
+    ).toBeChecked();
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox
+    ).toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
+    );
   });
 
   test('Delete an app', async ({ sysAdminPage }) => {
