@@ -524,9 +524,49 @@ test.describe('app', () => {
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
   });
 
-  test("Enable an app's concurrent edit alert.", async ({
-    sysAdminPage,
-  }) => {});
+  test("Enable an app's concurrent edit alert", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
+    ).toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
+    ).not.toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
+
+    await appAdminPage.editGeneralSettingsLink.click();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
+    ).not.toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.check();
+
+    await expect(
+      appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
+    ).toBeChecked();
+
+    await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
+  });
 
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
