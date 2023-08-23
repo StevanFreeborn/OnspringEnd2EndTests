@@ -10,6 +10,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly appStatus: Locator;
   readonly appDescription: Locator;
   readonly appContentVersionStatus: Locator;
+  readonly concurrentEditAlertStatus: Locator;
   readonly editGeneralSettingsLink: Locator;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly closeButton: Locator;
@@ -34,6 +35,9 @@ export class AppAdminPage extends BaseAdminPage {
     );
     this.appContentVersionStatus = page.locator(
       'td:nth-match(td:has-text("Content Versioning") + td, 1)'
+    );
+    this.concurrentEditAlertStatus = page.locator(
+      'td:nth-match(td:has-text("Concurrent Edit Alert") + td, 1)'
     );
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
       page

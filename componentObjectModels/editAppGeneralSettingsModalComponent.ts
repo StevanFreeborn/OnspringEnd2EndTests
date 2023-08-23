@@ -13,6 +13,7 @@ export class EditAppGeneralSettingsModalComponent {
   readonly indirectUserSavesCheckbox: Locator;
   readonly apiSavesCheckbox: Locator;
   readonly systemSavesCheckbox: Locator;
+  readonly concurrentEditAlertCheckbox: Locator;
   readonly saveButton: Locator;
 
   constructor(page: Page) {
@@ -43,5 +44,6 @@ export class EditAppGeneralSettingsModalComponent {
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
+    this.concurrentEditAlertCheckbox = page.getByLabel('Concurrent Edit Alert');
   }
 }
