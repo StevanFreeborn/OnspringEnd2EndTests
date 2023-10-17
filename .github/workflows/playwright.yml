@@ -5,6 +5,7 @@ jobs:
   run_tests:
     name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     env:
+      CI: true
       SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
       SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
       SYS_ADMIN_FULLNAME: ${{ secrets.SYS_ADMIN_FULLNAME }}
