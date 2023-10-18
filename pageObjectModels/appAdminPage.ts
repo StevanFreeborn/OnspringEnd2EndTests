@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { EditAppDisplaySettingsModalComponent } from '../componentObjectModels/editAppDisplaySettingsModalComponent';
 import { EditAppGeneralSettingsModalComponent } from '../componentObjectModels/editAppGeneralSettingsModalComponent';
 import { BaseAdminPage } from './baseAdminPage';
 
@@ -13,8 +14,10 @@ export class AppAdminPage extends BaseAdminPage {
   readonly concurrentEditAlertStatus: Locator;
   readonly editGeneralSettingsLink: Locator;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
+  readonly displayLink: Locator;
+  readonly editDisplaySettingsLink: Locator;
+  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly closeButton: Locator;
-  readonly appGrid: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -40,6 +43,15 @@ export class AppAdminPage extends BaseAdminPage {
       'td:nth-match(td:has-text("Concurrent Edit Alert") + td, 1)'
     );
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
+      page
+    );
+    this.displayLink = page.locator(
+      'td:nth-match(td:has-text("Display Link Field") + td, 1)'
+    );
+    this.editDisplaySettingsLink = page
+      .getByRole('heading', { name: 'Edit Display Settings' })
+      .getByRole('link');
+    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(
       page
     );
     this.closeButton = page.locator('a:has-text("Close")');

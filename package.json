@@ -9,7 +9,6 @@
     "test:safari": "npm run test -- --project safari",
     "test:mobile": "npm run test -- --project android --project iOS",
     "test:seq": "npm run test:chrome && npm run test:safari && npm run test:mobile",
-    "test:flaky": "npm run test -- --grep @flaky",
     "test:ui": "npx playwright test --ui",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",

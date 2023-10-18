@@ -47,4 +47,3 @@ export class EditAppGeneralSettingsModalComponent {
     this.concurrentEditAlertCheckbox = page.getByLabel('Concurrent Edit Alert');
   }
 }
-5;

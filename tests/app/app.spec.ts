@@ -568,6 +568,27 @@ test.describe('app', () => {
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
   });
 
+  test("Update an app's display link field", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.displayLink).toHaveText('Record Id');
+
+    await appAdminPage.editDisplaySettingsLink.click();
+    await appAdminPage.editAppDisplaySettingsModal.displayLinkSelect.click();
+    await appAdminPage.page
+      .getByRole('option', { name: 'Created Date' })
+      .click();
+    await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+
+    await expect(appAdminPage.displayLink).toHaveText('Created Date');
+  });
+
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
