@@ -41,7 +41,7 @@ export class AppAdminPage extends BaseAdminPage {
       this.createAppSettingSelector('Description')
     );
     this.appContentVersionStatus = page.locator(
-      this.createAppSettingSelector('Content Version Status')
+      this.createAppSettingSelector('Content Versioning')
     );
     this.concurrentEditAlertStatus = page.locator(
       this.createAppSettingSelector('Concurrent Edit Alert')
