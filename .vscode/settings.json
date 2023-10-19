@@ -3,6 +3,7 @@
     "domcontentloaded",
     "endtests",
     "FULLNAME",
+    "listbox",
     "networkidle",
     "onspringend",
     "signin",

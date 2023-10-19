@@ -589,6 +589,27 @@ test.describe('app', () => {
     await expect(appAdminPage.displayLink).toHaveText('Created Date');
   });
 
+  test("Update an app's integration link field", async ({ sysAdminPage }) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await adminHomePage.page.waitForLoadState();
+    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+    await expect(appAdminPage.integrationLink).toHaveText('Record Id');
+
+    await appAdminPage.editDisplaySettingsLink.click();
+    await appAdminPage.editAppDisplaySettingsModal.integrationLinkSelect.click();
+    await appAdminPage.page
+      .getByRole('option', { name: 'Created Date' })
+      .click();
+    await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+
+    await expect(appAdminPage.integrationLink).toHaveText('Created Date');
+  });
+
   test('Delete an app', async ({ sysAdminPage }) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);

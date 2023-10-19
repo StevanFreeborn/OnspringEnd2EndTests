@@ -15,6 +15,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly editGeneralSettingsLink: Locator;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly displayLink: Locator;
+  readonly integrationLink: Locator;
   readonly editDisplaySettingsLink: Locator;
   readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly closeButton: Locator;
@@ -47,6 +48,9 @@ export class AppAdminPage extends BaseAdminPage {
     );
     this.displayLink = page.locator(
       'td:nth-match(td:has-text("Display Link Field") + td, 1)'
+    );
+    this.integrationLink = page.locator(
+      'td:nth-match(td:has-text("Integration Link Field") + td, 1)'
     );
     this.editDisplaySettingsLink = page
       .getByRole('heading', { name: 'Edit Display Settings' })
