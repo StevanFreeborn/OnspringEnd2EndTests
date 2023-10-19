@@ -656,7 +656,7 @@ test.describe('app', () => {
 });
 
 /**
- * Helper function to create an app and return objects needed for tests.
+ * Helper function to create an app, add app to delete list, and return objects needed for tests.
  */
 async function useAppSetup(sysAdminPage: Page, appsToDelete: string[]) {
   const adminHomePage = new AdminHomePage(sysAdminPage);
