@@ -4,7 +4,16 @@ export class EditAppDisplaySettingsModalComponent {
   private readonly page: Page;
   readonly displayLinkSelect: Locator;
   readonly integrationLinkSelect: Locator;
+  readonly displayFieldsSelect: Locator;
+  readonly primarySortSelect: Locator;
+  readonly secondarySortSelect: Locator;
   readonly saveButton: Locator;
+
+  getDisplayFieldOption(field: string) {
+    return this.page.locator(
+      `.selector-control .unselected-pane li:has-text("${field}")`
+    );
+  }
 
   constructor(page: Page) {
     this.page = page;
@@ -14,8 +23,26 @@ export class EditAppDisplaySettingsModalComponent {
     this.integrationLinkSelect = page.getByRole('listbox', {
       name: 'Integration Link Field',
     });
+    this.displayFieldsSelect = page.locator('.selector-select-list');
+    this.primarySortSelect = page
+      .locator('td.label:has-text("Primary Sort") + td>div')
+      .first();
+    this.secondarySortSelect = page
+      .locator('td.label:has-text("Secondary Sort") + td>div')
+      .first();
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
+  }
+
+  async selectDisplayLinkField(field: string) {
+    await this.displayFieldsSelect.click();
+    await this.getDisplayFieldOption(field).click();
+    await this.displayFieldsSelect.click();
+  }
+
+  async selectPrimarySortField(field: string) {
+    await this.primarySortSelect.click();
+    await this.page.getByRole('option', { name: field }).click();
   }
 }

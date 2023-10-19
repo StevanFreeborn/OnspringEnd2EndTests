@@ -12,13 +12,21 @@ export class AppAdminPage extends BaseAdminPage {
   readonly appDescription: Locator;
   readonly appContentVersionStatus: Locator;
   readonly concurrentEditAlertStatus: Locator;
-  readonly editGeneralSettingsLink: Locator;
-  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly displayLink: Locator;
   readonly integrationLink: Locator;
+  readonly displayFields: Locator;
+  readonly sort: Locator;
+
+  readonly editGeneralSettingsLink: Locator;
   readonly editDisplaySettingsLink: Locator;
-  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly closeButton: Locator;
+
+  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
+  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
+
+  createAppSettingSelector(settingName: string) {
+    return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
+  }
 
   constructor(page: Page) {
     super(page);
@@ -27,38 +35,42 @@ export class AppAdminPage extends BaseAdminPage {
     this.pathRegex = new RegExp(
       `${process.env.INSTANCE_URL}${this.path}[0-9]+`
     );
+    this.appName = page.locator(this.createAppSettingSelector('Name'));
+    this.appStatus = page.locator(this.createAppSettingSelector('Status'));
+    this.appDescription = page.locator(
+      this.createAppSettingSelector('Description')
+    );
+    this.appContentVersionStatus = page.locator(
+      this.createAppSettingSelector('Content Version Status')
+    );
+    this.concurrentEditAlertStatus = page.locator(
+      this.createAppSettingSelector('Concurrent Edit Alert')
+    );
+    this.displayLink = page.locator(
+      this.createAppSettingSelector('Display Link Field')
+    );
+    this.integrationLink = page.locator(
+      this.createAppSettingSelector('Integration Link Field')
+    );
+    this.displayFields = page.locator(
+      this.createAppSettingSelector('Display Fields')
+    );
+    this.sort = page.locator(this.createAppSettingSelector('Sort'));
+
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })
       .getByRole('link');
-    this.appName = page.locator('td:nth-match(td:has-text("Name") + td, 1)');
-    this.appStatus = page.locator(
-      'td:nth-match(td:has-text("Status") + td, 1)'
-    );
-    this.appDescription = page.locator(
-      'td:nth-match(td:has-text("Description") + td, 1)'
-    );
-    this.appContentVersionStatus = page.locator(
-      'td:nth-match(td:has-text("Content Versioning") + td, 1)'
-    );
-    this.concurrentEditAlertStatus = page.locator(
-      'td:nth-match(td:has-text("Concurrent Edit Alert") + td, 1)'
+    this.editDisplaySettingsLink = page
+      .getByRole('heading', { name: 'Edit Display Settings' })
+      .getByRole('link');
+    this.closeButton = page.locator('a:has-text("Close")');
+
+    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(
+      page
     );
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
       page
     );
-    this.displayLink = page.locator(
-      'td:nth-match(td:has-text("Display Link Field") + td, 1)'
-    );
-    this.integrationLink = page.locator(
-      'td:nth-match(td:has-text("Integration Link Field") + td, 1)'
-    );
-    this.editDisplaySettingsLink = page
-      .getByRole('heading', { name: 'Edit Display Settings' })
-      .getByRole('link');
-    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(
-      page
-    );
-    this.closeButton = page.locator('a:has-text("Close")');
   }
 
   async goto(appId: number) {

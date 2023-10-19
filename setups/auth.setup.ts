@@ -13,4 +13,5 @@ setup('login as system administrator', async ({ page }) => {
     sysAdminUser.fullName
   );
   await page.context().storageState({ path: SYS_ADMIN_AUTH_PATH });
+  await page.close();
 });

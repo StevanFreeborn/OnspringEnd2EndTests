@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, test } from '../../fixtures';
+import { Page, expect, test } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
@@ -32,9 +32,12 @@ test.describe('app', () => {
       // eslint-disable-next-line playwright/no-force-option
       await appDeleteButton.click({ force: true });
 
-      await appsAdminPage.deleteAppDialog.confirmationInput.type('OK', {
-        delay: 100,
-      });
+      await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially(
+        'OK',
+        {
+          delay: 100,
+        }
+      );
 
       // eslint-disable-next-line playwright/no-force-option
       await appsAdminPage.deleteAppDialog.deleteButton.click({ force: true });
@@ -223,14 +226,15 @@ test.describe('app', () => {
   });
 
   test("Update an app's name", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    const updatedAppName = `${appName}-updated`;
-    appsToDelete.push(updatedAppName);
+    const { appAdminPage, appName } = await useAppSetup(
+      sysAdminPage,
+      appsToDelete
+    );
 
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const updatedAppName = `${appName}-updated`;
+    const appIndex = appsToDelete.indexOf(appName);
+    appsToDelete[appIndex] = updatedAppName;
+
     await appAdminPage.editGeneralSettingsLink.click();
 
     await expect(
@@ -246,13 +250,7 @@ test.describe('app', () => {
   });
 
   test('Disable an app', async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -274,13 +272,7 @@ test.describe('app', () => {
   });
 
   test('Enable an app', async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -318,13 +310,7 @@ test.describe('app', () => {
   });
 
   test("Update an app's description.", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appDescription).toHaveText('');
 
@@ -345,13 +331,7 @@ test.describe('app', () => {
   });
 
   test("Disable an app's content versioning", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -383,13 +363,7 @@ test.describe('app', () => {
   });
 
   test("Enable an app's content versioning", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -449,13 +423,7 @@ test.describe('app', () => {
   test("Change the save types of an app's content versioning", async ({
     sysAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -497,13 +465,7 @@ test.describe('app', () => {
   });
 
   test("Disable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -525,13 +487,7 @@ test.describe('app', () => {
   });
 
   test("Enable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -569,13 +525,7 @@ test.describe('app', () => {
   });
 
   test("Update an app's display link field", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.displayLink).toHaveText('Record Id');
 
@@ -590,13 +540,7 @@ test.describe('app', () => {
   });
 
   test("Update an app's integration link field", async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-    appsToDelete.push(appName);
-
-    await adminHomePage.page.waitForLoadState();
-    await adminHomePage.createAppUsingHeaderCreateButton(appName);
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
 
     await expect(appAdminPage.integrationLink).toHaveText('Record Id');
 
@@ -608,6 +552,60 @@ test.describe('app', () => {
     await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
 
     await expect(appAdminPage.integrationLink).toHaveText('Created Date');
+  });
+
+  test("Update an app's display fields", async ({ sysAdminPage }) => {
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
+
+    await expect(appAdminPage.displayFields).toHaveText('Record Id');
+
+    await appAdminPage.editDisplaySettingsLink.click();
+    await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
+    await appAdminPage.editAppDisplaySettingsModal
+      .getDisplayFieldOption('Created Date')
+      .click();
+    await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
+    await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+
+    await expect(appAdminPage.displayFields).toHaveText(/Record Id/);
+    await expect(appAdminPage.displayFields).toHaveText(/Created Date/);
+  });
+
+  test("Update an app's primary sort field", async ({ sysAdminPage }) => {
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
+
+    await expect(appAdminPage.sort).toHaveText('None');
+
+    await appAdminPage.editDisplaySettingsLink.click();
+    await appAdminPage.editAppDisplaySettingsModal.primarySortSelect.click();
+    await appAdminPage.page.getByRole('option', { name: 'Record Id' }).click();
+    await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+
+    await expect(appAdminPage.sort).toHaveText('Record Id (Ascending)');
+  });
+
+  test("Update an app's secondary sort field", async ({ sysAdminPage }) => {
+    const { appAdminPage } = await useAppSetup(sysAdminPage, appsToDelete);
+
+    await expect(appAdminPage.sort).toHaveText('None');
+
+    await appAdminPage.editDisplaySettingsLink.click();
+    await appAdminPage.editAppDisplaySettingsModal.selectDisplayLinkField(
+      'Created Date'
+    );
+    await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField(
+      'Record Id'
+    );
+
+    await appAdminPage.editAppDisplaySettingsModal.secondarySortSelect.click();
+    await appAdminPage.page
+      .getByRole('option', { name: 'Created Date' })
+      .click();
+
+    await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+
+    await expect(appAdminPage.sort).toHaveText(/Record Id \(Ascending\)/);
+    await expect(appAdminPage.sort).toHaveText(/Created Date \(Ascending\)/);
   });
 
   test('Delete an app', async ({ sysAdminPage }) => {
@@ -637,9 +635,12 @@ test.describe('app', () => {
 
     await expect(appsAdminPage.deleteAppDialog.confirmationInput).toBeVisible();
 
-    await appsAdminPage.deleteAppDialog.confirmationInput.type('OK', {
-      delay: 100,
-    });
+    await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially(
+      'OK',
+      {
+        delay: 100,
+      }
+    );
 
     await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue(
       'OK'
@@ -653,3 +654,22 @@ test.describe('app', () => {
     await expect(appRow).not.toBeAttached();
   });
 });
+
+/**
+ * Helper function to create an app and return objects needed for tests.
+ */
+async function useAppSetup(sysAdminPage: Page, appsToDelete: string[]) {
+  const adminHomePage = new AdminHomePage(sysAdminPage);
+  const appAdminPage = new AppAdminPage(sysAdminPage);
+  const appName = FakeDataFactory.createFakeAppName();
+  appsToDelete.push(appName);
+
+  await adminHomePage.page.waitForLoadState();
+  await adminHomePage.createAppUsingHeaderCreateButton(appName);
+
+  return {
+    adminHomePage,
+    appAdminPage,
+    appName,
+  };
+}
