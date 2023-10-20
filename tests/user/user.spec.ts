@@ -41,6 +41,6 @@ test.describe('User', () => {
     await expect(editUserPage.lastNameInput).toHaveValue(newUser.lastName);
     await expect(editUserPage.usernameInput).toHaveValue(newUser.username);
     await expect(editUserPage.emailInput).toHaveValue(newUser.email);
-    await expect(editUserPage.activeStatusButton).toHaveClass('active-status');
+    await expect(editUserPage.activeStatusButton).toHaveClass(/active-status/);
   });
 });

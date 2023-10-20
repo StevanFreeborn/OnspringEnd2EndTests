@@ -11,20 +11,23 @@ export class UserAdminPage extends BaseAdminPage {
   readonly lockedStatusButton: Locator;
   readonly saveRecordButton: Locator;
 
-  getFieldSelector(field: string, element = 'input') {
-    return `td:nth-match(td:has-text("${field}") + td ${element}, 1)`;
+  getFieldSelector(field: string, controlSelector = 'input') {
+    const pascalCaseFieldName = field
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join('');
+    return `td.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 
   constructor(page: Page) {
     super(page);
-    this.firstNameInput = page.locator(
-      'td:nth-match(td:has-text("First Name") + td input, 1)'
-    );
+    this.firstNameInput = page.locator(this.getFieldSelector('First Name'));
     this.lastNameInput = page.locator(this.getFieldSelector('Last Name'));
     this.usernameInput = page.locator(this.getFieldSelector('Username'));
-    this.emailInput = page.locator(this.getFieldSelector('Email'));
+    this.emailInput = page.locator(this.getFieldSelector('Email Address'));
     this.activeStatusButton = page.getByRole('button', {
       name: 'Active',
+      exact: true,
     });
     this.inactiveStatusButton = page.getByRole('button', {
       name: 'Inactive',
@@ -32,8 +35,6 @@ export class UserAdminPage extends BaseAdminPage {
     this.lockedStatusButton = page.getByRole('button', {
       name: 'Locked',
     });
-    this.saveRecordButton = page.getByRole('button', {
-      name: 'Save Record',
-    });
+    this.saveRecordButton = page.getByRole('link', { name: 'Save Record' });
   }
 }
