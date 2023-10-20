@@ -6,7 +6,9 @@ export class EditAppDisplaySettingsModalComponent {
   readonly integrationLinkSelect: Locator;
   readonly displayFieldsSelect: Locator;
   readonly primarySortSelect: Locator;
+  readonly primarySortDirectionSelect: Locator;
   readonly secondarySortSelect: Locator;
+  readonly secondarySortDirectionSelect: Locator;
   readonly saveButton: Locator;
 
   getDisplayFieldOption(field: string) {
@@ -27,8 +29,14 @@ export class EditAppDisplaySettingsModalComponent {
     this.primarySortSelect = page
       .locator('td.label:has-text("Primary Sort") + td>div')
       .first();
+    this.primarySortDirectionSelect = page
+      .locator('td.label:has-text("Primary Sort") + td>div>span:nth-child(2)')
+      .first();
     this.secondarySortSelect = page
       .locator('td.label:has-text("Secondary Sort") + td>div')
+      .first();
+    this.secondarySortDirectionSelect = page
+      .locator('td.label:has-text("Secondary Sort") + td>div>span:nth-child(2)')
       .first();
     this.saveButton = page.getByRole('button', {
       name: 'Save',

@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { EditAppAdminSettingsModalComponent } from '../componentObjectModels/editAppAdminSettingsModalComponent';
 import { EditAppDisplaySettingsModalComponent } from '../componentObjectModels/editAppDisplaySettingsModalComponent';
 import { EditAppGeneralSettingsModalComponent } from '../componentObjectModels/editAppGeneralSettingsModalComponent';
 import { BaseAdminPage } from './baseAdminPage';
@@ -16,13 +17,16 @@ export class AppAdminPage extends BaseAdminPage {
   readonly integrationLink: Locator;
   readonly displayFields: Locator;
   readonly sort: Locator;
+  readonly adminPermissions: Locator;
 
   readonly editGeneralSettingsLink: Locator;
   readonly editDisplaySettingsLink: Locator;
+  readonly editAdminSettingsLink: Locator;
   readonly closeButton: Locator;
 
   readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
+  readonly editAppAdminSettingsModal: EditAppAdminSettingsModalComponent;
 
   createAppSettingSelector(settingName: string) {
     return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
@@ -56,6 +60,9 @@ export class AppAdminPage extends BaseAdminPage {
       this.createAppSettingSelector('Display Fields')
     );
     this.sort = page.locator(this.createAppSettingSelector('Sort'));
+    this.adminPermissions = page.locator(
+      this.createAppSettingSelector('Administration Permissions')
+    );
 
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })
@@ -63,12 +70,18 @@ export class AppAdminPage extends BaseAdminPage {
     this.editDisplaySettingsLink = page
       .getByRole('heading', { name: 'Edit Display Settings' })
       .getByRole('link');
+    this.editAdminSettingsLink = page
+      .getByRole('heading', { name: 'Edit Administration Settings' })
+      .getByRole('link');
     this.closeButton = page.locator('a:has-text("Close")');
 
     this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(
       page
     );
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
+      page
+    );
+    this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(
       page
     );
   }

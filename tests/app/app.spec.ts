@@ -579,6 +579,14 @@ test.describe('app', () => {
     await appAdminPage.editDisplaySettingsLink.click();
     await appAdminPage.editAppDisplaySettingsModal.primarySortSelect.click();
     await appAdminPage.page.getByRole('option', { name: 'Record Id' }).click();
+
+    await expect(
+      appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect
+    ).toBeVisible();
+    await expect(
+      appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect
+    ).toHaveText('Ascending');
+
     await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
 
     await expect(appAdminPage.sort).toHaveText('Record Id (Ascending)');
@@ -602,10 +610,43 @@ test.describe('app', () => {
       .getByRole('option', { name: 'Created Date' })
       .click();
 
+    await expect(
+      appAdminPage.editAppDisplaySettingsModal.secondarySortDirectionSelect
+    ).toBeVisible();
+    await expect(
+      appAdminPage.editAppDisplaySettingsModal.secondarySortDirectionSelect
+    ).toHaveText('Ascending');
+
     await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
 
     await expect(appAdminPage.sort).toHaveText(/Record Id \(Ascending\)/);
     await expect(appAdminPage.sort).toHaveText(/Created Date \(Ascending\)/);
+  });
+
+  test("Change an app's administration permissions to private.", async ({
+    sysAdminPage,
+  }) => {
+    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+
+    await expect(appAdminPage.adminPermissions).toHaveText('Public');
+
+    await appAdminPage.editAdminSettingsLink.click();
+    await appAdminPage.editAppAdminSettingsModal.adminPermissionsSelect.click();
+    await appAdminPage.page.getByRole('option', { name: 'Private' }).click();
+
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.usersSelect
+    ).toBeVisible();
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.groupsSelect
+    ).toBeVisible();
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.rolesSelect
+    ).toBeVisible();
+
+    await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.adminPermissions).toHaveText('Private');
   });
 
   test('Delete an app', async ({ sysAdminPage }) => {
