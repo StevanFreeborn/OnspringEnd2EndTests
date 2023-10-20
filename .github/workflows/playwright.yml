@@ -7,7 +7,9 @@ jobs:
     env:
       SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
       SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
-      SYS_ADMIN_FULLNAME: ${{ secrets.SYS_ADMIN_FULLNAME }}
+      SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
+      SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
+      SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
       INSTANCE_URL: ${{ secrets.INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:

@@ -1,50 +1,23 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Page, expect, test } from '../../fixtures';
+import { expect, test } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
+import {
+  createAppForTest,
+  deleteAppsForTest,
+  navigateToAdminHomePage,
+} from '../utils';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
-import { DashboardPage } from './../../pageObjectModels/dashboardPage';
 
 test.describe('app', () => {
   let appsToDelete: string[] = [];
 
   test.beforeEach(async ({ sysAdminPage }) => {
-    const dashboardPage = new DashboardPage(sysAdminPage);
-    await dashboardPage.goto();
-    await dashboardPage.page.waitForLoadState();
-    await dashboardPage.sharedNavPage.adminGearIcon.click();
+    await navigateToAdminHomePage(sysAdminPage);
   });
 
   test.afterEach(async ({ sysAdminPage }) => {
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    await appsAdminPage.goto();
-    await appsAdminPage.page.waitForLoadState();
-
-    for (const appName of appsToDelete) {
-      const appRow = appsAdminPage.appGrid
-        .getByRole('row', { name: appName })
-        .first();
-      const appDeleteButton = appRow.getByTitle('Delete App');
-      await appsAdminPage.page.waitForLoadState('networkidle');
-
-      // eslint-disable-next-line playwright/no-force-option
-      await appRow.hover({ force: true });
-      // eslint-disable-next-line playwright/no-force-option
-      await appDeleteButton.click({ force: true });
-
-      await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially(
-        'OK',
-        {
-          delay: 100,
-        }
-      );
-
-      // eslint-disable-next-line playwright/no-force-option
-      await appsAdminPage.deleteAppDialog.deleteButton.click({ force: true });
-      await appsAdminPage.deleteAppDialog.waitForModalToBeDismissed();
-      await appsAdminPage.page.waitForLoadState('networkidle');
-    }
-
+    await deleteAppsForTest(sysAdminPage, appsToDelete);
     appsToDelete = [];
   });
 
@@ -623,7 +596,7 @@ test.describe('app', () => {
     await expect(appAdminPage.sort).toHaveText(/Created Date \(Ascending\)/);
   });
 
-  test("Change an app's administration permissions to private.", async ({
+  test("Change an app's administration permissions to private", async ({
     sysAdminPage,
   }) => {
     const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
@@ -631,8 +604,9 @@ test.describe('app', () => {
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
 
     await appAdminPage.editAdminSettingsLink.click();
-    await appAdminPage.editAppAdminSettingsModal.adminPermissionsSelect.click();
-    await appAdminPage.page.getByRole('option', { name: 'Private' }).click();
+    await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
+      'Private'
+    );
 
     await expect(
       appAdminPage.editAppAdminSettingsModal.usersSelect
@@ -647,6 +621,54 @@ test.describe('app', () => {
     await appAdminPage.editAppAdminSettingsModal.saveButton.click();
 
     await expect(appAdminPage.adminPermissions).toHaveText('Private');
+  });
+
+  test('Give app administration permissions to specific users', async () => {
+    // TODO: Implement this test
+    expect(true).toBe(false);
+  });
+
+  test('Give app administration permissions to specific roles', async () => {
+    // TODO: Implement this test
+    expect(true).toBe(false);
+  });
+
+  test('Give app administration permissions to specific groups', async () => {
+    // TODO: Implement this test
+    expect(true).toBe(false);
+  });
+
+  test("Change an app's administration permissions to public", async ({
+    sysAdminPage,
+  }) => {
+    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+
+    await expect(appAdminPage.adminPermissions).toHaveText('Public');
+
+    await appAdminPage.editAdminSettingsLink.click();
+    await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
+      'Private'
+    );
+    await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+
+    await appAdminPage.editAdminSettingsLink.click();
+    await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
+      'Public'
+    );
+
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.usersSelect
+    ).toBeHidden();
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.groupsSelect
+    ).toBeHidden();
+    await expect(
+      appAdminPage.editAppAdminSettingsModal.rolesSelect
+    ).toBeHidden();
+
+    await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+
+    await expect(appAdminPage.adminPermissions).toHaveText('Public');
   });
 
   test('Delete an app', async ({ sysAdminPage }) => {
@@ -695,22 +717,3 @@ test.describe('app', () => {
     await expect(appRow).not.toBeAttached();
   });
 });
-
-/**
- * Helper function to create an app, add app to delete list, and return objects needed for tests.
- */
-async function createAppForTest(sysAdminPage: Page, appsToDelete: string[]) {
-  const adminHomePage = new AdminHomePage(sysAdminPage);
-  const appAdminPage = new AppAdminPage(sysAdminPage);
-  const appName = FakeDataFactory.createFakeAppName();
-  appsToDelete.push(appName);
-
-  await adminHomePage.page.waitForLoadState();
-  await adminHomePage.createAppUsingHeaderCreateButton(appName);
-
-  return {
-    adminHomePage,
-    appAdminPage,
-    appName,
-  };
-}

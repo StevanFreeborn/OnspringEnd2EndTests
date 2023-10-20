@@ -26,4 +26,9 @@ export class EditAppAdminSettingsModalComponent {
       name: 'Save',
     });
   }
+
+  async selectAdminPermissions(permission: string) {
+    await this.adminPermissionsSelect.click();
+    await this.page.getByRole('option', { name: permission }).click();
+  }
 }

@@ -1,8 +1,12 @@
 import { faker } from '@faker-js/faker';
 
 export class FakeDataFactory {
-  static createFakeFullName() {
-    return faker.name.fullName();
+  static createFakeFirstName() {
+    return faker.person.firstName();
+  }
+
+  static createFakeLastName() {
+    return faker.person.lastName();
   }
 
   static createFakeUsername() {
@@ -10,7 +14,11 @@ export class FakeDataFactory {
   }
 
   static createFakePassword() {
-    return faker.internet.password(10);
+    return faker.internet.password({ length: 10 });
+  }
+
+  static createFakeEmail() {
+    return faker.internet.email();
   }
 
   static createFakeAppName() {
