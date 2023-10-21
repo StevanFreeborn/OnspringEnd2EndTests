@@ -3,13 +3,13 @@ import { expect, test } from '../../fixtures';
 import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
-import { SetupHelper } from '../utils/setupHelper';
+import { TestHelper } from '../utils/testHelper';
 
 test.describe('User', () => {
   let usersToDelete: string[] = [];
 
   test.beforeEach(async ({ sysAdminPage }) => {
-    await SetupHelper.navigateToAdminHomePage(sysAdminPage);
+    await TestHelper.navigateToAdminHomePage(sysAdminPage);
   });
 
   test.afterEach(async () => {

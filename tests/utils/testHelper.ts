@@ -5,7 +5,7 @@ import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/appsAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboardPage';
 
-export const SetupHelper = {
+export const TestHelper = {
   /**
    * @summary Helper function to navigate to the admin home page.
    */
