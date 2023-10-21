@@ -3,13 +3,13 @@ import { expect, test } from '../../fixtures';
 import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
-import { navigateToAdminHomePage } from '../utils';
+import { SetupHelper } from '../utils/setupHelper';
 
 test.describe('User', () => {
   let usersToDelete: string[] = [];
 
   test.beforeEach(async ({ sysAdminPage }) => {
-    await navigateToAdminHomePage(sysAdminPage);
+    await SetupHelper.navigateToAdminHomePage(sysAdminPage);
   });
 
   test.afterEach(async () => {
@@ -23,6 +23,7 @@ test.describe('User', () => {
     const addUserPage = new AddUserAdminPage(sysAdminPage);
     const editUserPage = new EditUserAdminPage(sysAdminPage);
     const newUser = UserFactory.createNewUser();
+    usersToDelete.push(newUser.username);
 
     await adminHomePage.page.waitForLoadState();
     await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();

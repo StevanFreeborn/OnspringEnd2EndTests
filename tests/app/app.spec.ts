@@ -2,22 +2,18 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, test } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
-import {
-  createAppForTest,
-  deleteAppsForTest,
-  navigateToAdminHomePage,
-} from '../utils';
+import { SetupHelper } from '../utils/setupHelper';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
 
 test.describe('app', () => {
   let appsToDelete: string[] = [];
 
   test.beforeEach(async ({ sysAdminPage }) => {
-    await navigateToAdminHomePage(sysAdminPage);
+    await SetupHelper.navigateToAdminHomePage(sysAdminPage);
   });
 
   test.afterEach(async ({ sysAdminPage }) => {
-    await deleteAppsForTest(sysAdminPage, appsToDelete);
+    await SetupHelper.deleteAppsForTest(sysAdminPage, appsToDelete);
     appsToDelete = [];
   });
 
@@ -199,7 +195,7 @@ test.describe('app', () => {
   });
 
   test("Update an app's name", async ({ sysAdminPage }) => {
-    const { appAdminPage, appName } = await createAppForTest(
+    const { appAdminPage, appName } = await SetupHelper.createAppForTest(
       sysAdminPage,
       appsToDelete
     );
@@ -223,7 +219,10 @@ test.describe('app', () => {
   });
 
   test('Disable an app', async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -245,7 +244,10 @@ test.describe('app', () => {
   });
 
   test('Enable an app', async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -283,7 +285,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's description.", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appDescription).toHaveText('');
 
@@ -304,7 +309,10 @@ test.describe('app', () => {
   });
 
   test("Disable an app's content versioning", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -336,7 +344,10 @@ test.describe('app', () => {
   });
 
   test("Enable an app's content versioning", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -396,7 +407,10 @@ test.describe('app', () => {
   test("Change the save types of an app's content versioning", async ({
     sysAdminPage,
   }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -438,7 +452,10 @@ test.describe('app', () => {
   });
 
   test("Disable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -460,7 +477,10 @@ test.describe('app', () => {
   });
 
   test("Enable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -498,7 +518,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's display link field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.displayLink).toHaveText('Record Id');
 
@@ -513,7 +536,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's integration link field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.integrationLink).toHaveText('Record Id');
 
@@ -528,7 +554,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's display fields", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.displayFields).toHaveText('Record Id');
 
@@ -545,7 +574,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's primary sort field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.sort).toHaveText('None');
 
@@ -566,7 +598,10 @@ test.describe('app', () => {
   });
 
   test("Update an app's secondary sort field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.sort).toHaveText('None');
 
@@ -599,7 +634,10 @@ test.describe('app', () => {
   test("Change an app's administration permissions to private", async ({
     sysAdminPage,
   }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
 
@@ -641,7 +679,10 @@ test.describe('app', () => {
   test("Change an app's administration permissions to public", async ({
     sysAdminPage,
   }) => {
-    const { appAdminPage } = await createAppForTest(sysAdminPage, appsToDelete);
+    const { appAdminPage } = await SetupHelper.createAppForTest(
+      sysAdminPage,
+      appsToDelete
+    );
 
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
 
