@@ -1,15 +1,35 @@
 import { UserFactory } from '../../factories/userFactory';
-import { expect, test } from '../../fixtures';
+import { test as base, expect } from '../../fixtures';
 import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
-import { TestHelper } from '../utils/testHelper';
+
+type UserTestFixtures = {
+  adminHomePage: AdminHomePage;
+  addUserPage: AddUserAdminPage;
+  editUserPage: EditUserAdminPage;
+};
+
+const test = base.extend<UserTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    await use(adminHomePage);
+  },
+  addUserPage: async ({ sysAdminPage }, use) => {
+    const addUserPage = new AddUserAdminPage(sysAdminPage);
+    await use(addUserPage);
+  },
+  editUserPage: async ({ sysAdminPage }, use) => {
+    const editUserPage = new EditUserAdminPage(sysAdminPage);
+    await use(editUserPage);
+  },
+});
 
 test.describe('User', () => {
   let usersToDelete: string[] = [];
 
-  test.beforeEach(async ({ sysAdminPage }) => {
-    await TestHelper.navigateToAdminHomePage(sysAdminPage);
+  test.beforeEach(async ({ adminHomePage }) => {
+    await adminHomePage.goto();
   });
 
   test.afterEach(async () => {
@@ -17,15 +37,13 @@ test.describe('User', () => {
   });
 
   test('Create a User via the create button in the header of the admin home page', async ({
-    sysAdminPage,
+    adminHomePage,
+    addUserPage,
+    editUserPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const addUserPage = new AddUserAdminPage(sysAdminPage);
-    const editUserPage = new EditUserAdminPage(sysAdminPage);
     const newUser = UserFactory.createNewUser();
     usersToDelete.push(newUser.username);
 
-    await adminHomePage.page.waitForLoadState();
     await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
     await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
     await adminHomePage.sharedAdminNavPage.userCreateMenuOption.click();

@@ -1,27 +1,46 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, test } from '../../fixtures';
+import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
-import { TestHelper } from '../utils/testHelper';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
+
+type AppTestFixtures = {
+  adminHomePage: AdminHomePage;
+  appsAdminPage: AppsAdminPage;
+  appAdminPage: AppAdminPage;
+};
+
+const test = base.extend<AppTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    await use(adminHomePage);
+  },
+  appsAdminPage: async ({ sysAdminPage }, use) => {
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    await use(appsAdminPage);
+  },
+  appAdminPage: async ({ adminHomePage }, use) => {
+    const appAdminPage = new AppAdminPage(adminHomePage.page);
+    await use(appAdminPage);
+  },
+});
 
 test.describe('app', () => {
   let appsToDelete: string[] = [];
 
-  test.beforeEach(async ({ sysAdminPage }) => {
-    await TestHelper.navigateToAdminHomePage(sysAdminPage);
+  test.beforeEach(async ({ adminHomePage }) => {
+    await adminHomePage.goto();
   });
 
-  test.afterEach(async ({ sysAdminPage }) => {
-    await TestHelper.deleteAppsForTest(sysAdminPage, appsToDelete);
+  test.afterEach(async ({ appsAdminPage }) => {
+    await appsAdminPage.deleteApps(appsToDelete);
     appsToDelete = [];
   });
 
   test('Create an app via the create button on the header of on the admin home page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -33,10 +52,9 @@ test.describe('app', () => {
   });
 
   test('Create an app via the create button on the Apps tile on the admin home page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -48,11 +66,10 @@ test.describe('app', () => {
   });
 
   test('Create an app via the Create App button on the Apps admin page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appsAdminPage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -66,10 +83,9 @@ test.describe('app', () => {
   });
 
   test('Create a copy of an app via the create button on the header of the admin home page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -111,10 +127,9 @@ test.describe('app', () => {
   });
 
   test('Create a copy of an app via the create button on the Apps tile on the admin home page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -154,11 +169,10 @@ test.describe('app', () => {
   });
 
   test('Create a copy of an app via the Create App button on the Apps admin page', async ({
-    sysAdminPage,
+    adminHomePage,
+    appsAdminPage,
+    appAdminPage,
   }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -194,15 +208,11 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
   });
 
-  test("Update an app's name", async ({ sysAdminPage }) => {
-    const { appAdminPage, appName } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
-
+  test("Update an app's name", async ({ appAdminPage, adminHomePage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
     const updatedAppName = `${appName}-updated`;
-    const appIndex = appsToDelete.indexOf(appName);
-    appsToDelete[appIndex] = updatedAppName;
+    appsToDelete.push(updatedAppName);
 
     await appAdminPage.editGeneralSettingsLink.click();
 
@@ -218,11 +228,10 @@ test.describe('app', () => {
     await expect(appAdminPage.appName).toHaveText(updatedAppName);
   });
 
-  test('Disable an app', async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test('Disable an app', async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -243,11 +252,10 @@ test.describe('app', () => {
     await expect(appAdminPage.appStatus).toHaveText('Disabled');
   });
 
-  test('Enable an app', async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test('Enable an app', async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
 
@@ -284,11 +292,13 @@ test.describe('app', () => {
     await expect(appAdminPage.appStatus).toHaveText('Enabled');
   });
 
-  test("Update an app's description.", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's description.", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appDescription).toHaveText('');
 
@@ -308,11 +318,13 @@ test.describe('app', () => {
     await expect(appAdminPage.appDescription).toHaveText(updatedDescription);
   });
 
-  test("Disable an app's content versioning", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Disable an app's content versioning", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -343,11 +355,13 @@ test.describe('app', () => {
     await expect(appAdminPage.appContentVersionStatus).toHaveText('Disabled');
   });
 
-  test("Enable an app's content versioning", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Enable an app's content versioning", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -405,12 +419,12 @@ test.describe('app', () => {
   });
 
   test("Change the save types of an app's content versioning", async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.appContentVersionStatus).toHaveText(
       'Enabled - Direct User Saves'
@@ -451,11 +465,13 @@ test.describe('app', () => {
     );
   });
 
-  test("Disable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Disable an app's concurrent edit alert", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -476,11 +492,13 @@ test.describe('app', () => {
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
   });
 
-  test("Enable an app's concurrent edit alert", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Enable an app's concurrent edit alert", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
 
@@ -517,11 +535,13 @@ test.describe('app', () => {
     await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
   });
 
-  test("Update an app's display link field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's display link field", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.displayLink).toHaveText('Record Id');
 
@@ -535,11 +555,13 @@ test.describe('app', () => {
     await expect(appAdminPage.displayLink).toHaveText('Created Date');
   });
 
-  test("Update an app's integration link field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's integration link field", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.integrationLink).toHaveText('Record Id');
 
@@ -553,11 +575,13 @@ test.describe('app', () => {
     await expect(appAdminPage.integrationLink).toHaveText('Created Date');
   });
 
-  test("Update an app's display fields", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's display fields", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.displayFields).toHaveText('Record Id');
 
@@ -573,11 +597,13 @@ test.describe('app', () => {
     await expect(appAdminPage.displayFields).toHaveText(/Created Date/);
   });
 
-  test("Update an app's primary sort field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's primary sort field", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.sort).toHaveText('None');
 
@@ -597,11 +623,13 @@ test.describe('app', () => {
     await expect(appAdminPage.sort).toHaveText('Record Id (Ascending)');
   });
 
-  test("Update an app's secondary sort field", async ({ sysAdminPage }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+  test("Update an app's secondary sort field", async ({
+    adminHomePage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.sort).toHaveText('None');
 
@@ -632,12 +660,12 @@ test.describe('app', () => {
   });
 
   test("Change an app's administration permissions to private", async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
 
@@ -677,12 +705,12 @@ test.describe('app', () => {
   });
 
   test("Change an app's administration permissions to public", async ({
-    sysAdminPage,
+    adminHomePage,
+    appAdminPage,
   }) => {
-    const { appAdminPage } = await TestHelper.createAppForTest(
-      sysAdminPage,
-      appsToDelete
-    );
+    const appName = FakeDataFactory.createFakeAppName();
+    await adminHomePage.createApp(appName);
+    appsToDelete.push(appName);
 
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
 
@@ -712,10 +740,11 @@ test.describe('app', () => {
     await expect(appAdminPage.adminPermissions).toHaveText('Public');
   });
 
-  test('Delete an app', async ({ sysAdminPage }) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
+  test('Delete an app', async ({
+    adminHomePage,
+    appsAdminPage,
+    appAdminPage,
+  }) => {
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid
       .getByRole('row', { name: appName })

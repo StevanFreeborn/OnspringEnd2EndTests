@@ -27,6 +27,11 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path, { waitUntil: 'load' });
   }
 
+  async createApp(appName: string) {
+    await this.goto();
+    await this.createAppUsingHeaderCreateButton(appName);
+  }
+
   async createAppUsingHeaderCreateButton(appName: string) {
     await this.sharedAdminNavPage.adminCreateButton.hover();
     await this.sharedAdminNavPage.adminCreateMenu.waitFor();
