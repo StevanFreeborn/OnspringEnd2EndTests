@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class DeleteAppDialogComponent {
+export class DeleteUserDialogComponent {
   private readonly page: Page;
   readonly overlay: Locator;
   readonly dialog: Locator;
@@ -13,7 +13,6 @@ export class DeleteAppDialogComponent {
     this.dialog = page.locator(
       'body > div.ui-dialog.ui-corner-all.ui-widget.ui-widget-content.ui-front.ui-dialog-buttons.ui-draggable.warning-dialog'
     );
-    this.confirmationInput = page.getByLabel('Delete App').getByRole('textbox');
     this.deleteButton = page.getByRole('button', { name: 'Delete' });
   }
 

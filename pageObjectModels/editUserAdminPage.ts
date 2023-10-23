@@ -12,8 +12,6 @@ export class EditUserAdminPage extends UserAdminPage {
   }
 
   async goto(userId: number) {
-    await this.page.goto(`/Admin/Security/User/${userId}/Edit`, {
-      waitUntil: 'load',
-    });
+    await this.page.goto(`/Admin/Security/User/${userId}/Edit`);
   }
 }

@@ -107,18 +107,16 @@ test.describe('app', () => {
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await appAdminPage.sharedNavPage.adminGearIcon.click();
+      await appAdminPage.sidebar.adminGearIcon.click();
     });
 
     await test.step('Create the copy of the app', async () => {
       await adminHomePage.page.waitForLoadState();
-      await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
+      await adminHomePage.adminNav.adminCreateButton.hover();
 
-      await expect(
-        adminHomePage.sharedAdminNavPage.adminCreateMenu
-      ).toBeVisible();
+      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
 
-      await adminHomePage.sharedAdminNavPage.appCreateMenuOption.click();
+      await adminHomePage.adminNav.appCreateMenuOption.click();
 
       await expect(
         adminHomePage.createAppDialog.copyFromRadioButton
@@ -158,7 +156,7 @@ test.describe('app', () => {
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await appAdminPage.sharedNavPage.adminGearIcon.click();
+      await appAdminPage.sidebar.adminGearIcon.click();
     });
 
     await test.step('Create the copy of the app', async () => {
@@ -910,7 +908,7 @@ test.describe('app', () => {
     });
 
     await test.step('Verify app was deleted correctly', async () => {
-      await appsAdminPage.deleteAppDialog.waitForModalToBeDismissed();
+      await appsAdminPage.deleteAppDialog.waitForDialogToBeDismissed();
       await appsAdminPage.page.waitForLoadState('networkidle');
       await expect(appRow).not.toBeAttached();
     });

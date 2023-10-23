@@ -14,7 +14,7 @@ export class UserAdminPage extends BaseAdminPage {
   getFieldSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = field
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('');
     return `td.data-${pascalCaseFieldName} ${controlSelector}`;
   }

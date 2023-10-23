@@ -1,14 +1,14 @@
 import { Page } from '@playwright/test';
+import { AdminNavComponent } from '../componentObjectModels/adminNavComponent';
 import { BasePage } from './basePage';
-import { SharedAdminNavPage } from './sharedAdminNavPage';
 
 export class BaseAdminPage extends BasePage {
   readonly page: Page;
-  readonly sharedAdminNavPage: SharedAdminNavPage;
+  readonly adminNav: AdminNavComponent;
 
   constructor(page: Page) {
     super(page);
     this.page = page;
-    this.sharedAdminNavPage = new SharedAdminNavPage(page);
+    this.adminNav = new AdminNavComponent(page);
   }
 }

@@ -11,7 +11,7 @@ setup('login as system administrator', async ({ page }) => {
 
   await setup.step('Login as system administrator', async () => {
     await loginPage.login(sysAdminUser);
-    await expect(dashboardPage.sharedNavPage.usersFullName).toHaveText(
+    await expect(dashboardPage.sidebar.usersFullName).toHaveText(
       sysAdminUser.fullName
     );
   });

@@ -24,7 +24,7 @@ export class AdminHomePage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'load' });
+    await this.page.goto(this.path);
   }
 
   async createApp(appName: string) {
@@ -33,9 +33,9 @@ export class AdminHomePage extends BaseAdminPage {
   }
 
   async createAppUsingHeaderCreateButton(appName: string) {
-    await this.sharedAdminNavPage.adminCreateButton.hover();
-    await this.sharedAdminNavPage.adminCreateMenu.waitFor();
-    await this.sharedAdminNavPage.appCreateMenuOption.click();
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.appCreateMenuOption.click();
 
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();

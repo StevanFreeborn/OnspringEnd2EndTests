@@ -13,6 +13,6 @@ export class DashboardPage extends BasePage {
 
   async goto(dashboardId?: number) {
     const path = dashboardId ? `${this.path}/${dashboardId}` : this.path;
-    await this.page.goto(path, { waitUntil: 'load' });
+    await this.page.goto(path);
   }
 }

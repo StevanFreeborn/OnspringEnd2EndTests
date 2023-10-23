@@ -60,7 +60,7 @@ export class AppsAdminPage extends BaseAdminPage {
 
       // eslint-disable-next-line playwright/no-force-option
       await this.deleteAppDialog.deleteButton.click({ force: true });
-      await this.deleteAppDialog.waitForModalToBeDismissed();
+      await this.deleteAppDialog.waitForDialogToBeDismissed();
       await this.page.waitForLoadState('networkidle');
     }
   }

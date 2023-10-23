@@ -56,7 +56,7 @@ test.describe('login', () => {
       await expect(dashboardPage.page).toHaveURL(
         new RegExp(dashboardPage.path)
       );
-      await expect(dashboardPage.sharedNavPage.usersFullName).toHaveText(
+      await expect(dashboardPage.sidebar.usersFullName).toHaveText(
         user.fullName
       );
     });
