@@ -44,22 +44,28 @@ test.describe('User', () => {
     const newUser = UserFactory.createNewUser();
     usersToDelete.push(newUser.username);
 
-    await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
-    await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
-    await adminHomePage.sharedAdminNavPage.userCreateMenuOption.click();
-    await addUserPage.page.waitForLoadState();
-    await addUserPage.fillRequiredUserFields(newUser);
-    await addUserPage.activeStatusButton.click();
-    await addUserPage.saveRecordButton.click();
+    await test.step('Create a new user', async () => {
+      await adminHomePage.sharedAdminNavPage.adminCreateButton.hover();
+      await adminHomePage.sharedAdminNavPage.adminCreateMenu.waitFor();
+      await adminHomePage.sharedAdminNavPage.userCreateMenuOption.click();
+      await addUserPage.page.waitForLoadState();
+      await addUserPage.fillRequiredUserFields(newUser);
+      await addUserPage.activeStatusButton.click();
+      await addUserPage.saveRecordButton.click();
+    });
 
-    await addUserPage.page.waitForURL(editUserPage.pathRegex);
-    await editUserPage.page.waitForLoadState();
+    await test.step('Verify user is created', async () => {
+      await addUserPage.page.waitForURL(editUserPage.pathRegex);
+      await editUserPage.page.waitForLoadState();
 
-    expect(editUserPage.page.url()).toMatch(editUserPage.pathRegex);
-    await expect(editUserPage.firstNameInput).toHaveValue(newUser.firstName);
-    await expect(editUserPage.lastNameInput).toHaveValue(newUser.lastName);
-    await expect(editUserPage.usernameInput).toHaveValue(newUser.username);
-    await expect(editUserPage.emailInput).toHaveValue(newUser.email);
-    await expect(editUserPage.activeStatusButton).toHaveClass(/active-status/);
+      expect(editUserPage.page.url()).toMatch(editUserPage.pathRegex);
+      await expect(editUserPage.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserPage.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserPage.usernameInput).toHaveValue(newUser.username);
+      await expect(editUserPage.emailInput).toHaveValue(newUser.email);
+      await expect(editUserPage.activeStatusButton).toHaveClass(
+        /active-status/
+      );
+    });
   });
 });

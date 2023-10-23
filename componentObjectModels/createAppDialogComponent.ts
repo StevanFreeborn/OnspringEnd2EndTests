@@ -15,7 +15,7 @@ export class CreateAppDialogComponent {
       .getByText('Select an App');
   }
 
-  appToCopy(appName: string) {
+  getAppToCopy(appName: string) {
     return this.page.getByRole('option', { name: appName });
   }
 }
