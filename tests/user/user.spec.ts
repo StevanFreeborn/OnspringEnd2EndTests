@@ -39,7 +39,8 @@ test.describe('User', () => {
     await adminHomePage.goto();
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ usersSecurityAdminPage }) => {
+    await usersSecurityAdminPage.deleteUsers(usersToDelete);
     usersToDelete = [];
   });
 
@@ -105,11 +106,11 @@ test.describe('User', () => {
       await userRow.hover();
       await userRow.getByTitle('Delete User').click();
       await usersSecurityAdminPage.deleteUserDialog.deleteButton.click();
+      await usersSecurityAdminPage.deleteUserDialog.waitForDialogToBeDismissed();
+      await usersSecurityAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify user is deleted', async () => {
-      await usersSecurityAdminPage.deleteUserDialog.waitForDialogToBeDismissed();
-      await usersSecurityAdminPage.page.waitForLoadState('networkidle');
       await expect(userRow).not.toBeAttached();
     });
   });

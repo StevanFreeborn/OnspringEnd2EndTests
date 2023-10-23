@@ -17,6 +17,26 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path);
+    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+  }
+
+  async deleteUsers(usersToDelete: string[]) {
+    await this.goto();
+
+    for (const username of usersToDelete) {
+      const userRow = this.userGrid
+        .getByRole('row', { name: username })
+        .first();
+
+      // eslint-disable-next-line playwright/no-force-option
+      await userRow.hover({ force: true });
+
+      // eslint-disable-next-line playwright/no-force-option
+      await userRow.getByTitle('Delete User').click({ force: true });
+
+      await this.deleteUserDialog.deleteButton.click();
+      await this.deleteUserDialog.waitForDialogToBeDismissed();
+      await this.page.waitForLoadState('networkidle');
+    }
   }
 }

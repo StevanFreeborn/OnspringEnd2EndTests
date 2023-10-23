@@ -905,11 +905,11 @@ test.describe('app', () => {
       await expect(appsAdminPage.deleteAppDialog.deleteButton).toBeEnabled();
 
       await appsAdminPage.deleteAppDialog.deleteButton.click();
+      await appsAdminPage.deleteAppDialog.waitForDialogToBeDismissed();
+      await appsAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify app was deleted correctly', async () => {
-      await appsAdminPage.deleteAppDialog.waitForDialogToBeDismissed();
-      await appsAdminPage.page.waitForLoadState('networkidle');
       await expect(appRow).not.toBeAttached();
     });
   });
