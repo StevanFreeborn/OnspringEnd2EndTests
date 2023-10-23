@@ -82,16 +82,35 @@ test.describe('User', () => {
     });
   });
 
-  test('Delete a user', async ({ addUserAdminPage }) => {
+  test('Delete a user', async ({
+    addUserAdminPage,
+    usersSecurityAdminPage,
+  }) => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
+    const userRow = usersSecurityAdminPage.userGrid
+      .getByRole('row', { name: newUser.username })
+      .first();
 
     await test.step('Create user to delete', async () => {
       await addUserAdminPage.createUser(newUser);
     });
 
-    await test.step('Navigate to users security admin page', async () => {});
-    await test.step('Delete user', async () => {});
-    await test.step('Verify user is deleted', async () => {});
+    await test.step('Navigate to users security admin page', async () => {
+      await usersSecurityAdminPage.goto();
+      await expect(userRow).toBeVisible();
+    });
+
+    await test.step('Delete user', async () => {
+      await userRow.hover();
+      await userRow.getByTitle('Delete User').click();
+      await usersSecurityAdminPage.deleteUserDialog.deleteButton.click();
+    });
+
+    await test.step('Verify user is deleted', async () => {
+      await usersSecurityAdminPage.deleteUserDialog.waitForDialogToBeDismissed();
+      await usersSecurityAdminPage.page.waitForLoadState('networkidle');
+      await expect(userRow).not.toBeAttached();
+    });
   });
 });

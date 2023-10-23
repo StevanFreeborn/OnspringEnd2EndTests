@@ -11,7 +11,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.page = page;
-    this.path = '/Admin/Security/Users';
+    this.path = '/Admin/Security/User';
     this.userGrid = page.locator('#grid');
     this.deleteUserDialog = new DeleteUserDialogComponent(page);
   }
