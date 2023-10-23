@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class SharedAdminNavPage {
+export class AdminNavComponent {
   readonly page: Page;
   readonly adminCreateButton: Locator;
   readonly adminCreateMenu: Locator;
