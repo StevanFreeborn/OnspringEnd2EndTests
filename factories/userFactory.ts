@@ -1,4 +1,4 @@
-import { User } from '../models/user';
+import { User, UserStatus } from '../models/user';
 import { FakeDataFactory } from './fakeDataFactory';
 
 export class UserFactory {
@@ -14,16 +14,23 @@ export class UserFactory {
     const password =
       process.env.SYS_ADMIN_PASSWORD ?? FakeDataFactory.createFakePassword();
 
-    return new User(firstName, lastName, email, username, password);
+    return new User(
+      firstName,
+      lastName,
+      email,
+      username,
+      password,
+      UserStatus.Active
+    );
   }
 
-  static createNewUser() {
+  static createNewUser(status: UserStatus) {
     const firstName = FakeDataFactory.createFakeFirstName();
     const lastName = FakeDataFactory.createFakeLastName();
     const email = FakeDataFactory.createFakeEmail();
     const username = FakeDataFactory.createFakeUsername();
     const password = FakeDataFactory.createFakePassword();
 
-    return new User(firstName, lastName, email, username, password);
+    return new User(firstName, lastName, email, username, password, status);
   }
 }
