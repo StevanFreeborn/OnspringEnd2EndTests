@@ -21,7 +21,7 @@ export class AddUserAdminPage extends UserAdminPage {
     await this.emailInput.fill(user.email);
   }
 
-  async createUser(user: User) {
+  async addUser(user: User) {
     await this.goto();
     await this.fillRequiredUserFields(user);
 

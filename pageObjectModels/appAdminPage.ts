@@ -23,8 +23,8 @@ export class AppAdminPage extends BaseAdminPage {
   readonly editAdminSettingsLink: Locator;
   readonly closeButton: Locator;
 
-  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
+  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly editAppAdminSettingsModal: EditAppAdminSettingsModalComponent;
 
   createAppSettingSelector(settingName: string) {

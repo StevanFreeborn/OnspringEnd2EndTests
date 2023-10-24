@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { toPascalCase } from '../utils';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class UserAdminPage extends BaseAdminPage {
@@ -12,10 +13,7 @@ export class UserAdminPage extends BaseAdminPage {
   readonly saveRecordButton: Locator;
 
   createFormInputSelector(field: string, controlSelector = 'input') {
-    const pascalCaseFieldName = field
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
+    const pascalCaseFieldName = toPascalCase(field);
     return `td.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 

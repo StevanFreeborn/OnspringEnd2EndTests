@@ -75,15 +75,16 @@ test.describe('User', () => {
     });
   });
 
-  test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage }) => {
+  test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage, editUserAdminPage }) => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
-    usersToDelete.push(newUser.username);
     const userRow = usersSecurityAdminPage.userGrid
       .getByRole('row', { name: newUser.username })
       .first();
 
     await test.step('Create user to delete', async () => {
-      await addUserAdminPage.createUser(newUser);
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Navigate to users security admin page', async () => {
