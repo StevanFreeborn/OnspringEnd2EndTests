@@ -53,12 +53,8 @@ test.describe('login', () => {
     });
 
     await test.step('Verify user is logged in.', async () => {
-      await expect(dashboardPage.page).toHaveURL(
-        new RegExp(dashboardPage.path)
-      );
-      await expect(dashboardPage.sidebar.usersFullName).toHaveText(
-        user.fullName
-      );
+      await expect(dashboardPage.page).toHaveURL(new RegExp(dashboardPage.path));
+      await expect(dashboardPage.sidebar.usersFullName).toHaveText(user.fullName);
     });
   });
 
@@ -81,9 +77,7 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(
-        LoginPage.invalidCredentialError.text
-      );
+      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
       await expect(loginPage.validationErrors).toHaveCSS(
         'color',
         LoginPage.invalidCredentialError.color
@@ -114,9 +108,7 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(
-        LoginPage.invalidCredentialError.text
-      );
+      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
       await expect(loginPage.validationErrors).toHaveCSS(
         'color',
         LoginPage.invalidCredentialError.color
@@ -128,9 +120,7 @@ test.describe('login', () => {
     });
   });
 
-  test('user cannot login using invalid username and password.', async ({
-    loginPage,
-  }) => {
+  test('user cannot login using invalid username and password.', async ({ loginPage }) => {
     const fakeUsername = FakeDataFactory.createFakeUsername();
     const fakePassword = FakeDataFactory.createFakePassword();
 
@@ -149,9 +139,7 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(
-        LoginPage.invalidCredentialError.text
-      );
+      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
       await expect(loginPage.validationErrors).toHaveCSS(
         'color',
         LoginPage.invalidCredentialError.color

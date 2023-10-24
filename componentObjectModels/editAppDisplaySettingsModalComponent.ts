@@ -12,9 +12,7 @@ export class EditAppDisplaySettingsModalComponent {
   readonly saveButton: Locator;
 
   getDisplayFieldOption(field: string) {
-    return this.page.locator(
-      `.selector-control .unselected-pane li:has-text("${field}")`
-    );
+    return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
   }
 
   constructor(page: Page) {
@@ -26,15 +24,11 @@ export class EditAppDisplaySettingsModalComponent {
       name: 'Integration Link Field',
     });
     this.displayFieldsSelect = page.locator('.selector-select-list');
-    this.primarySortSelect = page
-      .locator('td.label:has-text("Primary Sort") + td>div')
-      .first();
+    this.primarySortSelect = page.locator('td.label:has-text("Primary Sort") + td>div').first();
     this.primarySortDirectionSelect = page
       .locator('td.label:has-text("Primary Sort") + td>div>span:nth-child(2)')
       .first();
-    this.secondarySortSelect = page
-      .locator('td.label:has-text("Secondary Sort") + td>div')
-      .first();
+    this.secondarySortSelect = page.locator('td.label:has-text("Secondary Sort") + td>div').first();
     this.secondarySortDirectionSelect = page
       .locator('td.label:has-text("Secondary Sort") + td>div>span:nth-child(2)')
       .first();

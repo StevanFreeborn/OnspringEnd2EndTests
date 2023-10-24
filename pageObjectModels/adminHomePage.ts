@@ -4,7 +4,6 @@ import { CreateAppModalComponent } from '../componentObjectModels/createAppModal
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AdminHomePage extends BaseAdminPage {
-  readonly page: Page;
   readonly path: string;
   readonly appTileLink: Locator;
   readonly appTileCreateButton: Locator;
@@ -13,7 +12,6 @@ export class AdminHomePage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.page = page;
     this.path = '/Admin/Home';
     this.appTileLink = page.locator(
       'div.landing-list-item-container:nth-child(1) > div:nth-child(1) > a:nth-child(1)'
@@ -25,11 +23,6 @@ export class AdminHomePage extends BaseAdminPage {
 
   async goto() {
     await this.page.goto(this.path);
-  }
-
-  async createApp(appName: string) {
-    await this.goto();
-    await this.createAppUsingHeaderCreateButton(appName);
   }
 
   async createAppUsingHeaderCreateButton(appName: string) {
@@ -61,5 +54,10 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createAppModal.nameInput.fill(appName);
     await this.createAppModal.saveButton.click();
+  }
+
+  async createApp(appName: string) {
+    await this.goto();
+    await this.createAppUsingHeaderCreateButton(appName);
   }
 }

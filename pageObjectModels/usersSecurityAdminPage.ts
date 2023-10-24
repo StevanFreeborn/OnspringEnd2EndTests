@@ -3,14 +3,12 @@ import { DeleteUserDialogComponent } from '../componentObjectModels/deleteUserDi
 import { BaseAdminPage } from './baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {
-  readonly page: Page;
   readonly path: string;
   readonly userGrid: Locator;
   readonly deleteUserDialog: DeleteUserDialogComponent;
 
   constructor(page: Page) {
     super(page);
-    this.page = page;
     this.path = '/Admin/Security/User';
     this.userGrid = page.locator('#grid');
     this.deleteUserDialog = new DeleteUserDialogComponent(page);
@@ -24,9 +22,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
     await this.goto();
 
     for (const username of usersToDelete) {
-      const userRow = this.userGrid
-        .getByRole('row', { name: username })
-        .first();
+      const userRow = this.userGrid.getByRole('row', { name: username }).first();
 
       // eslint-disable-next-line playwright/no-force-option
       await userRow.hover({ force: true });

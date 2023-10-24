@@ -1,3 +1,4 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 
@@ -25,7 +26,18 @@ test.describe('Role', () => {
     rolesToDelete = [];
   });
 
-  test('Create a Role via the create button in the header of the admin home page', async ({}) => {});
+  test('Create a Role via the create button in the header of the admin home page', async ({
+    adminHomePage,
+  }) => {
+    const roleName = FakeDataFactory.createFakeRoleName();
+    rolesToDelete.push(roleName);
+
+    await test.step('Create a new user', async () => {
+      await adminHomePage.adminNav.adminCreateButton.hover();
+      await adminHomePage.adminNav.adminCreateMenu.waitFor();
+      await adminHomePage.adminNav.roleCreateMenuOption.click();
+    });
+  });
 
   test('Delete a Role', async ({}) => {});
 });

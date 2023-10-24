@@ -1,6 +1,12 @@
 import { faker } from '@faker-js/faker';
 
 export class FakeDataFactory {
+  static createUniqueIdentifier() {
+    const timestamp = new Date().getTime().toString();
+    const id = faker.database.mongodbObjectId();
+    return `${timestamp}-${id}`;
+  }
+
   static createFakeFirstName() {
     return faker.person.firstName();
   }
@@ -10,7 +16,8 @@ export class FakeDataFactory {
   }
 
   static createFakeUsername() {
-    return faker.internet.userName();
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${faker.internet.userName()}}`;
   }
 
   static createFakePassword() {
@@ -22,8 +29,17 @@ export class FakeDataFactory {
   }
 
   static createFakeAppName() {
-    const timestamp = new Date().getTime().toString();
-    const id = faker.database.mongodbObjectId();
-    return `${timestamp}-${id}-app-test`;
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-app-test`;
+  }
+
+  static createFakeGroupName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${faker.company.name()}`;
+  }
+
+  static createFakeRoleName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${faker.person.jobTitle()}`;
   }
 }

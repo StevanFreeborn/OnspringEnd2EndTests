@@ -67,26 +67,15 @@ test.describe('User', () => {
       await editUserAdminPage.page.waitForLoadState();
 
       expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
-      await expect(editUserAdminPage.firstNameInput).toHaveValue(
-        newUser.firstName
-      );
-      await expect(editUserAdminPage.lastNameInput).toHaveValue(
-        newUser.lastName
-      );
-      await expect(editUserAdminPage.usernameInput).toHaveValue(
-        newUser.username
-      );
+      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.usernameInput).toHaveValue(newUser.username);
       await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(editUserAdminPage.activeStatusButton).toHaveClass(
-        /active-status/
-      );
+      await expect(editUserAdminPage.activeStatusButton).toHaveClass(/active-status/);
     });
   });
 
-  test('Delete a user', async ({
-    addUserAdminPage,
-    usersSecurityAdminPage,
-  }) => {
+  test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage }) => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
     const userRow = usersSecurityAdminPage.userGrid

@@ -5,7 +5,6 @@ import { EditAppGeneralSettingsModalComponent } from '../componentObjectModels/e
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AppAdminPage extends BaseAdminPage {
-  readonly page: Page;
   readonly path: string;
   readonly pathRegex: RegExp;
   readonly appName: Locator;
@@ -34,31 +33,20 @@ export class AppAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.page = page;
     this.path = '/Admin/App/';
-    this.pathRegex = new RegExp(
-      `${process.env.INSTANCE_URL}${this.path}[0-9]+`
-    );
+    this.pathRegex = new RegExp(`${process.env.INSTANCE_URL}${this.path}[0-9]+`);
     this.appName = page.locator(this.createAppSettingSelector('Name'));
     this.appStatus = page.locator(this.createAppSettingSelector('Status'));
-    this.appDescription = page.locator(
-      this.createAppSettingSelector('Description')
-    );
+    this.appDescription = page.locator(this.createAppSettingSelector('Description'));
     this.appContentVersionStatus = page.locator(
       this.createAppSettingSelector('Content Versioning')
     );
     this.concurrentEditAlertStatus = page.locator(
       this.createAppSettingSelector('Concurrent Edit Alert')
     );
-    this.displayLink = page.locator(
-      this.createAppSettingSelector('Display Link Field')
-    );
-    this.integrationLink = page.locator(
-      this.createAppSettingSelector('Integration Link Field')
-    );
-    this.displayFields = page.locator(
-      this.createAppSettingSelector('Display Fields')
-    );
+    this.displayLink = page.locator(this.createAppSettingSelector('Display Link Field'));
+    this.integrationLink = page.locator(this.createAppSettingSelector('Integration Link Field'));
+    this.displayFields = page.locator(this.createAppSettingSelector('Display Fields'));
     this.sort = page.locator(this.createAppSettingSelector('Sort'));
     this.adminPermissions = page.locator(
       this.createAppSettingSelector('Administration Permissions')
@@ -75,15 +63,9 @@ export class AppAdminPage extends BaseAdminPage {
       .getByRole('link');
     this.closeButton = page.locator('a:has-text("Close")');
 
-    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(
-      page
-    );
-    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(
-      page
-    );
-    this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(
-      page
-    );
+    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
+    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(page);
+    this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(page);
   }
 
   async goto(appId: number) {

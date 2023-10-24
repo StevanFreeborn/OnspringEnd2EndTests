@@ -118,9 +118,7 @@ test.describe('app', () => {
 
       await adminHomePage.adminNav.appCreateMenuOption.click();
 
-      await expect(
-        adminHomePage.createAppDialog.copyFromRadioButton
-      ).toBeVisible();
+      await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createAppDialog.copyFromRadioButton.click();
       await adminHomePage.createAppDialog.selectAnAppDropdown.click();
@@ -129,9 +127,7 @@ test.describe('app', () => {
 
       await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
-      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
-        expectedAppCopyName
-      );
+      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
       await adminHomePage.createAppModal.saveButton.click();
     });
@@ -167,9 +163,7 @@ test.describe('app', () => {
 
       await adminHomePage.appTileCreateButton.click();
 
-      await expect(
-        adminHomePage.createAppDialog.copyFromRadioButton
-      ).toBeVisible();
+      await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createAppDialog.copyFromRadioButton.click();
       await adminHomePage.createAppDialog.selectAnAppDropdown.click();
@@ -178,9 +172,7 @@ test.describe('app', () => {
 
       await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
-      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(
-        expectedAppCopyName
-      );
+      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
       await adminHomePage.createAppModal.saveButton.click();
     });
@@ -215,9 +207,7 @@ test.describe('app', () => {
       await appsAdminPage.page.waitForLoadState();
       await appsAdminPage.createAppButton.click();
 
-      await expect(
-        appsAdminPage.createAppDialog.copyFromRadioButton
-      ).toBeVisible();
+      await expect(appsAdminPage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await appsAdminPage.createAppDialog.copyFromRadioButton.click();
       await appsAdminPage.createAppDialog.selectAnAppDropdown.click();
@@ -226,9 +216,7 @@ test.describe('app', () => {
 
       await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
 
-      await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(
-        expectedAppCopyName
-      );
+      await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
       await appsAdminPage.createAppModal.saveButton.click();
     });
@@ -251,13 +239,9 @@ test.describe('app', () => {
     await test.step("Update the app's name", async () => {
       await appAdminPage.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.nameInput
-      ).toHaveValue(appName);
+      await expect(appAdminPage.editAppGeneralSettingsModal.nameInput).toHaveValue(appName);
 
-      await appAdminPage.editAppGeneralSettingsModal.nameInput.fill(
-        updatedAppName
-      );
+      await appAdminPage.editAppGeneralSettingsModal.nameInput.fill(updatedAppName);
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
 
@@ -278,15 +262,17 @@ test.describe('app', () => {
     await test.step('Disable the app', async () => {
       await appAdminPage.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
@@ -308,15 +294,17 @@ test.describe('app', () => {
     await test.step('Disable the app', async () => {
       await appAdminPage.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
 
@@ -326,15 +314,17 @@ test.describe('app', () => {
     await test.step('Enable the app', async () => {
       await appAdminPage.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.statusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
@@ -344,10 +334,7 @@ test.describe('app', () => {
     });
   });
 
-  test("Update an app's description.", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's description.", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     const updatedDescription = 'This is an updated description';
     appsToDelete.push(appName);
@@ -360,13 +347,9 @@ test.describe('app', () => {
     await test.step("Update the app's description", async () => {
       await appAdminPage.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.descriptionEditor
-      ).toHaveText('');
+      await expect(appAdminPage.editAppGeneralSettingsModal.descriptionEditor).toHaveText('');
 
-      await appAdminPage.editAppGeneralSettingsModal.descriptionEditor.fill(
-        updatedDescription
-      );
+      await appAdminPage.editAppGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
 
@@ -375,18 +358,13 @@ test.describe('app', () => {
     });
   });
 
-  test("Disable an app's content versioning", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Disable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves'
-      );
+      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
@@ -396,9 +374,7 @@ test.describe('app', () => {
         appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
       ).toHaveAttribute('aria-checked', 'true');
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
-      ).toBeVisible();
+      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
       await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
 
@@ -406,9 +382,7 @@ test.describe('app', () => {
         appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
       ).toHaveAttribute('aria-checked', 'false');
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
-      ).toBeHidden();
+      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
@@ -418,18 +392,13 @@ test.describe('app', () => {
     });
   });
 
-  test("Enable an app's content versioning", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Enable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves'
-      );
+      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
@@ -446,9 +415,7 @@ test.describe('app', () => {
         appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
       ).toHaveAttribute('aria-checked', 'false');
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
-      ).toBeHidden();
+      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
       await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
 
@@ -456,17 +423,13 @@ test.describe('app', () => {
         appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
       ).toHaveAttribute('aria-checked', 'true');
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
-      ).toBeVisible();
+      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's content versioning was enabled correctly", async () => {
-      await expect(appAdminPage.appContentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves'
-      );
+      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
   });
 
@@ -479,9 +442,7 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be changed', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves'
-      );
+      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the app's content versioning", async () => {
@@ -491,13 +452,9 @@ test.describe('app', () => {
         appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
       ).toHaveAttribute('aria-checked', 'true');
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionTypes
-      ).toBeVisible();
+      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.directUserSavesCheckbox
-      ).toBeChecked();
+      await expect(appAdminPage.editAppGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
 
       await appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox.check();
       await appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox.check();
@@ -506,12 +463,8 @@ test.describe('app', () => {
       await expect(
         appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox
       ).toBeChecked();
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox
-      ).toBeChecked();
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox
-      ).toBeChecked();
+      await expect(appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
+      await expect(appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
 
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
     });
@@ -523,18 +476,13 @@ test.describe('app', () => {
     });
   });
 
-  test("Disable an app's concurrent edit alert", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Disable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose concurrent edit alert will be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText(
-        'Enabled'
-      );
+      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
@@ -554,33 +502,24 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's concurrent edit alert was disabled correctly", async () => {
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText(
-        'Disabled'
-      );
+      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
     });
   });
 
-  test("Enable an app's concurrent edit alert", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Enable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose concurrent edit alert will be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText(
-        'Enabled'
-      );
+      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
       await appAdminPage.editGeneralSettingsLink.click();
       await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
       await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText(
-        'Disabled'
-      );
+      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the app's concurrent edit alert", async () => {
@@ -600,16 +539,11 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's concurrent edit alert was enabled correctly", async () => {
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText(
-        'Enabled'
-      );
+      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
     });
   });
 
-  test("Update an app's display link field", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's display link field", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -621,9 +555,7 @@ test.describe('app', () => {
     await test.step("Update the app's display link field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
       await appAdminPage.editAppDisplaySettingsModal.displayLinkSelect.click();
-      await appAdminPage.page
-        .getByRole('option', { name: 'Created Date' })
-        .click();
+      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
 
@@ -632,10 +564,7 @@ test.describe('app', () => {
     });
   });
 
-  test("Update an app's integration link field", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's integration link field", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -647,9 +576,7 @@ test.describe('app', () => {
     await test.step("Update the app's integration link field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
       await appAdminPage.editAppDisplaySettingsModal.integrationLinkSelect.click();
-      await appAdminPage.page
-        .getByRole('option', { name: 'Created Date' })
-        .click();
+      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
 
@@ -658,10 +585,7 @@ test.describe('app', () => {
     });
   });
 
-  test("Update an app's display fields", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's display fields", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -673,9 +597,7 @@ test.describe('app', () => {
     await test.step("Update the app's display fields", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
       await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
-      await appAdminPage.editAppDisplaySettingsModal
-        .getDisplayFieldOption('Created Date')
-        .click();
+      await appAdminPage.editAppDisplaySettingsModal.getDisplayFieldOption('Created Date').click();
       await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
@@ -686,10 +608,7 @@ test.describe('app', () => {
     });
   });
 
-  test("Update an app's primary sort field", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's primary sort field", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -701,16 +620,14 @@ test.describe('app', () => {
     await test.step("Update the app's primary sort field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
       await appAdminPage.editAppDisplaySettingsModal.primarySortSelect.click();
-      await appAdminPage.page
-        .getByRole('option', { name: 'Record Id' })
-        .click();
+      await appAdminPage.page.getByRole('option', { name: 'Record Id' }).click();
 
       await expect(
         appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect
       ).toBeVisible();
-      await expect(
-        appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect
-      ).toHaveText('Ascending');
+      await expect(appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
+        'Ascending'
+      );
 
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
@@ -720,10 +637,7 @@ test.describe('app', () => {
     });
   });
 
-  test("Update an app's secondary sort field", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Update an app's secondary sort field", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -734,17 +648,11 @@ test.describe('app', () => {
 
     await test.step("Update the app's secondary sort field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.selectDisplayLinkField(
-        'Created Date'
-      );
-      await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField(
-        'Record Id'
-      );
+      await appAdminPage.editAppDisplaySettingsModal.selectDisplayLinkField('Created Date');
+      await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
 
       await appAdminPage.editAppDisplaySettingsModal.secondarySortSelect.click();
-      await appAdminPage.page
-        .getByRole('option', { name: 'Created Date' })
-        .click();
+      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
 
       await expect(
         appAdminPage.editAppDisplaySettingsModal.secondarySortDirectionSelect
@@ -776,19 +684,11 @@ test.describe('app', () => {
 
     await test.step("Change the app's administration permissions to private", async () => {
       await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
-        'Private'
-      );
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.usersSelect
-      ).toBeVisible();
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.groupsSelect
-      ).toBeVisible();
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.rolesSelect
-      ).toBeVisible();
+      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeVisible();
+      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeVisible();
 
       await appAdminPage.editAppAdminSettingsModal.saveButton.click();
     });
@@ -827,27 +727,17 @@ test.describe('app', () => {
 
     await test.step("Change the app's administration permissions to private", async () => {
       await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
-        'Private'
-      );
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
       await appAdminPage.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step("Change the app's administration permissions to public", async () => {
       await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions(
-        'Public'
-      );
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Public');
 
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.usersSelect
-      ).toBeHidden();
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.groupsSelect
-      ).toBeHidden();
-      await expect(
-        appAdminPage.editAppAdminSettingsModal.rolesSelect
-      ).toBeHidden();
+      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeHidden();
+      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeHidden();
+      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeHidden();
 
       await appAdminPage.editAppAdminSettingsModal.saveButton.click();
     });
@@ -857,15 +747,9 @@ test.describe('app', () => {
     });
   });
 
-  test('Delete an app', async ({
-    adminHomePage,
-    appsAdminPage,
-    appAdminPage,
-  }) => {
+  test('Delete an app', async ({ adminHomePage, appsAdminPage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
-    const appRow = appsAdminPage.appGrid
-      .getByRole('row', { name: appName })
-      .first();
+    const appRow = appsAdminPage.appGrid.getByRole('row', { name: appName }).first();
     const appDeleteButton = appRow.getByTitle('Delete App');
 
     await test.step('Navigate to the Apps admin page', async () => {
@@ -888,20 +772,13 @@ test.describe('app', () => {
 
       await appDeleteButton.click();
 
-      await expect(
-        appsAdminPage.deleteAppDialog.confirmationInput
-      ).toBeVisible();
+      await expect(appsAdminPage.deleteAppDialog.confirmationInput).toBeVisible();
 
-      await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially(
-        'OK',
-        {
-          delay: 100,
-        }
-      );
+      await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially('OK', {
+        delay: 100,
+      });
 
-      await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue(
-        'OK'
-      );
+      await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue('OK');
       await expect(appsAdminPage.deleteAppDialog.deleteButton).toBeEnabled();
 
       await appsAdminPage.deleteAppDialog.deleteButton.click();

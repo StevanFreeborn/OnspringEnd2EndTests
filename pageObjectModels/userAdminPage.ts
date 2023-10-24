@@ -11,7 +11,7 @@ export class UserAdminPage extends BaseAdminPage {
   readonly lockedStatusButton: Locator;
   readonly saveRecordButton: Locator;
 
-  getFieldSelector(field: string, controlSelector = 'input') {
+  createFormInputSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = field
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -21,10 +21,10 @@ export class UserAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.firstNameInput = page.locator(this.getFieldSelector('First Name'));
-    this.lastNameInput = page.locator(this.getFieldSelector('Last Name'));
-    this.usernameInput = page.locator(this.getFieldSelector('Username'));
-    this.emailInput = page.locator(this.getFieldSelector('Email Address'));
+    this.firstNameInput = page.locator(this.createFormInputSelector('First Name'));
+    this.lastNameInput = page.locator(this.createFormInputSelector('Last Name'));
+    this.usernameInput = page.locator(this.createFormInputSelector('Username'));
+    this.emailInput = page.locator(this.createFormInputSelector('Email Address'));
     this.activeStatusButton = page.getByRole('button', {
       name: 'Active',
       exact: true,

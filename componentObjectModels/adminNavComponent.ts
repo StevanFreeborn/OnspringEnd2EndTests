@@ -6,6 +6,7 @@ export class AdminNavComponent {
   readonly adminCreateMenu: Locator;
   readonly appCreateMenuOption: Locator;
   readonly userCreateMenuOption: Locator;
+  readonly roleCreateMenuOption: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -13,5 +14,6 @@ export class AdminNavComponent {
     this.adminCreateMenu = page.locator('#admin-create-menu');
     this.appCreateMenuOption = this.adminCreateMenu.getByText('App');
     this.userCreateMenuOption = this.adminCreateMenu.getByText('User');
+    this.roleCreateMenuOption = this.adminCreateMenu.getByText('Role');
   }
 }
