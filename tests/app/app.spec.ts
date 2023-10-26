@@ -1,8 +1,13 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
+import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
+import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
+import { AddUserAdminPage } from './../../pageObjectModels/addUserAdminPage';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
+import { EditUserAdminPage } from './../../pageObjectModels/editUserAdminPage';
+import { UsersSecurityAdminPage } from './../../pageObjectModels/usersSecurityAdminPage';
 
 type AppTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -597,7 +602,7 @@ test.describe('app', () => {
     await test.step("Update the app's display fields", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
       await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
-      await appAdminPage.editAppDisplaySettingsModal.getDisplayFieldOption('Created Date').click();
+      await appAdminPage.editAppDisplaySettingsModal.selectDisplayField('Created Date');
       await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
@@ -648,7 +653,7 @@ test.describe('app', () => {
 
     await test.step("Update the app's secondary sort field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.selectDisplayLinkField('Created Date');
+      await appAdminPage.editAppDisplaySettingsModal.selectDisplayField('Created Date');
       await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
 
       await appAdminPage.editAppDisplaySettingsModal.secondarySortSelect.click();
@@ -698,9 +703,46 @@ test.describe('app', () => {
     });
   });
 
-  test('Give app administration permissions to specific users', async () => {
-    // TODO: Implement this test
-    expect(true).toBe(false);
+  test('Give app administration permissions to specific users', async ({
+    adminHomePage,
+    sysAdminPage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    appsToDelete.push(appName);
+    const usersToDelete = [newUser.username];
+
+    await test.step('Create user that will be given admin permissions', async () => {
+      const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
+      const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+    });
+
+    await test.step('Create the app whose administration permissions will be changed', async () => {
+      await adminHomePage.createApp(appName);
+    });
+
+    await test.step('Give app admin permissions to user', async () => {
+      await appAdminPage.editAdminSettingsLink.click();
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeVisible();
+
+      await appAdminPage.editAppAdminSettingsModal.selectUser(newUser.fullName);
+      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify app admin permissions were given to user', async () => {
+      await expect(appAdminPage.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.adminUsers).toHaveText(newUser.fullName);
+    });
+
+    await test.step('Delete user', async () => {
+      const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
+      await usersSecurityAdminPage.deleteUsers(usersToDelete);
+    });
   });
 
   test('Give app administration permissions to specific roles', async () => {

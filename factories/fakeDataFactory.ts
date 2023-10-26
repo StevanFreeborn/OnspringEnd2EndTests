@@ -17,7 +17,7 @@ export class FakeDataFactory {
 
   static createFakeUsername() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-${faker.internet.userName()}}`;
+    return `${uniqueId}-${faker.internet.userName()}`;
   }
 
   static createFakePassword() {

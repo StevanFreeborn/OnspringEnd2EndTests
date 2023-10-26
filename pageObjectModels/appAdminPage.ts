@@ -17,6 +17,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly displayFields: Locator;
   readonly sort: Locator;
   readonly adminPermissions: Locator;
+  readonly adminUsers: Locator;
 
   readonly editGeneralSettingsLink: Locator;
   readonly editDisplaySettingsLink: Locator;
@@ -26,10 +27,6 @@ export class AppAdminPage extends BaseAdminPage {
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly editAppAdminSettingsModal: EditAppAdminSettingsModalComponent;
-
-  createAppSettingSelector(settingName: string) {
-    return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
-  }
 
   constructor(page: Page) {
     super(page);
@@ -51,6 +48,7 @@ export class AppAdminPage extends BaseAdminPage {
     this.adminPermissions = page.locator(
       this.createAppSettingSelector('Administration Permissions')
     );
+    this.adminUsers = page.locator(this.createAppSettingSelector('Users'));
 
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })
@@ -66,6 +64,10 @@ export class AppAdminPage extends BaseAdminPage {
     this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(page);
     this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(page);
+  }
+
+  private createAppSettingSelector(settingName: string) {
+    return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
   }
 
   async goto(appId: number) {

@@ -11,10 +11,6 @@ export class EditAppDisplaySettingsModalComponent {
   readonly secondarySortDirectionSelect: Locator;
   readonly saveButton: Locator;
 
-  getDisplayFieldOption(field: string) {
-    return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
-  }
-
   constructor(page: Page) {
     this.page = page;
     this.displayLinkSelect = page.getByRole('listbox', {
@@ -37,9 +33,13 @@ export class EditAppDisplaySettingsModalComponent {
     });
   }
 
-  async selectDisplayLinkField(field: string) {
+  private getUnselectedSelectorOption(field: string) {
+    return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
+  }
+
+  async selectDisplayField(field: string) {
     await this.displayFieldsSelect.click();
-    await this.getDisplayFieldOption(field).click();
+    await this.getUnselectedSelectorOption(field).click();
     await this.displayFieldsSelect.click();
   }
 

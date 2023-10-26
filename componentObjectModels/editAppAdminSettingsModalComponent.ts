@@ -21,8 +21,18 @@ export class EditAppAdminSettingsModalComponent {
     });
   }
 
+  private getUnselectedSelectorOption(field: string) {
+    return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
+  }
+
   async selectAdminPermissions(permission: string) {
     await this.adminPermissionsSelect.click();
     await this.page.getByRole('option', { name: permission }).click();
+  }
+
+  async selectUser(userFullName: string) {
+    await this.usersSelect.click();
+    await this.getUnselectedSelectorOption(userFullName).click();
+    await this.usersSelect.click();
   }
 }
