@@ -51,7 +51,7 @@ test.describe('Role', () => {
     const roleName = FakeDataFactory.createFakeRoleName();
     rolesToDelete.push(roleName);
 
-    await test.step('Create a new user', async () => {
+    await test.step('Create a new role', async () => {
       await adminHomePage.adminNav.adminCreateButton.hover();
       await adminHomePage.adminNav.adminCreateMenu.waitFor();
       await adminHomePage.adminNav.roleCreateMenuOption.click();

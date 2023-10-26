@@ -1,8 +1,7 @@
 import { Locator, Page } from '@playwright/test';
-import { toPascalCase } from '../utils';
-import { BaseAdminPage } from './baseAdminPage';
+import { BaseAdminFormPage } from './baseAdminFormPage';
 
-export class UserAdminPage extends BaseAdminPage {
+export class UserAdminPage extends BaseAdminFormPage {
   readonly firstNameInput: Locator;
   readonly lastNameInput: Locator;
   readonly usernameInput: Locator;
@@ -10,19 +9,13 @@ export class UserAdminPage extends BaseAdminPage {
   readonly activeStatusButton: Locator;
   readonly inactiveStatusButton: Locator;
   readonly lockedStatusButton: Locator;
-  readonly saveRecordButton: Locator;
-
-  createFormInputSelector(field: string, controlSelector = 'input') {
-    const pascalCaseFieldName = toPascalCase(field);
-    return `td.data-${pascalCaseFieldName} ${controlSelector}`;
-  }
 
   constructor(page: Page) {
     super(page);
-    this.firstNameInput = page.locator(this.createFormInputSelector('First Name'));
-    this.lastNameInput = page.locator(this.createFormInputSelector('Last Name'));
-    this.usernameInput = page.locator(this.createFormInputSelector('Username'));
-    this.emailInput = page.locator(this.createFormInputSelector('Email Address'));
+    this.firstNameInput = page.locator(this.createFormControlSelector('First Name'));
+    this.lastNameInput = page.locator(this.createFormControlSelector('Last Name'));
+    this.usernameInput = page.locator(this.createFormControlSelector('Username'));
+    this.emailInput = page.locator(this.createFormControlSelector('Email Address'));
     this.activeStatusButton = page.getByRole('button', {
       name: 'Active',
       exact: true,
@@ -33,6 +26,5 @@ export class UserAdminPage extends BaseAdminPage {
     this.lockedStatusButton = page.getByRole('button', {
       name: 'Locked',
     });
-    this.saveRecordButton = page.getByRole('link', { name: 'Save Record' });
   }
 }
