@@ -601,9 +601,7 @@ test.describe('app', () => {
 
     await test.step("Update the app's display fields", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
-      await appAdminPage.editAppDisplaySettingsModal.selectDisplayField('Created Date');
-      await appAdminPage.editAppDisplaySettingsModal.displayFieldsSelect.click();
+      await appAdminPage.editAppDisplaySettingsModal.addDisplayField('Created Date');
       await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
     });
 
@@ -653,7 +651,7 @@ test.describe('app', () => {
 
     await test.step("Update the app's secondary sort field", async () => {
       await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.selectDisplayField('Created Date');
+      await appAdminPage.editAppDisplaySettingsModal.addDisplayField('Created Date');
       await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
 
       await appAdminPage.editAppDisplaySettingsModal.secondarySortSelect.click();
