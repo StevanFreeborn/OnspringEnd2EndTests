@@ -30,8 +30,8 @@ const test = base.extend<AppTestFixtures>({
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
     await use(appsAdminPage);
   },
-  appAdminPage: async ({ adminHomePage }, use) => {
-    const appAdminPage = new AppAdminPage(adminHomePage.page);
+  appAdminPage: async ({ sysAdminPage }, use) => {
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     await use(appAdminPage);
   },
 });
@@ -61,7 +61,7 @@ test.describe('app', () => {
 
     await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
     });
   });
 
@@ -78,7 +78,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
     });
   });
 
@@ -100,7 +100,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
     });
   });
 
@@ -145,7 +145,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -190,7 +190,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -234,7 +234,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -248,16 +248,16 @@ test.describe('app', () => {
     });
 
     await test.step("Update the app's name", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.nameInput).toHaveValue(appName);
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.nameInput).toHaveValue(appName);
 
-      await appAdminPage.editAppGeneralSettingsModal.nameInput.fill(updatedAppName);
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.nameInput.fill(updatedAppName);
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's name was updated correctly", async () => {
-      await expect(appAdminPage.appName).toHaveText(updatedAppName);
+      await expect(appAdminPage.generalTab.appName).toHaveText(updatedAppName);
     });
   });
 
@@ -267,29 +267,29 @@ test.describe('app', () => {
 
     await test.step('Create the app to be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step('Verify app was disabled correctly', async () => {
-      await expect(appAdminPage.appStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.appStatus).toHaveText('Disabled');
     });
   });
 
@@ -299,49 +299,49 @@ test.describe('app', () => {
 
     await test.step('Create the app to be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
 
-      await expect(appAdminPage.appStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.appStatus).toHaveText('Disabled');
     });
 
     await test.step('Enable the app', async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.statusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.statusToggle.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step('Verify app was enabled correctly', async () => {
-      await expect(appAdminPage.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
     });
   });
 
@@ -352,20 +352,20 @@ test.describe('app', () => {
 
     await test.step('Create the app whose description will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appDescription).toHaveText('');
+      await expect(appAdminPage.generalTab.appDescription).toHaveText('');
     });
 
     await test.step("Update the app's description", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.descriptionEditor).toHaveText('');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.descriptionEditor).toHaveText('');
 
-      await appAdminPage.editAppGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's description was updated correctly", async () => {
-      await expect(appAdminPage.appDescription).toHaveText(updatedDescription);
+      await expect(appAdminPage.generalTab.appDescription).toHaveText(updatedDescription);
     });
   });
 
@@ -375,31 +375,33 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's content versioning was disabled correctly", async () => {
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Disabled');
     });
   });
 
@@ -409,79 +411,77 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
-      await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Disabled');
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the app's content versioning", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
-      await appAdminPage.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's content versioning was enabled correctly", async () => {
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
   });
 
-  test("Change the save types of an app's content versioning", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Change the save types of an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be changed', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the app's content versioning", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await expect(appAdminPage.editAppGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox.check();
-      await appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox.check();
-      await appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox.check();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.indirectUserSavesCheckbox.check();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.apiSavesCheckbox.check();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.systemSavesCheckbox.check();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.indirectUserSavesCheckbox
-      ).toBeChecked();
-      await expect(appAdminPage.editAppGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
-      await expect(appAdminPage.editAppGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's content versioning was changed correctly", async () => {
-      await expect(appAdminPage.appContentVersionStatus).toHaveText(
+      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText(
         'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
       );
     });
@@ -493,27 +493,23 @@ test.describe('app', () => {
 
     await test.step('Create the app whose concurrent edit alert will be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).not.toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's concurrent edit alert was disabled correctly", async () => {
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
   });
 
@@ -523,34 +519,30 @@ test.describe('app', () => {
 
     await test.step('Create the app whose concurrent edit alert will be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
-      await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Disabled');
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
+      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the app's concurrent edit alert", async () => {
-      await appAdminPage.editGeneralSettingsLink.click();
+      await appAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).not.toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.check();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox.check();
 
-      await expect(
-        appAdminPage.editAppGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).toBeChecked();
+      await expect(appAdminPage.generalTab.editAppGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
 
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's concurrent edit alert was enabled correctly", async () => {
-      await expect(appAdminPage.concurrentEditAlertStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
     });
   });
 
@@ -560,18 +552,18 @@ test.describe('app', () => {
 
     await test.step('Create the app whose display link field will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.displayLink).toHaveText('Record Id');
+      await expect(appAdminPage.generalTab.displayLink).toHaveText('Record Id');
     });
 
     await test.step("Update the app's display link field", async () => {
-      await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.displayLinkSelect.click();
+      await appAdminPage.generalTab.editDisplaySettingsLink.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.displayLinkSelect.click();
       await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's display link field was updated correctly", async () => {
-      await expect(appAdminPage.displayLink).toHaveText('Created Date');
+      await expect(appAdminPage.generalTab.displayLink).toHaveText('Created Date');
     });
   });
 
@@ -581,18 +573,18 @@ test.describe('app', () => {
 
     await test.step('Create the app whose integration link field will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.integrationLink).toHaveText('Record Id');
+      await expect(appAdminPage.generalTab.integrationLink).toHaveText('Record Id');
     });
 
     await test.step("Update the app's integration link field", async () => {
-      await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.integrationLinkSelect.click();
+      await appAdminPage.generalTab.editDisplaySettingsLink.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.integrationLinkSelect.click();
       await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's integration link field was updated correctly", async () => {
-      await expect(appAdminPage.integrationLink).toHaveText('Created Date');
+      await expect(appAdminPage.generalTab.integrationLink).toHaveText('Created Date');
     });
   });
 
@@ -602,18 +594,18 @@ test.describe('app', () => {
 
     await test.step('Create the app whose display fields will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.displayFields).toHaveText('Record Id');
+      await expect(appAdminPage.generalTab.displayFields).toHaveText('Record Id');
     });
 
     await test.step("Update the app's display fields", async () => {
-      await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.addDisplayField('Created Date');
-      await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editDisplaySettingsLink.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.addDisplayField('Created Date');
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's display fields were updated correctly", async () => {
-      await expect(appAdminPage.displayFields).toHaveText(/Record Id/);
-      await expect(appAdminPage.displayFields).toHaveText(/Created Date/);
+      await expect(appAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
+      await expect(appAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
     });
   });
 
@@ -623,26 +615,23 @@ test.describe('app', () => {
 
     await test.step('Create the app whose primary sort field will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.sort).toHaveText('None');
+      await expect(appAdminPage.generalTab.sort).toHaveText('None');
     });
 
     await test.step("Update the app's primary sort field", async () => {
-      await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.primarySortSelect.click();
-      await appAdminPage.page.getByRole('option', { name: 'Record Id' }).click();
+      await appAdminPage.generalTab.editDisplaySettingsLink.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
 
-      await expect(
-        appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect
-      ).toBeVisible();
-      await expect(appAdminPage.editAppDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
+      await expect(appAdminPage.generalTab.editAppDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
         'Ascending'
       );
 
-      await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's primary sort field was updated correctly", async () => {
-      await expect(appAdminPage.sort).toHaveText('Record Id (Ascending)');
+      await expect(appAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
     });
   });
 
@@ -652,58 +641,52 @@ test.describe('app', () => {
 
     await test.step('Create the app whose secondary sort field will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.sort).toHaveText('None');
+      await expect(appAdminPage.generalTab.sort).toHaveText('None');
     });
 
     await test.step("Update the app's secondary sort field", async () => {
-      await appAdminPage.editDisplaySettingsLink.click();
-      await appAdminPage.editAppDisplaySettingsModal.addDisplayField('Created Date');
-      await appAdminPage.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await appAdminPage.generalTab.editDisplaySettingsLink.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.addDisplayField('Created Date');
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.selectPrimarySortField('Record Id');
 
-      await appAdminPage.editAppDisplaySettingsModal.secondarySortSelect.click();
-      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.selectSecondarySortField('Created Date');
 
-      await expect(
-        appAdminPage.editAppDisplaySettingsModal.secondarySortDirectionSelect
-      ).toBeVisible();
-      await expect(
-        appAdminPage.editAppDisplaySettingsModal.secondarySortDirectionSelect
-      ).toHaveText('Ascending');
+      await expect(appAdminPage.generalTab.editAppDisplaySettingsModal.secondarySortDirectionSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppDisplaySettingsModal.secondarySortDirectionSelect).toHaveText(
+        'Ascending'
+      );
 
-      await appAdminPage.editAppDisplaySettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's secondary sort field was updated correctly", async () => {
-      await expect(appAdminPage.sort).toHaveText(/Record Id \(Ascending\)/);
-      await expect(appAdminPage.sort).toHaveText(/Created Date \(Ascending\)/);
+      await expect(appAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
+      await expect(appAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
     });
   });
 
-  test("Change an app's administration permissions to private", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Change an app's administration permissions to private", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.adminPermissions).toHaveText('Public');
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
     });
 
     await test.step("Change the app's administration permissions to private", async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeVisible();
-      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeVisible();
-      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.usersSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.rolesSelect).toBeVisible();
 
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's administration permissions were set to private", async () => {
-      await expect(appAdminPage.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
     });
   });
 
@@ -729,18 +712,18 @@ test.describe('app', () => {
     });
 
     await test.step('Give app admin permissions to user', async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.usersSelect).toBeVisible();
 
-      await appAdminPage.editAppAdminSettingsModal.selectUser(newUser.fullName);
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectUser(newUser.fullName);
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step('Verify app admin permissions were given to user', async () => {
-      await expect(appAdminPage.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.adminUsers).toHaveText(newUser.fullName);
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.generalTab.adminUsers).toHaveText(newUser.fullName);
     });
 
     await test.step('Delete user', async () => {
@@ -771,18 +754,18 @@ test.describe('app', () => {
     });
 
     await test.step('Give app admin permissions to role', async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.rolesSelect).toBeVisible();
 
-      await appAdminPage.editAppAdminSettingsModal.selectRole(roleName);
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectRole(roleName);
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step('Verify app admin permissions were given to role', async () => {
-      await expect(appAdminPage.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.adminRoles).toHaveText(roleName);
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.generalTab.adminRoles).toHaveText(roleName);
     });
 
     await test.step('Delete role', async () => {
@@ -813,18 +796,18 @@ test.describe('app', () => {
     });
 
     await test.step('Give app admin permissions to group', async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.groupsSelect).toBeVisible();
 
-      await appAdminPage.editAppAdminSettingsModal.selectGroup(groupName);
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectGroup(groupName);
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step('Verify app admin permissions were given to group', async () => {
-      await expect(appAdminPage.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.adminGroups).toHaveText(groupName);
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.generalTab.adminGroups).toHaveText(groupName);
     });
 
     await test.step('Delete group', async () => {
@@ -833,37 +816,34 @@ test.describe('app', () => {
     });
   });
 
-  test("Change an app's administration permissions to public", async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test("Change an app's administration permissions to public", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.adminPermissions).toHaveText('Public');
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
     });
 
     await test.step("Change the app's administration permissions to private", async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Private');
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step("Change the app's administration permissions to public", async () => {
-      await appAdminPage.editAdminSettingsLink.click();
-      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Public');
+      await appAdminPage.generalTab.editAdminSettingsLink.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.selectAdminPermissions('Public');
 
-      await expect(appAdminPage.editAppAdminSettingsModal.usersSelect).toBeHidden();
-      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeHidden();
-      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeHidden();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.usersSelect).toBeHidden();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.groupsSelect).toBeHidden();
+      await expect(appAdminPage.generalTab.editAppAdminSettingsModal.rolesSelect).toBeHidden();
 
-      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppAdminSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's administration permissions were set to public", async () => {
-      await expect(appAdminPage.adminPermissions).toHaveText('Public');
+      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
     });
   });
 
@@ -881,20 +861,20 @@ test.describe('app', () => {
 
     await test.step('Create the app whose app notes will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.appNotes).toHaveText('');
+      await expect(appAdminPage.generalTab.appNotes).toHaveText('');
     });
 
     await test.step("Update the app's app notes", async () => {
-      await appAdminPage.editNotesSettingLink.click();
+      await appAdminPage.generalTab.editNotesSettingLink.click();
 
-      await expect(appAdminPage.editAppNotesSettingsModal.notesEditor).toHaveText('');
+      await expect(appAdminPage.generalTab.editAppNotesSettingsModal.notesEditor).toHaveText('');
 
-      await appAdminPage.editAppNotesSettingsModal.notesEditor.fill(note);
-      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAppNotesSettingsModal.notesEditor.fill(note);
+      await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify app's app notes were updated correctly", async () => {
-      await expect(appAdminPage.appNotes).toHaveText(note);
+      await expect(appAdminPage.generalTab.appNotes).toHaveText(note);
     });
   });
 
