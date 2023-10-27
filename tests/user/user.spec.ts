@@ -77,9 +77,7 @@ test.describe('User', () => {
 
   test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage, editUserAdminPage }) => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
-    const userRow = usersSecurityAdminPage.userGrid
-      .getByRole('row', { name: newUser.username })
-      .first();
+    const userRow = usersSecurityAdminPage.userGrid.getByRole('row', { name: newUser.username }).first();
 
     await test.step('Create user to delete', async () => {
       await addUserAdminPage.addUser(newUser);

@@ -25,10 +25,7 @@ export class EditAppGeneralSettingsModalComponent {
     this.contentVersionStatusSwitch = page.getByRole('switch', {
       name: 'Content Versioning',
     });
-    this.contentVersionStatusToggle = page
-      .getByRole('switch', { name: 'Content Versioning' })
-      .locator('span')
-      .nth(3);
+    this.contentVersionStatusToggle = page.getByRole('switch', { name: 'Content Versioning' }).locator('span').nth(3);
     this.contentVersionTypes = page.locator('#versioning-types');
     this.directUserSavesCheckbox = page.getByLabel('Direct User Saves', {
       exact: true,

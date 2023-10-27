@@ -36,10 +36,7 @@ export class EditAppDisplaySettingsModalComponent {
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
-    this.selectorCloseButton = page
-      .locator('.selector-control:not(.invisible)')
-      .getByTitle('Close')
-      .first();
+    this.selectorCloseButton = page.locator('.selector-control:not(.invisible)').getByTitle('Close').first();
   }
 
   async addDisplayField(field: string) {
@@ -48,8 +45,17 @@ export class EditAppDisplaySettingsModalComponent {
     await this.selectorCloseButton.click();
   }
 
+  private async selectFieldFromSelector(field: string) {
+    await this.page.getByRole('option', { name: field }).click();
+  }
+
   async selectPrimarySortField(field: string) {
     await this.primarySortSelect.click();
-    await this.page.getByRole('option', { name: field }).click();
+    await this.selectFieldFromSelector(field);
+  }
+
+  async selectSecondarySortField(field: string) {
+    await this.secondarySortSelect.click();
+    await this.selectFieldFromSelector(field);
   }
 }

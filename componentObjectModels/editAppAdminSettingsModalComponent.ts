@@ -20,10 +20,7 @@ export class EditAppAdminSettingsModalComponent {
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
-    this.selectorCloseButton = page
-      .locator('.selector-control:not(.invisible)')
-      .getByTitle('Close')
-      .first();
+    this.selectorCloseButton = page.locator('.selector-control:not(.invisible)').getByTitle('Close').first();
   }
 
   private getUnselectedSelectorOption(field: string) {

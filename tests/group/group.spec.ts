@@ -69,15 +69,9 @@ test.describe('Group', () => {
     });
   });
 
-  test('Delete a Group', async ({
-    addGroupAdminPage,
-    editGroupAdminPage,
-    groupsSecurityAdminPage,
-  }) => {
+  test('Delete a Group', async ({ addGroupAdminPage, editGroupAdminPage, groupsSecurityAdminPage }) => {
     const groupName = FakeDataFactory.createFakeGroupName();
-    const groupRow = groupsSecurityAdminPage.groupsGrid
-      .getByRole('row', { name: groupName })
-      .first();
+    const groupRow = groupsSecurityAdminPage.groupsGrid.getByRole('row', { name: groupName }).first();
 
     await test.step('Create group to delete', async () => {
       await addGroupAdminPage.addGroup(groupName);

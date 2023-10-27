@@ -21,10 +21,7 @@ const test = base.extend<LoginTestFixtures>({
 });
 
 test.describe('login', () => {
-  test('user can login using valid username and password.', async ({
-    loginPage,
-    dashboardPage,
-  }) => {
+  test('user can login using valid username and password.', async ({ loginPage, dashboardPage }) => {
     const user = UserFactory.createSysAdminUser();
 
     await test.step('Navigate to login page.', async () => {
@@ -78,14 +75,8 @@ test.describe('login', () => {
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
       await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'color',
-        LoginPage.invalidCredentialError.color
-      );
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'font-weight',
-        LoginPage.invalidCredentialError.fontWeight
-      );
+      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
+      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
     });
   });
 
@@ -109,14 +100,8 @@ test.describe('login', () => {
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
       await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'color',
-        LoginPage.invalidCredentialError.color
-      );
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'font-weight',
-        LoginPage.invalidCredentialError.fontWeight
-      );
+      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
+      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
     });
   });
 
@@ -140,14 +125,8 @@ test.describe('login', () => {
     await test.step('Verify user is not logged in.', async () => {
       await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
       await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'color',
-        LoginPage.invalidCredentialError.color
-      );
-      await expect(loginPage.validationErrors).toHaveCSS(
-        'font-weight',
-        LoginPage.invalidCredentialError.fontWeight
-      );
+      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
+      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
     });
   });
 });
