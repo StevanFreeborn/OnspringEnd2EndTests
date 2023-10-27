@@ -867,6 +867,13 @@ test.describe('app', () => {
     });
   });
 
+  test('Enable geocoding for an app', async () => {
+    await test.step('Create app whose geocoding will be enabled', async () => {});
+    await test.step('Create fields for geocoding mapping', async () => {});
+    await test.step('Enable geocoding for app', async () => {});
+    await test.step('Verify geocoding was enabled correctly', async () => {});
+  });
+
   test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     const note = 'This is a note';
