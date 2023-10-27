@@ -41,4 +41,10 @@ export class EditAppAdminSettingsModalComponent {
     await this.getUnselectedSelectorOption(roleName).click();
     await this.rolesSelect.click();
   }
+
+  async selectGroup(groupName: string) {
+    await this.groupsSelect.click();
+    await this.getUnselectedSelectorOption(groupName).click();
+    await this.groupsSelect.click();
+  }
 }

@@ -4,11 +4,14 @@ import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
+import { AddGroupAdminPage } from './../../pageObjectModels/addGroupAdminPage';
 import { AddRoleAdminPage } from './../../pageObjectModels/addRoleAdminPage';
 import { AddUserAdminPage } from './../../pageObjectModels/addUserAdminPage';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
+import { EditGroupAdminPage } from './../../pageObjectModels/editGroupAdminPage';
 import { EditRoleAdminPage } from './../../pageObjectModels/editRoleAdminPage';
 import { EditUserAdminPage } from './../../pageObjectModels/editUserAdminPage';
+import { GroupsSecurityAdminPage } from './../../pageObjectModels/groupsSecurityAdminPage';
 import { RolesSecurityAdminPage } from './../../pageObjectModels/rolesSecurityAdminPage';
 import { UsersSecurityAdminPage } from './../../pageObjectModels/usersSecurityAdminPage';
 
@@ -788,9 +791,46 @@ test.describe('app', () => {
     });
   });
 
-  test('Give app administration permissions to specific groups', async () => {
-    // TODO: Implement this test
-    expect(true).toBe(false);
+  test('Give app administration permissions to specific groups', async ({
+    adminHomePage,
+    sysAdminPage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    const groupName = FakeDataFactory.createFakeGroupName();
+    appsToDelete.push(appName);
+    const groupsToDelete = [groupName];
+
+    await test.step('Create group that will be given admin permissions', async () => {
+      const addGroupAdminPage = new AddGroupAdminPage(sysAdminPage);
+      const editGroupAdminPage = new EditGroupAdminPage(sysAdminPage);
+      await addGroupAdminPage.addGroup(groupName);
+      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+    });
+
+    await test.step('Create the app whose administration permissions will be changed', async () => {
+      await adminHomePage.createApp(appName);
+    });
+
+    await test.step('Give app admin permissions to group', async () => {
+      await appAdminPage.editAdminSettingsLink.click();
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(appAdminPage.editAppAdminSettingsModal.groupsSelect).toBeVisible();
+
+      await appAdminPage.editAppAdminSettingsModal.selectGroup(groupName);
+      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify app admin permissions were given to group', async () => {
+      await expect(appAdminPage.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.adminGroups).toHaveText(groupName);
+    });
+
+    await test.step('Delete group', async () => {
+      const groupSecurityAdminPage = new GroupsSecurityAdminPage(sysAdminPage);
+      await groupSecurityAdminPage.deleteGroups(groupsToDelete);
+    });
   });
 
   test("Change an app's administration permissions to public", async ({
