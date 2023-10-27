@@ -867,6 +867,30 @@ test.describe('app', () => {
     });
   });
 
+  test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    const note = 'This is a note';
+    appsToDelete.push(appName);
+
+    await test.step('Create the app whose app notes will be updated', async () => {
+      await adminHomePage.createApp(appName);
+      await expect(appAdminPage.appNotes).toHaveText('');
+    });
+
+    await test.step("Update the app's app notes", async () => {
+      await appAdminPage.editNotesSettingLink.click();
+
+      await expect(appAdminPage.editAppNotesSettingsModal.notesEditor).toHaveText('');
+
+      await appAdminPage.editAppNotesSettingsModal.notesEditor.fill(note);
+      await appAdminPage.editAppGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify app's app notes were updated correctly", async () => {
+      await expect(appAdminPage.appNotes).toHaveText(note);
+    });
+  });
+
   test('Delete an app', async ({ adminHomePage, appsAdminPage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid.getByRole('row', { name: appName }).first();

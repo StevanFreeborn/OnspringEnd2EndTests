@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { EditAppAdminSettingsModalComponent } from '../componentObjectModels/editAppAdminSettingsModalComponent';
 import { EditAppDisplaySettingsModalComponent } from '../componentObjectModels/editAppDisplaySettingsModalComponent';
 import { EditAppGeneralSettingsModalComponent } from '../componentObjectModels/editAppGeneralSettingsModalComponent';
+import { EditAppNotesSettingsModalComponent } from '../componentObjectModels/editAppNotesSettingsModal';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AppAdminPage extends BaseAdminPage {
@@ -20,15 +21,18 @@ export class AppAdminPage extends BaseAdminPage {
   readonly adminUsers: Locator;
   readonly adminRoles: Locator;
   readonly adminGroups: Locator;
+  readonly appNotes: Locator;
 
   readonly editGeneralSettingsLink: Locator;
   readonly editDisplaySettingsLink: Locator;
   readonly editAdminSettingsLink: Locator;
+  readonly editNotesSettingLink: Locator;
   readonly closeButton: Locator;
 
   readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
   readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
   readonly editAppAdminSettingsModal: EditAppAdminSettingsModalComponent;
+  readonly editAppNotesSettingsModal: EditAppNotesSettingsModalComponent;
 
   constructor(page: Page) {
     super(page);
@@ -53,6 +57,7 @@ export class AppAdminPage extends BaseAdminPage {
     this.adminUsers = page.locator(this.createAppSettingSelector('Users'));
     this.adminRoles = page.locator(this.createAppSettingSelector('Roles'));
     this.adminGroups = page.locator(this.createAppSettingSelector('Groups'));
+    this.appNotes = page.locator(this.createAppSettingSelector('Notes'));
 
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })
@@ -63,11 +68,13 @@ export class AppAdminPage extends BaseAdminPage {
     this.editAdminSettingsLink = page
       .getByRole('heading', { name: 'Edit Administration Settings' })
       .getByRole('link');
+    this.editNotesSettingLink = page.getByRole('heading', { name: 'Edit Notes' }).getByRole('link');
     this.closeButton = page.locator('a:has-text("Close")');
 
     this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(page);
     this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(page);
+    this.editAppNotesSettingsModal = new EditAppNotesSettingsModalComponent(page);
   }
 
   private createAppSettingSelector(settingName: string) {
