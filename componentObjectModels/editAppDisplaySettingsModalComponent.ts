@@ -10,6 +10,7 @@ export class EditAppDisplaySettingsModalComponent {
   readonly secondarySortSelect: Locator;
   readonly secondarySortDirectionSelect: Locator;
   readonly saveButton: Locator;
+  readonly selectorCloseButton: Locator;
 
   private getUnselectedSelectorOption(field: string) {
     return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
@@ -35,12 +36,16 @@ export class EditAppDisplaySettingsModalComponent {
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
+    this.selectorCloseButton = page
+      .locator('.selector-control:not(.invisible)')
+      .getByTitle('Close')
+      .first();
   }
 
   async addDisplayField(field: string) {
     await this.displayFieldsSelect.click();
     await this.getUnselectedSelectorOption(field).click();
-    await this.displayFieldsSelect.click();
+    await this.selectorCloseButton.click();
   }
 
   async selectPrimarySortField(field: string) {

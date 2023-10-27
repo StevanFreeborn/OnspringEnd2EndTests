@@ -35,11 +35,11 @@ export class FakeDataFactory {
 
   static createFakeGroupName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-${faker.company.name()}`;
+    return `${uniqueId}-group-test`;
   }
 
   static createFakeRoleName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-${faker.person.jobTitle()}`;
+    return `${uniqueId}-role-test`;
   }
 }

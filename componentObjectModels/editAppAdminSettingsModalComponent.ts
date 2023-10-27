@@ -7,6 +7,7 @@ export class EditAppAdminSettingsModalComponent {
   readonly groupsSelect: Locator;
   readonly rolesSelect: Locator;
   readonly saveButton: Locator;
+  readonly selectorCloseButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -19,6 +20,10 @@ export class EditAppAdminSettingsModalComponent {
     this.saveButton = page.getByRole('button', {
       name: 'Save',
     });
+    this.selectorCloseButton = page
+      .locator('.selector-control:not(.invisible)')
+      .getByTitle('Close')
+      .first();
   }
 
   private getUnselectedSelectorOption(field: string) {
@@ -33,18 +38,18 @@ export class EditAppAdminSettingsModalComponent {
   async selectUser(userFullName: string) {
     await this.usersSelect.click();
     await this.getUnselectedSelectorOption(userFullName).click();
-    await this.usersSelect.click();
+    await this.selectorCloseButton.click();
   }
 
   async selectRole(roleName: string) {
     await this.rolesSelect.click();
     await this.getUnselectedSelectorOption(roleName).click();
-    await this.rolesSelect.click();
+    await this.selectorCloseButton.click();
   }
 
   async selectGroup(groupName: string) {
     await this.groupsSelect.click();
     await this.getUnselectedSelectorOption(groupName).click();
-    await this.groupsSelect.click();
+    await this.selectorCloseButton.click();
   }
 }
