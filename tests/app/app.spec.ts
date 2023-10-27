@@ -4,9 +4,12 @@ import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
+import { AddRoleAdminPage } from './../../pageObjectModels/addRoleAdminPage';
 import { AddUserAdminPage } from './../../pageObjectModels/addUserAdminPage';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
+import { EditRoleAdminPage } from './../../pageObjectModels/editRoleAdminPage';
 import { EditUserAdminPage } from './../../pageObjectModels/editUserAdminPage';
+import { RolesSecurityAdminPage } from './../../pageObjectModels/rolesSecurityAdminPage';
 import { UsersSecurityAdminPage } from './../../pageObjectModels/usersSecurityAdminPage';
 
 type AppTestFixtures = {
@@ -743,9 +746,46 @@ test.describe('app', () => {
     });
   });
 
-  test('Give app administration permissions to specific roles', async () => {
-    // TODO: Implement this test
-    expect(true).toBe(false);
+  test('Give app administration permissions to specific roles', async ({
+    adminHomePage,
+    sysAdminPage,
+    appAdminPage,
+  }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    const roleName = FakeDataFactory.createFakeRoleName();
+    appsToDelete.push(appName);
+    const rolesToDelete = [roleName];
+
+    await test.step('Create role that will be given admin permissions', async () => {
+      const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
+      const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
+      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+    });
+
+    await test.step('Create the app whose administration permissions will be changed', async () => {
+      await adminHomePage.createApp(appName);
+    });
+
+    await test.step('Give app admin permissions to role', async () => {
+      await appAdminPage.editAdminSettingsLink.click();
+      await appAdminPage.editAppAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(appAdminPage.editAppAdminSettingsModal.rolesSelect).toBeVisible();
+
+      await appAdminPage.editAppAdminSettingsModal.selectRole(roleName);
+      await appAdminPage.editAppAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify app admin permissions were given to role', async () => {
+      await expect(appAdminPage.adminPermissions).toHaveText('Private');
+      await expect(appAdminPage.adminRoles).toHaveText(roleName);
+    });
+
+    await test.step('Delete role', async () => {
+      const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+      await roleSecurityAdminPage.deleteRoles(rolesToDelete);
+    });
   });
 
   test('Give app administration permissions to specific groups', async () => {

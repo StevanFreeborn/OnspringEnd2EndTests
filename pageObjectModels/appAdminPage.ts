@@ -18,6 +18,8 @@ export class AppAdminPage extends BaseAdminPage {
   readonly sort: Locator;
   readonly adminPermissions: Locator;
   readonly adminUsers: Locator;
+  readonly adminRoles: Locator;
+  readonly adminGroups: Locator;
 
   readonly editGeneralSettingsLink: Locator;
   readonly editDisplaySettingsLink: Locator;
@@ -49,6 +51,8 @@ export class AppAdminPage extends BaseAdminPage {
       this.createAppSettingSelector('Administration Permissions')
     );
     this.adminUsers = page.locator(this.createAppSettingSelector('Users'));
+    this.adminRoles = page.locator(this.createAppSettingSelector('Roles'));
+    this.adminGroups = page.locator(this.createAppSettingSelector('Groups'));
 
     this.editGeneralSettingsLink = page
       .getByRole('heading', { name: 'Edit General Settings' })
