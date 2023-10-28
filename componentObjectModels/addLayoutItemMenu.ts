@@ -7,7 +7,7 @@ export class AddLayoutItemMenu {
     this.menu = page.locator(`[data-add-menu="layout-item"]`).first();
   }
 
-  async selectItem(itemName: string) {
-    await this.menu.getByText(itemName, { exact: true }).click();
+  async selectItem(itemType: string) {
+    await this.menu.getByText(itemType, { exact: true }).click();
   }
 }

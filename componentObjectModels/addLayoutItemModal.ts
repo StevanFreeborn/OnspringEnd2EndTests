@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class AddFieldModal {
+export class AddLayoutItemModal {
   readonly nameInput: Locator;
   readonly saveButton: Locator;
 

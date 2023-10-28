@@ -44,9 +44,9 @@ test.describe('text field', () => {
     await test.step('Add the text field', async () => {
       await appAdminPage.layoutTab.addFieldButton.click();
       await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
-      await appAdminPage.layoutTab.addFieldDialog.continueButton.click();
-      await appAdminPage.layoutTab.addFieldModal.nameInput.fill(fieldName);
-      await appAdminPage.layoutTab.addFieldModal.saveButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.layoutTab.addLayoutItemModal.nameInput.fill(fieldName);
+      await appAdminPage.layoutTab.addLayoutItemModal.saveButton.click();
     });
 
     await test.step('Verify the field was added', async () => {

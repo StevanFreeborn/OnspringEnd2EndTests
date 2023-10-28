@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class AddFieldDialog {
+export class AddLayoutItemDialog {
   readonly continueButton: Locator;
 
   constructor(page: Page) {
