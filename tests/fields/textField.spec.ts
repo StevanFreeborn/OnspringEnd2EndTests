@@ -1,7 +1,8 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base } from '../../fixtures';
+import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from './../../pageObjectModels/appAdminPage';
+import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
 
 type TextFieldTestFixtures = {
   appAdminPage: AppAdminPage;
@@ -13,27 +14,45 @@ const test = base.extend<TextFieldTestFixtures>({
     const appAdminPage = new AppAdminPage(sysAdminPage);
     await use(appAdminPage);
   },
-  appId: async ({ appAdminPage, sysAdminPage }, use) => {
+  appId: async ({ sysAdminPage }, use) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    const appAdminPage = new AppAdminPage(sysAdminPage);
     const appName = FakeDataFactory.createFakeAppName();
 
     await adminHomePage.goto();
     await adminHomePage.createApp(appName);
-    await appAdminPage.page.waitForLoadState();
+    await appAdminPage.page.waitForURL(appAdminPage.pathRegex);
     const appId = appAdminPage.getAppIdFromUrl();
+
     await use(appId);
+
+    await appsAdminPage.goto();
+    await appsAdminPage.deleteApps([appName]);
   },
 });
 
 test.describe('text field', () => {
   test.beforeEach(async ({ appAdminPage, appId }) => {
     await appAdminPage.goto(appId);
+    await appAdminPage.layoutTabButton.click();
   });
 
   test('Add a Text Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
+      await appAdminPage.layoutTab.addFieldDialog.continueButton.click();
+      await appAdminPage.layoutTab.addFieldModal.nameInput.fill(fieldName);
+      await appAdminPage.layoutTab.addFieldModal.saveButton.click();
     });
-    await test.step('Verify the field was added', async () => {});
+
+    await test.step('Verify the field was added', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 });

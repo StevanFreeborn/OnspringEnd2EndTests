@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { AppGeneralTabComponent } from '../componentObjectModels/appGeneralTabComponent';
+import { AppLayoutTabComponent } from '../componentObjectModels/appLayoutTabComponent';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AppAdminPage extends BaseAdminPage {
@@ -11,6 +12,7 @@ export class AppAdminPage extends BaseAdminPage {
   readonly layoutTabButton: Locator;
 
   readonly generalTab: AppGeneralTabComponent;
+  readonly layoutTab: AppLayoutTabComponent;
 
   constructor(page: Page) {
     super(page);
@@ -22,6 +24,7 @@ export class AppAdminPage extends BaseAdminPage {
     this.layoutTabButton = page.locator('#tab-strip').getByText('Layout');
 
     this.generalTab = new AppGeneralTabComponent(page);
+    this.layoutTab = new AppLayoutTabComponent(page);
   }
 
   async goto(appId: number) {

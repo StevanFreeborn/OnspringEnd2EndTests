@@ -42,4 +42,9 @@ export class FakeDataFactory {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-role-test`;
   }
+
+  static createFakeFieldName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-field-test`;
+  }
 }
