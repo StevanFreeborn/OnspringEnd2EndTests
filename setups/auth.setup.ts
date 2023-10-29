@@ -8,9 +8,14 @@ setup('login as system administrator', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
   const sysAdminUser = UserFactory.createSysAdminUser();
-  await loginPage.login(sysAdminUser);
-  await expect(dashboardPage.sharedNavPage.usersFullName).toHaveText(
-    sysAdminUser.fullName
-  );
-  await page.context().storageState({ path: SYS_ADMIN_AUTH_PATH });
+
+  await setup.step('Login as system administrator', async () => {
+    await loginPage.login(sysAdminUser);
+    await expect(dashboardPage.sidebar.usersFullName).toHaveText(sysAdminUser.fullName);
+  });
+
+  await setup.step('Save system administrator auth state', async () => {
+    await page.context().storageState({ path: SYS_ADMIN_AUTH_PATH });
+    await page.close();
+  });
 });

@@ -25,7 +25,7 @@ export class LoginPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'load' });
+    await this.page.goto(this.path);
   }
 
   async enterUsername(username: string) {

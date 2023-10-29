@@ -1,28 +1,11 @@
 import { Locator, Page } from '@playwright/test';
+import { BaseDeleteDialogComponent } from './baseDeleteDialogComponent';
 
-export class DeleteAppDialogComponent {
-  private readonly page: Page;
-  readonly overlay: Locator;
-  readonly dialog: Locator;
+export class DeleteAppDialogComponent extends BaseDeleteDialogComponent {
   readonly confirmationInput: Locator;
-  readonly deleteButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
-    this.overlay = page.locator('body > div.ui-widget-overlay.ui-front');
-    this.dialog = page.locator(
-      'body > div.ui-dialog.ui-corner-all.ui-widget.ui-widget-content.ui-front.ui-dialog-buttons.ui-draggable.warning-dialog'
-    );
+    super(page);
     this.confirmationInput = page.getByLabel('Delete App').getByRole('textbox');
-    this.deleteButton = page.getByRole('button', { name: 'Delete' });
-  }
-
-  async waitForModalToBeDismissed() {
-    await Promise.all([
-      this.dialog.waitFor({
-        state: 'detached',
-      }),
-      this.overlay.waitFor({ state: 'detached' }),
-    ]);
   }
 }

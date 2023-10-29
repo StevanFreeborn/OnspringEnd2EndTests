@@ -9,7 +9,6 @@
     "test:safari": "npm run test -- --project safari",
     "test:mobile": "npm run test -- --project android --project iOS",
     "test:seq": "npm run test:chrome && npm run test:safari && npm run test:mobile",
-    "test:flaky": "npm run test -- --grep @flaky",
     "test:ui": "npx playwright test --ui",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",
@@ -25,13 +24,14 @@
   "author": "stevan freeborn",
   "license": "ISC",
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
-    "@playwright/test": "^1.37.1",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "@typescript-eslint/parser": "^6.4.0",
-    "dotenv": "^16.0.3",
-    "eslint": "^8.47.0",
-    "eslint-plugin-playwright": "^0.15.3",
-    "prettier": "^3.0.2"
+    "@faker-js/faker": "^8.2.0",
+    "@playwright/test": "^1.39.0",
+    "@types/node": "^20.8.9",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.51.0",
+    "eslint-plugin-playwright": "^0.17.0",
+    "prettier": "^3.0.3"
   }
 }

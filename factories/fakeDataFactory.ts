@@ -1,21 +1,50 @@
 import { faker } from '@faker-js/faker';
 
 export class FakeDataFactory {
-  static createFakeFullName() {
-    return faker.name.fullName();
+  static createUniqueIdentifier() {
+    const timestamp = new Date().getTime().toString();
+    const id = faker.database.mongodbObjectId();
+    return `${timestamp}-${id}`;
+  }
+
+  static createFakeFirstName() {
+    return faker.person.firstName();
+  }
+
+  static createFakeLastName() {
+    return faker.person.lastName();
   }
 
   static createFakeUsername() {
-    return faker.internet.userName();
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${faker.internet.userName()}`;
   }
 
   static createFakePassword() {
-    return faker.internet.password(10);
+    return faker.internet.password({ length: 10 });
+  }
+
+  static createFakeEmail() {
+    return faker.internet.email();
   }
 
   static createFakeAppName() {
-    const timestamp = new Date().getTime().toString();
-    const id = faker.database.mongodbObjectId();
-    return `${timestamp}-${id}-app-test`;
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-app-test`;
+  }
+
+  static createFakeGroupName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-group-test`;
+  }
+
+  static createFakeRoleName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-role-test`;
+  }
+
+  static createFakeFieldName(fieldName: string = 'field-test') {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${fieldName}`;
   }
 }
