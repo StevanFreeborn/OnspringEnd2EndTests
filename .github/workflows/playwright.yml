@@ -14,7 +14,7 @@ jobs:
       INSTANCE_URL: ${{ secrets.INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.37.0-jammy
+      image: mcr.microsoft.com/playwright:v1.39.0-jammy
     strategy:
       fail-fast: false
       matrix:
