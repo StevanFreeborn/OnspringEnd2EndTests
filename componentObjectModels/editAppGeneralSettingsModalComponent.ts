@@ -21,7 +21,7 @@ export class EditAppGeneralSettingsModalComponent {
     this.nameInput = page.getByLabel('Name');
     this.descriptionEditor = page.locator('.content-area.mce-content-body');
     this.statusSwitch = page.getByRole('switch', { name: 'Status' });
-    this.statusToggle = page.getByRole('switch', { name: 'Status' }).locator('span').nth(3);
+    this.statusToggle = this.statusSwitch.locator('span').nth(3);
     this.contentVersionStatusSwitch = page.getByRole('switch', {
       name: 'Content Versioning',
     });

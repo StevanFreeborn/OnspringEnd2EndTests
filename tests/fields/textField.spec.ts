@@ -1,3 +1,4 @@
+import { LayoutItemType } from '../../componentObjectModels/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
@@ -43,7 +44,7 @@ test.describe('text field', () => {
 
     await test.step('Add the text field', async () => {
       await appAdminPage.layoutTab.addFieldButton.click();
-      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(LayoutItemType.TextField);
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
       await appAdminPage.layoutTab.addLayoutItemModal.nameInput.fill(fieldName);
       await appAdminPage.layoutTab.addLayoutItemModal.saveButton.click();

@@ -43,8 +43,8 @@ export class FakeDataFactory {
     return `${uniqueId}-role-test`;
   }
 
-  static createFakeFieldName() {
+  static createFakeFieldName(fieldName: string = 'field-test') {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-field-test`;
+    return `${uniqueId}-${fieldName}`;
   }
 }

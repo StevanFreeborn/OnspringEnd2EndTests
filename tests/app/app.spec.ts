@@ -1,3 +1,4 @@
+import { LayoutItemType } from '../../componentObjectModels/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
@@ -847,11 +848,52 @@ test.describe('app', () => {
     });
   });
 
-  test('Enable geocoding for an app', async () => {
-    await test.step('Create app whose geocoding will be enabled', async () => {});
-    await test.step('Create fields for geocoding mapping', async () => {});
-    await test.step('Enable geocoding for app', async () => {});
-    await test.step('Verify geocoding was enabled correctly', async () => {});
+  test('Enable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    const addressFieldName = FakeDataFactory.createFakeFieldName('address');
+    const cityFieldName = FakeDataFactory.createFakeFieldName('city');
+    const stateFieldName = FakeDataFactory.createFakeFieldName('state');
+    const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
+
+    const fieldNames = [addressFieldName, cityFieldName, stateFieldName, zipFieldName];
+
+    await test.step('Create app whose geocoding will be enabled', async () => {
+      await adminHomePage.createApp(appName);
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+    });
+
+    await test.step('Create fields for geocoding mapping', async () => {
+      await appAdminPage.layoutTabButton.click();
+
+      for (const fieldName of fieldNames) {
+        await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+      }
+    });
+
+    await test.step('Enable geocoding for app', async () => {
+      await appAdminPage.generalTabButton.click();
+      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
+      await appAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
+
+      await expect(appAdminPage.generalTab.editGeocodingSettingsModal.geocodingDataGrid).toBeVisible();
+
+      await appAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(addressFieldName);
+      await appAdminPage.generalTab.editGeocodingSettingsModal.selectCityField(cityFieldName);
+      await appAdminPage.generalTab.editGeocodingSettingsModal.selectStateField(stateFieldName);
+      await appAdminPage.generalTab.editGeocodingSettingsModal.selectZipField(zipFieldName);
+      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify geocoding was enabled correctly', async () => {
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.geocodingData.grid).toBeVisible();
+      await expect(appAdminPage.generalTab.geocodingData.address).toHaveText(addressFieldName);
+      await expect(appAdminPage.generalTab.geocodingData.city).toHaveText(cityFieldName);
+      await expect(appAdminPage.generalTab.geocodingData.state).toHaveText(stateFieldName);
+      await expect(appAdminPage.generalTab.geocodingData.zip).toHaveText(zipFieldName);
+    });
   });
 
   test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {

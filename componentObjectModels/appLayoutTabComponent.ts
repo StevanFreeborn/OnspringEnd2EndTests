@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from './addLayoutItemDialog';
-import { AddLayoutItemMenu } from './addLayoutItemMenu';
+import { AddLayoutItemMenu, LayoutItemType } from './addLayoutItemMenu';
 import { AddLayoutItemModal } from './addLayoutItemModal';
 
 export class AppLayoutTabComponent {
@@ -20,7 +20,7 @@ export class AppLayoutTabComponent {
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 
-  async addLayoutItem(itemType: string, itemName: string) {
+  async addLayoutItem(itemType: LayoutItemType, itemName: string) {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(itemType);
     await this.addLayoutItemDialog.continueButton.click();
