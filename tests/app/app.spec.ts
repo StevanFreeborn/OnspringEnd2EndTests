@@ -896,6 +896,36 @@ test.describe('app', () => {
     });
   });
 
+  test('Disable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+
+    await test.step('Create app whose geocoding will be disabled', async () => {
+      await adminHomePage.createApp(appName);
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+    });
+
+    await test.step('Enable geocoding for app', async () => {
+      await appAdminPage.enableGeocoding({
+        address: FakeDataFactory.createFakeFieldName('address'),
+        city: FakeDataFactory.createFakeFieldName('city'),
+        state: FakeDataFactory.createFakeFieldName('state'),
+        zip: FakeDataFactory.createFakeFieldName('zip'),
+      });
+    });
+
+    await test.step('Disable geocoding for app', async () => {
+      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
+      await appAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
+      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify geocoding was disabled correctly', async () => {
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.geocodingData.grid).toBeHidden();
+    });
+  });
+
   test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     const note = 'This is a note';
