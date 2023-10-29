@@ -25,8 +25,7 @@ const config: PlaywrightTestConfig = {
     [
       'json',
       {
-        outputDir: testResultsDir,
-        outputFile: 'results.json',
+        outputFile: path.join(testResultsDir, 'report.json'),
       },
     ],
   ],
