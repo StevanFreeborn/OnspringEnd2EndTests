@@ -6,6 +6,7 @@ import path from 'path';
 
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 const isCI = process.env.CI == 'true';
+const testResultsDir = 'test-results';
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
@@ -17,7 +18,18 @@ const config: PlaywrightTestConfig = {
   forbidOnly: isCI,
   retries: isCI ? 3 : 1,
   workers: isCI ? 1 : Math.floor(os.cpus().length / 2),
-  reporter: [['html'], ['list'], ['blob']],
+  reporter: [
+    ['html'],
+    ['list'],
+    ['blob'],
+    [
+      'json',
+      {
+        outputDir: testResultsDir,
+        outputFile: 'results.json',
+      },
+    ],
+  ],
   use: {
     actionTimeout: 0,
     baseURL: process.env.INSTANCE_URL,
@@ -47,8 +59,7 @@ const config: PlaywrightTestConfig = {
       dependencies: ['setup'],
     },
   ],
-
-  outputDir: 'test-results/',
+  outputDir: testResultsDir,
 };
 
 export default config;

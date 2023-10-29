@@ -5,6 +5,7 @@ import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/appAdminPage';
+import { AnnotationType } from '../annotations';
 import { AddGroupAdminPage } from './../../pageObjectModels/addGroupAdminPage';
 import { AddRoleAdminPage } from './../../pageObjectModels/addRoleAdminPage';
 import { AddUserAdminPage } from './../../pageObjectModels/addUserAdminPage';
@@ -53,6 +54,11 @@ test.describe('app', () => {
     adminHomePage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-1',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -70,6 +76,11 @@ test.describe('app', () => {
     adminHomePage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-2',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -88,6 +99,11 @@ test.describe('app', () => {
     appsAdminPage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-3',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -109,6 +125,11 @@ test.describe('app', () => {
     adminHomePage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-4',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -154,6 +175,11 @@ test.describe('app', () => {
     adminHomePage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-808',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -200,6 +226,11 @@ test.describe('app', () => {
     appsAdminPage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-6',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -240,6 +271,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's name", async ({ appAdminPage, adminHomePage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-7',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const updatedAppName = `${appName}-updated`;
     appsToDelete.push(updatedAppName);
@@ -263,6 +299,11 @@ test.describe('app', () => {
   });
 
   test('Disable an app', async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-8',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -295,6 +336,11 @@ test.describe('app', () => {
   });
 
   test('Enable an app', async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-9',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -347,6 +393,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's description.", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-10',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const updatedDescription = 'This is an updated description';
     appsToDelete.push(appName);
@@ -371,6 +422,11 @@ test.describe('app', () => {
   });
 
   test("Disable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-11',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -407,6 +463,11 @@ test.describe('app', () => {
   });
 
   test("Enable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-12',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -450,6 +511,11 @@ test.describe('app', () => {
   });
 
   test("Change the save types of an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-13',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -489,6 +555,11 @@ test.describe('app', () => {
   });
 
   test("Disable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-14',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -515,6 +586,11 @@ test.describe('app', () => {
   });
 
   test("Enable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-15',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -548,6 +624,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's display link field", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-16',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -569,6 +650,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's integration link field", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-17',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -590,6 +676,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's display fields", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-18',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -611,6 +702,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's primary sort field", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-19',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -637,6 +733,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's secondary sort field", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-20',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -667,6 +768,11 @@ test.describe('app', () => {
   });
 
   test("Change an app's administration permissions to private", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-21',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -696,6 +802,11 @@ test.describe('app', () => {
     sysAdminPage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-22',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     appsToDelete.push(appName);
@@ -738,6 +849,11 @@ test.describe('app', () => {
     sysAdminPage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-23',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const roleName = FakeDataFactory.createFakeRoleName();
     appsToDelete.push(appName);
@@ -780,6 +896,11 @@ test.describe('app', () => {
     sysAdminPage,
     appAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-24',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const groupName = FakeDataFactory.createFakeGroupName();
     appsToDelete.push(appName);
@@ -818,6 +939,11 @@ test.describe('app', () => {
   });
 
   test("Change an app's administration permissions to public", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-25',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -849,6 +975,11 @@ test.describe('app', () => {
   });
 
   test('Enable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-26',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -897,6 +1028,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's geocoding field mapping", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-27',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
     const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
@@ -935,6 +1071,11 @@ test.describe('app', () => {
   });
 
   test('Disable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-28',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
@@ -965,6 +1106,11 @@ test.describe('app', () => {
   });
 
   test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-29',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const note = 'This is a note';
     appsToDelete.push(appName);
@@ -989,6 +1135,11 @@ test.describe('app', () => {
   });
 
   test('Delete an app', async ({ adminHomePage, appsAdminPage, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-782',
+    });
+
     const appName = FakeDataFactory.createFakeAppName();
     const appRow = appsAdminPage.appGrid.getByRole('row', { name: appName }).first();
     const appDeleteButton = appRow.getByTitle('Delete App');

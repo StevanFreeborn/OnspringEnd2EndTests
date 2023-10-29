@@ -4,6 +4,7 @@ import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/rolesSecurityAdminPage';
+import { AnnotationType } from '../annotations';
 
 type RoleTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -48,6 +49,11 @@ test.describe('Role', () => {
     addRoleAdminPage,
     editRoleAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-625',
+    });
+
     const roleName = FakeDataFactory.createFakeRoleName();
     rolesToDelete.push(roleName);
 
@@ -76,6 +82,11 @@ test.describe('Role', () => {
   });
 
   test('Delete a Role', async ({ addRoleAdminPage, editRoleAdminPage, rolesSecurityAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-632',
+    });
+
     const roleName = FakeDataFactory.createFakeRoleName();
     const roleRow = rolesSecurityAdminPage.roleGrid.getByRole('row', { name: roleName }).first();
 

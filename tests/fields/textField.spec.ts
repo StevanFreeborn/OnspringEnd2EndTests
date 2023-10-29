@@ -2,6 +2,7 @@ import { LayoutItemType } from '../../componentObjectModels/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AnnotationType } from '../annotations';
 import { AppAdminPage } from './../../pageObjectModels/appAdminPage';
 import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
 
@@ -40,6 +41,11 @@ test.describe('text field', () => {
   });
 
   test('Add a Text Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-80',
+    });
+
     const fieldName = FakeDataFactory.createFakeFieldName();
 
     await test.step('Add the text field', async () => {

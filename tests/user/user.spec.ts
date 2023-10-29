@@ -5,6 +5,7 @@ import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
+import { AnnotationType } from '../annotations';
 
 type UserTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -49,6 +50,11 @@ test.describe('User', () => {
     addUserAdminPage,
     editUserAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-668',
+    });
+
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
 
@@ -76,6 +82,11 @@ test.describe('User', () => {
   });
 
   test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage, editUserAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-675',
+    });
+
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     const userRow = usersSecurityAdminPage.userGrid.getByRole('row', { name: newUser.username }).first();
 

@@ -4,6 +4,7 @@ import { AddGroupAdminPage } from '../../pageObjectModels/addGroupAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditGroupAdminPage } from '../../pageObjectModels/editGroupAdminPage';
 import { GroupsSecurityAdminPage } from '../../pageObjectModels/groupsSecurityAdminPage';
+import { AnnotationType } from '../annotations';
 
 type GroupTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -48,6 +49,11 @@ test.describe('Group', () => {
     addGroupAdminPage,
     editGroupAdminPage,
   }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-494',
+    });
+
     const groupName = FakeDataFactory.createFakeGroupName();
     groupsToDelete.push(groupName);
 
@@ -70,6 +76,11 @@ test.describe('Group', () => {
   });
 
   test('Delete a Group', async ({ addGroupAdminPage, editGroupAdminPage, groupsSecurityAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-501',
+    });
+
     const groupName = FakeDataFactory.createFakeGroupName();
     const groupRow = groupsSecurityAdminPage.groupsGrid.getByRole('row', { name: groupName }).first();
 
