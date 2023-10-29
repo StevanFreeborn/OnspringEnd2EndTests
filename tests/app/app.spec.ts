@@ -896,6 +896,44 @@ test.describe('app', () => {
     });
   });
 
+  test("Update an app's geocoding field mapping", async ({ adminHomePage, appAdminPage }) => {
+    const appName = FakeDataFactory.createFakeAppName();
+    appsToDelete.push(appName);
+    const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
+
+    await test.step('Create app whose geocode mapping will be updated', async () => {
+      await adminHomePage.createApp(appName);
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+    });
+
+    await test.step('Enable geocoding for app', async () => {
+      await appAdminPage.enableGeocoding({
+        address: FakeDataFactory.createFakeFieldName('address'),
+        city: FakeDataFactory.createFakeFieldName('city'),
+        state: FakeDataFactory.createFakeFieldName('state'),
+        zip: FakeDataFactory.createFakeFieldName('zip'),
+      });
+    });
+
+    await test.step('Create field to update geocoding mapping', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, secondAddressFieldName);
+    });
+
+    await test.step('Update geocoding field mapping', async () => {
+      await appAdminPage.generalTabButton.click();
+      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
+      await appAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(secondAddressFieldName);
+      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify geocoding was disabled correctly', async () => {
+      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.geocodingData.grid).toBeVisible();
+      await expect(appAdminPage.generalTab.geocodingData.address).toHaveText(secondAddressFieldName);
+    });
+  });
+
   test('Disable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
