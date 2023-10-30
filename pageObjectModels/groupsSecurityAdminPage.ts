@@ -23,16 +23,17 @@ export class GroupsSecurityAdminPage extends BaseAdminPage {
 
     for (const groupName of groupsToDelete) {
       const groupRow = this.groupsGrid.getByRole('row', { name: groupName }).first();
+      const rowElement = await groupRow.elementHandle();
 
-      // eslint-disable-next-line playwright/no-force-option
-      await groupRow.hover({ force: true });
+      if (rowElement === null) {
+        continue;
+      }
 
-      // eslint-disable-next-line playwright/no-force-option
-      await groupRow.getByTitle('Delete Group').click({ force: true });
-
+      await groupRow.hover();
+      await groupRow.getByTitle('Delete Group').click();
       await this.deleteGroupDialog.deleteButton.click();
       await this.deleteGroupDialog.waitForDialogToBeDismissed();
-      await this.page.waitForLoadState('networkidle');
+      await rowElement.waitForElementState('hidden');
     }
   }
 }

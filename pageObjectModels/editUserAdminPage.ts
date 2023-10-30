@@ -12,4 +12,15 @@ export class EditUserAdminPage extends UserAdminPage {
   async goto(userId: number) {
     await this.page.goto(`/Admin/Security/User/${userId}/Edit`);
   }
+
+  getUserIdFromUrl() {
+    if (this.page.url().match(this.pathRegex) === null) {
+      throw new Error('The current page is not an edit user admin page.');
+    }
+
+    const url = this.page.url();
+    const urlParts = url.split('/');
+    const userId = urlParts[urlParts.length - 2];
+    return parseInt(userId);
+  }
 }

@@ -4,12 +4,14 @@ import { BaseAdminPage } from './baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
+  readonly createUserButton: Locator;
   readonly userGrid: Locator;
   readonly deleteUserDialog: DeleteUserDialogComponent;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/User';
+    this.createUserButton = page.locator('.create-button');
     this.userGrid = page.locator('#grid');
     this.deleteUserDialog = new DeleteUserDialogComponent(page);
   }
@@ -23,16 +25,17 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
 
     for (const username of usersToDelete) {
       const userRow = this.userGrid.getByRole('row', { name: username }).first();
+      const rowElement = await userRow.elementHandle();
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.hover({ force: true });
+      if (rowElement === null) {
+        continue;
+      }
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.getByTitle('Delete User').click({ force: true });
-
+      await userRow.hover();
+      await userRow.getByTitle('Delete User').click();
       await this.deleteUserDialog.deleteButton.click();
       await this.deleteUserDialog.waitForDialogToBeDismissed();
-      await this.page.waitForLoadState('networkidle');
+      await rowElement.waitForElementState('hidden');
     }
   }
 }

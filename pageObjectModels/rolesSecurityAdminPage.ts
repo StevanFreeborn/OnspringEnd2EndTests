@@ -22,17 +22,18 @@ export class RolesSecurityAdminPage extends BaseAdminPage {
     await this.goto();
 
     for (const roleName of rolesToDelete) {
-      const userRow = this.roleGrid.getByRole('row', { name: roleName }).first();
+      const roleRow = this.roleGrid.getByRole('row', { name: roleName }).first();
+      const rowElement = await roleRow.elementHandle();
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.hover({ force: true });
+      if (rowElement === null) {
+        continue;
+      }
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.getByTitle('Delete Role').click({ force: true });
-
+      await roleRow.hover();
+      await roleRow.getByTitle('Delete Role').click();
       await this.deleteRoleDialog.deleteButton.click();
       await this.deleteRoleDialog.waitForDialogToBeDismissed();
-      await this.page.waitForLoadState('networkidle');
+      await rowElement.waitForElementState('hidden');
     }
   }
 }

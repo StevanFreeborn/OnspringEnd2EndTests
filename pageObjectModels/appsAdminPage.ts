@@ -44,22 +44,20 @@ export class AppsAdminPage extends BaseAdminPage {
 
     for (const appName of appsToDelete) {
       const appRow = this.appGrid.getByRole('row', { name: appName }).first();
-      const appDeleteButton = appRow.getByTitle('Delete App');
-      await this.page.waitForLoadState('networkidle');
+      const rowElement = await appRow.elementHandle();
 
-      // eslint-disable-next-line playwright/no-force-option
-      await appRow.hover({ force: true });
-      // eslint-disable-next-line playwright/no-force-option
-      await appDeleteButton.click({ force: true });
+      if (rowElement === null) {
+        continue;
+      }
 
+      await appRow.hover();
+      await appRow.getByTitle('Delete App').click();
       await this.deleteAppDialog.confirmationInput.pressSequentially('OK', {
         delay: 100,
       });
-
-      // eslint-disable-next-line playwright/no-force-option
-      await this.deleteAppDialog.deleteButton.click({ force: true });
+      await this.deleteAppDialog.deleteButton.click();
       await this.deleteAppDialog.waitForDialogToBeDismissed();
-      await this.page.waitForLoadState('networkidle');
+      await rowElement.waitForElementState('hidden');
     }
   }
 }

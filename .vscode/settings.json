@@ -3,6 +3,7 @@
     "domcontentloaded",
     "endtests",
     "FULLNAME",
+    "iife",
     "listbox",
     "networkidle",
     "onspringend",

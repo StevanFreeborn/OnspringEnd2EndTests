@@ -1,7 +1,10 @@
 import { Locator, Page } from '@playwright/test';
+import { ReferenceFieldGrid } from '../componentObjectModels/referenceFieldGrid';
 import { BaseAdminFormPage } from './baseAdminFormPage';
 
 export class UserAdminPage extends BaseAdminFormPage {
+  readonly generalTabButton: Locator;
+  readonly securityTabButton: Locator;
   readonly firstNameInput: Locator;
   readonly lastNameInput: Locator;
   readonly usernameInput: Locator;
@@ -9,9 +12,13 @@ export class UserAdminPage extends BaseAdminFormPage {
   readonly activeStatusButton: Locator;
   readonly inactiveStatusButton: Locator;
   readonly lockedStatusButton: Locator;
+  readonly rolesReferenceFieldGird: ReferenceFieldGrid;
+  readonly groupsReferenceFieldGird: ReferenceFieldGrid;
 
   constructor(page: Page) {
     super(page);
+    this.generalTabButton = page.locator('#tab-strip-0').getByText('General');
+    this.securityTabButton = page.locator('#tab-strip-0').getByText('Security');
     this.firstNameInput = page.locator(this.createFormControlSelector('First Name'));
     this.lastNameInput = page.locator(this.createFormControlSelector('Last Name'));
     this.usernameInput = page.locator(this.createFormControlSelector('Username'));
@@ -26,5 +33,13 @@ export class UserAdminPage extends BaseAdminFormPage {
     this.lockedStatusButton = page.getByRole('button', {
       name: 'Locked',
     });
+    this.rolesReferenceFieldGird = new ReferenceFieldGrid(
+      page,
+      this.createFormControlSelector('Roles', 'div.onx-reference-grid')
+    );
+    this.groupsReferenceFieldGird = new ReferenceFieldGrid(
+      page,
+      this.createFormControlSelector('Groups', 'div.onx-reference-grid')
+    );
   }
 }
