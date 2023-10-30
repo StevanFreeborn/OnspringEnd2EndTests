@@ -236,12 +236,11 @@ test.describe('User', () => {
     await test.step('Update the user', async () => {
       await editUserAdminPage.lockedStatusButton.click();
       await editUserAdminPage.saveRecordButton.click();
-      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
-      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Verify user is updated correctly', async () => {
-      await editUserAdminPage.page.reload();
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
       await expect(editUserAdminPage.lockedStatusButton).toHaveClass(/active-status/);
     });
   });
@@ -280,14 +279,11 @@ test.describe('User', () => {
 
       await editUserAdminPage.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
       await editUserAdminPage.saveRecordButton.click();
-      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
-      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Verify the role is assigned to the user', async () => {
-      await editUserAdminPage.page.reload();
-      await editUserAdminPage.securityTabButton.click();
-
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
       const roleRow = editUserAdminPage.rolesReferenceFieldGird.gridTable.getByRole('row', { name: roleName });
       await expect(roleRow).toBeVisible();
     });
@@ -333,14 +329,11 @@ test.describe('User', () => {
 
       await editUserAdminPage.groupsReferenceFieldGird.searchForAndSelectRecord(groupName);
       await editUserAdminPage.saveRecordButton.click();
-      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
-      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Verify the group is assigned to the user', async () => {
-      await editUserAdminPage.page.reload();
-      await editUserAdminPage.securityTabButton.click();
-
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
       const groupRow = editUserAdminPage.groupsReferenceFieldGird.gridTable.getByRole('row', { name: groupName });
       await expect(groupRow).toBeVisible();
     });
