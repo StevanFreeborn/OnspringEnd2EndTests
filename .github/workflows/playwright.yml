@@ -25,7 +25,14 @@ jobs:
       SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
       SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
       SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
-      INSTANCE_URL: ${{ secrets[format('{0}_INSTANCE_URL', github.event.inputs.environment)] }}
+      TEST_ENV: ${{ github.event.inputs.environment }}
+      ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
+      BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
+      QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
+      IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
+      VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
+      VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
+      PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
