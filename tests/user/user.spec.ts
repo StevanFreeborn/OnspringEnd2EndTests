@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
 import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { CopyUserAdminPage } from '../../pageObjectModels/copyUserAdminPage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
@@ -160,24 +161,80 @@ test.describe('User', () => {
     });
   });
 
-  test('Create a copy of a user', async () => {
+  test('Create a copy of a user', async ({ addUserAdminPage, editUserAdminPage, usersSecurityAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-785',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const copyUserAdminPage = new CopyUserAdminPage(addUserAdminPage.page);
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const copiedUserUsername = `${newUser.username} (Copy)`;
+    usersToDelete.push(newUser.username);
+    usersToDelete.push(copiedUserUsername);
+
+    await test.step('Create a user to copy', async () => {
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Copy the user', async () => {
+      const userRow = usersSecurityAdminPage.userGrid.getByRole('row', { name: newUser.username }).first();
+
+      await usersSecurityAdminPage.goto();
+      await userRow.hover();
+      await userRow.getByTitle('Copy User').click();
+      await copyUserAdminPage.page.waitForLoadState();
+
+      await expect(copyUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(copyUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(copyUserAdminPage.usernameInput).toHaveValue(newUser.username);
+      await expect(copyUserAdminPage.emailInput).toHaveValue(newUser.email);
+      await expect(copyUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+
+      await copyUserAdminPage.usernameInput.clear();
+      await copyUserAdminPage.usernameInput.fill(copiedUserUsername);
+      await copyUserAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the user is copied', async () => {
+      await copyUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+
+      expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
+      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.usernameInput).toHaveValue(copiedUserUsername);
+      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+    });
   });
 
-  test('Update a user', async () => {
+  test('Update a user', async ({ addUserAdminPage, editUserAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-674',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    usersToDelete.push(newUser.username);
+
+    await test.step('Create a user to update', async () => {
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Update the user', async () => {
+      await editUserAdminPage.lockedStatusButton.click();
+      await editUserAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify user is updated correctly', async () => {
+      await editUserAdminPage.page.reload();
+      await expect(editUserAdminPage.lockedStatusButton).toHaveClass(/active-status/);
+    });
   });
 
   test('Assign a role to a user', async () => {
