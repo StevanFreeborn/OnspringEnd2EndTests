@@ -58,7 +58,7 @@ test.describe('User', () => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
 
-    await test.step('Create a new user', async () => {
+    await test.step('Create the user', async () => {
       await adminHomePage.adminNav.adminCreateButton.hover();
       await adminHomePage.adminNav.adminCreateMenu.waitFor();
       await adminHomePage.adminNav.userCreateMenuOption.click();
@@ -94,7 +94,7 @@ test.describe('User', () => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
 
-    await test.step('Create a new user', async () => {
+    await test.step('Create the user', async () => {
       await adminHomePage.securityTileLink.hover();
       await adminHomePage.securityTileCreateButton.waitFor();
       await adminHomePage.securityTileCreateButton.click();
@@ -121,14 +121,43 @@ test.describe('User', () => {
     });
   });
 
-  test('Create a User via the "Create User" button on the user home page', async () => {
+  test('Create a User via the Create User button on the user home page', async ({
+    adminHomePage,
+    usersSecurityAdminPage,
+    addUserAdminPage,
+    editUserAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-670',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    usersToDelete.push(newUser.username);
+
+    await test.step('Navigate to the users security admin page', async () => {
+      await adminHomePage.securityTileLink.click();
+    });
+
+    await test.step('Create the user', async () => {
+      await usersSecurityAdminPage.createUserButton.click();
+      await addUserAdminPage.page.waitForLoadState();
+      await addUserAdminPage.fillRequiredUserFields(newUser);
+      await addUserAdminPage.inactiveStatusButton.click();
+      await addUserAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify user is created correctly', async () => {
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+
+      expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
+      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.usernameInput).toHaveValue(newUser.username);
+      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+    });
   });
 
   test('Create a copy of a user', async () => {

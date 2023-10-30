@@ -4,12 +4,14 @@ import { BaseAdminPage } from './baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
+  readonly createUserButton: Locator;
   readonly userGrid: Locator;
   readonly deleteUserDialog: DeleteUserDialogComponent;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/User';
+    this.createUserButton = page.locator('.create-button');
     this.userGrid = page.locator('#grid');
     this.deleteUserDialog = new DeleteUserDialogComponent(page);
   }
