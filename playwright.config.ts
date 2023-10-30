@@ -8,6 +8,33 @@ export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 const isCI = process.env.CI == 'true';
 const testResultsDir = 'test-results';
 
+let baseURL: string | undefined;
+
+switch (process.env.TEST_ENV) {
+  case 'BETA':
+    baseURL = process.env.BETA_INSTANCE_URL;
+    break;
+  case 'QA':
+    baseURL = process.env.QA_INSTANCE_URL;
+    break;
+  case 'IST':
+    baseURL = process.env.IST_INSTANCE_URL;
+    break;
+  case 'VPRIOR':
+    baseURL = process.env.VPRIOR_INSTANCE_URL;
+    break;
+  case 'VNEXT':
+    baseURL = process.env.VNEXT_INSTANCE_URL;
+    break;
+  case 'PROD':
+    baseURL = process.env.BETA_INSTANCE_URL;
+    break;
+  case 'ALPHA':
+  default:
+    baseURL = process.env.ALPHA_INSTANCE_URL;
+    break;
+}
+
 const config: PlaywrightTestConfig = {
   testDir: './tests',
   timeout: 120 * 1000,
@@ -31,7 +58,7 @@ const config: PlaywrightTestConfig = {
   ],
   use: {
     actionTimeout: 0,
-    baseURL: process.env.INSTANCE_URL,
+    baseURL: baseURL,
     trace: isCI ? 'on-first-retry' : 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: isCI ? 'on-first-retry' : 'retain-on-failure',
