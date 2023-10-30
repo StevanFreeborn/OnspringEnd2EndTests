@@ -25,7 +25,7 @@ jobs:
       SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
       SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
       SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
-      INSTANCE_URL: ${{ secrets.INSTANCE_URL }}
+      INSTANCE_URL: ${{ secrets[format('{0}_INSTANCE_URL', github.event.inputs.environment)] }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
