@@ -25,16 +25,17 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
 
     for (const username of usersToDelete) {
       const userRow = this.userGrid.getByRole('row', { name: username }).first();
+      const rowElement = await userRow.elementHandle();
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.hover({ force: true });
+      if (rowElement === null) {
+        continue;
+      }
 
-      // eslint-disable-next-line playwright/no-force-option
-      await userRow.getByTitle('Delete User').click({ force: true });
-
+      await userRow.hover();
+      await userRow.getByTitle('Delete User').click();
       await this.deleteUserDialog.deleteButton.click();
       await this.deleteUserDialog.waitForDialogToBeDismissed();
-      await this.page.waitForLoadState('networkidle');
+      await rowElement.waitForElementState('hidden');
     }
   }
 }

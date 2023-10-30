@@ -10,6 +10,10 @@ import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
+import { AddGroupAdminPage } from './../../pageObjectModels/addGroupAdminPage';
+import { EditGroupAdminPage } from './../../pageObjectModels/editGroupAdminPage';
+import { GroupsSecurityAdminPage } from './../../pageObjectModels/groupsSecurityAdminPage';
+import { RolesSecurityAdminPage } from './../../pageObjectModels/rolesSecurityAdminPage';
 
 type UserTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -232,6 +236,8 @@ test.describe('User', () => {
     await test.step('Update the user', async () => {
       await editUserAdminPage.lockedStatusButton.click();
       await editUserAdminPage.saveRecordButton.click();
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Verify user is updated correctly', async () => {
@@ -272,8 +278,10 @@ test.describe('User', () => {
 
       await expect(editUserAdminPage.rolesReferenceFieldGird.searchResults).toBeVisible();
 
-      await editUserAdminPage.rolesReferenceFieldGird.selectSearchResult(roleName);
+      await editUserAdminPage.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
       await editUserAdminPage.saveRecordButton.click();
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
     });
 
     await test.step('Verify the role is assigned to the user', async () => {
@@ -283,16 +291,65 @@ test.describe('User', () => {
       const roleRow = editUserAdminPage.rolesReferenceFieldGird.gridTable.getByRole('row', { name: roleName });
       await expect(roleRow).toBeVisible();
     });
+
+    await test.step('Delete the role', async () => {
+      const rolesSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+      await rolesSecurityAdminPage.goto();
+      await rolesSecurityAdminPage.deleteRoles([roleName]);
+    });
   });
 
-  test('Assign a group to a user', async () => {
+  test('Assign a group to a user', async ({ sysAdminPage, addUserAdminPage, editUserAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-677',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const groupName = FakeDataFactory.createFakeGroupName();
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    usersToDelete.push(newUser.username);
+
+    await test.step('Create the group to assign to the user', async () => {
+      const addGroupAdminPage = new AddGroupAdminPage(sysAdminPage);
+      const editGroupAdminPage = new EditGroupAdminPage(sysAdminPage);
+
+      await addGroupAdminPage.addGroup(groupName);
+      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Create the user to assign the group to', async () => {
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Assign the group to the user', async () => {
+      await editUserAdminPage.securityTabButton.click();
+      expect(await editUserAdminPage.groupsReferenceFieldGird.isGridEmpty()).toBe(true);
+      await editUserAdminPage.groupsReferenceFieldGird.filterInput.click();
+
+      await expect(editUserAdminPage.groupsReferenceFieldGird.searchResults).toBeVisible();
+
+      await editUserAdminPage.groupsReferenceFieldGird.searchForAndSelectRecord(groupName);
+      await editUserAdminPage.saveRecordButton.click();
+      await editUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Verify the group is assigned to the user', async () => {
+      await editUserAdminPage.page.reload();
+      await editUserAdminPage.securityTabButton.click();
+
+      const groupRow = editUserAdminPage.groupsReferenceFieldGird.gridTable.getByRole('row', { name: groupName });
+      await expect(groupRow).toBeVisible();
+    });
+
+    await test.step('Delete the group', async () => {
+      const groupsSecurityAdminPage = new GroupsSecurityAdminPage(sysAdminPage);
+      await groupsSecurityAdminPage.goto();
+      await groupsSecurityAdminPage.deleteGroups([groupName]);
+    });
   });
 
   test('Delete a user', async ({ addUserAdminPage, usersSecurityAdminPage, editUserAdminPage }) => {

@@ -13,6 +13,7 @@ export class UserAdminPage extends BaseAdminFormPage {
   readonly inactiveStatusButton: Locator;
   readonly lockedStatusButton: Locator;
   readonly rolesReferenceFieldGird: ReferenceFieldGrid;
+  readonly groupsReferenceFieldGird: ReferenceFieldGrid;
 
   constructor(page: Page) {
     super(page);
@@ -35,6 +36,10 @@ export class UserAdminPage extends BaseAdminFormPage {
     this.rolesReferenceFieldGird = new ReferenceFieldGrid(
       page,
       this.createFormControlSelector('Roles', 'div.onx-reference-grid')
+    );
+    this.groupsReferenceFieldGird = new ReferenceFieldGrid(
+      page,
+      this.createFormControlSelector('Groups', 'div.onx-reference-grid')
     );
   }
 }
