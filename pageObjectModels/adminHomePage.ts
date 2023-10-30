@@ -9,6 +9,9 @@ export class AdminHomePage extends BaseAdminPage {
   readonly appTileCreateButton: Locator;
   readonly createAppDialog: CreateAppDialogComponent;
   readonly createAppModal: CreateAppModalComponent;
+  readonly securityTileLink: Locator;
+  readonly securityTileCreateButton: Locator;
+  readonly securityCreateMenu: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -17,6 +20,11 @@ export class AdminHomePage extends BaseAdminPage {
     this.appTileCreateButton = page.locator('#card-create-button-Apps');
     this.createAppDialog = new CreateAppDialogComponent(page);
     this.createAppModal = new CreateAppModalComponent(page);
+    this.securityTileLink = page.locator(
+      'div.landing-list-item-container:nth-child(6) > div:nth-child(1) > a:nth-child(1)'
+    );
+    this.securityTileCreateButton = page.locator('#card-create-button-Security');
+    this.securityCreateMenu = page.locator('[data-create-menu-for="card-create-button-Security"]');
   }
 
   async goto() {
