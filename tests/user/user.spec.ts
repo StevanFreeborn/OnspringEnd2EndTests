@@ -1,9 +1,12 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
+import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
 import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { CopyUserAdminPage } from '../../pageObjectModels/copyUserAdminPage';
+import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
 import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
@@ -173,7 +176,7 @@ test.describe('User', () => {
     usersToDelete.push(newUser.username);
     usersToDelete.push(copiedUserUsername);
 
-    await test.step('Create a user to copy', async () => {
+    await test.step('Create the user to copy', async () => {
       await addUserAdminPage.addUser(newUser);
       await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
       await editUserAdminPage.page.waitForLoadState();
@@ -220,7 +223,7 @@ test.describe('User', () => {
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     usersToDelete.push(newUser.username);
 
-    await test.step('Create a user to update', async () => {
+    await test.step('Create the user to update', async () => {
       await addUserAdminPage.addUser(newUser);
       await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
       await editUserAdminPage.page.waitForLoadState();
@@ -237,14 +240,49 @@ test.describe('User', () => {
     });
   });
 
-  test('Assign a role to a user', async () => {
+  test('Assign a role to a user', async ({ sysAdminPage, addUserAdminPage, editUserAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-676',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    usersToDelete.push(newUser.username);
+
+    await test.step('Create the role to assign to the user', async () => {
+      const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
+      const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
+
+      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Create the user to assign the role to', async () => {
+      await addUserAdminPage.addUser(newUser);
+      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await editUserAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Assign the role to the user', async () => {
+      await editUserAdminPage.securityTabButton.click();
+      expect(await editUserAdminPage.rolesReferenceFieldGird.isGridEmpty()).toBe(true);
+      await editUserAdminPage.rolesReferenceFieldGird.filterInput.click();
+
+      await expect(editUserAdminPage.rolesReferenceFieldGird.searchResults).toBeVisible();
+
+      await editUserAdminPage.rolesReferenceFieldGird.selectSearchResult(roleName);
+      await editUserAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the role is assigned to the user', async () => {
+      await editUserAdminPage.page.reload();
+      await editUserAdminPage.securityTabButton.click();
+
+      const roleRow = editUserAdminPage.rolesReferenceFieldGird.gridTable.getByRole('row', { name: roleName });
+      await expect(roleRow).toBeVisible();
+    });
   });
 
   test('Assign a group to a user', async () => {
