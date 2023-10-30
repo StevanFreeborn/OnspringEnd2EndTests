@@ -2,7 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { LayoutItemType } from '../componentObjectModels/addLayoutItemMenu';
 import { AppGeneralTabComponent } from '../componentObjectModels/appGeneralTabComponent';
 import { AppLayoutTabComponent } from '../componentObjectModels/appLayoutTabComponent';
-import { baseURL } from '../playwright.config';
+import { BASE_URL } from '../playwright.config';
 import { BaseAdminPage } from './baseAdminPage';
 
 type GeocodeFields = {
@@ -26,7 +26,7 @@ export class AppAdminPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/App/';
-    this.pathRegex = new RegExp(`${baseURL}${this.path}[0-9]+`);
+    this.pathRegex = new RegExp(`${BASE_URL}${this.path}[0-9]+`);
     this.closeButton = page.locator('a:has-text("Close")');
 
     this.generalTabButton = page.locator('#tab-strip').getByText('General');

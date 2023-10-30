@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { baseURL } from '../playwright.config';
+import { BASE_URL } from '../playwright.config';
 import { UserAdminPage } from './userAdminPage';
 
 export class EditUserAdminPage extends UserAdminPage {
@@ -7,11 +7,16 @@ export class EditUserAdminPage extends UserAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.pathRegex = new RegExp(`${baseURL}/Admin/Security/User/[0-9]+/Edit`);
+    this.pathRegex = new RegExp(`${BASE_URL}/Admin/Security/User/[0-9]+/Edit`);
   }
 
   async goto(userId: number) {
     await this.page.goto(`/Admin/Security/User/${userId}/Edit`);
+  }
+
+  async saveUser() {
+    await this.saveRecordButton.click();
+    await this.page.waitForResponse(response => response.url().match(this.pathRegex) !== null);
   }
 
   getUserIdFromUrl() {
