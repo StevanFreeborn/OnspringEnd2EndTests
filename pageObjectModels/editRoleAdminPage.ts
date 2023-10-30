@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { baseURL } from '../playwright.config';
 import { RoleAdminPage } from './roleAdminPage';
 
 export class EditRoleAdminPage extends RoleAdminPage {
@@ -6,7 +7,7 @@ export class EditRoleAdminPage extends RoleAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.pathRegex = new RegExp(`${process.env.INSTANCE_URL}/Admin/Security/Role/[0-9]+/Edit`);
+    this.pathRegex = new RegExp(`${baseURL}/Admin/Security/Role/[0-9]+/Edit`);
   }
 
   async goto(roleId: number) {
