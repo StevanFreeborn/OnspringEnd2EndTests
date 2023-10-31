@@ -16,15 +16,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run Linting
-        run: npm run lint
+        run: npm run lint:fix
       - name: Run Formatting Check
-        run: npm run format:test
+        run: npm run format:fix
       - name: Commit Changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "<>"
           if [[ $(git status --porcelain) ]]; then
             git add .
-            git commit -m "Auto lint and format check fixes"
+            git commit -m "chore: lint and format check fixes"
             git push
           fi
