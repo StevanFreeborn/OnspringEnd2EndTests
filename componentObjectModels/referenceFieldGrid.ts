@@ -1,7 +1,9 @@
 import { Locator, Page } from '@playwright/test';
+import { BASE_URL } from './../playwright.config';
 
 export class ReferenceFieldGrid {
   private readonly page: Page;
+  private readonly pathRegex: RegExp;
   private readonly control: Locator;
   readonly filterInput: Locator;
   readonly searchResults: Locator;
@@ -11,6 +13,7 @@ export class ReferenceFieldGrid {
 
   constructor(page: Page, controlLocator: string) {
     this.page = page;
+    this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/EditReferenceSearchList`);
     this.control = page.locator(controlLocator);
     this.filterInput = this.control.getByPlaceholder('Select Related');
     this.searchResults = page.locator('div.grid-search-results:visible');
@@ -24,20 +27,28 @@ export class ReferenceFieldGrid {
     return rowCount === 0;
   }
 
-  async searchForAndSelectRecord(searchResult: string) {
-    const searchResultRow = this.searchResults.getByRole('row', { name: searchResult });
+  /**
+   * Searches for a record in the reference field grid and selects it. This method
+   * will scroll the search results until the record is visible and then select it.
+   * @param searchTerm The search term to use to search for the record.
+   * @returns A promise that resolves when the record is selected.
+   */
+  async searchForAndSelectRecord(searchTerm: string) {
+    const searchResultRow = this.searchResults.getByRole('row', { name: searchTerm });
     const scrollableElement = this.searchResults.locator('.k-grid-content.k-auto-scrollable').first();
 
-    await this.filterInput.fill(searchResult);
+    // Reference field grid search requests are debounced, so we need to simulate typing
+    // in the filter input with a delay between each character to ensure that the search
+    // request is sent.
+    await this.filterInput.pressSequentially(searchTerm, { delay: 125 });
+    await this.page.waitForResponse(this.pathRegex);
 
-    const initialScrollTop = await scrollableElement.evaluate(el => el.scrollTop);
-    let newScrollTop = 0;
     let isVisible = await searchResultRow.isVisible();
 
-    while (isVisible === false && initialScrollTop !== newScrollTop) {
+    // If the search result row is not visible, then it is not in the current view of the
+    // search results. We need to scroll the search results until the row is visible.
+    while (isVisible === false) {
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-      await this.page.waitForLoadState('networkidle');
-      newScrollTop = await scrollableElement.evaluate(el => el.scrollTop);
       isVisible = await searchResultRow.isVisible();
     }
 

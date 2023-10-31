@@ -16,7 +16,7 @@ export class EditUserAdminPage extends UserAdminPage {
 
   async saveUser() {
     await this.saveRecordButton.click();
-    await this.page.waitForResponse(response => response.url().match(this.pathRegex) !== null);
+    await this.page.waitForResponse(this.pathRegex);
   }
 
   getUserIdFromUrl() {
