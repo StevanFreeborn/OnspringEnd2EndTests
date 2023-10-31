@@ -57,11 +57,15 @@ const config: PlaywrightTestConfig = {
     ],
   ],
   use: {
+    viewport: { width: 1920, height: 1080 },
     actionTimeout: 0,
     baseURL: BASE_URL,
     trace: isCI ? 'on-first-retry' : 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: isCI ? 'on-first-retry' : 'retain-on-failure',
+    video: {
+      mode: isCI ? 'on-first-retry' : 'retain-on-failure',
+      size: { width: 1920, height: 1080 },
+    },
   },
 
   projects: [
