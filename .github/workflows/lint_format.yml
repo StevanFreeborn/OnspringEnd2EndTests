@@ -27,6 +27,6 @@ jobs:
             git add .
             git commit -m "chore: lint and format check fixes"
             git fetch origin
-            git pull origin ${{ github.head_ref }}
+            git pull --rebase origin ${{ github.head_ref }}
             git push origin HEAD:${{ github.head_ref }}
           fi
