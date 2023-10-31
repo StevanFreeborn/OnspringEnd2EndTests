@@ -9,5 +9,6 @@
     "onspringend",
     "signin",
     "textbox"
-  ]
+  ],
+  "editor.formatOnSave": false
 }
