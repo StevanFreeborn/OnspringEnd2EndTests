@@ -57,7 +57,7 @@ test.describe('Role', () => {
     const roleName = FakeDataFactory.createFakeRoleName();
     rolesToDelete.push(roleName);
 
-    await test.step('Create a new role', async () => {
+    await test.step('Create the role', async () => {
       await adminHomePage.adminNav.adminCreateButton.hover();
       await adminHomePage.adminNav.adminCreateMenu.waitFor();
       await adminHomePage.adminNav.roleCreateMenuOption.click();
@@ -73,22 +73,49 @@ test.describe('Role', () => {
     });
 
     await test.step('Verify the role is created correctly', async () => {
-      await editRoleAdminPage.page.waitForLoadState();
       await editRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
 
       expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
       await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
     });
   });
 
-  test('Create a Role via the create button on the Security tile on the admin home page', async () => {
+  test('Create a Role via the create button on the Security tile on the admin home page', async ({ adminHomePage, addRoleAdminPage, editRoleAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-626',
     });
 
-    // TODO: Implement this test
-    expect(false, 'Test not implemented').toBe(true);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    rolesToDelete.push(roleName);
+
+    await test.step('Create the role', async () => {
+        await adminHomePage.securityTileLink.hover();
+        await adminHomePage.securityTileCreateButton.waitFor();
+        await adminHomePage.securityTileCreateButton.click();
+
+        await expect(adminHomePage.securityCreateMenu).toBeVisible();
+
+        await adminHomePage.securityCreateMenu.getByText('Role').click();
+        await addRoleAdminPage.page.waitForLoadState();
+        await addRoleAdminPage.nameInput.fill(roleName);
+
+      // TODO: Remove the following when #3983 is fixed
+      // https://corp.onspring.com/Content/8/3983
+      await addRoleAdminPage.statusToggle.click();
+      await addRoleAdminPage.statusToggle.click();
+
+      await addRoleAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the role is created correctly', async () => {
+        await editRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+        await editRoleAdminPage.page.waitForLoadState();
+  
+        expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
+        await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
+    });
   });
 
   test('Create a Role via the Create Role button on the role home page', async () => {
