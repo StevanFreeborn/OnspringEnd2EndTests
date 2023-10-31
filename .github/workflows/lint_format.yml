@@ -15,9 +15,9 @@ jobs:
           node-version: latest
       - name: Install dependencies
         run: npm ci
-      - name: Run Linting
+      - name: Check and fix linting issues
         run: npm run lint:fix
-      - name: Run Formatting Check
+      - name: Check and fix formatting issues
         run: npm run format:fix
       - name: Commit Changes
         run: |
