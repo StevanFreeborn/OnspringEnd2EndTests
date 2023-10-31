@@ -1,9 +1,11 @@
 import { Locator, Page } from '@playwright/test';
 import { DeleteUserDialogComponent } from '../componentObjectModels/deleteUserDialogComponent';
+import { SecurityAdminPillNav } from '../componentObjectModels/securityAdminPillNav';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
+  readonly pillNav: SecurityAdminPillNav;
   readonly createUserButton: Locator;
   readonly userGrid: Locator;
   readonly deleteUserDialog: DeleteUserDialogComponent;
@@ -11,7 +13,8 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/User';
-    this.createUserButton = page.locator('.create-button');
+    this.pillNav = new SecurityAdminPillNav(page);
+    this.createUserButton = page.getByRole('button', { name: 'Create User' });
     this.userGrid = page.locator('#grid');
     this.deleteUserDialog = new DeleteUserDialogComponent(page);
   }

@@ -4,6 +4,7 @@ import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/rolesSecurityAdminPage';
+import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
 
 type RoleTestFixtures = {
@@ -78,10 +79,15 @@ test.describe('Role', () => {
 
       expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
       await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
+      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
     });
   });
 
-  test('Create a Role via the create button on the Security tile on the admin home page', async ({ adminHomePage, addRoleAdminPage, editRoleAdminPage }) => {
+  test('Create a Role via the create button on the Security tile on the admin home page', async ({
+    adminHomePage,
+    addRoleAdminPage,
+    editRoleAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-626',
@@ -91,15 +97,15 @@ test.describe('Role', () => {
     rolesToDelete.push(roleName);
 
     await test.step('Create the role', async () => {
-        await adminHomePage.securityTileLink.hover();
-        await adminHomePage.securityTileCreateButton.waitFor();
-        await adminHomePage.securityTileCreateButton.click();
+      await adminHomePage.securityTileLink.hover();
+      await adminHomePage.securityTileCreateButton.waitFor();
+      await adminHomePage.securityTileCreateButton.click();
 
-        await expect(adminHomePage.securityCreateMenu).toBeVisible();
+      await expect(adminHomePage.securityCreateMenu).toBeVisible();
 
-        await adminHomePage.securityCreateMenu.getByText('Role').click();
-        await addRoleAdminPage.page.waitForLoadState();
-        await addRoleAdminPage.nameInput.fill(roleName);
+      await adminHomePage.securityCreateMenu.getByText('Role').click();
+      await addRoleAdminPage.page.waitForLoadState();
+      await addRoleAdminPage.nameInput.fill(roleName);
 
       // TODO: Remove the following when #3983 is fixed
       // https://corp.onspring.com/Content/8/3983
@@ -110,32 +116,83 @@ test.describe('Role', () => {
     });
 
     await test.step('Verify the role is created correctly', async () => {
-        await editRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-        await editRoleAdminPage.page.waitForLoadState();
-  
-        expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
-        await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
+      await editRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
+
+      expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
+      await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
+      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
     });
   });
 
-  test('Create a Role via the Create Role button on the role home page', async () => {
+  test('Create a Role via the Create Role button on the role home page', async ({
+    sysAdminPage,
+    adminHomePage,
+    rolesSecurityAdminPage,
+    addRoleAdminPage,
+    editRoleAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-627',
     });
 
-    // TODO: Implement this test
-    expect(false, 'Test not implemented').toBe(true);
+    const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    rolesToDelete.push(roleName);
+
+    await test.step('Navigate to the roles security admin page', async () => {
+      await adminHomePage.securityTileLink.click();
+      await usersSecurityAdminPage.pillNav.rolesPillButton.click();
+    });
+
+    await test.step('Create the role', async () => {
+      await rolesSecurityAdminPage.createRoleButton.click();
+      await addRoleAdminPage.page.waitForLoadState();
+      await addRoleAdminPage.nameInput.fill(roleName);
+
+      // TODO: Remove the following when #3983 is fixed
+      // https://corp.onspring.com/Content/8/3983
+      await addRoleAdminPage.statusToggle.click();
+      await addRoleAdminPage.statusToggle.click();
+
+      await addRoleAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the role is created correctly', async () => {
+      await editRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
+
+      expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
+      await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
+      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
+    });
   });
 
-  test('Update a role', async () => {
+  test('Update a role', async ({ addRoleAdminPage, editRoleAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-631',
     });
 
-    // TODO: Implement this test
-    expect(false, 'Test not implemented').toBe(true);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    rolesToDelete.push(roleName);
+    const description = 'This is a test description';
+
+    await test.step('Create the role to update', async () => {
+      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await addRoleAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Update the role', async () => {
+      await editRoleAdminPage.descriptionEditor.fill(description);
+      await editRoleAdminPage.saveRole();
+    });
+
+    await test.step('Verify the role is updated', async () => {
+      await expect(editRoleAdminPage.descriptionEditor).toHaveText(description);
+    });
   });
 
   test('Create a copy of a role', async () => {
