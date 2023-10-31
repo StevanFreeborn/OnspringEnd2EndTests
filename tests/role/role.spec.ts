@@ -81,6 +81,46 @@ test.describe('Role', () => {
     });
   });
 
+  test('Create a Role via the create button on the Security tile on the admin home page', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-626',
+    });
+
+    // TODO: Implement this test
+    expect(false, 'Test not implemented').toBe(true);
+  });
+
+  test('Create a Role via the Create Role button on the role home page', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-627',
+    });
+
+    // TODO: Implement this test
+    expect(false, 'Test not implemented').toBe(true);
+  });
+
+  test('Update a role', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-631',
+    });
+
+    // TODO: Implement this test
+    expect(false, 'Test not implemented').toBe(true);
+  });
+
+  test('Create a copy of a role', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-786',
+    });
+
+    // TODO: Implement this test
+    expect(false, 'Test not implemented').toBe(true);
+  });
+
   test('Delete a Role', async ({ addRoleAdminPage, editRoleAdminPage, rolesSecurityAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
