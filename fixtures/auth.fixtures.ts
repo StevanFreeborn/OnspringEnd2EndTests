@@ -37,7 +37,7 @@ async function baseAuthPage(
   } finally {
     const videoFiles = fs.readdirSync(videoDir);
 
-    if (videoFiles.length > 0) {
+    if (videoFiles.length > 0 && testInfo.status === 'failed') {
       for (const file of videoFiles) {
         const videoFile = path.join(videoDir, file);
         await testInfo.attach('video', { path: videoFile });
