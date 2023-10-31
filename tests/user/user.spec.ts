@@ -269,7 +269,9 @@ test.describe('User', () => {
     });
 
     await test.step('Assign the role to the user', async () => {
-      await editUserAdminPage.securityTabButton.click();expect(await editUserAdminPage.rolesReferenceFieldGird.isGridEmpty()).toBe(true);await editUserAdminPage.rolesReferenceFieldGird.filterInput.click();
+      await editUserAdminPage.securityTabButton.click();
+      expect(await editUserAdminPage.rolesReferenceFieldGird.isGridEmpty()).toBe(true);
+      await editUserAdminPage.rolesReferenceFieldGird.filterInput.click();
 
       await expect(editUserAdminPage.rolesReferenceFieldGird.searchResults).toBeVisible();
 
