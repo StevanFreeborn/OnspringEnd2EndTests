@@ -27,10 +27,9 @@ jobs:
           then
             echo "Test files changed:"
             echo "$CHANGED_FILES"
-            CHANGED_FILES=$(cat << EOF
+            CHANGED_FILES << EOF
               $CHANGED_FILES
               EOF
-            )
             echo "changed_test_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
           else
             echo "No test files changed."
