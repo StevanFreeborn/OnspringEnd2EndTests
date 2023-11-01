@@ -13,8 +13,9 @@ jobs:
       - name: Get changed test files
         id: get_changed_test_files
         run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}:$GITHUB_REF
           echo "Changed files in this PR:"
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
+          CHANGED_FILES=$(git diff --name-only $GITHUB_REF...$GITHUB_SHA | grep '\.spec\.ts')
           echo "$CHANGED_FILES"
           if [ -z "$CHANGED_FILES" ]
           then
@@ -68,8 +69,8 @@ jobs:
           retention-days: 1
   merge_reports_and_publish:
     name: 'Merge Reports and Upload'
-    if: always()
-    needs: [run_tests]
+    needs: run_tests
+    if: ${{ needs.run_tests.result != 'skipped' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
