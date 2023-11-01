@@ -83,21 +83,27 @@ jobs:
         if: ${{ needs.run_tests.result != 'skipped' }}
         uses: actions/checkout@v3
       - name: Setup Node.js
+        if: ${{ needs.run_tests.result != 'skipped' }}
         uses: actions/setup-node@v3
         with:
           node-version: latest
       - name: Install dependencies
+        if: ${{ needs.run_tests.result != 'skipped' }}
         run: npm ci
       - name: Download blob reports
+        if: ${{ needs.run_tests.result != 'skipped' }}
         uses: actions/download-artifact@v3
         with:
           name: all-blob-reports
           path: all-blob-reports
       - name: Rename reports
+        if: ${{ needs.run_tests.result != 'skipped' }}
         run: count=1; for file in $(find ./all-blob-reports -maxdepth 1 -type f -name "*.zip"); do mv "$file" "all-blob-reports/report-$count.zip"; count=$((count+1)); done
       - name: Merge into HTML Report
+        if: ${{ needs.run_tests.result != 'skipped' }}
         run: npx playwright merge-reports --reporter html ./all-blob-reports
       - name: Upload HTML report
+        if: ${{ needs.run_tests.result != 'skipped' }}
         uses: actions/upload-artifact@v3
         with:
           name: html-report-attempt-${{ github.run_attempt }}
