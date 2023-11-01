@@ -13,23 +13,22 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
-      - name: Test
-        run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts'
-      # - name: Get changed test files
-      #   id: get_changed_test_files
-      #   run: |
-      #     echo "Changed files in this PR:"
-      #     BASE_HEAD_SHA=
-      #     PR_HEAD_SHA=
-      #     CHANGED_FILES=$(git diff --name-only $BASE_HEAD_SHA $PR_HEAD_SHA | grep '\.spec\.ts')
-      #     if [ -n "$CHANGED_FILES" ]
-      #     then
-      #       echo "Test files changed:"
-      #       echo "$CHANGED_FILES"
-      #       echo "::set-output name=changed_test_files::${CHANGED_FILES}"
-      #     else
-      #       echo "No test files changed."
-      #     fi
+      - name: Get changed test files
+        id: get_changed_test_files
+        continue-on-error: true
+        run: |
+          echo "Changed files in this PR:"
+          BASE_HEAD_SHA=${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA=${{ github.event.pull_request.head.sha }}
+          CHANGED_FILES=$(git diff --name-only $BASE_HEAD_SHA $PR_HEAD_SHA | grep '\.spec\.ts')
+          if [ -n "$CHANGED_FILES" ]
+          then
+            echo "Test files changed:"
+            echo "$CHANGED_FILES"
+            echo "::set-output name=changed_test_files::${CHANGED_FILES}"
+          else
+            echo "No test files changed."
+          fi
   run_tests:
     needs: check_for_test_file_changes
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files }}
