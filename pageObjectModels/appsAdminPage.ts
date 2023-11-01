@@ -1,25 +1,25 @@
 import { Locator, Page } from '@playwright/test';
-import { CreateAppDialogComponent } from '../componentObjectModels/createAppDialogComponent';
-import { CreateAppModalComponent } from '../componentObjectModels/createAppModalComponent';
-import { DeleteAppDialogComponent } from '../componentObjectModels/deleteAppDialogComponent';
+import { CreateAppDialog } from '../componentObjectModels/createAppDialog';
+import { CreateAppModal } from '../componentObjectModels/createAppModal';
+import { DeleteAppDialog } from '../componentObjectModels/deleteAppDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AppsAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly createAppButton: Locator;
   readonly appGrid: Locator;
-  readonly createAppDialog: CreateAppDialogComponent;
-  readonly createAppModal: CreateAppModalComponent;
-  readonly deleteAppDialog: DeleteAppDialogComponent;
+  readonly createAppDialog: CreateAppDialog;
+  readonly createAppModal: CreateAppModal;
+  readonly deleteAppDialog: DeleteAppDialog;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/App';
     this.createAppButton = page.locator('.create-button');
     this.appGrid = page.locator('#grid');
-    this.createAppDialog = new CreateAppDialogComponent(page);
-    this.createAppModal = new CreateAppModalComponent(page);
-    this.deleteAppDialog = new DeleteAppDialogComponent(page);
+    this.createAppDialog = new CreateAppDialog(page);
+    this.createAppModal = new CreateAppModal(page);
+    this.deleteAppDialog = new DeleteAppDialog(page);
   }
 
   async goto() {

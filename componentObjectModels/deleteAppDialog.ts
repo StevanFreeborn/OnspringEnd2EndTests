@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseDeleteDialogComponent } from './baseDeleteDialogComponent';
+import { BaseDeleteDialog } from './baseDeleteDialog';
 
-export class DeleteAppDialogComponent extends BaseDeleteDialogComponent {
+export class DeleteAppDialog extends BaseDeleteDialog {
   readonly confirmationInput: Locator;
 
   constructor(page: Page) {

@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class EditAppAdminSettingsModalComponent {
+export class EditAppAdminSettingsModal {
   private readonly page: Page;
   readonly adminPermissionsSelect: Locator;
   readonly usersSelect: Locator;

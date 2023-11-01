@@ -3,7 +3,7 @@ import { AddLayoutItemDialog } from './addLayoutItemDialog';
 import { AddLayoutItemMenu, LayoutItemType } from './addLayoutItemMenu';
 import { AddLayoutItemModal } from './addLayoutItemModal';
 
-export class AppLayoutTabComponent {
+export class AppLayoutTab {
   private readonly page: Page;
   readonly addFieldButton: Locator;
   readonly addLayoutItemMenu: AddLayoutItemMenu;

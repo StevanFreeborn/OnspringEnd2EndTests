@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { LayoutItemType } from '../componentObjectModels/addLayoutItemMenu';
-import { AppGeneralTabComponent } from '../componentObjectModels/appGeneralTabComponent';
-import { AppLayoutTabComponent } from '../componentObjectModels/appLayoutTabComponent';
+import { AppGeneralTab } from '../componentObjectModels/appGeneralTab';
+import { AppLayoutTab } from '../componentObjectModels/appLayoutTab';
 import { BASE_URL } from '../playwright.config';
 import { BaseAdminPage } from './baseAdminPage';
 
@@ -20,8 +20,8 @@ export class AppAdminPage extends BaseAdminPage {
   readonly generalTabButton: Locator;
   readonly layoutTabButton: Locator;
 
-  readonly generalTab: AppGeneralTabComponent;
-  readonly layoutTab: AppLayoutTabComponent;
+  readonly generalTab: AppGeneralTab;
+  readonly layoutTab: AppLayoutTab;
 
   constructor(page: Page) {
     super(page);
@@ -32,8 +32,8 @@ export class AppAdminPage extends BaseAdminPage {
     this.generalTabButton = page.locator('#tab-strip').getByText('General');
     this.layoutTabButton = page.locator('#tab-strip').getByText('Layout');
 
-    this.generalTab = new AppGeneralTabComponent(page);
-    this.layoutTab = new AppLayoutTabComponent(page);
+    this.generalTab = new AppGeneralTab(page);
+    this.layoutTab = new AppLayoutTab(page);
   }
 
   async goto(appId: number) {

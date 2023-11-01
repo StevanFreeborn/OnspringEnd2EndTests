@@ -1,11 +1,11 @@
 import { Locator, Page } from '@playwright/test';
-import { EditAppAdminSettingsModalComponent } from './editAppAdminSettingsModalComponent';
-import { EditAppDisplaySettingsModalComponent } from './editAppDisplaySettingsModalComponent';
-import { EditAppGeneralSettingsModalComponent } from './editAppGeneralSettingsModalComponent';
+import { EditAppAdminSettingsModal } from './editAppAdminSettingsModal';
+import { EditAppDisplaySettingsModal } from './editAppDisplaySettingsModal';
+import { EditAppGeneralSettingsModal } from './editAppGeneralSettingsModal';
 import { EditAppGeocodingSettingsModal } from './editAppGeocodingSettingsModal';
-import { EditAppNotesSettingsModalComponent } from './editAppNotesSettingsModal';
+import { EditAppNotesSettingsModal } from './editAppNotesSettingsModal';
 
-export class AppGeneralTabComponent {
+export class AppGeneralTab {
   private createSettingSelector(settingName: string) {
     return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
   }
@@ -44,10 +44,10 @@ export class AppGeneralTabComponent {
   readonly editGeocodingSettingsLink: Locator;
   readonly editNotesSettingLink: Locator;
 
-  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModalComponent;
-  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModalComponent;
-  readonly editAppAdminSettingsModal: EditAppAdminSettingsModalComponent;
-  readonly editAppNotesSettingsModal: EditAppNotesSettingsModalComponent;
+  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModal;
+  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModal;
+  readonly editAppAdminSettingsModal: EditAppAdminSettingsModal;
+  readonly editAppNotesSettingsModal: EditAppNotesSettingsModal;
   readonly editGeocodingSettingsModal: EditAppGeocodingSettingsModal;
 
   constructor(page: Page) {
@@ -76,10 +76,10 @@ export class AppGeneralTabComponent {
     this.editGeocodingSettingsLink = page.getByRole('heading', { name: 'Edit Geocoding' }).getByRole('link');
     this.editNotesSettingLink = page.getByRole('heading', { name: 'Edit Notes' }).getByRole('link');
 
-    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(page);
-    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
-    this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(page);
-    this.editAppNotesSettingsModal = new EditAppNotesSettingsModalComponent(page);
+    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModal(page);
+    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModal(page);
+    this.editAppAdminSettingsModal = new EditAppAdminSettingsModal(page);
+    this.editAppNotesSettingsModal = new EditAppNotesSettingsModal(page);
     this.editGeocodingSettingsModal = new EditAppGeocodingSettingsModal(page);
   }
 }

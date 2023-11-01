@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class CreateAppDialogComponent {
+export class CreateAppDialog {
   private readonly page: Page;
   readonly continueButton: Locator;
   readonly copyFromRadioButton: Locator;

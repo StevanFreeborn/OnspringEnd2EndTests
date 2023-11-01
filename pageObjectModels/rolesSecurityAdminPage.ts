@@ -1,19 +1,19 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteRoleDialogComponent } from '../componentObjectModels/deleteRoleDialogComponent';
+import { DeleteRoleDialog } from '../componentObjectModels/deleteRoleDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class RolesSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly createRoleButton: Locator;
   readonly roleGrid: Locator;
-  readonly deleteRoleDialog: DeleteRoleDialogComponent;
+  readonly deleteRoleDialog: DeleteRoleDialog;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/Role';
     this.createRoleButton = page.getByRole('button', { name: 'Create Role' });
     this.roleGrid = page.locator('#grid');
-    this.deleteRoleDialog = new DeleteRoleDialogComponent(page);
+    this.deleteRoleDialog = new DeleteRoleDialog(page);
   }
 
   async goto() {

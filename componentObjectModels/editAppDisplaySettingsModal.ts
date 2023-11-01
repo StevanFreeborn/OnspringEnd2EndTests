@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class EditAppDisplaySettingsModalComponent {
+export class EditAppDisplaySettingsModal {
   private readonly page: Page;
   readonly displayLinkSelect: Locator;
   readonly integrationLinkSelect: Locator;

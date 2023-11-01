@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class SidebarNavComponent {
+export class SidebarNav {
   readonly page: Page;
   readonly usersFullName: Locator;
   readonly adminGearIcon: Locator;

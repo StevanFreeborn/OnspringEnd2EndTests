@@ -1,17 +1,17 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteGroupDialogComponent } from '../componentObjectModels/deleteGroupDialogComponent';
+import { DeleteGroupDialog } from '../componentObjectModels/deleteGroupDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class GroupsSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly groupsGrid: Locator;
-  readonly deleteGroupDialog: DeleteGroupDialogComponent;
+  readonly deleteGroupDialog: DeleteGroupDialog;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/Group';
     this.groupsGrid = page.locator('#grid');
-    this.deleteGroupDialog = new DeleteGroupDialogComponent(page);
+    this.deleteGroupDialog = new DeleteGroupDialog(page);
   }
 
   async goto() {

@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteUserDialogComponent } from '../componentObjectModels/deleteUserDialogComponent';
+import { DeleteUserDialog } from '../componentObjectModels/deleteUserDialog';
 import { SecurityAdminPillNav } from '../componentObjectModels/securityAdminPillNav';
 import { BaseAdminPage } from './baseAdminPage';
 
@@ -8,7 +8,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   readonly pillNav: SecurityAdminPillNav;
   readonly createUserButton: Locator;
   readonly userGrid: Locator;
-  readonly deleteUserDialog: DeleteUserDialogComponent;
+  readonly deleteUserDialog: DeleteUserDialog;
 
   constructor(page: Page) {
     super(page);
@@ -16,7 +16,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
     this.pillNav = new SecurityAdminPillNav(page);
     this.createUserButton = page.getByRole('button', { name: 'Create User' });
     this.userGrid = page.locator('#grid');
-    this.deleteUserDialog = new DeleteUserDialogComponent(page);
+    this.deleteUserDialog = new DeleteUserDialog(page);
   }
 
   async goto() {

@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class CreateAppModalComponent {
+export class CreateAppModal {
   private readonly page: Page;
   readonly nameInput: Locator;
   readonly saveButton: Locator;

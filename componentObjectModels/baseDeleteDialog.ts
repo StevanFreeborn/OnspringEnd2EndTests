@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class BaseDeleteDialogComponent {
+export class BaseDeleteDialog {
   readonly overlay: Locator;
   readonly dialog: Locator;
   readonly deleteButton: Locator;
