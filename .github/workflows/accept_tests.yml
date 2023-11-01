@@ -28,6 +28,7 @@ jobs:
             echo "::set-output name=changed_test_files::${CHANGED_FILES}"
           else
             echo "No test files changed."
+            exit 0
           fi
   run_tests:
     needs: check_for_test_file_changes
