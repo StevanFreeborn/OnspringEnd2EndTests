@@ -1,23 +1,31 @@
-name: Playwright Tests
+name: Run Test Acceptance Test
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        type: choice
-        description: 'Environment to run tests against'
-        options:
-          - ALPHA
-          - BETA
-          - QA
-          - IST
-          - VPRIOR
-          - VNEXT
-          - PROD
-        required: true
-        default: ALPHA
+  pull_request:
+    branches:
+      - master
 jobs:
+  check_for_test_file_changes:
+    name: Check for test file changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Get changed test files
+        id: get_changed_test_files
+        run: |
+          echo "Changed files in this PR:"
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
+          if [ -z "$CHANGED_FILES" ]
+          then
+            echo "No test files changed."
+          else
+            echo "Test files changed:"
+            echo "$CHANGED_FILES"
+            echo "::set-output name=changed_test_files::${CHANGED_FILES}"
+          fi
   run_tests:
-    name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    needs: check_for_test_file_changes
+    if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files }}
     env:
       CI: true
       SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
@@ -25,13 +33,7 @@ jobs:
       SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
       SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
       SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
-      TEST_ENV: ${{ github.event.inputs.environment }}
-      ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
-      BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
-      QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
-      IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
-      VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
-      VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
+      TEST_ENV: PROD
       PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:
@@ -51,7 +53,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run your tests
-        run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
+        run: |
+          echo "Running tests for ${{ matrix.project }} shard ${{ matrix.shard }}"
+          npx playwright test ${{ needs.check_for_test_file_changes.outputs.changed_test_files }} --project=${{ matrix.project }} --shard=${{ matrix.shard }} --repeat-each=3
       - name: Rename blob-reports
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
@@ -62,7 +66,7 @@ jobs:
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
-    name: 'Merge Reports and Publish'
+    name: 'Merge Reports and Upload'
     if: always()
     needs: [run_tests]
     runs-on: ubuntu-latest
@@ -89,8 +93,4 @@ jobs:
         with:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
-          retention-days: 14
-      - name: Publish to gh pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: playwright-report
+          retention-days: 90
