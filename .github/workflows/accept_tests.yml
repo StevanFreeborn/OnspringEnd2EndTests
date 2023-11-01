@@ -15,6 +15,7 @@ jobs:
         run: |
           echo "Changed files in this PR:"
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
+          echo "$CHANGED_FILES"
           if [ -z "$CHANGED_FILES" ]
           then
             echo "No test files changed."
