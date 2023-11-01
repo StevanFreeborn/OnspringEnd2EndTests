@@ -18,6 +18,8 @@ jobs:
         run: |
           echo "Changed files in this PR:"
           git log -n 25
+          echo ${{ github.event.before }}
+          echo ${{ github.sha }}
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
           echo "$CHANGED_FILES"
           if [ -z "$CHANGED_FILES" ]
