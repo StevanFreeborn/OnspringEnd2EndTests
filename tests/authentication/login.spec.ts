@@ -1,8 +1,8 @@
 import { test as base, expect } from '@playwright/test';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
-import { DashboardPage } from '../../pageObjectModels/dashboardPage';
-import { LoginPage } from '../../pageObjectModels/loginPage';
+import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 
 type LoginTestFixtures = {
   loginPage: LoginPage;

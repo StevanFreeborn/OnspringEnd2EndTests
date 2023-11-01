@@ -1,11 +1,11 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
-import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { CopyRoleAdminPage } from '../../pageObjectModels/copyRoleAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/rolesSecurityAdminPage';
-import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
+import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
+import { CopyRoleAdminPage } from '../../pageObjectModels/roles/copyRoleAdminPage';
+import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
+import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
+import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
 
 type RoleTestFixtures = {

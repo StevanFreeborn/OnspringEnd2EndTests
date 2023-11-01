@@ -1,8 +1,8 @@
 import { expect, test as setup } from '@playwright/test';
 import { UserFactory } from '../factories/userFactory';
-import { LoginPage } from '../pageObjectModels/loginPage';
+import { LoginPage } from '../pageObjectModels/authentication/loginPage';
+import { DashboardPage } from '../pageObjectModels/dashboards/dashboardPage';
 import { SYS_ADMIN_AUTH_PATH } from '../playwright.config';
-import { DashboardPage } from './../pageObjectModels/dashboardPage';
 
 setup('login as system administrator', async ({ page }) => {
   const loginPage = new LoginPage(page);

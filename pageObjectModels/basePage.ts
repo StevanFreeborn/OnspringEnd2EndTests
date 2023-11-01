@@ -1,12 +1,12 @@
 import { Page } from '@playwright/test';
-import { SidebarNavComponent } from '../componentObjectModels/sidebarNavComponent';
+import { SidebarNav } from '../componentObjectModels/navs/sidebarNav';
 
 export class BasePage {
   readonly page: Page;
-  readonly sidebar: SidebarNavComponent;
+  readonly sidebar: SidebarNav;
 
   constructor(page: Page) {
     this.page = page;
-    this.sidebar = new SidebarNavComponent(page);
+    this.sidebar = new SidebarNav(page);
   }
 }

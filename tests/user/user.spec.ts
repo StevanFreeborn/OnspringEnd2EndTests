@@ -2,18 +2,18 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
 import { UserStatus } from '../../models/user';
-import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
-import { AddUserAdminPage } from '../../pageObjectModels/addUserAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { CopyUserAdminPage } from '../../pageObjectModels/copyUserAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
-import { EditUserAdminPage } from '../../pageObjectModels/editUserAdminPage';
-import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
+import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
+import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
+import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
+import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
+import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
+import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
+import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
+import { CopyUserAdminPage } from '../../pageObjectModels/users/copyUserAdminPage';
+import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPage';
+import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
-import { AddGroupAdminPage } from './../../pageObjectModels/addGroupAdminPage';
-import { EditGroupAdminPage } from './../../pageObjectModels/editGroupAdminPage';
-import { GroupsSecurityAdminPage } from './../../pageObjectModels/groupsSecurityAdminPage';
-import { RolesSecurityAdminPage } from './../../pageObjectModels/rolesSecurityAdminPage';
 
 type UserTestFixtures = {
   adminHomePage: AdminHomePage;
