@@ -83,6 +83,9 @@ jobs:
     if: ${{ needs.run_tests.result != 'skipped' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Print Result
+        run: |
+          echo "Result: ${{ needs.run_tests.result }}"
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Node.js
