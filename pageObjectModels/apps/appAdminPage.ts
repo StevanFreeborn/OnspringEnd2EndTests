@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
-import { LayoutItemType } from '../componentObjectModels/menus/addLayoutItemMenu';
-import { AppGeneralTab } from '../componentObjectModels/tabs/appGeneralTab';
-import { AppLayoutTab } from '../componentObjectModels/tabs/appLayoutTab';
-import { BASE_URL } from '../playwright.config';
-import { BaseAdminPage } from './baseAdminPage';
+import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
+import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
+import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
+import { BASE_URL } from '../../playwright.config';
+import { BaseAdminPage } from '../baseAdminPage';
 
 type GeocodeFields = {
   address: string;

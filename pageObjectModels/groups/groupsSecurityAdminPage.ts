@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteGroupDialog } from '../componentObjectModels/dialogs/deleteGroupDialog';
-import { BaseAdminPage } from './baseAdminPage';
+import { DeleteGroupDialog } from '../../componentObjectModels/dialogs/deleteGroupDialog';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class GroupsSecurityAdminPage extends BaseAdminPage {
   readonly path: string;

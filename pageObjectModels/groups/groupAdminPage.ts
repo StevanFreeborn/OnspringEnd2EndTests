@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseAdminFormPage } from './baseAdminFormPage';
+import { BaseAdminFormPage } from '../baseAdminFormPage';
 
 export class GroupAdminPage extends BaseAdminFormPage {
   readonly nameInput: Locator;

@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { User, UserStatus } from '../models/user';
+import { User, UserStatus } from '../../models/user';
 import { UserAdminPage } from './userAdminPage';
 
 export class AddUserAdminPage extends UserAdminPage {

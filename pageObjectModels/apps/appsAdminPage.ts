@@ -1,8 +1,8 @@
 import { Locator, Page } from '@playwright/test';
-import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
-import { DeleteAppDialog } from '../componentObjectModels/dialogs/deleteAppDialog';
-import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
-import { BaseAdminPage } from './baseAdminPage';
+import { CreateAppDialog } from '../../componentObjectModels/dialogs/createAppDialog';
+import { DeleteAppDialog } from '../../componentObjectModels/dialogs/deleteAppDialog';
+import { CreateAppModal } from '../../componentObjectModels/modals/createAppModal';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class AppsAdminPage extends BaseAdminPage {
   readonly path: string;

@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { User } from '../models/user';
+import { User } from '../../models/user';
 
 export class LoginPage {
   static readonly invalidCredentialError = {

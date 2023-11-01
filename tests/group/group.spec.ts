@@ -1,9 +1,9 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
-import { AddGroupAdminPage } from '../../pageObjectModels/addGroupAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { EditGroupAdminPage } from '../../pageObjectModels/editGroupAdminPage';
-import { GroupsSecurityAdminPage } from '../../pageObjectModels/groupsSecurityAdminPage';
+import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
+import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
+import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
 import { AnnotationType } from '../annotations';
 
 type GroupTestFixtures = {

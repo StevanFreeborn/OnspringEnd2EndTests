@@ -2,9 +2,9 @@ import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemM
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AnnotationType } from '../annotations';
-import { AppAdminPage } from './../../pageObjectModels/appAdminPage';
-import { AppsAdminPage } from './../../pageObjectModels/appsAdminPage';
 
 type TextFieldTestFixtures = {
   appAdminPage: AppAdminPage;

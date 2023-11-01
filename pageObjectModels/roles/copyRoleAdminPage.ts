@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { BASE_URL } from '../playwright.config';
+import { BASE_URL } from '../../playwright.config';
 import { RoleAdminPage } from './roleAdminPage';
 
 export class CopyRoleAdminPage extends RoleAdminPage {

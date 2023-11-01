@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteRoleDialog } from '../componentObjectModels/dialogs/deleteRoleDialog';
-import { BaseAdminPage } from './baseAdminPage';
+import { DeleteRoleDialog } from '../../componentObjectModels/dialogs/deleteRoleDialog';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class RolesSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
