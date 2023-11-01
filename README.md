@@ -78,3 +78,17 @@ npm run test -- -g "Delete a user"
 ### Learn more about Playwright's Test CLI
 
 [Playwright CLI](https://playwright.dev/docs/test-cli)
+
+## Workflows
+
+### [Playwright Tests](./github/workflows/playwright-tests.yml)
+
+This workflow runs the Playwright tests in a GitHub Actions workflow and allows you to supply an environment variable for the environment you want to run the tests against. It will only run when directly triggered by a user.
+
+### [Lint and Format](./github/workflows/lint-and-format.yml)
+
+This workflow runs ESLint and Prettier against the codebase to ensure code quality and consistency. It will run on any pull request that merges into the `master` branch.
+
+### [Run Test Acceptance Test](./github/workflows/run-test-acceptance-test.yml)
+
+This workflow will run all the tests found in a changed `.spec.ts` file. It will run on any pull request that merges into the `master` branch.
