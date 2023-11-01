@@ -20,13 +20,13 @@ jobs:
           BASE_SHA=${{ github.event.pull_request.base.sha}}
           PR_HEAD_SHA=${{ github.event.pull_request.head.sha}}
           CHANGED_FILES=$(git diff --name-only $BASE_SHA $PR_HEAD_SHA | grep '\.spec\.ts')
-          if [ -z "$CHANGED_FILES" ]
+          if [ -n "$CHANGED_FILES" ]
           then
-            echo "No test files changed."
-          else
             echo "Test files changed:"
             echo "$CHANGED_FILES"
             echo "::set-output name=changed_test_files::${CHANGED_FILES}"
+          else
+            echo "No test files changed."
           fi
   run_tests:
     needs: check_for_test_file_changes
