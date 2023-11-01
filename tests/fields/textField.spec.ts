@@ -1,4 +1,4 @@
-import { LayoutItemType } from '../../componentObjectModels/addLayoutItemMenu';
+import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';

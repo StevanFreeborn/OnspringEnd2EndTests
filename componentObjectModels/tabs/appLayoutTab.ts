@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
-import { AddLayoutItemDialog } from './addLayoutItemDialog';
-import { AddLayoutItemMenu, LayoutItemType } from './addLayoutItemMenu';
-import { AddLayoutItemModal } from './addLayoutItemModal';
+import { AddLayoutItemModal } from '../modals/addLayoutItemModal';
+import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
+import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
 
 export class AppLayoutTab {
   private readonly page: Page;

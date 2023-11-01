@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
-import { EditAppAdminSettingsModal } from './editAppAdminSettingsModal';
-import { EditAppDisplaySettingsModal } from './editAppDisplaySettingsModal';
-import { EditAppGeneralSettingsModal } from './editAppGeneralSettingsModal';
-import { EditAppGeocodingSettingsModal } from './editAppGeocodingSettingsModal';
-import { EditAppNotesSettingsModal } from './editAppNotesSettingsModal';
+import { EditAppAdminSettingsModal } from '../modals/editAppAdminSettingsModal';
+import { EditAppDisplaySettingsModal } from '../modals/editAppDisplaySettingsModal';
+import { EditAppGeneralSettingsModal } from '../modals/editAppGeneralSettingsModal';
+import { EditAppGeocodingSettingsModal } from '../modals/editAppGeocodingSettingsModal';
+import { EditAppNotesSettingsModal } from '../modals/editAppNotesSettingsModal';
 
 export class AppGeneralTab {
   private createSettingSelector(settingName: string) {

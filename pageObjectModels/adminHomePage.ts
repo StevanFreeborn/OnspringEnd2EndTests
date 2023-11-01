@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { CreateAppDialog } from '../componentObjectModels/createAppDialog';
-import { CreateAppModal } from '../componentObjectModels/createAppModal';
+import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AdminHomePage extends BaseAdminPage {

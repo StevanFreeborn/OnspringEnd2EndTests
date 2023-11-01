@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { DeleteUserDialog } from '../componentObjectModels/deleteUserDialog';
-import { SecurityAdminPillNav } from '../componentObjectModels/securityAdminPillNav';
+import { DeleteUserDialog } from '../componentObjectModels/dialogs/deleteUserDialog';
+import { SecurityAdminPillNav } from '../componentObjectModels/navs/securityAdminPillNav';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {

@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { ReferenceFieldGrid } from '../componentObjectModels/referenceFieldGrid';
+import { ReferenceFieldGrid } from '../componentObjectModels/controls/referenceFieldGrid';
 import { BaseAdminFormPage } from './baseAdminFormPage';
 
 export class UserAdminPage extends BaseAdminFormPage {

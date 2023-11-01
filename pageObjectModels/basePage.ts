@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { SidebarNav } from '../componentObjectModels/sidebarNav';
+import { SidebarNav } from '../componentObjectModels/navs/sidebarNav';
 
 export class BasePage {
   readonly page: Page;

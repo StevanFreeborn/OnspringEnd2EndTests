@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { AdminNav } from '../componentObjectModels/adminNav';
+import { AdminNav } from '../componentObjectModels/navs/adminNav';
 import { BasePage } from './basePage';
 
 export class BaseAdminPage extends BasePage {

@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { BASE_URL } from './../playwright.config';
+import { BASE_URL } from '../../playwright.config';
 
 export class ReferenceFieldGrid {
   private readonly page: Page;
