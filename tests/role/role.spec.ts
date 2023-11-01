@@ -80,7 +80,7 @@ test.describe('Role', () => {
 
       expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
       await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
-      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(editRoleAdminPage.statusSwitch).toHaveAttribute('aria-checked', 'false');
     });
   });
 
@@ -122,7 +122,7 @@ test.describe('Role', () => {
 
       expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
       await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
-      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(editRoleAdminPage.statusSwitch).toHaveAttribute('aria-checked', 'false');
     });
   });
 
@@ -166,7 +166,7 @@ test.describe('Role', () => {
 
       expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
       await expect(editRoleAdminPage.nameInput).toHaveValue(roleName);
-      await expect(editRoleAdminPage.statusToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(editRoleAdminPage.statusSwitch).toHaveAttribute('aria-checked', 'false');
     });
   });
 
