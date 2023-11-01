@@ -17,7 +17,7 @@ jobs:
         id: get_changed_test_files
         run: |
           echo "Changed files in this PR:"
-          git branch
+          git log -n 25
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
           echo "$CHANGED_FILES"
           if [ -z "$CHANGED_FILES" ]
