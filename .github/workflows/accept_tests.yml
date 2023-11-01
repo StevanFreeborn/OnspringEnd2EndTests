@@ -76,7 +76,7 @@ jobs:
   merge_reports_and_publish:
     name: 'Merge Reports and Upload'
     needs: run_tests
-    if: always()
+    if: ${{ needs.run_tests.result == 'success' || needs.run_tests.result == 'failure' }}
     runs-on: ubuntu-latest
     steps:
       - name: Print Result
