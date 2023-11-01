@@ -7,6 +7,8 @@ jobs:
   check_for_test_file_changes:
     name: Check for test file changes
     runs-on: ubuntu-latest
+    outputs:
+      changed_test_files: ${{ steps.get_changed_test_files.outputs.changed_test_files }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -25,7 +27,7 @@ jobs:
           then
             echo "Test files changed:"
             echo "$CHANGED_FILES"
-            echo "changed_test_files=$CHANGED_FILES"
+            echo "changed_test_files=$CHANGED_FILES" >> $GITHUB_ENV
           else
             echo "No test files changed."
           fi
