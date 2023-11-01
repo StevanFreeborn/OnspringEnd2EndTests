@@ -29,6 +29,10 @@ jobs:
           else
             echo "No test files changed."
           fi
+      - name: Print outputs
+        run: |
+          echo "Outputs:"
+          cat $GITHUB_OUTPUT
   run_tests:
     needs: check_for_test_file_changes
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
