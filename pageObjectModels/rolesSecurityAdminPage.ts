@@ -4,12 +4,14 @@ import { BaseAdminPage } from './baseAdminPage';
 
 export class RolesSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
+  readonly createRoleButton: Locator;
   readonly roleGrid: Locator;
   readonly deleteRoleDialog: DeleteRoleDialogComponent;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/Role';
+    this.createRoleButton = page.getByRole('button', { name: 'Create Role' });
     this.roleGrid = page.locator('#grid');
     this.deleteRoleDialog = new DeleteRoleDialogComponent(page);
   }

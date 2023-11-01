@@ -13,4 +13,9 @@ export class EditRoleAdminPage extends RoleAdminPage {
   async goto(roleId: number) {
     await this.page.goto(`/Admin/Security/Role/${roleId}/Edit`);
   }
+
+  async saveRole() {
+    await this.saveRecordButton.click();
+    await this.page.waitForResponse(this.pathRegex);
+  }
 }

@@ -35,13 +35,13 @@ npx playwright install
 
 #### 📝 Create .env file
 
-Copy the example.env file and rename it to .env
+Copy the `example.env` file and rename it to `.env`
 
 ```sh
 cp example.env .env
 ```
 
-Update the .env file with values for your environment
+Update the `.env` file with values for your environment
 
 ## Usage
 

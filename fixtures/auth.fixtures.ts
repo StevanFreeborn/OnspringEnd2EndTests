@@ -26,7 +26,9 @@ async function baseAuthPage(
     storageState: authStorageLocation,
     recordVideo: {
       dir: videoDir,
+      size: { width: 1920, height: 1080 },
     },
+    viewport: { width: 1920, height: 1080 },
   });
 
   const page = await context.newPage();
@@ -35,12 +37,14 @@ async function baseAuthPage(
     await use(page);
     await context.close();
   } finally {
-    const videoFiles = fs.readdirSync(videoDir);
+    if (fs.existsSync(videoDir)) {
+      const videoFiles = fs.readdirSync(videoDir);
 
-    if (videoFiles.length > 0 && testInfo.status === 'failed') {
-      for (const file of videoFiles) {
-        const videoFile = path.join(videoDir, file);
-        await testInfo.attach('video', { path: videoFile });
+      if (videoFiles.length > 0 && testInfo.status === 'failed') {
+        for (const file of videoFiles) {
+          const videoFile = path.join(videoDir, file);
+          await testInfo.attach('video', { path: videoFile });
+        }
       }
     }
   }

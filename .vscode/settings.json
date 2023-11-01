@@ -8,7 +8,8 @@
     "networkidle",
     "onspringend",
     "signin",
-    "textbox"
-  ],
-  "editor.formatOnSave": false
+    "textbox",
+    "VNEXT",
+    "VPRIOR"
+  ]
 }
