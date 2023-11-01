@@ -168,13 +168,18 @@ test.describe('User', () => {
     });
   });
 
-  test('Create a copy of a user', async ({ addUserAdminPage, editUserAdminPage, usersSecurityAdminPage }) => {
+  test('Create a copy of a user', async ({
+    sysAdminPage,
+    addUserAdminPage,
+    editUserAdminPage,
+    usersSecurityAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-785',
     });
 
-    const copyUserAdminPage = new CopyUserAdminPage(addUserAdminPage.page);
+    const copyUserAdminPage = new CopyUserAdminPage(sysAdminPage);
     const newUser = UserFactory.createNewUser(UserStatus.Inactive);
     const copiedUserUsername = `${newUser.username} (Copy)`;
     usersToDelete.push(newUser.username);

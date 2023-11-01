@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AddRoleAdminPage } from '../../pageObjectModels/addRoleAdminPage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { CopyRoleAdminPage } from '../../pageObjectModels/copyRoleAdminPage';
 import { EditRoleAdminPage } from '../../pageObjectModels/editRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/rolesSecurityAdminPage';
 import { UsersSecurityAdminPage } from '../../pageObjectModels/usersSecurityAdminPage';
@@ -195,14 +196,51 @@ test.describe('Role', () => {
     });
   });
 
-  test('Create a copy of a role', async () => {
+  test('Create a copy of a role', async ({
+    sysAdminPage,
+    addRoleAdminPage,
+    editRoleAdminPage,
+    rolesSecurityAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-786',
     });
 
-    // TODO: Implement this test
-    expect(false, 'Test not implemented').toBe(true);
+    const copyRoleAdminPage = new CopyRoleAdminPage(sysAdminPage);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    const copiedRoleName = `${roleName} (Copy)`;
+    rolesToDelete.push(roleName);
+    rolesToDelete.push(copiedRoleName);
+
+    await test.step('Create the role to copy', async () => {
+      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Copy the role', async () => {
+      const roleRow = rolesSecurityAdminPage.roleGrid.getByRole('row', { name: roleName }).first();
+
+      await rolesSecurityAdminPage.goto();
+      await roleRow.hover();
+      await roleRow.getByTitle('Copy Role').click();
+      await copyRoleAdminPage.page.waitForLoadState();
+
+      await expect(copyRoleAdminPage.nameInput).toHaveValue(roleName);
+
+      await copyRoleAdminPage.nameInput.clear();
+      await copyRoleAdminPage.nameInput.fill(copiedRoleName);
+      await copyRoleAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the role is copied', async () => {
+      await copyRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await editRoleAdminPage.page.waitForLoadState();
+
+      expect(editRoleAdminPage.page.url()).toMatch(editRoleAdminPage.pathRegex);
+      await expect(editRoleAdminPage.nameInput).toHaveValue(copiedRoleName);
+    });
   });
 
   test('Delete a Role', async ({ addRoleAdminPage, editRoleAdminPage, rolesSecurityAdminPage }) => {
