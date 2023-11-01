@@ -27,7 +27,7 @@ switch (process.env.TEST_ENV) {
     BASE_URL = process.env.VNEXT_INSTANCE_URL;
     break;
   case 'PROD':
-    BASE_URL = process.env.BETA_INSTANCE_URL;
+    BASE_URL = process.env.PROD_INSTANCE_URL;
     break;
   case 'ALPHA':
   default:
