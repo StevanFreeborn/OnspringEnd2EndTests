@@ -76,8 +76,8 @@ export class AppGeneralTabComponent {
     this.editGeocodingSettingsLink = page.getByRole('heading', { name: 'Edit Geocoding' }).getByRole('link');
     this.editNotesSettingLink = page.getByRole('heading', { name: 'Edit Notes' }).getByRole('link');
 
-    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
     this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModalComponent(page);
+    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModalComponent(page);
     this.editAppAdminSettingsModal = new EditAppAdminSettingsModalComponent(page);
     this.editAppNotesSettingsModal = new EditAppNotesSettingsModalComponent(page);
     this.editGeocodingSettingsModal = new EditAppGeocodingSettingsModal(page);
