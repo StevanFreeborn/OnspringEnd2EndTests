@@ -76,10 +76,11 @@ jobs:
   merge_reports_and_publish:
     name: 'Merge Reports and Upload'
     needs: run_tests
-    if: always() && ${{ needs.run_tests.result }} != 'skipped'
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        if: ${{ needs.run_tests.result != 'skipped' }}
         uses: actions/checkout@v3
       - name: Setup Node.js
         uses: actions/setup-node@v3
