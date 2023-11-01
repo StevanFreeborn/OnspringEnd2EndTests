@@ -15,9 +15,11 @@ jobs:
           fetch-depth: 0
       - name: Get changed test files
         id: get_changed_test_files
-        continue-on-error: true
+        shell: bash {0}
         run: |
           echo "Changed files in this PR:"
+          BASE_HEAD_SHA=${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA=${{ github.event.pull_request.head.sha }}
           CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts')
           if [ -n "$CHANGED_FILES" ]
           then
