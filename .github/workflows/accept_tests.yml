@@ -3,6 +3,12 @@ on:
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - .vscode/**
+      - .github/**
+      - '**/README.md'
+      - '**/example.env'
+      - '**/.gitignore'
 jobs:
   check_for_test_file_changes:
     name: Check for test file changes
