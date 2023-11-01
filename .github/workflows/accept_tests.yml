@@ -63,7 +63,7 @@ jobs:
       - name: Run your tests
         run: |
           echo "Running tests for ${{ matrix.project }} shard ${{ matrix.shard }}"
-          npx playwright test ${{ needs.check_for_test_file_changes.outputs.changed_test_files }} --project=${{ matrix.project }} --shard=${{ matrix.shard }} --repeat-each=3
+          npx playwright test ${{ needs.check_for_test_file_changes.outputs.changed_test_files }} --project=${{ matrix.project }} --shard=${{ matrix.shard }} --repeat-each 3 --retries 0
       - name: Rename blob-reports
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
@@ -76,12 +76,9 @@ jobs:
   merge_reports_and_publish:
     name: 'Merge Reports and Upload'
     needs: run_tests
-    if: ${{ needs.run_tests.result == 'success' || needs.run_tests.result == 'failure' }}
+    if: always() && ${{ needs.run_tests.result != 'skipped' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Print Result
-        run: |
-          echo "Result: ${{ needs.run_tests.result }}"
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Node.js
