@@ -13,9 +13,8 @@ jobs:
       - name: Get changed test files
         id: get_changed_test_files
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}:$GITHUB_REF
           echo "Changed files in this PR:"
-          CHANGED_FILES=$(git diff --name-only $GITHUB_REF...$GITHUB_SHA | grep '\.spec\.ts')
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.spec\.ts')
           echo "$CHANGED_FILES"
           if [ -z "$CHANGED_FILES" ]
           then
