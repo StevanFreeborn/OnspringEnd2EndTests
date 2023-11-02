@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { Locator, test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
@@ -213,7 +213,7 @@ test.describe('text field', () => {
     });
   });
 
-  test("Add a Text Field to an app's layout.", async ({ appAdminPage, appId, sysAdminPage }) => {
+  test("Add a Text Field to an app's layout", async ({ appAdminPage, appId, sysAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-84',
@@ -230,7 +230,7 @@ test.describe('text field', () => {
     await test.step('Add the text field to the layout', async () => {
       await appAdminPage.layoutTab.openLayout();
 
-      const [field, dropzone] = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+      const { field, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
         sectionName: sectionName,
         sectionColumn: 0,
@@ -241,7 +241,7 @@ test.describe('text field', () => {
       await expect(field).toHaveClass(/ui-draggable-disabled/);
       await expect(dropzone).toHaveText(new RegExp(fieldName));
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Verify the field was added to the layout', async () => {
@@ -256,6 +256,60 @@ test.describe('text field', () => {
       });
 
       await expect(field).toBeVisible();
+    });
+  });
+
+  test("Remove a Text Field from an app's layout", async ({ appAdminPage, appId, sysAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-85',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    let fieldInBank: Locator;
+    let fieldLayoutDropzone: Locator;
+
+    await test.step('Add the text field that will be removed from layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+      const { field, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
+      });
+
+      fieldLayoutDropzone = dropzone;
+      fieldInBank = field;
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Remove the text field from the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await fieldLayoutDropzone.hover();
+      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(fieldName));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was removed from the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(appId);
+      const field = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+
+      await expect(field).toBeHidden();
     });
   });
 });

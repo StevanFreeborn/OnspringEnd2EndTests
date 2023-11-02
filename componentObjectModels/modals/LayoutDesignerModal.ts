@@ -1,4 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { BASE_URL } from '../../playwright.config';
 import { CanvasSection } from '../sections/canvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
 import { AddFieldModal } from './addFieldModal';
@@ -12,8 +13,10 @@ type DragFieldParams = {
 };
 
 export class LayoutDesignerModal {
+  private readonly page: Page;
   private readonly designer: Locator;
-  readonly frame: FrameLocator;
+  private readonly frame: FrameLocator;
+  private readonly pathRegex: RegExp;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: CanvasSection;
   readonly addFieldModal: AddFieldModal;
@@ -22,14 +25,26 @@ export class LayoutDesignerModal {
   readonly closeButton: Locator;
 
   constructor(page: Page) {
+    this.page = page;
     this.designer = page.getByRole('dialog');
     this.frame = this.designer.frameLocator('iframe').first();
+    this.pathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
     this.addFieldModal = new AddFieldModal(page);
     this.saveButton = this.designer.getByRole('button', { name: 'Save' });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
+  }
+
+  async saveLayout() {
+    await this.saveButton.click();
+    await this.page.waitForResponse(this.pathRegex);
+  }
+
+  async saveAndCloseLayout() {
+    await this.saveAndCloseButton.click();
+    await this.page.waitForResponse(this.pathRegex);
   }
 
   async dragFieldOnToLayout(params: DragFieldParams) {
@@ -45,6 +60,6 @@ export class LayoutDesignerModal {
 
     await field.dragTo(dropzone);
 
-    return [field, dropzone];
+    return { field, dropzone };
   }
 }

@@ -2,9 +2,9 @@ import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
+import { AddLayoutItemModal } from '../modals/addLayoutItemModal';
 import { AddTextFieldModal } from '../modals/addTextFieldModal';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
-import { AddLayoutItemModal } from '../modals/addLayoutItemModal';
 
 export class AppLayoutTab {
   private readonly page: Page;
