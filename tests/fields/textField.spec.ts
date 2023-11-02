@@ -1,4 +1,3 @@
-import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
@@ -49,7 +48,7 @@ test.describe('text field', () => {
     const fieldName = FakeDataFactory.createFakeFieldName();
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
     });
 
     await test.step('Verify the field was added', async () => {
@@ -70,7 +69,7 @@ test.describe('text field', () => {
     const copiedFieldName = `${fieldName} (copy)`;
 
     await test.step('Add the the text field to be copied', async () => {
-      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
     });
 
     await test.step('Add a copy of the text field', async () => {
@@ -79,7 +78,7 @@ test.describe('text field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
 
-      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal(LayoutItemType.TextField);
+      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
       await addTextFieldModal.fieldInput.fill(copiedFieldName);
       await addTextFieldModal.fieldInput.fill(copiedFieldName);
@@ -105,18 +104,18 @@ test.describe('text field', () => {
     const copiedFieldName = `${fieldName} (1)`;
 
     await test.step('Add the text field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
     });
 
     await test.step('Add a copy of the text field', async () => {
       await appAdminPage.layoutTab.addFieldButton.click();
-      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(LayoutItemType.TextField);
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.selectFieldDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
-      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal(LayoutItemType.TextField);
+      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
       await expect(addTextFieldModal.fieldInput).toHaveValue(copiedFieldName);
 
@@ -127,5 +126,15 @@ test.describe('text field', () => {
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
       await expect(copiedFieldRow).toBeVisible();
     });
+  });
+
+  test('Add a Text Field to an app from a layout', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-82',
+    });
+
+    // TODO: Implement this test
+    expect(false).toBe(true);
   });
 });

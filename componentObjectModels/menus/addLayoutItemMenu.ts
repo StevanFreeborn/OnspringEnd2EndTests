@@ -1,17 +1,9 @@
 import { Locator, Page } from '@playwright/test';
+import { FieldType } from './addFieldTypeMenu';
 
-export enum LayoutItemType {
-  DateField = 'Date/Time',
-  ListField = 'List',
-  NumberField = 'Number',
-  TextField = 'Text',
-  AttachmentField = 'Attachment',
-  ImageField = 'Image',
-  ReferenceField = 'Reference',
-  TimeSpanField = 'Time Span',
-  FormulaField = 'Formula',
-  TextBlock = 'Formatted Text Block',
-}
+type ObjectType = 'Formatted Text Block';
+
+export type LayoutItemType = FieldType | ObjectType;
 
 export class AddLayoutItemMenu {
   private readonly menu: Locator;

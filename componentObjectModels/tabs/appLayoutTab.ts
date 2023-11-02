@@ -1,11 +1,14 @@
 import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
+import { LayoutDesignerModal } from '../modals/LayoutDesignerModal';
 import { AddTextFieldModal } from '../modals/addTextFieldModal';
 import { AddLayoutItemModal } from './../modals/addLayoutItemModal';
 
 export class AppLayoutTab {
   private readonly page: Page;
+  readonly layoutsGrid: Locator;
+  readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
   readonly addLayoutItemMenu: AddLayoutItemMenu;
   readonly addLayoutItemDialog: AddLayoutItemDialog;
@@ -13,6 +16,8 @@ export class AppLayoutTab {
 
   constructor(page: Page) {
     this.page = page;
+    this.layoutsGrid = page.locator('#grid-layouts').first();
+    this.layoutDesignerModal = new LayoutDesignerModal(page);
     this.addFieldButton = page.getByText('Add Field');
     this.addLayoutItemMenu = new AddLayoutItemMenu(page);
     this.addLayoutItemDialog = new AddLayoutItemDialog(page);
@@ -25,7 +30,7 @@ export class AppLayoutTab {
     await this.addLayoutItemDialog.continueButton.click();
 
     switch (itemType) {
-      case LayoutItemType.TextField:
+      case 'Text':
         {
           const modal = this.getLayoutItemModal(itemType);
           await modal.fieldInput.fill(itemName);
@@ -39,21 +44,21 @@ export class AppLayoutTab {
     await this.page.waitForLoadState('networkidle');
   }
 
-  getLayoutItemModal(itemType: LayoutItemType.TextField): AddTextFieldModal;
+  getLayoutItemModal(itemType: 'Text'): AddTextFieldModal;
   getLayoutItemModal(itemType: LayoutItemType): AddLayoutItemModal;
   getLayoutItemModal(itemType: LayoutItemType) {
     switch (itemType) {
-      case LayoutItemType.DateField:
-      case LayoutItemType.ListField:
-      case LayoutItemType.NumberField:
-      case LayoutItemType.TextField:
+      case 'Date/Time':
+      case 'List':
+      case 'Number':
+      case 'Text':
         return new AddTextFieldModal(this.page);
-      case LayoutItemType.AttachmentField:
-      case LayoutItemType.ImageField:
-      case LayoutItemType.ReferenceField:
-      case LayoutItemType.TimeSpanField:
-      case LayoutItemType.FormulaField:
-      case LayoutItemType.TextBlock:
+      case 'Attachment':
+      case 'Image':
+      case 'Reference':
+      case 'Time Span':
+      case 'Formula':
+      case 'Formatted Text Block':
       default:
         return new AddLayoutItemModal(this.page);
     }
