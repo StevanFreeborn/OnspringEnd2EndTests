@@ -83,7 +83,7 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.addLayoutItemModal.saveButton.click();
     });
 
-    await test.step('Verify the field was added', async () => {
+    await test.step('Verify the field was copied', async () => {
       await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
       await expect(copiedFieldRow).toBeVisible();
