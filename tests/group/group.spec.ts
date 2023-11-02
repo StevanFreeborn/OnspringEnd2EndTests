@@ -2,8 +2,10 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
+import { CopyGroupAdminPage } from '../../pageObjectModels/groups/copyGroupAdminPage';
 import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
 import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
+import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
 
 type GroupTestFixtures = {
@@ -72,6 +74,151 @@ test.describe('Group', () => {
 
       expect(editGroupAdminPage.page.url()).toMatch(editGroupAdminPage.pathRegex);
       await expect(editGroupAdminPage.nameInput).toHaveValue(groupName);
+    });
+  });
+
+  test('Create a Group via the create button on the Security tile on the admin home page', async ({
+    adminHomePage,
+    addGroupAdminPage,
+    editGroupAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-495',
+    });
+
+    const groupName = FakeDataFactory.createFakeGroupName();
+    groupsToDelete.push(groupName);
+
+    await test.step('Create the group', async () => {
+      await adminHomePage.securityTileLink.hover();
+      await adminHomePage.securityTileCreateButton.waitFor();
+      await adminHomePage.securityTileCreateButton.click();
+
+      await expect(adminHomePage.securityCreateMenu).toBeVisible();
+
+      await adminHomePage.securityCreateMenu.getByText('Group').click();
+      await addGroupAdminPage.page.waitForLoadState();
+      await addGroupAdminPage.nameInput.fill(groupName);
+      await addGroupAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the group is created correctly', async () => {
+      await editGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+
+      expect(editGroupAdminPage.page.url()).toMatch(editGroupAdminPage.pathRegex);
+      await expect(editGroupAdminPage.nameInput).toHaveValue(groupName);
+    });
+  });
+
+  test('Create a Group via the Create Group button on the group home page', async ({
+    sysAdminPage,
+    adminHomePage,
+    groupsSecurityAdminPage,
+    addGroupAdminPage,
+    editGroupAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-496',
+    });
+
+    const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
+    const groupName = FakeDataFactory.createFakeGroupName();
+    groupsToDelete.push(groupName);
+
+    await test.step('Navigate to the groups security admin page', async () => {
+      await adminHomePage.securityTileLink.click();
+      await usersSecurityAdminPage.pillNav.groupsPillButton.click();
+    });
+
+    await test.step('Create the group', async () => {
+      await groupsSecurityAdminPage.createGroupButton.click();
+      await addGroupAdminPage.page.waitForLoadState();
+      await addGroupAdminPage.nameInput.fill(groupName);
+      await addGroupAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the group is created correctly', async () => {
+      await editGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+
+      expect(editGroupAdminPage.page.url()).toMatch(editGroupAdminPage.pathRegex);
+      await expect(editGroupAdminPage.nameInput).toHaveValue(groupName);
+    });
+  });
+
+  test('Update a group', async ({ addGroupAdminPage, editGroupAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-500',
+    });
+
+    const groupName = FakeDataFactory.createFakeGroupName();
+    groupsToDelete.push(groupName);
+    const description = 'This is a test description';
+
+    await test.step('Create the group to update', async () => {
+      await addGroupAdminPage.addGroup(groupName);
+      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Update the role', async () => {
+      await editGroupAdminPage.descriptionEditor.fill(description);
+      await editGroupAdminPage.saveGroup();
+    });
+
+    await test.step('Verify the role is updated', async () => {
+      await expect(editGroupAdminPage.descriptionEditor).toHaveText(description);
+    });
+  });
+
+  test('Create a copy of a group', async ({
+    sysAdminPage,
+    addGroupAdminPage,
+    editGroupAdminPage,
+    groupsSecurityAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-784',
+    });
+
+    const copyGroupAdminPage = new CopyGroupAdminPage(sysAdminPage);
+    const groupName = FakeDataFactory.createFakeGroupName();
+    const copiedGroupName = `${groupName} (Copy)`;
+    groupsToDelete.push(groupName);
+    groupsToDelete.push(copiedGroupName);
+
+    await test.step('Create the group to copy', async () => {
+      await addGroupAdminPage.addGroup(groupName);
+      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Copy the role', async () => {
+      const roleRow = groupsSecurityAdminPage.groupsGrid.getByRole('row', { name: groupName }).first();
+
+      await groupsSecurityAdminPage.goto();
+      await roleRow.hover();
+      await roleRow.getByTitle('Copy Group').click();
+      await copyGroupAdminPage.page.waitForLoadState();
+
+      await expect(copyGroupAdminPage.nameInput).toHaveValue(groupName);
+
+      await copyGroupAdminPage.nameInput.clear();
+      await copyGroupAdminPage.nameInput.fill(copiedGroupName);
+      await copyGroupAdminPage.saveRecordButton.click();
+    });
+
+    await test.step('Verify the group is copied', async () => {
+      await copyGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await editGroupAdminPage.page.waitForLoadState();
+
+      expect(editGroupAdminPage.page.url()).toMatch(editGroupAdminPage.pathRegex);
+      await expect(editGroupAdminPage.nameInput).toHaveValue(copiedGroupName);
     });
   });
 
