@@ -78,13 +78,52 @@ test.describe('text field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.layoutTab.addLayoutItemModal.nameInput.clear();
-      await appAdminPage.layoutTab.addLayoutItemModal.nameInput.fill(copiedFieldName);
-      await appAdminPage.layoutTab.addLayoutItemModal.saveButton.click();
+
+      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal(LayoutItemType.TextField);
+
+      await addTextFieldModal.fieldInput.fill(copiedFieldName);
+      await addTextFieldModal.fieldInput.fill(copiedFieldName);
+      await addTextFieldModal.saveButton.click();
     });
 
     await test.step('Verify the field was copied', async () => {
       await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
+      await expect(copiedFieldRow).toBeVisible();
+    });
+  });
+
+  test('Add a copy of a Text Field on an app from the Fields & Objects report using Add Field button.', async ({
+    appAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-809',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const copiedFieldName = `${fieldName} (1)`;
+
+    await test.step('Add the text field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+    });
+
+    await test.step('Add a copy of the text field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(LayoutItemType.TextField);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectFieldDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal(LayoutItemType.TextField);
+
+      await expect(addTextFieldModal.fieldInput).toHaveValue(copiedFieldName);
+
+      await addTextFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
       await expect(copiedFieldRow).toBeVisible();
     });
