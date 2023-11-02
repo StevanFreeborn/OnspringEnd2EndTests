@@ -87,7 +87,9 @@ test.describe('text field', () => {
 
     await test.step('Verify the field was copied', async () => {
       await appAdminPage.page.waitForLoadState('networkidle');
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -123,7 +125,9 @@ test.describe('text field', () => {
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: copiedFieldName });
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -146,13 +150,65 @@ test.describe('text field', () => {
 
     await test.step('Verify the field was added', async () => {
       const field = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
+
       await expect(field).toBeVisible();
       await expect(field).not.toHaveClass(/ui-draggable-disabled/);
 
       await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
 
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+
       await expect(fieldRow).toBeVisible();
+    });
+  });
+
+  test('Add a copy of a Text Field on an app from a layout.', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-83',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const copiedFieldName = `${fieldName} (1)`;
+
+    await test.step('Open layout designer', async () => {
+      await appAdminPage.layoutTab.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+    });
+
+    await test.step('Add the text field to copy', async () => {
+      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+    });
+
+    await test.step('Add a copy of the text field', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem('Text');
+
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectFieldDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.addFieldModal;
+
+      await expect(addTextFieldModal.fieldInput).toHaveValue(copiedFieldName);
+
+      await addTextFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedField =
+        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
+
+      await expect(copiedField).toBeVisible();
+      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+
+      await expect(copiedFieldRow).toBeVisible();
     });
   });
 });
