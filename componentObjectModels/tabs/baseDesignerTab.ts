@@ -1,17 +1,17 @@
-import { Page } from '@playwright/test';
+import { FrameLocator } from '@playwright/test';
 
 export class BaseDesignerTab {
-  readonly page: Page;
+  readonly frame: FrameLocator;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(frame: FrameLocator) {
+    this.frame = frame;
   }
 
   getAddButton(buttonTitle: string) {
-    return this.page.getByTitle(buttonTitle);
+    return this.frame.getByTitle(buttonTitle);
   }
 
   getFilterInput(placeholder: string) {
-    return this.page.getByPlaceholder(placeholder);
+    return this.frame.getByPlaceholder(placeholder);
   }
 }

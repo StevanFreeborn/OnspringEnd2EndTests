@@ -1,4 +1,3 @@
-import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
@@ -999,7 +998,7 @@ test.describe('app', () => {
       await appAdminPage.layoutTabButton.click();
 
       for (const fieldName of fieldNames) {
-        await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+        await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
       }
     });
 
@@ -1053,7 +1052,7 @@ test.describe('app', () => {
 
     await test.step('Create field to update geocoding mapping', async () => {
       await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItem(LayoutItemType.TextField, secondAddressFieldName);
+      await appAdminPage.layoutTab.addLayoutItem('Text', secondAddressFieldName);
     });
 
     await test.step('Update geocoding field mapping', async () => {

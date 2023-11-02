@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 
 export type FieldType =
   | 'Date/Time'
@@ -14,8 +14,8 @@ export type FieldType =
 export class AddFieldTypeMenu {
   private readonly menu: Locator;
 
-  constructor(page: Page) {
-    this.menu = page.locator(`[data-add-menu="field"]`).first();
+  constructor(frame: FrameLocator) {
+    this.menu = frame.locator(`[data-add-menu="field"]`).first();
   }
 
   async selectItem(itemType: FieldType) {

@@ -1,5 +1,4 @@
 import { Locator, Page } from '@playwright/test';
-import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { BASE_URL } from '../../playwright.config';
@@ -56,7 +55,7 @@ export class AppAdminPage extends BaseAdminPage {
     await this.layoutTabButton.click();
 
     for (const fieldName of Object.values(geocodeFields)) {
-      await this.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+      await this.layoutTab.addLayoutItem('Text', fieldName);
     }
 
     await this.generalTabButton.click();

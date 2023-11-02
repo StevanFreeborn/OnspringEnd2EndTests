@@ -1,12 +1,12 @@
-import { Locator, Page } from '@playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 import { BaseDesignerTab } from './baseDesignerTab';
 
 export class LayoutDesignerObjectsTab extends BaseDesignerTab {
   readonly addObjectButton: Locator;
   readonly objectsFilterInput: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(frame: FrameLocator) {
+    super(frame);
     this.addObjectButton = this.getAddButton('Add Object');
     this.objectsFilterInput = this.getFilterInput('Filter Objects');
   }

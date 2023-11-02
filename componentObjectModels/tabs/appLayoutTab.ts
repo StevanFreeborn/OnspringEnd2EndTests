@@ -1,8 +1,9 @@
 import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
+import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
-import { LayoutDesignerModal } from '../modals/LayoutDesignerModal';
 import { AddTextFieldModal } from '../modals/addTextFieldModal';
+import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 import { AddLayoutItemModal } from './../modals/addLayoutItemModal';
 
 export class AppLayoutTab {
@@ -42,6 +43,17 @@ export class AppLayoutTab {
 
     await this.getLayoutItemModal(itemType).saveButton.click();
     await this.page.waitForLoadState('networkidle');
+  }
+
+  async addFieldFromLayoutDesigner(fieldType: FieldType, fieldName: string) {
+    const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+    await fieldTab.addFieldButton.click();
+    await fieldTab.addFieldMenu.selectItem(fieldType);
+    await this.addLayoutItemDialog.continueButton.click();
+
+    const addTextFieldModal = this.layoutDesignerModal.addFieldModal;
+    await addTextFieldModal.fieldInput.fill(fieldName);
+    await addTextFieldModal.saveButton.click();
   }
 
   getLayoutItemModal(itemType: 'Text'): AddTextFieldModal;

@@ -6,6 +6,9 @@ export class AddFieldModal extends AddLayoutItemModal {
 
   constructor(page: Page) {
     super(page);
-    this.fieldInput = page.frameLocator('iframe').getByLabel('Field', { exact: true });
+    this.fieldInput = page
+      .getByLabel(/Add\s+\w+\s+Field/)
+      .frameLocator('iframe')
+      .getByLabel('Field', { exact: true });
   }
 }

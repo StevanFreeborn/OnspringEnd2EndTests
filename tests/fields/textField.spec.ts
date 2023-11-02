@@ -128,13 +128,31 @@ test.describe('text field', () => {
     });
   });
 
-  test('Add a Text Field to an app from a layout', async () => {
+  test('Add a Text Field to an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-82',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
+    await test.step('Open layout designer', async () => {
+      await appAdminPage.layoutTab.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+    });
+
+    await test.step('Add the text field', async () => {
+      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const field = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
+      await expect(field).toBeVisible();
+      await expect(field).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 });
