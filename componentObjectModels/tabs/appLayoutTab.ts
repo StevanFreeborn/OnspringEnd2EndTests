@@ -4,7 +4,7 @@ import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddTextFieldModal } from '../modals/addTextFieldModal';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
-import { AddLayoutItemModal } from './../modals/addLayoutItemModal';
+import { AddLayoutItemModal } from '../modals/addLayoutItemModal';
 
 export class AppLayoutTab {
   private readonly page: Page;
