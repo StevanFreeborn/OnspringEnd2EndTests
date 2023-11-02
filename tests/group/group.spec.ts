@@ -165,12 +165,12 @@ test.describe('Group', () => {
       await editGroupAdminPage.page.waitForLoadState();
     });
 
-    await test.step('Update the role', async () => {
+    await test.step('Update the group', async () => {
       await editGroupAdminPage.descriptionEditor.fill(description);
       await editGroupAdminPage.saveGroup();
     });
 
-    await test.step('Verify the role is updated', async () => {
+    await test.step('Verify the group is updated', async () => {
       await expect(editGroupAdminPage.descriptionEditor).toHaveText(description);
     });
   });
