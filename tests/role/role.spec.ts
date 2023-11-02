@@ -183,7 +183,7 @@ test.describe('Role', () => {
     await test.step('Create the role to update', async () => {
       await addRoleAdminPage.addRole(roleName);
       await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-      await addRoleAdminPage.page.waitForLoadState();
+      await editRoleAdminPage.page.waitForLoadState();
     });
 
     await test.step('Update the role', async () => {

@@ -4,12 +4,14 @@ import { BaseAdminPage } from '../baseAdminPage';
 
 export class GroupsSecurityAdminPage extends BaseAdminPage {
   readonly path: string;
+  readonly createGroupButton: Locator;
   readonly groupsGrid: Locator;
   readonly deleteGroupDialog: DeleteGroupDialog;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Security/Group';
+    this.createGroupButton = page.getByRole('button', { name: 'Create Group' });
     this.groupsGrid = page.locator('#grid');
     this.deleteGroupDialog = new DeleteGroupDialog(page);
   }

@@ -13,4 +13,9 @@ export class EditGroupAdminPage extends GroupAdminPage {
   async goto(groupId: number) {
     await this.page.goto(`/Admin/Security/Group/${groupId}/Edit`);
   }
+
+  async saveGroup() {
+    await this.saveRecordButton.click();
+    await this.page.waitForResponse(this.pathRegex);
+  }
 }
