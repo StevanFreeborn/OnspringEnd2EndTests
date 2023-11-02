@@ -25,8 +25,13 @@ export class AppLayoutTab {
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 
-  async openDefaultLayout() {
-    await this.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+  /**
+   * Opens the specified layout.
+   * @param layoutName - The name of the layout to open. Defaults to 'Default Layout'.
+   * @returns A promise that resolves when the layout is opened.
+   */
+  async openLayout(layoutName: string = 'Default Layout') {
+    await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
   }
 
   async addLayoutItem(itemType: LayoutItemType, itemName: string) {

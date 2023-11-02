@@ -142,7 +142,7 @@ test.describe('text field', () => {
     const fieldName = FakeDataFactory.createFakeFieldName();
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTab.openDefaultLayout();
+      await appAdminPage.layoutTab.openLayout();
     });
 
     await test.step('Add the text field', async () => {
@@ -173,7 +173,7 @@ test.describe('text field', () => {
     const copiedFieldName = `${fieldName} (1)`;
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTab.openDefaultLayout();
+      await appAdminPage.layoutTab.openLayout();
     });
 
     await test.step('Add the text field to copy', async () => {
@@ -228,7 +228,7 @@ test.describe('text field', () => {
     });
 
     await test.step('Add the text field to the layout', async () => {
-      await appAdminPage.layoutTab.openDefaultLayout();
+      await appAdminPage.layoutTab.openLayout();
 
       const [field, dropzone] = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,

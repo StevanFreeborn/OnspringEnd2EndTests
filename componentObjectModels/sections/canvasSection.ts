@@ -10,6 +10,7 @@ type FieldDropzoneParams = {
 export class CanvasSection {
   private readonly section: Locator;
 
+  // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
     this.section = frame.locator('.canvas-section').first();
   }
