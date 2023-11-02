@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
 type TextFieldTestFixtures = {
@@ -212,13 +213,15 @@ test.describe('text field', () => {
     });
   });
 
-  test("Add a Text Field to an app's layout.", async ({ appAdminPage }) => {
+  test("Add a Text Field to an app's layout.", async ({ appAdminPage, appId, sysAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-84',
     });
 
     const fieldName = FakeDataFactory.createFakeFieldName();
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
 
     await test.step('Add the text field that will be added to layout', async () => {
       await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
@@ -227,16 +230,13 @@ test.describe('text field', () => {
     await test.step('Add the text field to the layout', async () => {
       await appAdminPage.layoutTab.openDefaultLayout();
 
-      const field = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
-
-      const dropzone = await appAdminPage.layoutTab.layoutDesignerModal.canvasSection.getFieldDropzone({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        column: 0,
-        row: 0,
+      const [field, dropzone] = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
       });
-
-      await field.dragTo(dropzone);
 
       await expect(field).toHaveClass(/ui-draggable-disabled/);
       await expect(dropzone).toHaveText(new RegExp(fieldName));
@@ -244,6 +244,18 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseButton.click();
     });
 
-    await test.step('Verify the field was added to the layout', async () => {});
+    await test.step('Verify the field was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(appId);
+
+      const field = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+
+      await expect(field).toBeVisible();
+    });
   });
 });
