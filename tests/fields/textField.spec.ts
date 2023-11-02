@@ -140,8 +140,8 @@ test.describe('text field', () => {
 
     const fieldName = FakeDataFactory.createFakeFieldName();
 
-    await test.step('Open layout designer', async () => {
-      await appAdminPage.layoutTab.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openDefaultLayout();
     });
 
     await test.step('Add the text field', async () => {
@@ -171,8 +171,8 @@ test.describe('text field', () => {
     const fieldName = FakeDataFactory.createFakeFieldName();
     const copiedFieldName = `${fieldName} (1)`;
 
-    await test.step('Open layout designer', async () => {
-      await appAdminPage.layoutTab.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openDefaultLayout();
     });
 
     await test.step('Add the text field to copy', async () => {
@@ -210,5 +210,40 @@ test.describe('text field', () => {
 
       await expect(copiedFieldRow).toBeVisible();
     });
+  });
+
+  test("Add a Text Field to an app's layout.", async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-84',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
+    await test.step('Add the text field that will be added to layout', async () => {
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+    });
+
+    await test.step('Add the text field to the layout', async () => {
+      await appAdminPage.layoutTab.openDefaultLayout();
+
+      const field = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
+
+      const dropzone = await appAdminPage.layoutTab.layoutDesignerModal.canvasSection.getFieldDropzone({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        column: 0,
+        row: 0,
+      });
+
+      await field.dragTo(dropzone);
+
+      await expect(field).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(fieldName));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseButton.click();
+    });
+
+    await test.step('Verify the field was added to the layout', async () => {});
   });
 });

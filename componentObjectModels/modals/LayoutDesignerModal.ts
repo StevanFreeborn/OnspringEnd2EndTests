@@ -5,10 +5,12 @@ import { AddFieldModal } from './addFieldModal';
 
 export class LayoutDesignerModal {
   private readonly designer: Locator;
-  private readonly frame: FrameLocator;
+  readonly frame: FrameLocator;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: CanvasSection;
   readonly addFieldModal: AddFieldModal;
+  readonly saveButton: Locator;
+  readonly saveAndCloseButton: Locator;
   readonly closeButton: Locator;
 
   constructor(page: Page) {
@@ -17,6 +19,8 @@ export class LayoutDesignerModal {
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
     this.addFieldModal = new AddFieldModal(page);
+    this.saveButton = this.designer.getByRole('button', { name: 'Save' });
+    this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
   }
 }

@@ -25,6 +25,10 @@ export class AppLayoutTab {
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 
+  async openDefaultLayout() {
+    await this.layoutsGrid.getByRole('row', { name: 'Default Layout' }).click();
+  }
+
   async addLayoutItem(itemType: LayoutItemType, itemName: string) {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(itemType);
@@ -51,9 +55,9 @@ export class AppLayoutTab {
     await fieldTab.addFieldMenu.selectItem(fieldType);
     await this.addLayoutItemDialog.continueButton.click();
 
-    const addTextFieldModal = this.layoutDesignerModal.addFieldModal;
-    await addTextFieldModal.fieldInput.fill(fieldName);
-    await addTextFieldModal.saveButton.click();
+    const addFieldModal = this.layoutDesignerModal.addFieldModal;
+    await addFieldModal.fieldInput.fill(fieldName);
+    await addFieldModal.saveButton.click();
   }
 
   getLayoutItemModal(itemType: 'Text'): AddTextFieldModal;
