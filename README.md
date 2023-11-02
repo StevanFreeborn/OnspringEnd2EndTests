@@ -91,4 +91,4 @@ This workflow runs ESLint and Prettier against the codebase to ensure code quali
 
 ### [Run Test Acceptance Test](./github/workflows/run-test-acceptance-test.yml)
 
-This workflow will run all the tests found in a changed `.spec.ts` file. It will run on any pull request that merges into the `master` branch.
+This workflow will run on any pull request that merges into the `master` branch. It will run all the tests found in `.spec.ts` files changed by the PR a total of 3 times in a row without retries to ensure the tests are stable.
