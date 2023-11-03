@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
+import { Role } from '../../models/role';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -861,7 +862,7 @@ test.describe('app', () => {
     await test.step('Create role that will be given admin permissions', async () => {
       const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
       const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.addRole(new Role({ name: roleName }));
       await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
     });
 

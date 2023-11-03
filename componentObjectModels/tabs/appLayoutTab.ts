@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
+import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
@@ -13,6 +14,7 @@ export class AppLayoutTab {
   readonly addFieldButton: Locator;
   readonly addLayoutItemMenu: AddLayoutItemMenu;
   readonly addLayoutItemDialog: AddLayoutItemDialog;
+  readonly deleteLayoutItemDialog: DeleteLayoutItemDialog;
   readonly fieldsAndObjectsGrid: Locator;
 
   constructor(page: Page) {
@@ -22,6 +24,7 @@ export class AppLayoutTab {
     this.addFieldButton = page.getByText('Add Field');
     this.addLayoutItemMenu = new AddLayoutItemMenu(page);
     this.addLayoutItemDialog = new AddLayoutItemDialog(page);
+    this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(page);
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 

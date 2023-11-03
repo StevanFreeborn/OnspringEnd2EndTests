@@ -1,14 +1,20 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, test as base, expect } from '../../fixtures';
+import { App } from '../../models/app';
+import { AppPermission, Permission, Role } from '../../models/role';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
+import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
 import { AnnotationType } from '../annotations';
+import { EditRoleAdminPage } from './../../pageObjectModels/roles/editRoleAdminPage';
 
 type TextFieldTestFixtures = {
   appAdminPage: AppAdminPage;
-  appId: number;
+  app: App;
+  role: Role;
 };
 
 const test = base.extend<TextFieldTestFixtures>({
@@ -16,7 +22,7 @@ const test = base.extend<TextFieldTestFixtures>({
     const appAdminPage = new AppAdminPage(sysAdminPage);
     await use(appAdminPage);
   },
-  appId: async ({ sysAdminPage }, use) => {
+  app: async ({ sysAdminPage }, use) => {
     const adminHomePage = new AdminHomePage(sysAdminPage);
     const appsAdminPage = new AppsAdminPage(sysAdminPage);
     const appAdminPage = new AppAdminPage(sysAdminPage);
@@ -26,17 +32,47 @@ const test = base.extend<TextFieldTestFixtures>({
     await adminHomePage.createApp(appName);
     await appAdminPage.page.waitForURL(appAdminPage.pathRegex);
     const appId = appAdminPage.getAppIdFromUrl();
+    const app = new App({ id: appId, name: appName });
 
-    await use(appId);
+    await use(app);
 
-    await appsAdminPage.goto();
     await appsAdminPage.deleteApps([appName]);
+  },
+  role: async ({ sysAdminPage, app }, use) => {
+    const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
+    const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
+    const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    const role = new Role({ name: roleName, status: 'Active' });
+    role.appPermissions.push(
+      new AppPermission({
+        appName: app.name,
+        contentRecords: new Permission({ read: true }),
+      })
+    );
+
+    await addRoleAdminPage.addRole(role);
+    await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+    await editRoleAdminPage.page.waitForLoadState();
+
+    role.id = editRoleAdminPage.getRoleIdFromUrl();
+
+    await use(role);
+
+    await roleSecurityAdminPage.deleteRoles([roleName]);
+  },
+  testUserPage: async ({ sysAdminPage, role }, use) => {
+    // TODO: Create test user fixture
+    // Create user, assign role, and set password
+    // User new user to login
+    // await use(user);
+    // Delete user
   },
 });
 
 test.describe('text field', () => {
-  test.beforeEach(async ({ appAdminPage, appId }) => {
-    await appAdminPage.goto(appId);
+  test.beforeEach(async ({ appAdminPage, app }) => {
+    await appAdminPage.goto(app.id);
     await appAdminPage.layoutTabButton.click();
   });
 
@@ -213,7 +249,7 @@ test.describe('text field', () => {
     });
   });
 
-  test("Add a Text Field to an app's layout", async ({ appAdminPage, appId, sysAdminPage }) => {
+  test("Add a Text Field to an app's layout", async ({ appAdminPage, app, sysAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-84',
@@ -246,7 +282,7 @@ test.describe('text field', () => {
 
     await test.step('Verify the field was added to the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(appId);
+      await addContentPage.goto(app.id);
 
       const field = await addContentPage.getField({
         tabName: tabName,
@@ -259,7 +295,7 @@ test.describe('text field', () => {
     });
   });
 
-  test("Remove a Text Field from an app's layout", async ({ appAdminPage, appId, sysAdminPage }) => {
+  test("Remove a Text Field from an app's layout", async ({ appAdminPage, app, sysAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-85',
@@ -301,7 +337,7 @@ test.describe('text field', () => {
 
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(appId);
+      await addContentPage.goto(app.id);
       const field = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
@@ -320,6 +356,7 @@ test.describe('text field', () => {
     });
 
     const fieldName = FakeDataFactory.createFakeFieldName();
+    const updatedFieldName = `${fieldName} updated`;
 
     await test.step('Add the text field', async () => {
       await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
@@ -331,15 +368,62 @@ test.describe('text field', () => {
       await fieldRow.getByTitle('Edit').click();
 
       const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
-      await editTextFieldModal.fieldInput.fill(`${fieldName} updated`);
+      await editTextFieldModal.fieldInput.fill(updatedFieldName);
       await editTextFieldModal.saveButton.click();
     });
 
     await test.step('Verify the field was updated', async () => {
       const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: `${fieldName} updated`,
+        name: updatedFieldName,
       });
       await expect(updatedFieldRow).toBeVisible();
     });
+  });
+
+  test('Delete a Text Field from an app', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-87',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
+    await test.step('Add the text field', async () => {
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+    });
+
+    await test.step('Delete the text field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: fieldName,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
+  });
+
+  test('Make a Text Field private by role', async ({ role }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-99',
+    });
+
+    // I want to have a role that has permissions to the app
+    // I want to have a user that has that role
+    // I want to have that user logged in
+
+    // await test.step('Add the text field', async () => {});
+
+    // await test.step('Verify the field is private by role', async () => {});
+
+    expect(role).toBeDefined();
   });
 });

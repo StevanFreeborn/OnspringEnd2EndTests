@@ -1,23 +1,26 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseAdminFormPage } from '../baseAdminFormPage';
+import { RoleGeneralTab } from '../../componentObjectModels/tabs/roleGeneralTab';
+import { RoleAppPermTab } from '../../componentObjectModels/tabs/roleAppPermTab';
 
 export class RoleAdminPage extends BaseAdminFormPage {
-  readonly nameInput: Locator;
-  readonly descriptionEditor: Locator;
-  readonly statusSwitch: Locator;
-  readonly statusToggle: Locator;
+  readonly generalTabButton: Locator;
+  readonly appPermissionsTabButton: Locator;
+  readonly surveyPermissionsTabButton: Locator;
+  readonly adminPermissionsTabButton: Locator;
+  readonly securityPermissionsTabButton: Locator;
+  readonly generalTab: RoleGeneralTab;
+  readonly appPermTab: RoleAppPermTab;
 
   constructor(page: Page) {
     super(page);
-    this.nameInput = page.locator(this.createFormControlSelector('Name'));
-    this.descriptionEditor = page.locator(
-      this.createFormControlSelector('Description', '.content-area.mce-content-body')
-    );
-    this.statusSwitch = page.getByRole('switch');
-    this.statusToggle = page
-      .locator(this.createFormControlSelector('Status', 'div.type-checkbox'))
-      .getByRole('switch')
-      .locator('span')
-      .nth(3);
+    this.generalTabButton = page.getByRole('tab', { name: 'General' });
+    this.appPermissionsTabButton = page.getByRole('tab', { name: 'App Permissions' });
+    this.surveyPermissionsTabButton = page.getByRole('tab', { name: 'Survey Permissions' });
+    this.adminPermissionsTabButton = page.getByRole('tab', { name: 'Administration Permissions' });
+    this.securityPermissionsTabButton = page.getByRole('tab', { name: 'Security Permissions' });
+
+    this.generalTab = new RoleGeneralTab(this);
+    this.appPermTab = new RoleAppPermTab(this);
   }
 }
