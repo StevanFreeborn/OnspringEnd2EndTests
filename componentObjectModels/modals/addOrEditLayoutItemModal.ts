@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class AddLayoutItemModal {
+export class AddOrEditLayoutItemModal {
   readonly saveButton: Locator;
 
   constructor(page: Page) {

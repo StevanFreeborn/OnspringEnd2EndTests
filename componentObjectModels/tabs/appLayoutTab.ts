@@ -2,8 +2,8 @@ import { Locator, Page } from '@playwright/test';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
-import { AddLayoutItemModal } from '../modals/addLayoutItemModal';
-import { AddTextFieldModal } from '../modals/addTextFieldModal';
+import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
+import { AddOrEditTextFieldModal } from '../modals/addOrEditTextFieldModal';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
 export class AppLayoutTab {
@@ -65,15 +65,15 @@ export class AppLayoutTab {
     await addFieldModal.saveButton.click();
   }
 
-  getLayoutItemModal(itemType: 'Text'): AddTextFieldModal;
-  getLayoutItemModal(itemType: LayoutItemType): AddLayoutItemModal;
+  getLayoutItemModal(itemType: 'Text'): AddOrEditTextFieldModal;
+  getLayoutItemModal(itemType: LayoutItemType): AddOrEditLayoutItemModal;
   getLayoutItemModal(itemType: LayoutItemType) {
     switch (itemType) {
       case 'Date/Time':
       case 'List':
       case 'Number':
       case 'Text':
-        return new AddTextFieldModal(this.page);
+        return new AddOrEditTextFieldModal(this.page);
       case 'Attachment':
       case 'Image':
       case 'Reference':
@@ -81,7 +81,7 @@ export class AppLayoutTab {
       case 'Formula':
       case 'Formatted Text Block':
       default:
-        return new AddLayoutItemModal(this.page);
+        return new AddOrEditLayoutItemModal(this.page);
     }
   }
 }

@@ -2,7 +2,7 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { BASE_URL } from '../../playwright.config';
 import { CanvasSection } from '../sections/canvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
-import { AddFieldModal } from './addFieldModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
 type DragFieldParams = {
   tabName: string;
@@ -19,7 +19,7 @@ export class LayoutDesignerModal {
   private readonly pathRegex: RegExp;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: CanvasSection;
-  readonly addFieldModal: AddFieldModal;
+  readonly addFieldModal: AddOrEditFieldModal;
   readonly saveButton: Locator;
   readonly saveAndCloseButton: Locator;
   readonly closeButton: Locator;
@@ -31,7 +31,7 @@ export class LayoutDesignerModal {
     this.pathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
-    this.addFieldModal = new AddFieldModal(page);
+    this.addFieldModal = new AddOrEditFieldModal(page);
     this.saveButton = this.designer.getByRole('button', { name: 'Save' });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });

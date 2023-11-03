@@ -312,4 +312,34 @@ test.describe('text field', () => {
       await expect(field).toBeHidden();
     });
   });
+
+  test('Update the configuration of a Text Field on an app', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-86',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
+    await test.step('Add the text field', async () => {
+      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+    });
+
+    await test.step('Update the text field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
+      await editTextFieldModal.fieldInput.fill(`${fieldName} updated`);
+      await editTextFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: `${fieldName} updated`,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
+  });
 });
