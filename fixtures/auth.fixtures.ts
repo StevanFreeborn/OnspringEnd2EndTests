@@ -1,6 +1,7 @@
 import { Browser, Page, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { User } from '../models/user';
 import { SYS_ADMIN_AUTH_PATH } from '../playwright.config';
 
 export async function sysAdminPage(
@@ -9,6 +10,20 @@ export async function sysAdminPage(
   testInfo: TestInfo
 ) {
   await createBaseAuthPage({ browser }, use, testInfo, SYS_ADMIN_AUTH_PATH);
+}
+
+export async function testUserPage(
+  {
+    browser,
+    user,
+  }: {
+    browser: Browser;
+    user: User;
+  },
+  use: (r: Page) => Promise<void>,
+  testInfo: TestInfo
+) {
+  await createBaseAuthPage({ browser }, use, testInfo, user.authStoragePath);
 }
 
 // This is necessary because videos currently are not supported

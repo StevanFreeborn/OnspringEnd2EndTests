@@ -14,6 +14,7 @@ export class User {
   readonly fullName: string;
   readonly status: UserStatus;
   readonly roles: string[];
+  authStoragePath?: string;
 
   constructor(
     firstName: string,

@@ -1,108 +1,12 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { UserFactory } from '../../factories/userFactory';
-import { Locator, Page, test as base, expect } from '../../fixtures';
-import { App } from '../../models/app';
+import { Locator, expect, fieldTest as test } from '../../fixtures';
 import { LayoutItemPermission } from '../../models/layoutItem';
-import { AppPermission, Permission, Role } from '../../models/role';
 import { TextField } from '../../models/textField';
-import { UserStatus } from '../../models/user';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
-import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
-import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
-import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPage';
 import { MS_PER_MIN } from '../../playwright.config';
 import { AnnotationType } from '../annotations';
-import { EditRoleAdminPage } from './../../pageObjectModels/roles/editRoleAdminPage';
-import { UsersSecurityAdminPage } from './../../pageObjectModels/users/usersSecurityAdminPage';
-
-type TextFieldTestFixtures = {
-  appAdminPage: AppAdminPage;
-  app: App;
-  role: Role;
-  testUserPage: Page;
-};
-
-const test = base.extend<TextFieldTestFixtures>({
-  appAdminPage: async ({ sysAdminPage }, use) => {
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    await use(appAdminPage);
-  },
-  app: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    const appName = FakeDataFactory.createFakeAppName();
-
-    await adminHomePage.goto();
-    await adminHomePage.createApp(appName);
-    await appAdminPage.page.waitForURL(appAdminPage.pathRegex);
-    const appId = appAdminPage.getAppIdFromUrl();
-    const app = new App({ id: appId, name: appName });
-
-    await use(app);
-
-    await appsAdminPage.deleteApps([appName]);
-  },
-  role: async ({ sysAdminPage, app }, use) => {
-    const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
-    const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-    const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
-    const roleName = FakeDataFactory.createFakeRoleName();
-    const role = new Role({ name: roleName, status: 'Active' });
-    role.appPermissions.push(
-      new AppPermission({
-        appName: app.name,
-        contentRecords: new Permission({ read: true }),
-      })
-    );
-
-    await addRoleAdminPage.addRole(role);
-    await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-    await editRoleAdminPage.page.waitForLoadState();
-
-    role.id = editRoleAdminPage.getRoleIdFromUrl();
-
-    await use(role);
-
-    await roleSecurityAdminPage.deleteRoles([roleName]);
-  },
-  testUserPage: async ({ browser, sysAdminPage, role }, use) => {
-    const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
-    const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
-    const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
-    const user = UserFactory.createNewUser(UserStatus.Active);
-    user.roles.push(role.name);
-
-    await addUserAdminPage.goto();
-    await addUserAdminPage.addUser(user);
-    await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
-    await editUserAdminPage.page.waitForLoadState();
-    await editUserAdminPage.changePassword(user.password);
-    await editUserAdminPage.saveUser();
-    user.id = editUserAdminPage.getUserIdFromUrl();
-
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    const loginPage = new LoginPage(page);
-    const dashboardPage = new DashboardPage(page);
-    await loginPage.login(user);
-    await loginPage.page.waitForURL(dashboardPage.path);
-
-    await use(page);
-
-    await usersSecurityAdminPage.deleteUsers([user.username]);
-    await context.close();
-  },
-});
 
 test.describe('text field', () => {
   test.beforeEach(async ({ appAdminPage, app }) => {

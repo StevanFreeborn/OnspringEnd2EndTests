@@ -6,6 +6,7 @@ import path from 'path';
 
 export const MS_PER_SEC = 1000;
 export const MS_PER_MIN = 60 * MS_PER_SEC;
+export const AUTH_DIR = '.auth';
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 const isCI = process.env.CI == 'true';
 const testResultsDir = 'test-results';
@@ -75,6 +76,12 @@ const config: PlaywrightTestConfig = {
       name: 'setup',
       testDir: 'setups',
       testMatch: '**/*.setup.ts',
+      teardown: 'teardown',
+    },
+    {
+      name: 'teardown',
+      testDir: 'teardowns',
+      testMatch: '**/*.teardown.ts',
     },
     {
       name: 'chrome',
