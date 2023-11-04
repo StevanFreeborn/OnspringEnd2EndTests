@@ -1,4 +1,6 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
+import { NumberField } from '../../models/numberField';
 import { AnnotationType } from '../annotations';
 
 test.describe('number field', () => {
@@ -7,24 +9,56 @@ test.describe('number field', () => {
     await appAdminPage.layoutTabButton.click();
   });
 
-  test('Add a Number Field to an app from the Fields & Objects report', async ({}) => {
+  test('Add a Number Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-66',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const fieldName = FakeDataFactory.createFakeFieldName();
+
+    await test.step('Add the number field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new NumberField({ name: fieldName }));
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
-  test('Create a copy of a Number Field on an app from the Fields & Objects report', async ({}) => {
+  test('Create a copy of a Number Field on an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-67',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const copiedFieldName = `${fieldName} (1)`;
+
+    await test.step('Add the the number field to be copied', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new NumberField({ name: fieldName }));
+    });
+
+    await test.step('Add a copy of the number field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Copy').click();
+
+      const addNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
+
+      await expect(addNumberFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addNumberFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a Number Field to an app from a layout.', async ({}) => {

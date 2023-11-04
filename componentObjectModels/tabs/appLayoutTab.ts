@@ -47,6 +47,12 @@ export class AppLayoutTab extends LayoutItemCreator {
           await modal.generalTab.fieldInput.fill(item.name);
         }
         break;
+      case 'Number':
+        {
+          const modal = this.getLayoutItemModal(item.type);
+          await modal.generalTab.fieldInput.fill(item.name);
+        }
+        break;
       default:
         break;
     }

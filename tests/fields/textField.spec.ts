@@ -40,7 +40,7 @@ test.describe('text field', () => {
     });
 
     const fieldName = FakeDataFactory.createFakeFieldName();
-    const copiedFieldName = `${fieldName} (copy)`;
+    const copiedFieldName = `${fieldName} (1)`;
 
     await test.step('Add the the text field to be copied', async () => {
       await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
@@ -54,8 +54,7 @@ test.describe('text field', () => {
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
-      await addTextFieldModal.generalTab.fieldInput.fill(copiedFieldName);
-      await addTextFieldModal.generalTab.fieldInput.fill(copiedFieldName);
+      await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addTextFieldModal.saveButton.click();
     });
 
