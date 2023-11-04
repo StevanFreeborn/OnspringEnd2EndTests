@@ -86,8 +86,8 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.addFieldButton.click();
       await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.selectFieldDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(fieldName).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
@@ -157,8 +157,8 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem('Text');
 
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.selectFieldDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(fieldName).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
       const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Text', 1);

@@ -2,14 +2,14 @@ import { Locator, Page } from '@playwright/test';
 import { BaseCreateOrAddDialog } from './baseCreateOrAddDialog';
 
 export class AddLayoutItemDialog extends BaseCreateOrAddDialog {
-  readonly selectFieldDropdown: Locator;
+  readonly selectDropdown: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.selectFieldDropdown = this.getSelectDropdown('Add Text Field', 'Select a field');
+    this.selectDropdown = page.getByRole('listbox').first();
   }
 
-  getFieldToCopy(fieldName: string) {
-    return this.getItemToCopy(fieldName);
+  getLayoutItemToCopy(itemName: string) {
+    return this.getItemToCopy(itemName);
   }
 }
