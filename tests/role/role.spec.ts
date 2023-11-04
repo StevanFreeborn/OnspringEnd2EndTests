@@ -67,7 +67,7 @@ test.describe('Role', () => {
       await addRoleAdminPage.page.waitForLoadState();
       await addRoleAdminPage.generalTab.nameInput.fill(roleName);
 
-      // TODO: Remove the following when #3983 is fixed
+      // FIX: Remove the following when #3983 is fixed
       // https://corp.onspring.com/Content/8/3983
       await addRoleAdminPage.generalTab.statusToggle.click();
       await addRoleAdminPage.generalTab.statusToggle.click();
@@ -109,7 +109,7 @@ test.describe('Role', () => {
       await addRoleAdminPage.page.waitForLoadState();
       await addRoleAdminPage.generalTab.nameInput.fill(roleName);
 
-      // TODO: Remove the following when #3983 is fixed
+      // FIX: Remove the following when #3983 is fixed
       // https://corp.onspring.com/Content/8/3983
       await addRoleAdminPage.generalTab.statusToggle.click();
       await addRoleAdminPage.generalTab.statusToggle.click();
@@ -153,7 +153,7 @@ test.describe('Role', () => {
       await addRoleAdminPage.page.waitForLoadState();
       await addRoleAdminPage.generalTab.nameInput.fill(roleName);
 
-      // TODO: Remove the following when #3983 is fixed
+      // FIX: Remove the following when #3983 is fixed
       // https://corp.onspring.com/Content/8/3983
       await addRoleAdminPage.generalTab.statusToggle.click();
       await addRoleAdminPage.generalTab.statusToggle.click();

@@ -25,7 +25,7 @@ export class AddRoleAdminPage extends RoleAdminPage {
     if (role.status === 'Active') {
       await this.generalTab.statusToggle.click();
     } else {
-      // TODO: Remove the following when #3983 is fixed
+      // FIX: Remove the following when #3983 is fixed
       // https://corp.onspring.com/Content/8/3983
       await this.generalTab.statusToggle.click();
       await this.generalTab.statusToggle.click();

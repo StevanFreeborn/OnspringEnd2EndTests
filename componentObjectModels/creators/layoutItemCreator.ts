@@ -10,7 +10,7 @@ export class LayoutItemCreator {
     this.page = page;
   }
 
-  // TODO: Shouldn't need to explicitly pass frameNumber here.
+  // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
   getLayoutItemModal(itemType: 'Text', frameNumber?: number): AddOrEditTextFieldModal;
   getLayoutItemModal(itemType: LayoutItemType, frameNumber?: number): AddOrEditLayoutItemModal;

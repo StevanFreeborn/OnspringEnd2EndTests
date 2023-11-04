@@ -55,7 +55,11 @@ export class LayoutDesignerModal extends LayoutItemCreator {
       row: sectionRow,
     });
 
-    await field.dragTo(dropzone);
+    await field.hover();
+    await this.page.mouse.down();
+    await dropzone.hover();
+    await this.canvasSection.layoutItemDropzone.waitFor({ state: 'visible' });
+    await this.page.mouse.up();
 
     return { field, dropzone };
   }
