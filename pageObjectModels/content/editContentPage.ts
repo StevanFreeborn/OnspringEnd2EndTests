@@ -13,4 +13,15 @@ export class EditContentPage extends BaseContentPage {
   async goto(appId: number, recordId: number) {
     await this.page.goto(`/Content/${appId}/${recordId}/Edit`);
   }
+
+  getRecordIdFromUrl() {
+    if (this.page.url().match(this.pathRegex) === null) {
+      throw new Error('The current page is not a content edit page.');
+    }
+
+    const url = this.page.url();
+    const urlParts = url.split('/');
+    const recordId = urlParts[urlParts.length - 2];
+    return parseInt(recordId);
+  }
 }

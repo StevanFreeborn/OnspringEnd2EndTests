@@ -2,7 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from '../baseFormPage';
 import { FieldType } from './../../componentObjectModels/menus/addFieldTypeMenu';
 
-type GetFieldParams = {
+export type GetFieldParams = {
   tabName: string;
   sectionName: string;
   fieldName: string;

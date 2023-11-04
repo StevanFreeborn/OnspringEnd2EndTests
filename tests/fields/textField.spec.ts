@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { Locator, Page, test as base, expect } from '../../fixtures';
 import { App } from '../../models/app';
+import { LayoutItemPermission } from '../../models/layoutItem';
 import { AppPermission, Permission, Role } from '../../models/role';
 import { TextField } from '../../models/textField';
 import { UserStatus } from '../../models/user';
@@ -10,6 +11,8 @@ import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
@@ -72,7 +75,6 @@ const test = base.extend<TextFieldTestFixtures>({
     await roleSecurityAdminPage.deleteRoles([roleName]);
   },
   testUserPage: async ({ browser, sysAdminPage, role }, use) => {
-    // Create user, assign role, and set password
     const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
     const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
     const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
@@ -87,21 +89,16 @@ const test = base.extend<TextFieldTestFixtures>({
     await editUserAdminPage.saveUser();
     user.id = editUserAdminPage.getUserIdFromUrl();
 
-    // Create a new browser context and page
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Login as new user
     const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);
     await loginPage.login(user);
     await loginPage.page.waitForURL(dashboardPage.path);
 
-    // Provide the page that that contains the
-    // test user's auth state to the test
     await use(page);
 
-    // Delete test user
     await usersSecurityAdminPage.deleteUsers([user.username]);
     await context.close();
   },
@@ -447,23 +444,242 @@ test.describe('text field', () => {
     });
   });
 
-  test('Make a Text Field private by role', async ({ testUserPage }) => {
-    // testUserPage requires significant setup
-    test.setTimeout(2 * MS_PER_MIN);
+  test('Make a Text Field private by role to prevent access', async ({
+    sysAdminPage,
+    role,
+    appAdminPage,
+    app,
+    testUserPage,
+  }) => {
+    // test requires significant setup
+    test.setTimeout(4 * MS_PER_MIN);
 
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-99',
     });
 
-    // I want to have a role that has permissions to the app
-    // I want to have a user that has that role
-    // I want to have that user logged in
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({
+      name: fieldName,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
 
-    // await test.step('Add the text field', async () => {});
+    await test.step('Add the text field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
 
-    // await test.step('Verify the field is private by role', async () => {});
+    await test.step('Create a record with a value in the text field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const field = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await field.fill('This should not be visible to the test user');
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
 
-    expect(testUserPage.url()).toMatch(/Dashboard/);
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const field = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await expect(field).toBeHidden();
+    });
+  });
+
+  test('Make a Text Field private by role to give access', async ({
+    sysAdminPage,
+    role,
+    appAdminPage,
+    app,
+    testUserPage,
+  }) => {
+    // test requires significant setup
+    test.setTimeout(4 * MS_PER_MIN);
+
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-810',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({
+      name: fieldName,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    const fieldValue = 'This should be visible to the test user';
+    let recordId: number;
+
+    await test.step('Add the text field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the text field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const field = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await field.fill(fieldValue);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const field = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await expect(field).toBeVisible();
+      await expect(field).toHaveText(new RegExp(fieldValue));
+    });
+  });
+
+  test('Make a Text Field public', async ({ sysAdminPage, role, appAdminPage, app, testUserPage }) => {
+    // test requires significant setup
+    test.setTimeout(4 * MS_PER_MIN);
+
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-105',
+    });
+
+    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({
+      name: fieldName,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the text field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the text field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const field = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await field.fill('This should not be visible to the test user');
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const field = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await expect(field).toBeHidden();
+    });
+
+    await test.step('Update the text field so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
+      await editTextFieldModal.securityTabButton.click();
+      await editTextFieldModal.securityTab.setPermissions([]);
+      await editTextFieldModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const field = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'Text',
+      });
+      await expect(field).toBeVisible();
+    });
   });
 });

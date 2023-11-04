@@ -8,7 +8,7 @@ export class LayoutItemSecurityTab {
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
-    this.viewSelect = frame.getByLabel('View');
+    this.viewSelect = frame.getByRole('listbox', { name: 'View' });
     this.permissionsGrid = new FieldPermissionGrid(frame.locator('#field-access-table').first());
   }
 
@@ -20,6 +20,9 @@ export class LayoutItemSecurityTab {
       for (const permission of permissions) {
         await this.permissionsGrid.getRolePermissionRow(permission.roleName).set(permission);
       }
+    } else {
+      await this.viewSelect.click();
+      await this.frame.getByRole('option', { name: 'Public' }).click();
     }
   }
 }
