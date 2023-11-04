@@ -18,4 +18,15 @@ export class EditRoleAdminPage extends RoleAdminPage {
     await this.saveRecordButton.click();
     await this.page.waitForResponse(this.pathRegex);
   }
+
+  getRoleIdFromUrl() {
+    if (this.page.url().match(this.pathRegex) === null) {
+      throw new Error('The current page is not a role admin page.');
+    }
+
+    const url = this.page.url();
+    const urlParts = url.split('/');
+    const roleId = urlParts[urlParts.length - 2];
+    return parseInt(roleId);
+  }
 }

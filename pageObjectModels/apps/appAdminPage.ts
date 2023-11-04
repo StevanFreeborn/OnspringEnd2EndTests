@@ -1,15 +1,15 @@
 import { Locator, Page } from '@playwright/test';
-import { LayoutItemType } from '../../componentObjectModels/menus/addLayoutItemMenu';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
+import { TextField } from '../../models/textField';
 import { BASE_URL } from '../../playwright.config';
 import { BaseAdminPage } from '../baseAdminPage';
 
 type GeocodeFields = {
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
+  address: TextField;
+  city: TextField;
+  state: TextField;
+  zip: TextField;
 };
 
 export class AppAdminPage extends BaseAdminPage {
@@ -55,17 +55,17 @@ export class AppAdminPage extends BaseAdminPage {
   async enableGeocoding(geocodeFields: GeocodeFields) {
     await this.layoutTabButton.click();
 
-    for (const fieldName of Object.values(geocodeFields)) {
-      await this.layoutTab.addLayoutItem(LayoutItemType.TextField, fieldName);
+    for (const field of Object.values(geocodeFields)) {
+      await this.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     }
 
     await this.generalTabButton.click();
     await this.generalTab.editGeocodingSettingsLink.click();
     await this.generalTab.editGeocodingSettingsModal.statusToggle.click();
-    await this.generalTab.editGeocodingSettingsModal.selectAddressField(geocodeFields.address);
-    await this.generalTab.editGeocodingSettingsModal.selectCityField(geocodeFields.city);
-    await this.generalTab.editGeocodingSettingsModal.selectStateField(geocodeFields.state);
-    await this.generalTab.editGeocodingSettingsModal.selectZipField(geocodeFields.zip);
+    await this.generalTab.editGeocodingSettingsModal.selectAddressField(geocodeFields.address.name);
+    await this.generalTab.editGeocodingSettingsModal.selectCityField(geocodeFields.city.name);
+    await this.generalTab.editGeocodingSettingsModal.selectStateField(geocodeFields.state.name);
+    await this.generalTab.editGeocodingSettingsModal.selectZipField(geocodeFields.zip.name);
     await this.generalTab.editGeocodingSettingsModal.saveButton.click();
   }
 }

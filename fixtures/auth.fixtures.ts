@@ -1,6 +1,7 @@
 import { Browser, Page, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { User } from '../models/user';
 import { SYS_ADMIN_AUTH_PATH } from '../playwright.config';
 
 export async function sysAdminPage(
@@ -8,17 +9,31 @@ export async function sysAdminPage(
   use: (r: Page) => Promise<void>,
   testInfo: TestInfo
 ) {
-  await baseAuthPage({ browser }, use, testInfo, SYS_ADMIN_AUTH_PATH);
+  await createBaseAuthPage({ browser }, use, testInfo, SYS_ADMIN_AUTH_PATH);
+}
+
+export async function testUserPage(
+  {
+    browser,
+    user,
+  }: {
+    browser: Browser;
+    user: User;
+  },
+  use: (r: Page) => Promise<void>,
+  testInfo: TestInfo
+) {
+  await createBaseAuthPage({ browser }, use, testInfo, user.authStoragePath);
 }
 
 // This is necessary because videos currently are not supported
 // when using a custom page fixture.
 // see issue: https://github.com/microsoft/playwright/issues/14813
-async function baseAuthPage(
+export async function createBaseAuthPage(
   { browser }: { browser: Browser },
   use: (r: Page) => Promise<void>,
   testInfo: TestInfo,
-  authStorageLocation: string
+  authStorageLocation?: string
 ) {
   const videoDir = path.join(testInfo.outputPath(), 'videos');
 

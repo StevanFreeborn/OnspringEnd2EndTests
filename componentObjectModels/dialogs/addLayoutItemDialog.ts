@@ -1,9 +1,15 @@
 import { Locator, Page } from '@playwright/test';
+import { BaseCreateOrAddDialog } from './baseCreateOrAddDialog';
 
-export class AddLayoutItemDialog {
-  readonly continueButton: Locator;
+export class AddLayoutItemDialog extends BaseCreateOrAddDialog {
+  readonly selectFieldDropdown: Locator;
 
   constructor(page: Page) {
-    this.continueButton = page.getByRole('button', { name: 'Continue' });
+    super(page);
+    this.selectFieldDropdown = this.getSelectDropdown('Add Text Field', 'Select a field');
+  }
+
+  getFieldToCopy(fieldName: string) {
+    return this.getItemToCopy(fieldName);
   }
 }

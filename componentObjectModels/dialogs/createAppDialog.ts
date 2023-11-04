@@ -1,19 +1,15 @@
 import { Locator, Page } from '@playwright/test';
+import { BaseCreateOrAddDialog } from './baseCreateOrAddDialog';
 
-export class CreateAppDialog {
-  private readonly page: Page;
-  readonly continueButton: Locator;
-  readonly copyFromRadioButton: Locator;
+export class CreateAppDialog extends BaseCreateOrAddDialog {
   readonly selectAnAppDropdown: Locator;
 
   constructor(page: Page) {
-    this.page = page;
-    this.continueButton = page.getByRole('button', { name: 'Continue' });
-    this.copyFromRadioButton = page.getByText('Copy from');
-    this.selectAnAppDropdown = page.getByRole('dialog', { name: 'Create App' }).getByText('Select an App');
+    super(page);
+    this.selectAnAppDropdown = this.getSelectDropdown('Create app', 'Select an app');
   }
 
   getAppToCopy(appName: string) {
-    return this.page.getByRole('option', { name: appName });
+    return this.getItemToCopy(appName);
   }
 }

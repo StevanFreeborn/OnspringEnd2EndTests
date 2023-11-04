@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
+import { Role } from '../../models/role';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
@@ -72,7 +73,7 @@ test.describe('User', () => {
       await adminHomePage.adminNav.userCreateMenuOption.click();
       await addUserAdminPage.page.waitForLoadState();
       await addUserAdminPage.fillRequiredUserFields(newUser);
-      await addUserAdminPage.activeStatusButton.click();
+      await addUserAdminPage.generalTab.activeStatusButton.click();
       await addUserAdminPage.saveRecordButton.click();
     });
 
@@ -81,11 +82,11 @@ test.describe('User', () => {
       await editUserAdminPage.page.waitForLoadState();
 
       expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
-      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
-      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
-      await expect(editUserAdminPage.usernameInput).toHaveValue(newUser.username);
-      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(editUserAdminPage.activeStatusButton).toHaveClass(/active-status/);
+      await expect(editUserAdminPage.generalTab.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.generalTab.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.generalTab.usernameInput).toHaveValue(newUser.username);
+      await expect(editUserAdminPage.generalTab.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.generalTab.activeStatusButton).toHaveClass(/active-status/);
     });
   });
 
@@ -112,7 +113,7 @@ test.describe('User', () => {
       await adminHomePage.securityCreateMenu.getByText('User').click();
       await addUserAdminPage.page.waitForLoadState();
       await addUserAdminPage.fillRequiredUserFields(newUser);
-      await addUserAdminPage.inactiveStatusButton.click();
+      await addUserAdminPage.generalTab.inactiveStatusButton.click();
       await addUserAdminPage.saveRecordButton.click();
     });
 
@@ -121,11 +122,11 @@ test.describe('User', () => {
       await editUserAdminPage.page.waitForLoadState();
 
       expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
-      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
-      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
-      await expect(editUserAdminPage.usernameInput).toHaveValue(newUser.username);
-      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(editUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+      await expect(editUserAdminPage.generalTab.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.generalTab.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.generalTab.usernameInput).toHaveValue(newUser.username);
+      await expect(editUserAdminPage.generalTab.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.generalTab.inactiveStatusButton).toHaveClass(/active-status/);
     });
   });
 
@@ -151,7 +152,7 @@ test.describe('User', () => {
       await usersSecurityAdminPage.createUserButton.click();
       await addUserAdminPage.page.waitForLoadState();
       await addUserAdminPage.fillRequiredUserFields(newUser);
-      await addUserAdminPage.inactiveStatusButton.click();
+      await addUserAdminPage.generalTab.inactiveStatusButton.click();
       await addUserAdminPage.saveRecordButton.click();
     });
 
@@ -160,11 +161,11 @@ test.describe('User', () => {
       await editUserAdminPage.page.waitForLoadState();
 
       expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
-      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
-      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
-      await expect(editUserAdminPage.usernameInput).toHaveValue(newUser.username);
-      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(editUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+      await expect(editUserAdminPage.generalTab.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.generalTab.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.generalTab.usernameInput).toHaveValue(newUser.username);
+      await expect(editUserAdminPage.generalTab.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.generalTab.inactiveStatusButton).toHaveClass(/active-status/);
     });
   });
 
@@ -199,14 +200,14 @@ test.describe('User', () => {
       await userRow.getByTitle('Copy User').click();
       await copyUserAdminPage.page.waitForLoadState();
 
-      await expect(copyUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
-      await expect(copyUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
-      await expect(copyUserAdminPage.usernameInput).toHaveValue(newUser.username);
-      await expect(copyUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(copyUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+      await expect(copyUserAdminPage.generalTab.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(copyUserAdminPage.generalTab.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(copyUserAdminPage.generalTab.usernameInput).toHaveValue(newUser.username);
+      await expect(copyUserAdminPage.generalTab.emailInput).toHaveValue(newUser.email);
+      await expect(copyUserAdminPage.generalTab.inactiveStatusButton).toHaveClass(/active-status/);
 
-      await copyUserAdminPage.usernameInput.clear();
-      await copyUserAdminPage.usernameInput.fill(copiedUserUsername);
+      await copyUserAdminPage.generalTab.usernameInput.clear();
+      await copyUserAdminPage.generalTab.usernameInput.fill(copiedUserUsername);
       await copyUserAdminPage.saveRecordButton.click();
     });
 
@@ -215,11 +216,11 @@ test.describe('User', () => {
       await editUserAdminPage.page.waitForLoadState();
 
       expect(editUserAdminPage.page.url()).toMatch(editUserAdminPage.pathRegex);
-      await expect(editUserAdminPage.firstNameInput).toHaveValue(newUser.firstName);
-      await expect(editUserAdminPage.lastNameInput).toHaveValue(newUser.lastName);
-      await expect(editUserAdminPage.usernameInput).toHaveValue(copiedUserUsername);
-      await expect(editUserAdminPage.emailInput).toHaveValue(newUser.email);
-      await expect(editUserAdminPage.inactiveStatusButton).toHaveClass(/active-status/);
+      await expect(editUserAdminPage.generalTab.firstNameInput).toHaveValue(newUser.firstName);
+      await expect(editUserAdminPage.generalTab.lastNameInput).toHaveValue(newUser.lastName);
+      await expect(editUserAdminPage.generalTab.usernameInput).toHaveValue(copiedUserUsername);
+      await expect(editUserAdminPage.generalTab.emailInput).toHaveValue(newUser.email);
+      await expect(editUserAdminPage.generalTab.inactiveStatusButton).toHaveClass(/active-status/);
     });
   });
 
@@ -239,12 +240,12 @@ test.describe('User', () => {
     });
 
     await test.step('Update the user', async () => {
-      await editUserAdminPage.lockedStatusButton.click();
+      await editUserAdminPage.generalTab.lockedStatusButton.click();
       await editUserAdminPage.saveUser();
     });
 
     await test.step('Verify user is updated correctly', async () => {
-      await expect(editUserAdminPage.lockedStatusButton).toHaveClass(/active-status/);
+      await expect(editUserAdminPage.generalTab.lockedStatusButton).toHaveClass(/active-status/);
     });
   });
 
@@ -262,7 +263,7 @@ test.describe('User', () => {
       const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
       const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
 
-      await addRoleAdminPage.addRole(roleName);
+      await addRoleAdminPage.addRole(new Role({ name: roleName }));
       await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
       await editRoleAdminPage.page.waitForLoadState();
     });
@@ -275,17 +276,19 @@ test.describe('User', () => {
 
     await test.step('Assign the role to the user', async () => {
       await editUserAdminPage.securityTabButton.click();
-      expect(await editUserAdminPage.rolesReferenceFieldGird.isGridEmpty()).toBe(true);
-      await editUserAdminPage.rolesReferenceFieldGird.filterInput.click();
+      expect(await editUserAdminPage.securityTab.rolesReferenceFieldGird.isGridEmpty()).toBe(true);
+      await editUserAdminPage.securityTab.rolesReferenceFieldGird.filterInput.click();
 
-      await expect(editUserAdminPage.rolesReferenceFieldGird.searchResults).toBeVisible();
+      await expect(editUserAdminPage.securityTab.rolesReferenceFieldGird.searchResults).toBeVisible();
 
-      await editUserAdminPage.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
+      await editUserAdminPage.securityTab.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
       await editUserAdminPage.saveUser();
     });
 
     await test.step('Verify the role is assigned to the user', async () => {
-      const roleRow = editUserAdminPage.rolesReferenceFieldGird.gridTable.getByRole('row', { name: roleName });
+      const roleRow = editUserAdminPage.securityTab.rolesReferenceFieldGird.gridTable.getByRole('row', {
+        name: roleName,
+      });
       await expect(roleRow).toBeVisible();
     });
 
@@ -323,17 +326,19 @@ test.describe('User', () => {
 
     await test.step('Assign the group to the user', async () => {
       await editUserAdminPage.securityTabButton.click();
-      expect(await editUserAdminPage.groupsReferenceFieldGird.isGridEmpty()).toBe(true);
-      await editUserAdminPage.groupsReferenceFieldGird.filterInput.click();
+      expect(await editUserAdminPage.securityTab.groupsReferenceFieldGird.isGridEmpty()).toBe(true);
+      await editUserAdminPage.securityTab.groupsReferenceFieldGird.filterInput.click();
 
-      await expect(editUserAdminPage.groupsReferenceFieldGird.searchResults).toBeVisible();
+      await expect(editUserAdminPage.securityTab.groupsReferenceFieldGird.searchResults).toBeVisible();
 
-      await editUserAdminPage.groupsReferenceFieldGird.searchForAndSelectRecord(groupName);
+      await editUserAdminPage.securityTab.groupsReferenceFieldGird.searchForAndSelectRecord(groupName);
       await editUserAdminPage.saveUser();
     });
 
     await test.step('Verify the group is assigned to the user', async () => {
-      const groupRow = editUserAdminPage.groupsReferenceFieldGird.gridTable.getByRole('row', { name: groupName });
+      const groupRow = editUserAdminPage.securityTab.groupsReferenceFieldGird.gridTable.getByRole('row', {
+        name: groupName,
+      });
       await expect(groupRow).toBeVisible();
     });
 
