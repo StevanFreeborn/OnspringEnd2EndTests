@@ -4,6 +4,8 @@ import 'dotenv/config';
 import os from 'os';
 import path from 'path';
 
+export const MS_PER_SEC = 1000;
+export const MS_PER_MIN = 60 * MS_PER_SEC;
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 const isCI = process.env.CI == 'true';
 const testResultsDir = 'test-results';
@@ -37,9 +39,9 @@ switch (process.env.TEST_ENV) {
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 120 * 1000,
+  timeout: 2 * MS_PER_MIN,
   expect: {
-    timeout: 30 * 1000,
+    timeout: 30 * MS_PER_SEC,
   },
   fullyParallel: true,
   forbidOnly: isCI,

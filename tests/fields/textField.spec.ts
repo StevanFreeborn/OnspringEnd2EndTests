@@ -1,20 +1,30 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, test as base, expect } from '../../fixtures';
+import { UserFactory } from '../../factories/userFactory';
+import { Locator, Page, test as base, expect } from '../../fixtures';
 import { App } from '../../models/app';
 import { AppPermission, Permission, Role } from '../../models/role';
+import { TextField } from '../../models/textField';
+import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
+import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
+import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
+import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPage';
+import { MS_PER_MIN } from '../../playwright.config';
 import { AnnotationType } from '../annotations';
 import { EditRoleAdminPage } from './../../pageObjectModels/roles/editRoleAdminPage';
+import { UsersSecurityAdminPage } from './../../pageObjectModels/users/usersSecurityAdminPage';
 
 type TextFieldTestFixtures = {
   appAdminPage: AppAdminPage;
   app: App;
   role: Role;
+  testUserPage: Page;
 };
 
 const test = base.extend<TextFieldTestFixtures>({
@@ -61,12 +71,39 @@ const test = base.extend<TextFieldTestFixtures>({
 
     await roleSecurityAdminPage.deleteRoles([roleName]);
   },
-  testUserPage: async ({ sysAdminPage, role }, use) => {
-    // TODO: Create test user fixture
+  testUserPage: async ({ browser, sysAdminPage, role }, use) => {
     // Create user, assign role, and set password
-    // User new user to login
-    // await use(user);
-    // Delete user
+    const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
+    const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
+    const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
+    const user = UserFactory.createNewUser(UserStatus.Active);
+    user.roles.push(role.name);
+
+    await addUserAdminPage.goto();
+    await addUserAdminPage.addUser(user);
+    await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+    await editUserAdminPage.page.waitForLoadState();
+    await editUserAdminPage.changePassword(user.password);
+    await editUserAdminPage.saveUser();
+    user.id = editUserAdminPage.getUserIdFromUrl();
+
+    // Create a new browser context and page
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Login as new user
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
+    await loginPage.login(user);
+    await loginPage.page.waitForURL(dashboardPage.path);
+
+    // Provide the page that that contains the
+    // test user's auth state to the test
+    await use(page);
+
+    // Delete test user
+    await usersSecurityAdminPage.deleteUsers([user.username]);
+    await context.close();
   },
 });
 
@@ -85,7 +122,7 @@ test.describe('text field', () => {
     const fieldName = FakeDataFactory.createFakeFieldName();
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Verify the field was added', async () => {
@@ -106,7 +143,7 @@ test.describe('text field', () => {
     const copiedFieldName = `${fieldName} (copy)`;
 
     await test.step('Add the the text field to be copied', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Add a copy of the text field', async () => {
@@ -117,8 +154,8 @@ test.describe('text field', () => {
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
-      await addTextFieldModal.fieldInput.fill(copiedFieldName);
-      await addTextFieldModal.fieldInput.fill(copiedFieldName);
+      await addTextFieldModal.generalTab.fieldInput.fill(copiedFieldName);
+      await addTextFieldModal.generalTab.fieldInput.fill(copiedFieldName);
       await addTextFieldModal.saveButton.click();
     });
 
@@ -143,7 +180,7 @@ test.describe('text field', () => {
     const copiedFieldName = `${fieldName} (1)`;
 
     await test.step('Add the text field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Add a copy of the text field', async () => {
@@ -156,7 +193,7 @@ test.describe('text field', () => {
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
-      await expect(addTextFieldModal.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTextFieldModal.saveButton.click();
     });
@@ -182,7 +219,7 @@ test.describe('text field', () => {
     });
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
     });
 
     await test.step('Verify the field was added', async () => {
@@ -213,7 +250,7 @@ test.describe('text field', () => {
     });
 
     await test.step('Add the text field to copy', async () => {
-      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
     });
 
     await test.step('Add a copy of the text field', async () => {
@@ -225,9 +262,9 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.getFieldToCopy(fieldName).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
-      const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.addFieldModal;
+      const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Text', 1);
 
-      await expect(addTextFieldModal.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTextFieldModal.saveButton.click();
     });
@@ -260,7 +297,7 @@ test.describe('text field', () => {
     const sectionName = 'Section 1';
 
     await test.step('Add the text field that will be added to layout', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Add the text field to the layout', async () => {
@@ -309,7 +346,7 @@ test.describe('text field', () => {
 
     await test.step('Add the text field that will be removed from layout', async () => {
       await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addFieldFromLayoutDesigner('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
       const { field, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
         sectionName: sectionName,
@@ -359,7 +396,7 @@ test.describe('text field', () => {
     const updatedFieldName = `${fieldName} updated`;
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Update the text field', async () => {
@@ -368,7 +405,7 @@ test.describe('text field', () => {
       await fieldRow.getByTitle('Edit').click();
 
       const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
-      await editTextFieldModal.fieldInput.fill(updatedFieldName);
+      await editTextFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editTextFieldModal.saveButton.click();
     });
 
@@ -389,7 +426,7 @@ test.describe('text field', () => {
     const fieldName = FakeDataFactory.createFakeFieldName();
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
     });
 
     await test.step('Delete the text field', async () => {
@@ -410,7 +447,10 @@ test.describe('text field', () => {
     });
   });
 
-  test('Make a Text Field private by role', async ({ role }) => {
+  test('Make a Text Field private by role', async ({ testUserPage }) => {
+    // testUserPage requires significant setup
+    test.setTimeout(2 * MS_PER_MIN);
+
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-99',
@@ -424,6 +464,6 @@ test.describe('text field', () => {
 
     // await test.step('Verify the field is private by role', async () => {});
 
-    expect(role).toBeDefined();
+    expect(testUserPage.url()).toMatch(/Dashboard/);
   });
 });

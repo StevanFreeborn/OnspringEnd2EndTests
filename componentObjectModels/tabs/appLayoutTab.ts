@@ -1,14 +1,12 @@
 import { Locator, Page } from '@playwright/test';
+import { LayoutItem } from '../../models/layoutItem';
+import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
-import { FieldType } from '../menus/addFieldTypeMenu';
-import { AddLayoutItemMenu, LayoutItemType } from '../menus/addLayoutItemMenu';
-import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
-import { AddOrEditTextFieldModal } from '../modals/addOrEditTextFieldModal';
+import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
-export class AppLayoutTab {
-  private readonly page: Page;
+export class AppLayoutTab extends LayoutItemCreator {
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -18,7 +16,7 @@ export class AppLayoutTab {
   readonly fieldsAndObjectsGrid: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.layoutsGrid = page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(page);
     this.addFieldButton = page.getByText('Add Field');
@@ -37,54 +35,52 @@ export class AppLayoutTab {
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
   }
 
-  async addLayoutItem(itemType: LayoutItemType, itemName: string) {
+  async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
     await this.addFieldButton.click();
-    await this.addLayoutItemMenu.selectItem(itemType);
+    await this.addLayoutItemMenu.selectItem(item.type);
     await this.addLayoutItemDialog.continueButton.click();
 
-    switch (itemType) {
+    switch (item.type) {
       case 'Text':
         {
-          const modal = this.getLayoutItemModal(itemType);
-          await modal.fieldInput.fill(itemName);
+          const modal = this.getLayoutItemModal(item.type);
+          await modal.generalTab.fieldInput.fill(item.name);
         }
         break;
       default:
         break;
     }
 
-    await this.getLayoutItemModal(itemType).saveButton.click();
+    const modal = this.getLayoutItemModal(item.type, 0);
+    await modal.securityTabButton.click();
+    await modal.securityTab.setPermissions(item.permissions);
+
+    await modal.saveButton.click();
     await this.page.waitForLoadState('networkidle');
   }
 
-  async addFieldFromLayoutDesigner(fieldType: FieldType, fieldName: string) {
-    const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
-    await fieldTab.addFieldButton.click();
-    await fieldTab.addFieldMenu.selectItem(fieldType);
-    await this.addLayoutItemDialog.continueButton.click();
-
-    const addFieldModal = this.layoutDesignerModal.addFieldModal;
-    await addFieldModal.fieldInput.fill(fieldName);
-    await addFieldModal.saveButton.click();
-  }
-
-  getLayoutItemModal(itemType: 'Text'): AddOrEditTextFieldModal;
-  getLayoutItemModal(itemType: LayoutItemType): AddOrEditLayoutItemModal;
-  getLayoutItemModal(itemType: LayoutItemType) {
-    switch (itemType) {
-      case 'Date/Time':
-      case 'List':
-      case 'Number':
-      case 'Text':
-        return new AddOrEditTextFieldModal(this.page);
-      case 'Attachment':
-      case 'Image':
-      case 'Reference':
-      case 'Time Span':
-      case 'Formula':
+  async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
+    switch (item.type) {
       case 'Formatted Text Block':
+        break;
+      case 'Text': {
+        const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+
+        if ((await fieldTab.addFieldButton.isVisible()) === false) {
+          await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+        }
+
+        await fieldTab.addFieldButton.click();
+        await fieldTab.addFieldMenu.selectItem(item.type);
+        await this.addLayoutItemDialog.continueButton.click();
+
+        const addFieldModal = this.layoutDesignerModal.getLayoutItemModal('Text', 1);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.saveButton.click();
+        break;
+      }
       default:
-        return new AddOrEditLayoutItemModal(this.page);
+        break;
     }
   }
 }

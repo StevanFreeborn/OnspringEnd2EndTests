@@ -19,6 +19,14 @@ export class EditUserAdminPage extends UserAdminPage {
     await this.page.waitForResponse(this.pathRegex);
   }
 
+  async changePassword(newPassword: string) {
+    await this.securityTabButton.click();
+    await this.securityTab.changePasswordLink.click();
+    await this.securityTab.changePasswordDialog.newPasswordInput.fill(newPassword);
+    await this.securityTab.changePasswordDialog.verifyPasswordInput.fill(newPassword);
+    await this.securityTab.changePasswordDialog.saveButton.click();
+  }
+
   getUserIdFromUrl() {
     if (this.page.url().match(this.pathRegex) === null) {
       throw new Error('The current page is not an edit user admin page.');

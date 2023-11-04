@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
 import { Role } from '../../models/role';
+import { TextField } from '../../models/textField';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -999,7 +1000,7 @@ test.describe('app', () => {
       await appAdminPage.layoutTabButton.click();
 
       for (const fieldName of fieldNames) {
-        await appAdminPage.layoutTab.addLayoutItem('Text', fieldName);
+        await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
       }
     });
 
@@ -1035,6 +1036,11 @@ test.describe('app', () => {
 
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
+
+    const addressFieldName = FakeDataFactory.createFakeFieldName('address');
+    const cityFieldName = FakeDataFactory.createFakeFieldName('city');
+    const stateFieldName = FakeDataFactory.createFakeFieldName('state');
+    const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
     const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
 
     await test.step('Create app whose geocode mapping will be updated', async () => {
@@ -1044,16 +1050,18 @@ test.describe('app', () => {
 
     await test.step('Enable geocoding for app', async () => {
       await appAdminPage.enableGeocoding({
-        address: FakeDataFactory.createFakeFieldName('address'),
-        city: FakeDataFactory.createFakeFieldName('city'),
-        state: FakeDataFactory.createFakeFieldName('state'),
-        zip: FakeDataFactory.createFakeFieldName('zip'),
+        address: new TextField({ name: addressFieldName }),
+        city: new TextField({ name: cityFieldName }),
+        state: new TextField({ name: stateFieldName }),
+        zip: new TextField({ name: zipFieldName }),
       });
     });
 
     await test.step('Create field to update geocoding mapping', async () => {
       await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItem('Text', secondAddressFieldName);
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(
+        new TextField({ name: secondAddressFieldName })
+      );
     });
 
     await test.step('Update geocoding field mapping', async () => {
@@ -1078,6 +1086,10 @@ test.describe('app', () => {
 
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
+    const addressFieldName = FakeDataFactory.createFakeFieldName('address');
+    const cityFieldName = FakeDataFactory.createFakeFieldName('city');
+    const stateFieldName = FakeDataFactory.createFakeFieldName('state');
+    const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
 
     await test.step('Create app whose geocoding will be disabled', async () => {
       await adminHomePage.createApp(appName);
@@ -1086,10 +1098,10 @@ test.describe('app', () => {
 
     await test.step('Enable geocoding for app', async () => {
       await appAdminPage.enableGeocoding({
-        address: FakeDataFactory.createFakeFieldName('address'),
-        city: FakeDataFactory.createFakeFieldName('city'),
-        state: FakeDataFactory.createFakeFieldName('state'),
-        zip: FakeDataFactory.createFakeFieldName('zip'),
+        address: new TextField({ name: addressFieldName }),
+        city: new TextField({ name: cityFieldName }),
+        state: new TextField({ name: stateFieldName }),
+        zip: new TextField({ name: zipFieldName }),
       });
     });
 

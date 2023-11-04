@@ -15,10 +15,10 @@ export class AddUserAdminPage extends UserAdminPage {
   }
 
   async fillRequiredUserFields(user: User) {
-    await this.firstNameInput.fill(user.firstName);
-    await this.lastNameInput.fill(user.lastName);
-    await this.usernameInput.fill(user.username);
-    await this.emailInput.fill(user.email);
+    await this.generalTab.firstNameInput.fill(user.firstName);
+    await this.generalTab.lastNameInput.fill(user.lastName);
+    await this.generalTab.usernameInput.fill(user.username);
+    await this.generalTab.emailInput.fill(user.email);
   }
 
   async addUser(user: User) {
@@ -27,16 +27,22 @@ export class AddUserAdminPage extends UserAdminPage {
 
     switch (user.status) {
       case UserStatus.Active:
-        await this.activeStatusButton.click();
+        await this.generalTab.activeStatusButton.click();
         break;
       case UserStatus.Inactive:
-        await this.inactiveStatusButton.click();
+        await this.generalTab.inactiveStatusButton.click();
         break;
       case UserStatus.Locked:
-        await this.lockedStatusButton.click();
+        await this.generalTab.lockedStatusButton.click();
         break;
       default:
         throw new Error(`Invalid user status: ${user.status}`);
+    }
+
+    if (user.roles.length) {
+      for (const role of user.roles) {
+        await this.assignRole(role);
+      }
     }
 
     await this.saveRecordButton.click();

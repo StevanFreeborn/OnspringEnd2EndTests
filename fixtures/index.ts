@@ -3,6 +3,7 @@ import { sysAdminPage } from './auth.fixtures';
 
 type Fixtures = {
   sysAdminPage: Page;
+  createNewPage: (authStorageLocation?: string) => Promise<Page>;
 };
 
 export * from '@playwright/test';

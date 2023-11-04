@@ -25,7 +25,7 @@ export class RoleAppPermTab {
 class AppPermissionSection {
   private readonly section: Locator;
   readonly heading: Locator;
-  readonly permissionGrid: PermissionGrid;
+  readonly permissionGrid: AppPermissionGrid;
 
   constructor(page: Page, appName: string) {
     this.section = page
@@ -33,27 +33,27 @@ class AppPermissionSection {
       .filter({ has: page.locator('h1').filter({ hasText: appName }) })
       .first();
     this.heading = this.section.locator('h1');
-    this.permissionGrid = new PermissionGrid(this.section);
+    this.permissionGrid = new AppPermissionGrid(this.section);
   }
 }
 
-class PermissionGrid {
+class AppPermissionGrid {
   readonly grid: Locator;
-  readonly contentRecordPermissions: CRUDPermissionRow;
-  readonly referencedRecordPermissions: ReadAndUpdatePermissionRow;
-  readonly versionHistoryPermissions: ReadOnlyPermissionRow;
-  readonly contentAdminPermissions: EnableOnlyPermissionRow;
-  readonly reportAdminPermissions: EnableOnlyPermissionRow;
-  readonly privateReportAdminPermissions: EnableOnlyPermissionRow;
+  readonly contentRecordPermissions: CRUDAppPermissionRow;
+  readonly referencedRecordPermissions: ReadAndUpdateAppPermissionRow;
+  readonly versionHistoryPermissions: ReadOnlyAppPermissionRow;
+  readonly contentAdminPermissions: EnableOnlyAppPermissionRow;
+  readonly reportAdminPermissions: EnableOnlyAppPermissionRow;
+  readonly privateReportAdminPermissions: EnableOnlyAppPermissionRow;
 
   constructor(section: Locator) {
     this.grid = section.locator('table');
-    this.contentRecordPermissions = new PermissionRow(this.grid.getByRole('row', { name: 'Content Records' }));
-    this.referencedRecordPermissions = new PermissionRow(this.grid.getByRole('row', { name: 'Referenced Records' }));
-    this.versionHistoryPermissions = new PermissionRow(this.grid.getByRole('row', { name: 'Version History' }));
-    this.contentAdminPermissions = new PermissionRow(this.grid.getByRole('row', { name: 'Content Administrator' }));
-    this.reportAdminPermissions = new PermissionRow(this.grid.getByRole('row', { name: 'Report Administrator' }));
-    this.privateReportAdminPermissions = new PermissionRow(
+    this.contentRecordPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Content Records' }));
+    this.referencedRecordPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Referenced Records' }));
+    this.versionHistoryPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Version History' }));
+    this.contentAdminPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Content Administrator' }));
+    this.reportAdminPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Report Administrator' }));
+    this.privateReportAdminPermissions = new AppPermissionRow(
       this.grid.getByRole('row', {
         name: 'Private to me Reports',
       })
@@ -61,7 +61,7 @@ class PermissionGrid {
   }
 }
 
-class BasePermissionRow {
+class BaseAppPermissionRow {
   protected readonly row: Locator;
 
   constructor(row: Locator) {
@@ -69,30 +69,30 @@ class BasePermissionRow {
   }
 }
 
-interface ReadOnlyPermissionRow {
+interface ReadOnlyAppPermissionRow {
   readonly readCheckbox: Locator;
   set(permissions: ReadOnlyPermission): Promise<void>;
 }
 
-interface ReadAndUpdatePermissionRow extends ReadOnlyPermissionRow {
+interface ReadAndUpdateAppPermissionRow extends ReadOnlyAppPermissionRow {
   readonly updateCheckbox: Locator;
   set(permissions: ReadAndUpdatePermission): Promise<void>;
 }
 
-interface EnableOnlyPermissionRow {
+interface EnableOnlyAppPermissionRow {
   readonly enableCheckbox: Locator;
   set(permissions: EnableOnlyPermission): Promise<void>;
 }
 
-interface CRUDPermissionRow extends ReadAndUpdatePermissionRow {
+interface CRUDAppPermissionRow extends ReadAndUpdateAppPermissionRow {
   readonly createCheckbox: Locator;
   readonly deleteCheckbox: Locator;
   set(permissions: CRUDPermission): Promise<void>;
 }
 
-class PermissionRow
-  extends BasePermissionRow
-  implements ReadOnlyPermissionRow, ReadAndUpdatePermissionRow, EnableOnlyPermissionRow, CRUDPermissionRow
+class AppPermissionRow
+  extends BaseAppPermissionRow
+  implements ReadOnlyAppPermissionRow, ReadAndUpdateAppPermissionRow, EnableOnlyAppPermissionRow, CRUDAppPermissionRow
 {
   readonly createCheckbox: Locator;
   readonly readCheckbox: Locator;
@@ -109,7 +109,7 @@ class PermissionRow
     this.enableCheckbox = row.locator('[data-permission-type="enabled"]').first();
   }
 
-  async set(permissions: Permission): Promise<void> {
+  async set(permissions: Permission) {
     if ((await this.createCheckbox.isVisible()) && (await this.createCheckbox.isEnabled())) {
       await this.createCheckbox.setChecked(permissions.create);
     }

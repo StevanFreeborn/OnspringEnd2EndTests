@@ -5,6 +5,7 @@ export enum UserStatus {
 }
 
 export class User {
+  id: number = 0;
   readonly firstName: string;
   readonly lastName: string;
   readonly email: string;
@@ -12,6 +13,7 @@ export class User {
   readonly password: string;
   readonly fullName: string;
   readonly status: UserStatus;
+  readonly roles: string[];
 
   constructor(
     firstName: string,
@@ -19,7 +21,8 @@ export class User {
     email: string,
     username: string,
     password: string,
-    status: UserStatus
+    status: UserStatus,
+    roles: string[] = []
   ) {
     this.firstName = firstName;
     this.lastName = lastName;
@@ -28,5 +31,6 @@ export class User {
     this.password = password;
     this.fullName = `${firstName} ${lastName}`;
     this.status = status;
+    this.roles = roles;
   }
 }
