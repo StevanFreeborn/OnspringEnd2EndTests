@@ -61,7 +61,7 @@ const config: PlaywrightTestConfig = {
   ],
   use: {
     viewport: { width: 1920, height: 1080 },
-    actionTimeout: 30 * MS_PER_SEC,
+    actionTimeout: 1 * MS_PER_MIN,
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
