@@ -5,7 +5,6 @@ import { TextField } from '../../models/textField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { MS_PER_MIN } from '../../playwright.config';
 import { AnnotationType } from '../annotations';
 
 test.describe('text field', () => {
@@ -355,9 +354,6 @@ test.describe('text field', () => {
     app,
     testUserPage,
   }) => {
-    // test requires significant setup
-    test.setTimeout(4 * MS_PER_MIN);
-
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-99',
@@ -427,9 +423,6 @@ test.describe('text field', () => {
     app,
     testUserPage,
   }) => {
-    // test requires significant setup
-    test.setTimeout(4 * MS_PER_MIN);
-
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-810',
@@ -495,9 +488,6 @@ test.describe('text field', () => {
   });
 
   test('Make a Text Field public', async ({ sysAdminPage, role, appAdminPage, app, testUserPage }) => {
-    // test requires significant setup
-    test.setTimeout(4 * MS_PER_MIN);
-
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-105',

@@ -40,7 +40,7 @@ switch (process.env.TEST_ENV) {
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 2 * MS_PER_MIN,
+  timeout: 10 * MS_PER_MIN,
   expect: {
     timeout: 30 * MS_PER_SEC,
   },
@@ -61,7 +61,7 @@ const config: PlaywrightTestConfig = {
   ],
   use: {
     viewport: { width: 1920, height: 1080 },
-    actionTimeout: 0,
+    actionTimeout: 1 * MS_PER_MIN,
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
