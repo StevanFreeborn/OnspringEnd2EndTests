@@ -33,4 +33,12 @@ export const fieldTest = test.extend<FieldTestFixtures>({
   testUserPage: testUserPage,
 });
 
+export type ApiTestOptions = {
+  apiURL: string | undefined;
+};
+
+export const apiTest = base.extend<ApiTestOptions>({
+  apiURL: ['', { option: true }],
+});
+
 export * from '@playwright/test';
