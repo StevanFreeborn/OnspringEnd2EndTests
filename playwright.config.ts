@@ -60,6 +60,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
         outputFile: path.join(testResultsDir, 'report.json'),
       },
     ],
+    ['github'],
   ],
   use: {
     viewport: { width: 1920, height: 1080 },
