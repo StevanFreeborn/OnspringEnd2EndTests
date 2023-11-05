@@ -87,21 +87,11 @@ jobs:
     runs-on: ubuntu-latest
     # container:
     #   image: mcr.microsoft.com/playwright:v1.39.0-jammy
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     project: [chrome, edge]
-    #     shard: [1/10, 2/10, 3/10, 4/10, 5/10, 6/10, 7/10, 8/10, 9/10, 10/10]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chrome, edge]
+        shard: ${{ needs.generate_shards.outputs.shards }}
     steps:
       - name: Echo shards
-        run: echo ${{ needs.generate_shards.outputs.shards }}
-      # - name: Checkout repository
-      #   uses: actions/checkout@v3
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: latest
-      # - name: Install dependencies
-      #   run: npm ci
-      # - name: Run your tests
-      #   run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
+        run: echo ${{ matrix.project }} ${{ matrix.shard }}
