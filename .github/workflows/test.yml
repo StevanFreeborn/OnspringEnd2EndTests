@@ -94,7 +94,7 @@ jobs:
     #     shard: [1/10, 2/10, 3/10, 4/10, 5/10, 6/10, 7/10, 8/10, 9/10, 10/10]
     steps:
       - name: Echo shards
-        run: echo ${{ fromJson(needs.generate_shards.outputs.shards) }}
+        run: echo ${{ needs.generate_shards.outputs.shards }}
       # - name: Checkout repository
       #   uses: actions/checkout@v3
       # - name: Setup Node.js
