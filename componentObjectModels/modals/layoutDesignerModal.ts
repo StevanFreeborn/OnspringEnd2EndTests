@@ -35,13 +35,15 @@ export class LayoutDesignerModal extends LayoutItemCreator {
   }
 
   async saveLayout() {
+    const saveResponse = this.page.waitForResponse(this.pathRegex);
     await this.saveButton.click();
-    await this.page.waitForResponse(this.pathRegex);
+    await saveResponse;
   }
 
   async saveAndCloseLayout() {
+    const saveResponse = this.page.waitForResponse(this.pathRegex);
     await this.saveAndCloseButton.click();
-    await this.page.waitForResponse(this.pathRegex);
+    await saveResponse;
   }
 
   async dragFieldOnToLayout(params: DragFieldParams) {
