@@ -1,5 +1,17 @@
 import { FrameLocator, Locator } from '@playwright/test';
 
+export enum FieldTypeEnum {
+  DateTime = 'Date/Time',
+  List = 'List',
+  Number = 'Number',
+  Text = 'Text',
+  Attachment = 'Attachment',
+  Image = 'Image',
+  Reference = 'Reference',
+  TimeSpan = 'Time Span',
+  Formula = 'Formula',
+}
+
 export type FieldType =
   | 'Date/Time'
   | 'List'
