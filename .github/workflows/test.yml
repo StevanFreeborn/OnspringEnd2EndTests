@@ -1,5 +1,8 @@
 name: Test
 on:
+  push:
+    branches:
+      - stevanfreeborn/chore/generate-shard-dynamically
   workflow_dispatch:
     # inputs:
     #   environment:
