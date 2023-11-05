@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Test
 on:
   workflow_dispatch:
     # inputs:
@@ -55,9 +55,9 @@ jobs:
           # Output the result and the array
           echo "Total test calls: $total_count"
           echo "Total shards: $num_of_shards"
-          echo "shards=$num_of_shards" >> $GITHUB_OUTPUT
+          echo "shards=$shards_array" >> $GITHUB_OUTPUT
   run_tests:
-    name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    name: 'Playwright Tests'
     needs: generate_shards
     env:
       CI: true
@@ -75,13 +75,13 @@ jobs:
       VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
       PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.39.0-jammy
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [chrome, edge]
-        shard: [1/10, 2/10, 3/10, 4/10, 5/10, 6/10, 7/10, 8/10, 9/10, 10/10]
+    # container:
+    #   image: mcr.microsoft.com/playwright:v1.39.0-jammy
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     project: [chrome, edge]
+    #     shard: [1/10, 2/10, 3/10, 4/10, 5/10, 6/10, 7/10, 8/10, 9/10, 10/10]
     steps:
       - name: Echo shards
         run: echo ${{ needs.generate_shards.outputs.shards }}
