@@ -40,9 +40,8 @@ export class ReferenceFieldGrid {
     // Reference field grid search requests are debounced, so we need to simulate typing
     // in the filter input with a delay between each character to ensure that the search
     // request is sent.
-    const searchResponse = this.page.waitForResponse(this.pathRegex);
     await this.filterInput.pressSequentially(searchTerm, { delay: 125 });
-    await searchResponse;
+    await this.page.waitForResponse(this.pathRegex);
 
     let isVisible = await searchResultRow.isVisible();
 
