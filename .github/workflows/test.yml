@@ -59,7 +59,7 @@ jobs:
             shards_array+=("$i/$num_of_shards")
           done
 
-          json_shards_array=$(jq -n -c --arg arr "$(printf '%s\n' "${myArray[@]}")" '[$arr | split("\n")[:-1]]')
+          json_shards_array=$(jq -n -c --arg arr "$(printf '%s\n' "${shards_array[@]}")" '[$arr | split("\n")[:-1]]')
 
           # Output the result and the array
           echo "Total tests: $test_count"
