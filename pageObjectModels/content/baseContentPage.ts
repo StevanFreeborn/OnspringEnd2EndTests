@@ -66,6 +66,12 @@ export class BaseContentPage extends BaseFormPage {
     let locator: string;
 
     switch (fieldType) {
+      case 'Number':
+        locator = this.createFormControlSelector(fieldName, 'input[data-field-type="number"]');
+        break;
+      case 'Text':
+        locator = this.createFormControlSelector(fieldName, 'input[data-field-type="textBox"]');
+        break;
       default:
         locator = this.createFormControlSelector(fieldName);
         break;

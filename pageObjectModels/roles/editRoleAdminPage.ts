@@ -15,8 +15,9 @@ export class EditRoleAdminPage extends RoleAdminPage {
   }
 
   async saveRole() {
+    const saveResponse = this.page.waitForResponse(this.pathRegex);
     await this.saveRecordButton.click();
-    await this.page.waitForResponse(this.pathRegex);
+    await saveResponse;
   }
 
   getRoleIdFromUrl() {

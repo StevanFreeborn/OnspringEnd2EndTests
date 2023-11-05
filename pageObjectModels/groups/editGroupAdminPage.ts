@@ -15,7 +15,8 @@ export class EditGroupAdminPage extends GroupAdminPage {
   }
 
   async saveGroup() {
+    const saveResponse = this.page.waitForResponse(this.pathRegex);
     await this.saveRecordButton.click();
-    await this.page.waitForResponse(this.pathRegex);
+    await saveResponse;
   }
 }

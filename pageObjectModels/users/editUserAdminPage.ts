@@ -15,8 +15,9 @@ export class EditUserAdminPage extends UserAdminPage {
   }
 
   async saveUser() {
+    const saveResponse = this.page.waitForResponse(this.pathRegex);
     await this.saveRecordButton.click();
-    await this.page.waitForResponse(this.pathRegex);
+    await saveResponse;
   }
 
   async changePassword(newPassword: string) {
