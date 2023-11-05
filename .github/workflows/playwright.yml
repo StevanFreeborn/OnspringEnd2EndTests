@@ -16,8 +16,56 @@ on:
         required: true
         default: ALPHA
 jobs:
+  generate_shards:
+    name: 'Generate Shards'
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.generate_shards.outputs.shards }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+      - name: Generate shards
+        id: generate_shards
+        run: |
+          #!/bin/bash
+          test_directory="tests"
+
+          test_count=0
+
+          while IFS= read -r file; do
+            count=$(grep -c "test(" "$file")
+            test_count=$((test_count + count))
+          done < <(find "$test_directory" -type f -name '*.spec.ts')
+
+          min_shards=10
+          max_tests_per_shard=20
+
+          num_of_shards=$((test_count / max_tests_per_shard))
+
+          if [ "$num_of_shards" -le "$min_shards" ]; then
+            num_of_shards=$min_shards
+          fi
+
+          shards_array=()
+
+          for ((i=1; i<=$num_of_shards; i++)); do
+            shards_array+=("$i/$num_of_shards")
+          done
+
+          json_shards_array=$(jq -n -c --arg arr "$(printf '%s\n' "${shards_array[@]}")" '$arr | split("\n")')
+
+          # Output the result and the array
+          echo "Total tests: $test_count"
+          echo "Total shards: $num_of_shards"
+          echo "shards=${shards_array[@]}"
+          echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
     name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    needs: generate_shards
     env:
       CI: true
       SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
@@ -40,7 +88,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [chrome, edge]
-        shard: [1/10, 2/10, 3/10, 4/10, 5/10, 6/10, 7/10, 8/10, 9/10, 10/10]
+        shard: ${{ fromJson(needs.generate_shards.outputs.shards) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
