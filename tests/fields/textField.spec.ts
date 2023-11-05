@@ -19,14 +19,14 @@ test.describe('text field', () => {
       description: 'Test-80',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Verify the field was added', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await expect(fieldRow).toBeVisible();
     });
   });
@@ -39,15 +39,15 @@ test.describe('text field', () => {
       description: 'Test-81',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
-    const copiedFieldName = `${fieldName} (1)`;
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Add the the text field to be copied', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Add a copy of the text field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
@@ -75,19 +75,19 @@ test.describe('text field', () => {
       description: 'Test-809',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
-    const copiedFieldName = `${fieldName} (1)`;
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Add the text field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Add a copy of the text field', async () => {
       await appAdminPage.layoutTab.addFieldButton.click();
-      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem('Text');
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
@@ -111,25 +111,27 @@ test.describe('text field', () => {
       description: 'Test-82',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Open layout designer for default layout', async () => {
       await appAdminPage.layoutTab.openLayout();
     });
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
     });
 
     await test.step('Verify the field was added', async () => {
-      const field = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
+      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
+        field.name
+      );
 
-      await expect(field).toBeVisible();
-      await expect(field).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(fieldInBank).toBeVisible();
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
 
       await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
 
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
 
       await expect(fieldRow).toBeVisible();
     });
@@ -141,15 +143,15 @@ test.describe('text field', () => {
       description: 'Test-83',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
-    const copiedFieldName = `${fieldName} (1)`;
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Open layout designer for default layout', async () => {
       await appAdminPage.layoutTab.openLayout();
     });
 
     await test.step('Add the text field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
     });
 
     await test.step('Add a copy of the text field', async () => {
@@ -158,7 +160,7 @@ test.describe('text field', () => {
 
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(fieldName).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
       const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Text', 1);
@@ -191,27 +193,27 @@ test.describe('text field', () => {
       description: 'Test-84',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
 
     await test.step('Add the text field that will be added to layout', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Add the text field to the layout', async () => {
       await appAdminPage.layoutTab.openLayout();
 
-      const { field, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
         sectionName: sectionName,
         sectionColumn: 0,
         sectionRow: 0,
-        fieldName: fieldName,
+        fieldName: field.name,
       });
 
-      await expect(field).toHaveClass(/ui-draggable-disabled/);
-      await expect(dropzone).toHaveText(new RegExp(fieldName));
+      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(field.name));
 
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
@@ -220,14 +222,14 @@ test.describe('text field', () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
 
-      const field = await addContentPage.getField({
+      const contentField = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
 
-      await expect(field).toBeVisible();
+      await expect(contentField).toBeVisible();
     });
   });
 
@@ -237,7 +239,7 @@ test.describe('text field', () => {
       description: 'Test-85',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
     let fieldInBank: Locator;
@@ -245,17 +247,17 @@ test.describe('text field', () => {
 
     await test.step('Add the text field that will be removed from layout', async () => {
       await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(new TextField({ name: fieldName }));
-      const { field, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
         sectionName: sectionName,
         sectionColumn: 0,
         sectionRow: 0,
-        fieldName: fieldName,
+        fieldName: field.name,
       });
 
       fieldLayoutDropzone = dropzone;
-      fieldInBank = field;
+      fieldInBank = fieldFromBank;
 
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
@@ -266,7 +268,7 @@ test.describe('text field', () => {
       await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
 
       await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
-      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(fieldName));
+      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
 
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
@@ -274,14 +276,14 @@ test.describe('text field', () => {
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
-      const field = await addContentPage.getField({
+      const contentField = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
 
-      await expect(field).toBeHidden();
+      await expect(contentField).toBeHidden();
     });
   });
 
@@ -291,15 +293,15 @@ test.describe('text field', () => {
       description: 'Test-86',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
-    const updatedFieldName = `${fieldName} updated`;
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const updatedFieldName = `${field.name} updated`;
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Update the text field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
 
@@ -322,14 +324,14 @@ test.describe('text field', () => {
       description: 'Test-87',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
+    const field = new TextField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Add the text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
     await test.step('Delete the text field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
@@ -339,7 +341,7 @@ test.describe('text field', () => {
 
     await test.step('Verify the field was deleted', async () => {
       const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: fieldName,
+        name: field.name,
       });
 
       await expect(deletedFieldRow).toBeHidden();
@@ -358,9 +360,8 @@ test.describe('text field', () => {
       description: 'Test-99',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
     const field = new TextField({
-      name: fieldName,
+      name: FakeDataFactory.createFakeFieldName(),
       permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
     });
     const tabName = 'Tab 2';
@@ -380,20 +381,20 @@ test.describe('text field', () => {
         sectionName: 'Section 1',
         sectionColumn: 0,
         sectionRow: 0,
-        fieldName: fieldName,
+        fieldName: field.name,
       });
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Create a record with a value in the text field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const field = await addContentPage.getField({
+      const contentField = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await field.fill('This should not be visible to the test user');
+      await contentField.fill('This should not be visible to the test user');
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -405,13 +406,13 @@ test.describe('text field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const field = await viewContentPage.getField({
+      const contentField = await viewContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await expect(field).toBeHidden();
+      await expect(contentField).toBeHidden();
     });
   });
 
@@ -427,9 +428,8 @@ test.describe('text field', () => {
       description: 'Test-810',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
     const field = new TextField({
-      name: fieldName,
+      name: FakeDataFactory.createFakeFieldName(),
       permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
     });
     const tabName = 'Tab 2';
@@ -450,20 +450,20 @@ test.describe('text field', () => {
         sectionName: 'Section 1',
         sectionColumn: 0,
         sectionRow: 0,
-        fieldName: fieldName,
+        fieldName: field.name,
       });
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Create a record with a value in the text field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const field = await addContentPage.getField({
+      const contentField = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await field.fill(fieldValue);
+      await contentField.fill(fieldValue);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -475,14 +475,14 @@ test.describe('text field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const field = await viewContentPage.getField({
+      const contentField = await viewContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await expect(field).toBeVisible();
-      await expect(field).toHaveText(new RegExp(fieldValue));
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(fieldValue));
     });
   });
 
@@ -492,9 +492,8 @@ test.describe('text field', () => {
       description: 'Test-105',
     });
 
-    const fieldName = FakeDataFactory.createFakeFieldName();
     const field = new TextField({
-      name: fieldName,
+      name: FakeDataFactory.createFakeFieldName(),
       permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
     });
     const tabName = 'Tab 2';
@@ -514,20 +513,20 @@ test.describe('text field', () => {
         sectionName: 'Section 1',
         sectionColumn: 0,
         sectionRow: 0,
-        fieldName: fieldName,
+        fieldName: field.name,
       });
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Create a record with a value in the text field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const field = await addContentPage.getField({
+      const contentField = await addContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await field.fill('This should not be visible to the test user');
+      await contentField.fill('This should not be visible to the test user');
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -539,19 +538,19 @@ test.describe('text field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const field = await viewContentPage.getField({
+      const contentField = await viewContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await expect(field).toBeHidden();
+      await expect(contentField).toBeHidden();
     });
 
     await test.step('Update the text field so that it is public', async () => {
       await appAdminPage.goto(app.id);
       await appAdminPage.layoutTabButton.click();
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: fieldName });
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
 
@@ -566,13 +565,13 @@ test.describe('text field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const field = await viewContentPage.getField({
+      const contentField = await viewContentPage.getField({
         tabName: tabName,
         sectionName: sectionName,
-        fieldName: fieldName,
+        fieldName: field.name,
         fieldType: 'Text',
       });
-      await expect(field).toBeVisible();
+      await expect(contentField).toBeVisible();
     });
   });
 });
