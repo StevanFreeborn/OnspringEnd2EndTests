@@ -1,8 +1,8 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
-import { devices } from '@playwright/test';
+import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
 import 'dotenv/config';
 import os from 'os';
 import path from 'path';
+import { ApiTestOptions } from './fixtures';
 
 export const MS_PER_SEC = 1000;
 export const MS_PER_MIN = 60 * MS_PER_SEC;
@@ -38,7 +38,9 @@ switch (process.env.TEST_ENV) {
     break;
 }
 
-const config: PlaywrightTestConfig = {
+const API_URL = BASE_URL?.replace(/^https:\/\/[^.]+/, 'https://api');
+
+export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   testDir: './tests',
   timeout: 10 * MS_PER_MIN,
   expect: {
@@ -63,6 +65,7 @@ const config: PlaywrightTestConfig = {
     viewport: { width: 1920, height: 1080 },
     actionTimeout: 1 * MS_PER_MIN,
     baseURL: BASE_URL,
+    apiURL: API_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: {
@@ -106,6 +109,4 @@ const config: PlaywrightTestConfig = {
     },
   ],
   outputDir: testResultsDir,
-};
-
-export default config;
+});
