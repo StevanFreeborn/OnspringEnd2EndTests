@@ -91,7 +91,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [chrome, edge]
-        shard: ${{ needs.generate_shards.outputs.shards }}
+        shard: ${{ fromJson(needs.generate_shards.outputs.shards) }}
     steps:
       - name: Echo shards
         run: echo ${{ matrix.project }} ${{ matrix.shard }}
