@@ -51,13 +51,14 @@ jobs:
 
           shards_array=()
 
-          for i in {1..10}; do
+          for ((i=1; i<=$num_of_shards; i++)); do
             shards_array+=("$i/$num_of_shards")
           done
 
           # Output the result and the array
-          echo "Total test calls: $total_count"
+          echo "Total test calls: $test_count"
           echo "Total shards: $num_of_shards"
+          echo "shards=${shards_array[@]}"
           echo "shards=$shards_array" >> $GITHUB_OUTPUT
   run_tests:
     name: 'Playwright Tests'
