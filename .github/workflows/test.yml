@@ -27,6 +27,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
       - name: Generate shards
         id: generate_shards
         run: |
@@ -55,11 +59,13 @@ jobs:
             shards_array+=("$i/$num_of_shards")
           done
 
+          json_shards_array=$(jq -n --arg arr "$(printf '%s\n' "${shards_array[@]}")" '[$arr | split("\n")[:-1]]')
+
           # Output the result and the array
-          echo "Total test calls: $test_count"
+          echo "Total tests: $test_count"
           echo "Total shards: $num_of_shards"
           echo "shards=${shards_array[@]}"
-          echo "shards=$shards_array" >> $GITHUB_OUTPUT
+          echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
     name: 'Playwright Tests'
     needs: generate_shards
