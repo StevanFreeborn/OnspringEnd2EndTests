@@ -9,6 +9,7 @@ on:
       - '**/README.md'
       - '**/example.env'
       - '**/.gitignore'
+      - '**/.env.vault'
 jobs:
   check_for_test_file_changes:
     name: Check for test file changes
