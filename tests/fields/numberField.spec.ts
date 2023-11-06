@@ -501,6 +501,7 @@ test.describe('number field', () => {
     const addContentPage = new AddContentPage(sysAdminPage);
     const editContentPage = new EditContentPage(sysAdminPage);
     const viewContentPage = new ViewContentPage(testUserPage);
+    const fieldValue = '100';
     let recordId: number;
 
     await test.step('Add the number field', async () => {
@@ -526,7 +527,7 @@ test.describe('number field', () => {
         fieldName: field.name,
         fieldType: 'Number',
       });
-      await contentField.fill('100');
+      await contentField.fill(fieldValue);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -572,6 +573,7 @@ test.describe('number field', () => {
         fieldType: 'Number',
       });
       await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(fieldValue);
     });
   });
 });
