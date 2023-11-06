@@ -27,14 +27,38 @@ test.describe('date/time field', () => {
     });
   });
 
-  test('Create a copy of a Date/Time Field on an app from the Fields & Objects report', async () => {
+  test('Create a copy of a Date/Time Field on an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-57',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the the date/time field to be copied', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the date/time field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Copy').click();
+
+      const addDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
+
+      await expect(addDateFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addDateFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a Date/Time Field to an app from a layout', async () => {
