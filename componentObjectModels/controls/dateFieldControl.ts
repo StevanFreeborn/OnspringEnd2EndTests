@@ -126,7 +126,56 @@ export class DateFieldControl {
     await this.selectTime(time);
   }
 
+  private validateDate(year: number, month: MonthOption, day: number) {
+    if (year < 1800 || year > 2099) {
+      throw new Error('Year must be between 1800 and 2099.');
+    }
+
+    if (day < 1) {
+      throw new Error('Day must be greater than 0.');
+    }
+
+    switch (month) {
+      case 'January':
+      case 'March':
+      case 'May':
+      case 'July':
+      case 'August':
+      case 'October':
+      case 'December':
+        if (day > 31) {
+          throw new Error('Day must be less than or equal to 31.');
+        }
+        break;
+      case 'April':
+      case 'June':
+      case 'September':
+      case 'November':
+        if (day > 30) {
+          throw new Error('Day must be less than or equal to 30.');
+        }
+        break;
+      case 'February': {
+        // Check for leap year
+        // leap year if evenly divisible by 4 and not evenly divisible by 100
+        // leap year if evenly divisible by 400
+        const isLeapYear = (0 == year % 4 && 0 != year % 100) || 0 == year % 400;
+        if (isLeapYear && day > 29) {
+          throw new Error('Day must be less than or equal to 29.');
+        }
+
+        if (day > 28) {
+          throw new Error('Day must be less than or equal to 28.');
+        }
+        break;
+      }
+      default:
+        throw new Error('Invalid month.');
+    }
+  }
+
   async selectDateUsingCalendar(year: number, month: MonthOption, day: number) {
+    this.validateDate(year, month, day);
     await this.calendarButton.click();
 
     let currentYear = await this.getYear();
