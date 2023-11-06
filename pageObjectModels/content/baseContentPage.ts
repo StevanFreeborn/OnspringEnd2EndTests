@@ -1,13 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from '../baseFormPage';
-import { FieldType } from './../../componentObjectModels/menus/addFieldTypeMenu';
-
-export type GetFieldParams = {
-  tabName: string;
-  sectionName: string;
-  fieldName: string;
-  fieldType: FieldType;
-};
 
 export class BaseContentPage extends BaseFormPage {
   private readonly contentContainer: Locator;
@@ -58,25 +50,5 @@ export class BaseContentPage extends BaseFormPage {
         has: this.page.locator('h1').filter({ hasText: sectionName }),
       })
       .first();
-  }
-
-  async getField({ tabName, sectionName, fieldName, fieldType }: GetFieldParams) {
-    const section = await this.getSection(tabName, sectionName);
-
-    let locator: string;
-
-    switch (fieldType) {
-      case 'Number':
-        locator = this.createFormControlSelector(fieldName, 'input[data-field-type="number"]');
-        break;
-      case 'Text':
-        locator = this.createFormControlSelector(fieldName, 'input[data-field-type="textBox"]');
-        break;
-      default:
-        locator = this.createFormControlSelector(fieldName);
-        break;
-    }
-
-    return section.locator(locator).first();
   }
 }

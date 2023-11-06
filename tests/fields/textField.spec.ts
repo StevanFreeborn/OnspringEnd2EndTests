@@ -67,7 +67,7 @@ test.describe('text field', () => {
     });
   });
 
-  test('Add a copy of a Text Field on an app from the Fields & Objects report using Add Field button.', async ({
+  test('Add a copy of a Text Field on an app from the Fields & Objects report using Add Field button', async ({
     appAdminPage,
   }) => {
     test.info().annotations.push({
@@ -501,6 +501,7 @@ test.describe('text field', () => {
     const addContentPage = new AddContentPage(sysAdminPage);
     const editContentPage = new EditContentPage(sysAdminPage);
     const viewContentPage = new ViewContentPage(testUserPage);
+    const fieldValue = 'This should be visible to the test user';
     let recordId: number;
 
     await test.step('Add the text field', async () => {
@@ -526,7 +527,7 @@ test.describe('text field', () => {
         fieldName: field.name,
         fieldType: 'Text',
       });
-      await contentField.fill('This should not be visible to the test user');
+      await contentField.fill(fieldValue);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -572,6 +573,7 @@ test.describe('text field', () => {
         fieldType: 'Text',
       });
       await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(fieldValue));
     });
   });
 });

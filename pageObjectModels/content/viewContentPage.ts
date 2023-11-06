@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { BASE_URL } from '../../playwright.config';
-import { BaseContentPage, GetFieldParams } from './baseContentPage';
+import { BaseContentPage } from './baseContentPage';
+import { GetFieldParams } from './editableContentPage';
 
 export class ViewContentPage extends BaseContentPage {
   readonly pathRegex: RegExp;

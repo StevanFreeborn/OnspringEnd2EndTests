@@ -10,10 +10,11 @@ export const AUTH_DIR = '.auth';
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 const isCI = process.env.CI == 'true';
 const testResultsDir = 'test-results';
-
+const jsonReportPath = path.join(testResultsDir, 'report.json');
+const TEST_ENV = process.env.TEST_ENV || 'ALPHA';
 export let BASE_URL: string | undefined;
 
-switch (process.env.TEST_ENV) {
+switch (TEST_ENV) {
   case 'BETA':
     BASE_URL = process.env.BETA_INSTANCE_URL;
     break;
@@ -50,18 +51,30 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   forbidOnly: isCI,
   retries: isCI ? 3 : 1,
   workers: isCI ? 1 : Math.floor(os.cpus().length / 2),
-  reporter: [
-    ['html'],
-    ['list'],
-    ['blob'],
-    [
-      'json',
-      {
-        outputFile: path.join(testResultsDir, 'report.json'),
-      },
-    ],
-    ['github'],
-  ],
+  reporter: isCI
+    ? [
+        ['html'],
+        ['list'],
+        ['blob'],
+        [
+          'json',
+          {
+            outputFile: jsonReportPath,
+          },
+        ],
+        ['github'],
+      ]
+    : [
+        ['html'],
+        ['list'],
+        ['blob'],
+        [
+          'json',
+          {
+            outputFile: jsonReportPath,
+          },
+        ],
+      ],
   use: {
     viewport: { width: 1920, height: 1080 },
     actionTimeout: 1 * MS_PER_MIN,
@@ -74,7 +87,6 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       size: { width: 1920, height: 1080 },
     },
   },
-
   projects: [
     {
       name: 'setup',
@@ -110,4 +122,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     },
   ],
   outputDir: testResultsDir,
+  metadata: {
+    environment: TEST_ENV,
+  },
 });
