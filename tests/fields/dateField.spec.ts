@@ -1,15 +1,30 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
+import { DateField } from '../../models/dateField';
 import { AnnotationType } from '../annotations';
 
 test.describe('date/time field', () => {
-  test('Add a Date/Time Field to an app from the Fields & Objects report', async () => {
+  test.beforeEach(async ({ appAdminPage, app }) => {
+    await appAdminPage.goto(app.id);
+    await appAdminPage.layoutTabButton.click();
+  });
+
+  test('Add a Date/Time Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-56',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Add the date/time field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a Date/Time Field on an app from the Fields & Objects report', async () => {

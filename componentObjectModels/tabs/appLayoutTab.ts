@@ -42,18 +42,21 @@ export class AppLayoutTab extends LayoutItemCreator {
     await this.addLayoutItemDialog.continueButton.click();
 
     switch (item.type) {
-      case 'Text':
-        {
-          const modal = this.getLayoutItemModal(item.type);
-          await modal.generalTab.fieldInput.fill(item.name);
-        }
+      case 'Text': {
+        const modal = this.getLayoutItemModal(item.type);
+        await modal.generalTab.fieldInput.fill(item.name);
         break;
-      case 'Number':
-        {
-          const modal = this.getLayoutItemModal(item.type);
-          await modal.generalTab.fieldInput.fill(item.name);
-        }
+      }
+      case 'Number': {
+        const modal = this.getLayoutItemModal(item.type);
+        await modal.generalTab.fieldInput.fill(item.name);
         break;
+      }
+      case 'Date/Time': {
+        const modal = this.getLayoutItemModal(item.type);
+        await modal.generalTab.fieldInput.fill(item.name);
+        break;
+      }
       default:
         break;
     }
