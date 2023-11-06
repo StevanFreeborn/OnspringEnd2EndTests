@@ -318,14 +318,35 @@ test.describe('date/time field', () => {
     });
   });
 
-  test('Update the configuration of a Date/Time Field on an app', async () => {
+  test('Update the configuration of a Date/Time Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-73',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the date/time field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the date/time field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
+      await editDateFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editDateFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Make a Date/Time Field private by role to prevent access', async () => {
