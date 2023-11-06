@@ -122,4 +122,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     },
   ],
   outputDir: testResultsDir,
+  metadata: {
+    environment: TEST_ENV,
+  },
 });

@@ -64,7 +64,7 @@ jobs:
           echo "shards=${shards_array[@]}"
           echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
-    name: 'Playwright Tests - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    name: 'Playwright Tests - ${{ github.event.inputs.environment }} - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: generate_shards
     env:
       CI: true
