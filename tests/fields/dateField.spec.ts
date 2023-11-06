@@ -398,7 +398,7 @@ test.describe('date/time field', () => {
         fieldName: field.name,
         fieldType: 'Date/Time',
       });
-      await dateTimePicker.selectDateUsingCalendar(2024, 'January', 1);
+      await dateTimePicker.selectDateUsingCalendar(2024, 1, 1);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -420,14 +420,78 @@ test.describe('date/time field', () => {
     });
   });
 
-  test('Make a Date/Time Field private by role to give access', async () => {
+  test('Make a Date/Time Field private by role to give access', async ({
+    sysAdminPage,
+    role,
+    appAdminPage,
+    app,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-812',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const fieldValue = `${month}/${day}/${year}`;
+    let recordId: number;
+
+    await test.step('Add the date/time field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the date/time field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const dateTimePicker = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Date/Time',
+      });
+      await dateTimePicker.selectDateUsingCalendar(year, month, day);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Date/Time',
+      });
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(fieldValue));
+    });
   });
 
   test('Make a Date/Time Field public', async () => {

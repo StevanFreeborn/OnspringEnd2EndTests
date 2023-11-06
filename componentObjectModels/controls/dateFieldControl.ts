@@ -50,7 +50,7 @@ type TimeOption =
   | '11:00 PM'
   | '11:30 PM';
 
-type MonthOption =
+type MonthName =
   | 'January'
   | 'February'
   | 'March'
@@ -63,6 +63,21 @@ type MonthOption =
   | 'October'
   | 'November'
   | 'December';
+
+const monthMap = new Map<number, MonthName>([
+  [1, 'January'],
+  [2, 'February'],
+  [3, 'March'],
+  [4, 'April'],
+  [5, 'May'],
+  [6, 'June'],
+  [7, 'July'],
+  [8, 'August'],
+  [9, 'September'],
+  [10, 'October'],
+  [11, 'November'],
+  [12, 'December'],
+]);
 
 export class DateFieldControl {
   private readonly page: Page;
@@ -126,7 +141,7 @@ export class DateFieldControl {
     await this.selectTime(time);
   }
 
-  private validateDate(year: number, month: MonthOption, day: number) {
+  private validateDate(year: number, month: MonthName | undefined, day: number) {
     if (year < 1800 || year > 2099) {
       throw new Error('Year must be between 1800 and 2099.');
     }
@@ -174,14 +189,15 @@ export class DateFieldControl {
     }
   }
 
-  async selectDateUsingCalendar(year: number, month: MonthOption, day: number) {
-    this.validateDate(year, month, day);
+  async selectDateUsingCalendar(year: number, month: number, day: number) {
+    const monthName = monthMap.get(month);
+    this.validateDate(year, monthName, day);
     await this.calendarButton.click();
 
     let currentYear = await this.getYear();
     let currentMonth = await this.getMonth();
 
-    while (currentMonth !== month || currentYear !== year) {
+    while (currentMonth !== monthName || currentYear !== year) {
       if (currentYear > year) {
         await this.previousMonthButton.click();
       } else {
@@ -195,7 +211,7 @@ export class DateFieldControl {
     await this.selectDay(day);
   }
 
-  async selectDateAndTimeUsingCalendar(year: number, month: MonthOption, day: number, time: TimeOption) {
+  async selectDateAndTimeUsingCalendar(year: number, month: number, day: number, time: TimeOption) {
     await this.selectDateUsingCalendar(year, month, day);
     await this.selectTimeUsingClock(time);
   }

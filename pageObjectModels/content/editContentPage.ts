@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { BASE_URL } from '../../playwright.config';
-import { BaseContentPage } from './baseContentPage';
+import { EditableContentPage } from './editableContentPage';
 
-export class EditContentPage extends BaseContentPage {
+export class EditContentPage extends EditableContentPage {
   readonly pathRegex: RegExp;
 
   constructor(page: Page) {
