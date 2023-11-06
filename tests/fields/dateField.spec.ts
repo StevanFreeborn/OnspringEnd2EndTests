@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
 import { DateField } from '../../models/dateField';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('date/time field', () => {
@@ -185,14 +186,51 @@ test.describe('date/time field', () => {
     });
   });
 
-  test("Add a Date/Time Field to an app's layout", async () => {
+  test("Add a Date/Time Field to an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-64',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Add the date/time field that will be added to layout', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add the date/time field to the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+
+      const dateTimePicker = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Date/Time',
+      });
+
+      await expect(dateTimePicker.input).toBeVisible();
+      await expect(dateTimePicker.calendarButton).toBeVisible();
+    });
   });
 
   test("Remove a Date/Time Field from an app's layout", async () => {
