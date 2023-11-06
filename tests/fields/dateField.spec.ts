@@ -288,14 +288,34 @@ test.describe('date/time field', () => {
     });
   });
 
-  test('Delete a Date/Time Field from an app', async () => {
+  test('Delete a Date/Time Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-70',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Add the date/time field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the date/time field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Update the configuration of a Date/Time Field on an app', async () => {
