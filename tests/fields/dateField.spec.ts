@@ -508,7 +508,7 @@ test.describe('date/time field', () => {
     const { year, month, day, fieldValue } = getTestDate();
     let recordId: number;
 
-    await test.step('Add the text field', async () => {
+    await test.step('Add the date/time field', async () => {
       await appAdminPage.goto(app.id);
       await appAdminPage.layoutTabButton.click();
       await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
@@ -523,7 +523,7 @@ test.describe('date/time field', () => {
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
-    await test.step('Create a record with a value in the text field as system admin', async () => {
+    await test.step('Create a record with a value in the date/time field as system admin', async () => {
       await addContentPage.goto(app.id);
       const dateTimePicker = await addContentPage.getField({
         tabName: tabName,
@@ -552,7 +552,7 @@ test.describe('date/time field', () => {
       await expect(contentField).toBeHidden();
     });
 
-    await test.step('Update the text field so that it is public', async () => {
+    await test.step('Update the date/time field so that it is public', async () => {
       await appAdminPage.goto(app.id);
       await appAdminPage.layoutTabButton.click();
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
