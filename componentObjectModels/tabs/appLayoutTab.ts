@@ -27,12 +27,35 @@ export class AppLayoutTab extends LayoutItemCreator {
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 
-  private async openAddFieldModal(itemType: FieldType) {
-    const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+  private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
+    switch (item.type) {
+      case 'Formatted Text Block':
+        break;
+      case 'Date/Time': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        break;
+      }
+      case 'Number': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        break;
+      }
+      case 'Text': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        break;
+      }
+      default:
+        break;
+    }
 
-    await fieldTab.addFieldButton.click();
-    await fieldTab.addFieldMenu.selectItem(itemType);
-    await this.addLayoutItemDialog.continueButton.click();
+    const modal = this.getLayoutItemModal(item.type, frameNumber);
+    await modal.securityTabButton.click();
+    await modal.securityTab.setPermissions(item.permissions);
+
+    await modal.saveButton.click();
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**
@@ -49,32 +72,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     await this.addLayoutItemMenu.selectItem(item.type);
     await this.addLayoutItemDialog.continueButton.click();
 
-    switch (item.type) {
-      case 'Text': {
-        const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fillOutGeneralTab(item);
-        break;
-      }
-      case 'Number': {
-        const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fillOutGeneralTab(item);
-        break;
-      }
-      case 'Date/Time': {
-        const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fillOutGeneralTab(item);
-        break;
-      }
-      default:
-        break;
-    }
-
-    const modal = this.getLayoutItemModal(item.type, 0);
-    await modal.securityTabButton.click();
-    await modal.securityTab.setPermissions(item.permissions);
-
-    await modal.saveButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await this.addLayoutItem(item);
   }
 
   async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
@@ -84,32 +82,10 @@ export class AppLayoutTab extends LayoutItemCreator {
       await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
     }
 
-    switch (item.type) {
-      case 'Formatted Text Block':
-        break;
-      case 'Date/Time': {
-        await this.openAddFieldModal(item.type);
-        const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
-        await addFieldModal.saveButton.click();
-        break;
-      }
-      case 'Number': {
-        await this.openAddFieldModal(item.type);
-        const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
-        await addFieldModal.saveButton.click();
-        break;
-      }
-      case 'Text': {
-        await this.openAddFieldModal(item.type);
-        const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
-        await addFieldModal.saveButton.click();
-        break;
-      }
-      default:
-        break;
-    }
+    await fieldTab.addFieldButton.click();
+    await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
+    await this.addLayoutItemDialog.continueButton.click();
+
+    await this.addLayoutItem(item, 1);
   }
 }
