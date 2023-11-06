@@ -31,7 +31,9 @@ test.describe('number field', () => {
     });
   });
 
-  test('Create a copy of a Number Field on an app from the Fields & Objects report', async ({ appAdminPage }) => {
+  test('Create a copy of a Number Field on an app from the Fields & Objects report using row copy button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-67',
@@ -58,6 +60,44 @@ test.describe('number field', () => {
 
     await test.step('Verify the field was copied', async () => {
       await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
+  });
+
+  test('Create a copy of a Number Field on an app from the Fields & Objects report using Add Field button', async ({
+    appAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-813',
+    });
+
+    const field = new NumberField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the number field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the number field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
+
+      await expect(addNumberFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addNumberFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });

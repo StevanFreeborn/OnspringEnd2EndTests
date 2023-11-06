@@ -67,7 +67,7 @@ test.describe('text field', () => {
     });
   });
 
-  test('Add a copy of a Text Field on an app from the Fields & Objects report using Add Field button.', async ({
+  test('Add a copy of a Text Field on an app from the Fields & Objects report using Add Field button', async ({
     appAdminPage,
   }) => {
     test.info().annotations.push({
