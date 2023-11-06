@@ -27,6 +27,14 @@ export class AppLayoutTab extends LayoutItemCreator {
     this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
   }
 
+  private async openAddFieldModal(itemType: FieldType) {
+    const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+
+    await fieldTab.addFieldButton.click();
+    await fieldTab.addFieldMenu.selectItem(itemType);
+    await this.addLayoutItemDialog.continueButton.click();
+  }
+
   /**
    * Opens the specified layout.
    * @param layoutName - The name of the layout to open. Defaults to 'Default Layout'.
@@ -44,17 +52,17 @@ export class AppLayoutTab extends LayoutItemCreator {
     switch (item.type) {
       case 'Text': {
         const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fieldInput.fill(item.name);
+        await modal.generalTab.fillOutGeneralTab(item);
         break;
       }
       case 'Number': {
         const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fieldInput.fill(item.name);
+        await modal.generalTab.fillOutGeneralTab(item);
         break;
       }
       case 'Date/Time': {
         const modal = this.getLayoutItemModal(item.type);
-        await modal.generalTab.fieldInput.fill(item.name);
+        await modal.generalTab.fillOutGeneralTab(item);
         break;
       }
       default:
@@ -69,24 +77,24 @@ export class AppLayoutTab extends LayoutItemCreator {
     await this.page.waitForLoadState('networkidle');
   }
 
-  private async openAddFieldModal(itemType: FieldType) {
-    const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
-
-    await fieldTab.addFieldButton.click();
-    await fieldTab.addFieldMenu.selectItem(itemType);
-    await this.addLayoutItemDialog.continueButton.click();
-  }
-
   async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
     const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+
+    if ((await fieldTab.addFieldButton.isVisible()) === false) {
+      await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+    }
 
     switch (item.type) {
       case 'Formatted Text Block':
         break;
+      case 'Date/Time': {
+        await this.openAddFieldModal(item.type);
+        const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.saveButton.click();
+        break;
+      }
       case 'Number': {
-        if ((await fieldTab.addFieldButton.isVisible()) === false) {
-          await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
-        }
         await this.openAddFieldModal(item.type);
         const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
         await addFieldModal.generalTab.fillOutGeneralTab(item);
@@ -94,9 +102,6 @@ export class AppLayoutTab extends LayoutItemCreator {
         break;
       }
       case 'Text': {
-        if ((await fieldTab.addFieldButton.isVisible()) === false) {
-          await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
-        }
         await this.openAddFieldModal(item.type);
         const addFieldModal = this.layoutDesignerModal.getLayoutItemModal(item.type, 1);
         await addFieldModal.generalTab.fillOutGeneralTab(item);
