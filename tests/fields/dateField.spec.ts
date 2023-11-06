@@ -133,14 +133,56 @@ test.describe('date/time field', () => {
     });
   });
 
-  test('Create a copy of a Date/Time Field on an app from a layout', async () => {
+  test('Create a copy of a Date/Time Field on an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-59',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the date/time field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Add a copy of the date/time field', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem(
+        'Date/Time'
+      );
+
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addDateFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Date/Time', 1);
+
+      await expect(addDateFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addDateFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedField =
+        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
+
+      await expect(copiedField).toBeVisible();
+      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test("Add a Date/Time Field to an app's layout", async () => {
