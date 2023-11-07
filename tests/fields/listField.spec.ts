@@ -68,4 +68,45 @@ test.describe('list field', async () => {
       await expect(copiedFieldRow).toBeVisible();
     });
   });
+
+  test('Create a copy of a List Field on an app from the Fields & Objects report using Add Field button', async ({
+    appAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-815',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the list field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the list field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
+
+      await expect(addListFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addListFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
+  });
 });
