@@ -32,6 +32,11 @@ export class AppLayoutTab extends LayoutItemCreator {
     switch (item.type) {
       case 'Formatted Text Block':
         break;
+      case 'Time Span': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        break;
+      }
       case 'List': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item as ListField);
