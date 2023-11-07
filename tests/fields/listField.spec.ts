@@ -334,4 +334,38 @@ test.describe('list field', async () => {
       await expect(deletedFieldRow).toBeHidden();
     });
   });
+
+  test('Update the configuration of a List Field on an app', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-74',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the list field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
+      await editListFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editListFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
+  });
 });
