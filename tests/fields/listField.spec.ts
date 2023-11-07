@@ -301,4 +301,37 @@ test.describe('list field', async () => {
       await expect(contentField).toBeHidden();
     });
   });
+
+  test('Delete a List Field from an app', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-72',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    await test.step('Add the list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the list field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
+  });
 });
