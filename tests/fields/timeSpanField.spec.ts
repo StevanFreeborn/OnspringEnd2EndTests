@@ -63,14 +63,42 @@ test.describe('time span field', async () => {
     });
   });
 
-  test('Create a copy of a Time Span Field on an app from the Fields & Objects report using Add Field button', async () => {
+  test('Create a copy of a Time Span Field on an app from the Fields & Objects report using Add Field button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-817',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new TimeSpanField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the time span field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the time span field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
+
+      await expect(addTimeSpanFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addTimeSpanFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a Time Span Field to an app from a layout', async () => {
