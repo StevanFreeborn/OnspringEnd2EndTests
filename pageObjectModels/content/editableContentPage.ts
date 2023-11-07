@@ -29,6 +29,8 @@ export class EditableContentPage extends BaseContentPage {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'List':
+        return section.locator(this.createFormControlSelector(params.fieldName, 'div.type-list')).getByRole('listbox');
       case 'Date/Time': {
         const dateTimePicker = section
           .locator(this.createFormControlSelector(params.fieldName, 'span.k-datetimepicker'))

@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
 import { ListField, ListValue } from '../../models/listField';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('list field', async () => {
@@ -192,6 +193,56 @@ test.describe('list field', async () => {
       });
 
       await expect(copiedFieldRow).toBeVisible();
+    });
+  });
+
+  test("Add a List Field to an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-65',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Add the list field that will be added to layout', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add the list field to the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+
+      const contentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'List',
+      });
+
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toBeVisible();
     });
   });
 });
