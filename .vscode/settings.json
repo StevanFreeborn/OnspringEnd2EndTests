@@ -7,6 +7,7 @@
     "endtests",
     "FULLNAME",
     "iife",
+    "jsxdev",
     "listbox",
     "navs",
     "networkidle",
@@ -15,6 +16,7 @@
     "tabstrip",
     "teardowns",
     "textbox",
+    "timespan",
     "VNEXT",
     "VPRIOR"
   ]

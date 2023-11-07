@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { DateFieldControl } from '../../componentObjectModels/controls/dateFieldControl';
+import { TimeSpanFieldControl } from '../../componentObjectModels/controls/timeSpanFieldControl';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BaseContentPage } from './baseContentPage';
 
@@ -16,11 +17,17 @@ export type GetFieldParams = BaseGetFieldParams & {
 export type GetDateFieldParams = BaseGetFieldParams & {
   fieldType: 'Date/Time';
 };
+
+export type GetTimeSpanFieldParams = BaseGetFieldParams & {
+  fieldType: 'Time Span';
+};
+
 export class EditableContentPage extends BaseContentPage {
   constructor(page: Page) {
     super(page);
   }
 
+  async getField(params: GetTimeSpanFieldParams): Promise<TimeSpanFieldControl>;
   async getField(params: GetDateFieldParams): Promise<DateFieldControl>;
   async getField(params: GetFieldParams): Promise<Locator>;
   async getField(params: GetFieldParams) {
@@ -29,6 +36,11 @@ export class EditableContentPage extends BaseContentPage {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'Time Span': {
+        return new TimeSpanFieldControl(
+          section.locator(this.createFormControlSelector(params.fieldName, 'div.timespan-base')).first()
+        );
+      }
       case 'List':
         return section.locator(this.createFormControlSelector(params.fieldName, 'div.type-list')).getByRole('listbox');
       case 'Date/Time': {
