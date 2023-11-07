@@ -495,13 +495,103 @@ test.describe('time span field', async () => {
     });
   });
 
-  test('Make a Time Span Field public', async () => {
+  test('Make a Time Span Field public', async ({ sysAdminPage, appAdminPage, role, app, testUserPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-135',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-105',
+    });
+
+    const field = new TimeSpanField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    const quantity = '1';
+    const fieldValue = `${quantity} ${Units.Days}`;
+    let recordId: number;
+
+    await test.step('Add the time span field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the time span field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const timeSpanField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Time Span',
+      });
+      await timeSpanField.quantityInput.fill(quantity);
+      await timeSpanField.selectUnit('Days');
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Time Span',
+      });
+      await expect(contentField).toBeHidden();
+    });
+
+    await test.step('Update the time span field so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
+      await editTimeSpanFieldModal.securityTabButton.click();
+      await editTimeSpanFieldModal.securityTab.setPermissions([]);
+      await editTimeSpanFieldModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Time Span',
+      });
+      await expect(contentField).toBeVisible();
+
+      const escapedFieldValue = escapeRegExp(fieldValue);
+      await expect(contentField).toHaveText(new RegExp(escapedFieldValue));
+    });
   });
 });
