@@ -286,14 +286,35 @@ test.describe('time span field', async () => {
     });
   });
 
-  test('Update the configuration of a Time Span Field on an app', async () => {
+  test('Update the configuration of a Time Span Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-132',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new TimeSpanField({ name: FakeDataFactory.createFakeFieldName() });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the time span field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the time span field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
+      await editTimeSpanFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editTimeSpanFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete a Time Span Field from an app', async () => {
