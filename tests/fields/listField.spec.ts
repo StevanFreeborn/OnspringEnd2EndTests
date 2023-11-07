@@ -1,7 +1,10 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, expect, fieldTest as test } from '../../fixtures';
+import { LayoutItemPermission } from '../../models/layoutItem';
 import { ListField, ListValue } from '../../models/listField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('list field', async () => {
@@ -366,6 +369,76 @@ test.describe('list field', async () => {
         name: updatedFieldName,
       });
       await expect(updatedFieldRow).toBeVisible();
+    });
+  });
+
+  test('Make a List Field private by role to prevent access', async ({
+    sysAdminPage,
+    appAdminPage,
+    app,
+    role,
+    testUserPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-100',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the list field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the list field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const listFieldSelector = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'List',
+      });
+      await listFieldSelector.click();
+      await addContentPage.page.getByRole('option', { name: field.values[0].value }).click();
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Date/Time',
+      });
+      await expect(contentField).toBeHidden();
     });
   });
 });
