@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, fieldTest as test } from '../../fixtures';
 import { ListField, ListValue } from '../../models/listField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
@@ -242,7 +242,63 @@ test.describe('list field', async () => {
       });
 
       await expect(contentField).toBeVisible();
-      await expect(contentField).toBeVisible();
+    });
+  });
+
+  test("Remove a List Field from an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-71',
+    });
+
+    const field = new ListField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    let fieldInBank: Locator;
+    let fieldLayoutDropzone: Locator;
+
+    await test.step('Add the list field that will be removed from layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      fieldLayoutDropzone = dropzone;
+      fieldInBank = fieldFromBank;
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Remove the list field from the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await fieldLayoutDropzone.hover();
+      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was removed from the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+      const contentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'List',
+      });
+
+      await expect(contentField).toBeHidden();
     });
   });
 });
