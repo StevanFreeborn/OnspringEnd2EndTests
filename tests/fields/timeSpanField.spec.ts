@@ -317,14 +317,34 @@ test.describe('time span field', async () => {
     });
   });
 
-  test('Delete a Time Span Field from an app', async () => {
+  test('Delete a Time Span Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-133',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new TimeSpanField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Add the time span field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the time span field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Make a Time Span Field private by role to prevent access', async () => {
