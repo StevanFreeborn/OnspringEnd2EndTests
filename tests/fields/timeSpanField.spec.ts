@@ -1,3 +1,4 @@
+import { Units } from '../../componentObjectModels/controls/timeSpanFieldControl';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, expect, fieldTest as test } from '../../fixtures';
 import { LayoutItemPermission } from '../../models/layoutItem';
@@ -5,6 +6,7 @@ import { TimeSpanField } from '../../models/timeSpanField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
+import { escapeRegExp } from '../../utils';
 import { AnnotationType } from '../annotations';
 
 test.describe('time span field', async () => {
@@ -419,14 +421,78 @@ test.describe('time span field', async () => {
     });
   });
 
-  test('Make a Time Span Field private by role to give access', async () => {
+  test('Make a Time Span Field private by role to give access', async ({
+    sysAdminPage,
+    appAdminPage,
+    role,
+    app,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-818',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new TimeSpanField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    const quantity = '1';
+    const fieldValue = `${quantity} ${Units.Days}`;
+    let recordId: number;
+
+    await test.step('Add the time span field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the time span field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const timeSpanField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Time Span',
+      });
+      await timeSpanField.quantityInput.fill(quantity);
+      await timeSpanField.selectUnit('Days');
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Time Span',
+      });
+      await expect(contentField).toBeVisible();
+
+      const escapedFieldValue = escapeRegExp(fieldValue);
+      await expect(contentField).toHaveText(new RegExp(escapedFieldValue));
+    });
   });
 
   test('Make a Time Span Field public', async () => {
