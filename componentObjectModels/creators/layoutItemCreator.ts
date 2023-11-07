@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddOrEditDateFieldModal } from '../modals/addOrEditDateFieldModal';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
+import { AddOrEditListFieldModal } from '../modals/addOrEditListFieldModal';
 import { AddOrEditNumberFieldModal } from '../modals/addOrEditNumberFieldModal';
 import { AddOrEditTextFieldModal } from '../modals/addOrEditTextFieldModal';
 
@@ -17,11 +18,14 @@ export class LayoutItemCreator {
   getLayoutItemModal(itemType: 'Text', frameNumber?: number): AddOrEditTextFieldModal;
   getLayoutItemModal(itemType: 'Number', frameNumber?: number): AddOrEditNumberFieldModal;
   getLayoutItemModal(itemType: 'Date/Time', frameNumber?: number): AddOrEditDateFieldModal;
+  getLayoutItemModal(itemType: 'List', frameNumber?: number): AddOrEditListFieldModal;
   getLayoutItemModal(itemType: LayoutItemType, frameNumber?: number): AddOrEditLayoutItemModal;
   getLayoutItemModal(itemType: LayoutItemType, frameNumber: number = 0) {
     switch (itemType) {
       case 'Date/Time':
+        return new AddOrEditDateFieldModal(this.page, frameNumber);
       case 'List':
+        return new AddOrEditListFieldModal(this.page, frameNumber);
       case 'Number':
         return new AddOrEditNumberFieldModal(this.page, frameNumber);
       case 'Text':

@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { LayoutItem } from '../../models/layoutItem';
+import { ListField } from '../../models/listField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
@@ -31,6 +32,11 @@ export class AppLayoutTab extends LayoutItemCreator {
     switch (item.type) {
       case 'Formatted Text Block':
         break;
+      case 'List': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as ListField);
+        break;
+      }
       case 'Date/Time': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item);
