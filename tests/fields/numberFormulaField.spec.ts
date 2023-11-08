@@ -145,14 +145,57 @@ test.describe('number formula field', () => {
     });
   });
 
-  test('Create a copy of a Number Formula Field on an app from a layout', async () => {
+  test('Create a copy of a Number Formula Field on an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-149',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new NumberFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return 1;',
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the number formula field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Add a copy of the number formula field', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem('Formula');
+
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addNumberFormulaFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
+
+      await expect(addNumberFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addNumberFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedField =
+        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
+
+      await expect(copiedField).toBeVisible();
+      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test("Add a Number Formula Field to an app's layout", async () => {

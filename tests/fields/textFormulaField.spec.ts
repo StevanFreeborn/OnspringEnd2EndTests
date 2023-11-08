@@ -178,11 +178,11 @@ test.describe('text formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
 
-      const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
+      const addTextFormulaFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
 
-      await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addTextFieldModal.saveButton.click();
+      await addTextFormulaFieldModal.saveButton.click();
     });
 
     await test.step('Verify the field was copied', async () => {
