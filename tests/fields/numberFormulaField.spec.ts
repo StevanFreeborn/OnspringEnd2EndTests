@@ -305,14 +305,38 @@ test.describe('number formula field', () => {
     });
   });
 
-  test('Update the configuration of a Number Formula Field on an app', async () => {
+  test('Update the configuration of a Number Formula Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-152',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new NumberFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return 1;',
+    });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the number formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the number formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editNumberFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      await editNumberFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editNumberFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete a Number Formula Field from an app', async () => {
