@@ -501,13 +501,88 @@ test.describe('number formula field', () => {
     });
   });
 
-  test('Make a Number Formula Field public', async () => {
+  test('Make a Number Formula Field public', async ({ sysAdminPage, appAdminPage, app, role, testUserPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-155',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const returnValue = '1';
+    const field = new NumberFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: `return ${returnValue};`,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the number formula field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the number formula field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Formula',
+      });
+      await expect(contentField).toBeHidden();
+    });
+
+    await test.step('Update the number formula field so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      await editTextFormulaFieldModal.securityTabButton.click();
+      await editTextFormulaFieldModal.securityTab.setPermissions([]);
+      await editTextFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Formula',
+      });
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(returnValue));
+    });
   });
 });
