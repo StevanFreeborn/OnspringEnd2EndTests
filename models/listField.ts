@@ -1,6 +1,6 @@
 import { LayoutItem, LayoutItemObject } from './layoutItem';
 
-type ListFieldObject = LayoutItemObject & {
+type ListFieldObject = Omit<LayoutItemObject, 'type'> & {
   values?: ListValue[];
 };
 

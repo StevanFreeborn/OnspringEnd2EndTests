@@ -9,7 +9,7 @@ export class BaseAdminFormPage extends BaseAdminPage {
     return `td.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 
-  constructor(page: Page) {
+  protected constructor(page: Page) {
     super(page);
     this.saveRecordButton = page.getByRole('link', { name: 'Save Record' });
   }

@@ -6,7 +6,7 @@ export class BaseCreateOrAddDialog {
   readonly copyFromRadioButton: Locator;
   readonly selectDropdown: Locator;
 
-  constructor(page: Page) {
+  protected constructor(page: Page) {
     this.page = page;
     this.continueButton = page.getByRole('button', { name: 'Continue' });
     this.copyFromRadioButton = page.getByText('Copy from');
