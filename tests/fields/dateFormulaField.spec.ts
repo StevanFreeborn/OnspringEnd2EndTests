@@ -339,14 +339,37 @@ test.describe('date formula field', () => {
     });
   });
 
-  test('Delete a Date/Time Formula Field from an app', async () => {
+  test('Delete a Date/Time Formula Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-162',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return new Date();',
+    });
+
+    await test.step('Add the date formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the date formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Make a Date/Time Formula Field private by role to prevent access', async () => {
