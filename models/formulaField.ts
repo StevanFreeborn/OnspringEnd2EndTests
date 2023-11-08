@@ -12,7 +12,7 @@ export class FormulaField extends LayoutItem {
   readonly formula: string;
 
   protected constructor({ id = 0, name, permissions = [], outputType, formula }: FormulaFieldObject) {
-    super({ id, name, permissions, type: 'Date/Time' });
+    super({ id, name, permissions, type: 'Formula' });
     this.outputType = outputType;
     this.formula = formula;
   }

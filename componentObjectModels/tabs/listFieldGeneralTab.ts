@@ -1,14 +1,14 @@
 import { FrameLocator } from '@playwright/test';
+import { ListField } from '../../models/listField';
 import { ListValuesGrid } from '../controls/listValuesGrid';
 import { FieldGeneralTab } from './fieldGeneralTab';
-import { ListField } from '../../models/listField';
 
 export class ListFieldGeneralTab extends FieldGeneralTab {
   readonly listValuesGrid: ListValuesGrid;
 
   constructor(frame: FrameLocator) {
     super(frame);
-    this.listValuesGrid = new ListValuesGrid(frame.locator('.list-values').first());
+    this.listValuesGrid = new ListValuesGrid(this.frame.locator('.list-values').first());
   }
 
   async fillOutGeneralTab(listField: ListField) {

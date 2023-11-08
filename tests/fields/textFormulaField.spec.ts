@@ -1,4 +1,6 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
+import { TextFormulaField } from '../../models/textFormulaField';
 import { AnnotationType } from '../annotations';
 
 test.describe('text formula field', () => {
@@ -7,24 +9,64 @@ test.describe('text formula field', () => {
     await appAdminPage.layoutTabButton.click();
   });
 
-  test('Add a Text Formula Field to an app from the Fields & Objects report', async () => {
+  test('Add a Text Formula Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-136',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return "Hello World"',
+    });
+
+    await test.step('Add the text formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
-  test('Create a copy of a Text Formula Field on an app from the Fields & Objects report using the row copy button', async () => {
+  test('Create a copy of a Text Formula Field on an app from the Fields & Objects report using the row copy button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-137',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return "Hello World"',
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the the text field to be copied', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the text formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Copy').click();
+
+      const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addTextFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a Text Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
