@@ -69,14 +69,45 @@ test.describe('date formula field', () => {
     });
   });
 
-  test('Create a copy of a Date/Time Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
+  test('Create a copy of a Date/Time Formula Field on an app from the Fields & Objects report using the Add Field button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-824',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return new Date();',
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the date formula field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the date formula field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addDateFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a Date/Time Formula Field to an app from a layout', async () => {
