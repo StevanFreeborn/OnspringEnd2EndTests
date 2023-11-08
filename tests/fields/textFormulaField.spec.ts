@@ -305,14 +305,38 @@ test.describe('text formula field', () => {
     });
   });
 
-  test('Update the configuration of a Text Formula Field on an app', async () => {
+  test('Update the configuration of a Text Formula Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-142',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return "Hello World"',
+    });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the text formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the text formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      await editTextFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editTextFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete a Text Formula Field from an app', async () => {
