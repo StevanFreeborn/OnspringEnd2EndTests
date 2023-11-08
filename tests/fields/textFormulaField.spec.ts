@@ -69,14 +69,45 @@ test.describe('text formula field', () => {
     });
   });
 
-  test('Create a copy of a Text Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
+  test('Create a copy of a Text Formula Field on an app from the Fields & Objects report using the Add Field button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-820',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return "Hello World"',
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the text formula field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the text formula field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addTextFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a Text Formula Field to an app from a layout', async () => {
