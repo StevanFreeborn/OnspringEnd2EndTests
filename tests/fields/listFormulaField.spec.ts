@@ -321,14 +321,40 @@ test.describe('list formula field', () => {
     });
   });
 
-  test('Update the configuration of a List Formula Field on an app', async () => {
+  test('Update the configuration of a List Formula Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-173',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the list formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the list formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editListFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      await editListFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editListFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete a List Formula Field from an app', async () => {
