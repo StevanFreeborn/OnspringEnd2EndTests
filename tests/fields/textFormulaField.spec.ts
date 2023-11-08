@@ -44,7 +44,7 @@ test.describe('text formula field', () => {
     });
     const copiedFieldName = `${field.name} (1)`;
 
-    await test.step('Add the the text field to be copied', async () => {
+    await test.step('Add the the text formula field to be copied', async () => {
       await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
     });
 
