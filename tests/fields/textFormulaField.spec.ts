@@ -494,7 +494,7 @@ test.describe('text formula field', () => {
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
-        fieldType: 'Text',
+        fieldType: 'Formula',
       });
       await expect(contentField).toBeVisible();
       await expect(contentField).toHaveText(new RegExp(returnValue));
