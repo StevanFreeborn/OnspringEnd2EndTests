@@ -305,20 +305,44 @@ test.describe('date formula field', () => {
     });
   });
 
+  test('Update the configuration of a Date/Time Formula Field on an app', async ({ appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-163',
+    });
+
+    const field = new DateFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return new Date();',
+    });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the date formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the date formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      await editDateFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editDateFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
+  });
+
   test('Delete a Date/Time Formula Field from an app', async () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-162',
-    });
-
-    // TODO: Implement test
-    expect(false).toBe(true);
-  });
-
-  test('Update the configuration of a Date/Time Formula Field on an app', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-163',
     });
 
     // TODO: Implement test
