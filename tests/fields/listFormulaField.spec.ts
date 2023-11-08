@@ -60,10 +60,10 @@ test.describe('list formula field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
 
-      const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+      const addListFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
-      await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addTextFormulaFieldModal.saveButton.click();
+      await expect(addListFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addListFormulaFieldModal.saveButton.click();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -75,14 +75,47 @@ test.describe('list formula field', () => {
     });
   });
 
-  test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
+  test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the Add Field button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-830',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the list formula field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the list formula field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addListFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addListFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addListFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add a List Formula Field to an app from a layout', async () => {
