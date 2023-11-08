@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, fieldTest as test } from '../../fixtures';
 import { NumberFormulaField } from '../../models/numberFormulaField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
@@ -248,14 +248,61 @@ test.describe('number formula field', () => {
     });
   });
 
-  test("Remove a Number Formula Field from an app's layout", async () => {
+  test("Remove a Number Formula Field from an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-151',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new NumberFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return 1;',
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    let fieldInBank: Locator;
+    let fieldLayoutDropzone: Locator;
+
+    await test.step('Add the number formula field that will be removed from layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      fieldLayoutDropzone = dropzone;
+      fieldInBank = fieldFromBank;
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Remove the number formula field from the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await fieldLayoutDropzone.hover();
+      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was removed from the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+      const contentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Formula',
+      });
+
+      await expect(contentField).toBeHidden();
+    });
   });
 
   test('Update the configuration of a Number Formula Field on an app', async () => {
