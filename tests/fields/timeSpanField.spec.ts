@@ -9,7 +9,7 @@ import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage'
 import { escapeRegExp } from '../../utils';
 import { AnnotationType } from '../annotations';
 
-test.describe('time span field', async () => {
+test.describe('time span field', () => {
   test.beforeEach(async ({ appAdminPage, app }) => {
     await appAdminPage.goto(app.id);
     await appAdminPage.layoutTabButton.click();
