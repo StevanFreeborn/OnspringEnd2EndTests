@@ -3,7 +3,7 @@ import { FrameLocator } from '@playwright/test';
 export class BaseDesignerTab {
   readonly frame: FrameLocator;
 
-  constructor(frame: FrameLocator) {
+  protected constructor(frame: FrameLocator) {
     this.frame = frame;
   }
 

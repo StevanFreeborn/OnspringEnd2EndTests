@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddOrEditDateFieldModal } from '../modals/addOrEditDateFieldModal';
+import { AddOrEditFormulaFieldModal } from '../modals/addOrEditFormulaFieldModal';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
 import { AddOrEditListFieldModal } from '../modals/addOrEditListFieldModal';
 import { AddOrEditNumberFieldModal } from '../modals/addOrEditNumberFieldModal';
@@ -21,6 +22,7 @@ export class LayoutItemCreator {
   getLayoutItemModal(itemType: 'Date/Time', frameNumber?: number): AddOrEditDateFieldModal;
   getLayoutItemModal(itemType: 'List', frameNumber?: number): AddOrEditListFieldModal;
   getLayoutItemModal(itemType: 'Time Span', frameNumber?: number): AddOrEditTimeSpanFieldModal;
+  getLayoutItemModal(itemType: 'Formula', frameNumber?: number): AddOrEditFormulaFieldModal;
   getLayoutItemModal(itemType: LayoutItemType, frameNumber?: number): AddOrEditLayoutItemModal;
   getLayoutItemModal(itemType: LayoutItemType, frameNumber: number = 0) {
     switch (itemType) {
@@ -38,6 +40,7 @@ export class LayoutItemCreator {
       case 'Time Span':
         return new AddOrEditTimeSpanFieldModal(this.page, frameNumber);
       case 'Formula':
+        return new AddOrEditFormulaFieldModal(this.page, frameNumber);
       case 'Formatted Text Block':
       default:
         return new AddOrEditLayoutItemModal(this.page, frameNumber);

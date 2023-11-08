@@ -49,6 +49,9 @@ export class EditableContentPage extends BaseContentPage {
           .first();
         return new DateFieldControl(dateTimePicker, this.page);
       }
+      case 'Formula':
+        locator = this.createFormControlSelector(params.fieldName, 'div.data-text-only');
+        break;
       case 'Number':
         locator = this.createFormControlSelector(params.fieldName, 'input[data-field-type="number"]');
         break;

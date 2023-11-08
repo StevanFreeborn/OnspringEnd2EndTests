@@ -5,7 +5,7 @@ export class BasePage {
   readonly page: Page;
   readonly sidebar: SidebarNav;
 
-  constructor(page: Page) {
+  protected constructor(page: Page) {
     this.page = page;
     this.sidebar = new SidebarNav(page);
   }

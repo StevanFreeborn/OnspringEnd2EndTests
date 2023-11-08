@@ -7,7 +7,7 @@ import { EditContentPage } from '../../pageObjectModels/content/editContentPage'
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { AnnotationType } from '../annotations';
 
-test.describe('list field', async () => {
+test.describe('list field', () => {
   test.beforeEach(async ({ appAdminPage, app }) => {
     await appAdminPage.goto(app.id);
     await appAdminPage.layoutTabButton.click();

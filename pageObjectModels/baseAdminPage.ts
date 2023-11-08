@@ -5,7 +5,7 @@ import { BasePage } from './basePage';
 export class BaseAdminPage extends BasePage {
   readonly adminNav: AdminNav;
 
-  constructor(page: Page) {
+  protected constructor(page: Page) {
     super(page);
     this.adminNav = new AdminNav(page);
   }
