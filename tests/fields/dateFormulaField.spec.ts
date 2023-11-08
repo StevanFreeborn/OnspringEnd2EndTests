@@ -30,14 +30,43 @@ test.describe('date formula field', () => {
     });
   });
 
-  test('Create a copy of a Date/Time Formula Field on an app from the Fields & Objects report using the row copy button', async () => {
+  test('Create a copy of a Date/Time Formula Field on an app from the Fields & Objects report using the row copy button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-157',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new DateFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return new Date();',
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the the date formula field to be copied', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the date formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Copy').click();
+
+      const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addDateFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a Date/Time Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
