@@ -1,8 +1,11 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, expect, fieldTest as test } from '../../fixtures';
+import { LayoutItemPermission } from '../../models/layoutItem';
 import { ListValue } from '../../models/listField';
 import { ListFormulaField } from '../../models/listFormulaField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('list formula field', () => {
@@ -357,24 +360,103 @@ test.describe('list formula field', () => {
     });
   });
 
-  test('Delete a List Formula Field from an app', async () => {
+  test('Delete a List Formula Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-172',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+
+    await test.step('Add the list formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the list formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
-  test('Make a List Formula Field private by role to prevent access', async () => {
+  test('Make a List Formula Field private by role to prevent access', async ({
+    sysAdminPage,
+    appAdminPage,
+    app,
+    role,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-174',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the list formula field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the list formula field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Formula',
+      });
+      await expect(contentField).toBeHidden();
+    });
   });
 
   test('Make a List Formula Field private by role to give access', async () => {
