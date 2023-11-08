@@ -34,14 +34,45 @@ test.describe('list formula field', () => {
     });
   });
 
-  test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the row copy button', async () => {
+  test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the row copy button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-167',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the the list formula field to be copied', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the list formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Copy').click();
+
+      const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await addTextFormulaFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      await appAdminPage.page.waitForLoadState('networkidle');
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the Add Field button', async () => {
