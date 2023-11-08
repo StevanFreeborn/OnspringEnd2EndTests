@@ -1,4 +1,7 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, fieldTest as test } from '../../fixtures';
+import { ListValue } from '../../models/listField';
+import { ListFormulaField } from '../../models/listFormulaField';
 import { AnnotationType } from '../annotations';
 
 test.describe('list formula field', () => {
@@ -7,14 +10,28 @@ test.describe('list formula field', () => {
     await appAdminPage.layoutTabButton.click();
   });
 
-  test('Add a List Formula Field to an app from the Fields & Objects report', async () => {
+  test('Add a List Formula Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-166',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+
+    await test.step('Add the list formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a List Formula Field on an app from the Fields & Objects report using the row copy button', async () => {
