@@ -437,14 +437,69 @@ test.describe('date formula field', () => {
     });
   });
 
-  test('Make a Date/Time Formula Field private by role to give access', async () => {
+  test('Make a Date/Time Formula Field private by role to give access', async ({
+    sysAdminPage,
+    appAdminPage,
+    app,
+    role,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-825',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const today = new Date();
+    const expectedFieldValue = today.toLocaleDateString('en-us');
+    const field = new DateFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: `return Date(${today.getTime()});`,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the date formula field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the date formula field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Formula',
+      });
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(expectedFieldValue));
+    });
   });
 
   test('Make a Date/Time Formula Field public', async () => {
