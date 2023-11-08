@@ -339,14 +339,37 @@ test.describe('text formula field', () => {
     });
   });
 
-  test('Delete a Text Formula Field from an app', async () => {
+  test('Delete a Text Formula Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-143',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: 'return "Hello World"',
+    });
+
+    await test.step('Add the text formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the text formula field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Make a Text Formula Field private by role to prevent access', async () => {
