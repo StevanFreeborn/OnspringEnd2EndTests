@@ -21,7 +21,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
 
     await test.step('Add the text formula field', async () => {
@@ -44,7 +44,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const copiedFieldName = `${field.name} (1)`;
 
@@ -83,7 +83,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const copiedFieldName = `${field.name} (1)`;
 
@@ -122,7 +122,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
 
     await test.step('Open layout designer for default layout', async () => {
@@ -157,7 +157,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const copiedFieldName = `${field.name} (1)`;
 
@@ -210,7 +210,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
@@ -259,7 +259,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
@@ -316,7 +316,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
     const updatedFieldName = `${field.name} updated`;
 
@@ -350,7 +350,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
     });
 
     await test.step('Add the text formula field', async () => {
@@ -389,7 +389,7 @@ test.describe('text formula field', () => {
 
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: 'return "Hello World"',
+      formula: 'return "Hello World";',
       permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
     });
     const tabName = 'Tab 2';
@@ -452,7 +452,7 @@ test.describe('text formula field', () => {
     const returnValue = 'Hello World';
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: `return "${returnValue}"`,
+      formula: `return "${returnValue}";`,
       permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
     });
     const tabName = 'Tab 2';
@@ -510,7 +510,7 @@ test.describe('text formula field', () => {
     const returnValue = 'Hello World';
     const field = new TextFormulaField({
       name: FakeDataFactory.createFakeFieldName(),
-      formula: `return "${returnValue}"`,
+      formula: `return "${returnValue}";`,
       permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
     });
     const tabName = 'Tab 2';
