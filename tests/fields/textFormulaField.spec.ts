@@ -437,14 +437,68 @@ test.describe('text formula field', () => {
     });
   });
 
-  test('Make a Text Formula Field private by role to give access', async () => {
+  test('Make a Text Formula Field private by role to give access', async ({
+    sysAdminPage,
+    role,
+    appAdminPage,
+    app,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-821',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const returnValue = 'Hello World';
+    const field = new TextFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      formula: `return "${returnValue}"`,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the text formula field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the text formula field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const contentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Text',
+      });
+      await expect(contentField).toBeVisible();
+      await expect(contentField).toHaveText(new RegExp(returnValue));
+    });
   });
 
   test('Make a Text Formula Field public', async () => {
