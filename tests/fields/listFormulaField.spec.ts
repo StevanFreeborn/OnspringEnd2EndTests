@@ -118,14 +118,41 @@ test.describe('list formula field', () => {
     });
   });
 
-  test('Add a List Formula Field to an app from a layout', async () => {
+  test('Add a List Formula Field to an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-168',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const listValues = [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })];
+    const field = new ListFormulaField({
+      name: FakeDataFactory.createFakeFieldName(),
+      values: listValues,
+      formula: `return [:${listValues[0].value}];`,
+    });
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the list formula field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
+        field.name
+      );
+
+      await expect(fieldInBank).toBeVisible();
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a List Formula Field on an app from a layout', async () => {
