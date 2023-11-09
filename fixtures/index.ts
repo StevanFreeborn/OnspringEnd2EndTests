@@ -5,13 +5,13 @@ import { User } from '../models/user';
 import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
-import { jpegFilePath } from './file.fixtures';
+import { jpgFilePath } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
 import { activeUserWithRole } from './user.fixtures';
 
 type Fixtures = {
   sysAdminPage: Page;
-  jpegFilePath: string;
+  jpgFilePath: string;
 };
 
 type FieldTestFixtures = {
@@ -24,7 +24,7 @@ type FieldTestFixtures = {
 
 export const test = base.extend<Fixtures>({
   sysAdminPage: sysAdminPage,
-  jpegFilePath: jpegFilePath,
+  jpgFilePath: jpgFilePath,
 });
 
 export const fieldTest = test.extend<FieldTestFixtures>({
