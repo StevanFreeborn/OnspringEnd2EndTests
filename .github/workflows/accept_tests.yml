@@ -1,6 +1,6 @@
 name: Run Test Acceptance Test
 env:
-  TEST_ENV: BETA
+  TEST_ENV: BETA # If changed update run_tests job name
   CI: true
   SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
   SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
@@ -101,7 +101,7 @@ jobs:
           echo "shards=${shards_array[@]}"
           echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
-    name: 'Playwright Tests - $TEST_ENV - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    name: 'Playwright Tests - BETA - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: [check_for_test_file_changes, generate_shards]
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
     runs-on: ubuntu-latest
