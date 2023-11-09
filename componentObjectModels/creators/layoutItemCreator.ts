@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 import { LayoutItemType } from '../menus/addLayoutItemMenu';
+import { AddOrEditAttachmentFieldModal } from '../modals/addOrEditAttachmentFieldModal';
 import { AddOrEditDateFieldModal } from '../modals/addOrEditDateFieldModal';
 import { AddOrEditFormulaFieldModal } from '../modals/addOrEditFormulaFieldModal';
 import { AddOrEditImageFieldModal } from '../modals/addOrEditImageFieldModal';
@@ -18,6 +19,7 @@ export class LayoutItemCreator {
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
+  getLayoutItemModal(itemType: 'Attachment', frameNumber?: number): AddOrEditAttachmentFieldModal;
   getLayoutItemModal(itemType: 'Image', frameNumber?: number): AddOrEditImageFieldModal;
   getLayoutItemModal(itemType: 'Text', frameNumber?: number): AddOrEditTextFieldModal;
   getLayoutItemModal(itemType: 'Number', frameNumber?: number): AddOrEditNumberFieldModal;
@@ -37,6 +39,7 @@ export class LayoutItemCreator {
       case 'Text':
         return new AddOrEditTextFieldModal(this.page, frameNumber);
       case 'Attachment':
+        return new AddOrEditAttachmentFieldModal(this.page, frameNumber);
       case 'Image':
         return new AddOrEditImageFieldModal(this.page, frameNumber);
       case 'Reference':
