@@ -354,7 +354,7 @@ test.describe('attachment field', () => {
     app,
     role,
     testUserPage,
-    txtFilePath,
+    txtFile,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -396,7 +396,7 @@ test.describe('attachment field', () => {
         fieldType: 'Attachment',
       });
 
-      await attachmentField.addFile(txtFilePath);
+      await attachmentField.addFile(txtFile.path);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -419,23 +419,170 @@ test.describe('attachment field', () => {
     });
   });
 
-  test('Make an Attachment Field private by role to give access', async () => {
+  test('Make an Attachment Field private by role to give access', async ({
+    sysAdminPage,
+    appAdminPage,
+    app,
+    role,
+    testUserPage,
+    txtFile,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-853',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new AttachmentField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the attachment field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the attachment field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const attachmentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+
+      await attachmentField.addFile(txtFile.path);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const attachmentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+      const attachment = await viewContentPage.getAttachmentByNameFromField(attachmentField, txtFile.name);
+
+      await expect(attachmentField).toBeAttached();
+      await expect(attachment).toBeVisible();
+    });
   });
 
-  test('Make an Attachment Field public', async () => {
+  test('Make an Attachment Field public', async ({ sysAdminPage, appAdminPage, app, role, testUserPage, txtFile }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-97',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new AttachmentField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the attachment field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the attachment field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const attachmentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+
+      await attachmentField.addFile(txtFile.path);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const attachmentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+
+      await expect(attachmentField).toBeHidden();
+    });
+
+    await test.step('Update the attachment field so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
+      await editAttachmentFieldModal.securityTabButton.click();
+      await editAttachmentFieldModal.securityTab.setPermissions([]);
+      await editAttachmentFieldModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const attachmentField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+      const attachment = await viewContentPage.getAttachmentByNameFromField(attachmentField, txtFile.name);
+
+      await expect(attachmentField).toBeAttached();
+      await expect(attachment).toBeVisible();
+    });
   });
 });

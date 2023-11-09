@@ -50,12 +50,11 @@ export class ViewContentPage extends BaseContentPage {
     return image;
   }
 
-  async getAttachmentByFileIdFromField(attachmentField: Locator, fileId: number) {
-    const page = attachmentField.page();
+  async getAttachmentByNameFromField(attachmentField: Locator, fileName: string) {
     return attachmentField
       .locator('.k-grid-content tr')
       .filter({
-        has: page.locator(`input[value="${fileId}"]`),
+        hasText: fileName,
       })
       .first();
   }

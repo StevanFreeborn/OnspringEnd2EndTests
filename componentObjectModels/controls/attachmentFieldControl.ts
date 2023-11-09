@@ -33,7 +33,7 @@ export class AttachmentFieldControl {
       }
 
       const body = await res.json();
-      fileId = body.data[0].fileId;
+      fileId = body.data[0].id;
       return isAddFileResponse !== null;
     });
 

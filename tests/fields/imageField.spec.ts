@@ -352,7 +352,7 @@ test.describe('image field', () => {
     app,
     role,
     testUserPage,
-    jpgFilePath,
+    jpgFile,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -394,7 +394,7 @@ test.describe('image field', () => {
         fieldType: 'Image',
       });
 
-      await imageField.addFile(jpgFilePath);
+      await imageField.addFile(jpgFile.path);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -423,7 +423,7 @@ test.describe('image field', () => {
     app,
     role,
     testUserPage,
-    jpgFilePath,
+    jpgFile,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -466,7 +466,7 @@ test.describe('image field', () => {
         fieldType: 'Image',
       });
 
-      await imageField.addFile(jpgFilePath);
+      fileId = await imageField.addFile(jpgFile.path);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -491,7 +491,7 @@ test.describe('image field', () => {
     });
   });
 
-  test('Make an Image Field public', async ({ sysAdminPage, appAdminPage, app, role, testUserPage, jpgFilePath }) => {
+  test('Make an Image Field public', async ({ sysAdminPage, appAdminPage, app, role, testUserPage, jpgFile }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-115',
@@ -532,7 +532,7 @@ test.describe('image field', () => {
         fieldName: field.name,
         fieldType: 'Image',
       });
-      fileId = await imageField.addFile(jpgFilePath);
+      fileId = await imageField.addFile(jpgFile.path);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
