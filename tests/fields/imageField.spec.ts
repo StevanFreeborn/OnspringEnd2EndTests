@@ -313,14 +313,34 @@ test.describe('image field', () => {
     });
   });
 
-  test('Delete an Image Field from an app', async () => {
+  test('Delete an Image Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-113',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Add the image field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the image field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Make an Image Field private by role to prevent access', async () => {
