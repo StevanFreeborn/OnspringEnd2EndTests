@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, fieldTest as test } from '../../fixtures';
 import { AttachmentField } from '../../models/attachmentField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
@@ -230,14 +230,58 @@ test.describe('attachment field', () => {
     });
   });
 
-  test("Remove an Attachment Field from an app's layout", async () => {
+  test("Remove an Attachment Field from an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-93',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    let fieldInBank: Locator;
+    let fieldLayoutDropzone: Locator;
+
+    await test.step('Add the attachment field that will be removed from layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      fieldLayoutDropzone = dropzone;
+      fieldInBank = fieldFromBank;
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Remove the attachment field from the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await fieldLayoutDropzone.hover();
+      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was removed from the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+      const attachmentField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
+
+      await expect(attachmentField.control).toBeHidden();
+    });
   });
 
   test('Update the configuration of an Attachment Field on an app', async () => {
