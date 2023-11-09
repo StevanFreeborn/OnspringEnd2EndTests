@@ -21,6 +21,9 @@ export class ViewContentPage extends BaseContentPage {
     let locator: string;
 
     switch (fieldType) {
+      case 'Attachment':
+        locator = this.createFormControlSelector(fieldName, 'div.type-attachment');
+        break;
       case 'Image':
         locator = this.createFormControlSelector(fieldName, 'div.type-image');
         break;
@@ -45,5 +48,15 @@ export class ViewContentPage extends BaseContentPage {
     }
 
     return image;
+  }
+
+  async getAttachmentByFileIdFromField(attachmentField: Locator, fileId: number) {
+    const page = attachmentField.page();
+    return attachmentField
+      .locator('.k-grid-content tr')
+      .filter({
+        has: page.locator(`input[value="${fileId}"]`),
+      })
+      .first();
   }
 }
