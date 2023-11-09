@@ -315,14 +315,34 @@ test.describe('attachment field', () => {
     });
   });
 
-  test('Delete an Attachment Field from an app', async () => {
+  test('Delete an Attachment Field from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-95',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Add the attachment field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Delete the attachment field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the field was deleted', async () => {
+      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: field.name,
+      });
+
+      await expect(deletedFieldRow).toBeHidden();
+    });
   });
 
   test('Make an Attachment Field private by role to prevent access', async () => {
