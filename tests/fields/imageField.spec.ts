@@ -99,14 +99,36 @@ test.describe('image field', () => {
     });
   });
 
-  test('Add an Image Field to an app from a layout', async () => {
+  test('Add an Image Field to an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-108',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({ name: FakeDataFactory.createFakeFieldName() });
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the image field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Verify the image was added', async () => {
+      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
+        field.name
+      );
+
+      await expect(fieldInBank).toBeVisible();
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+
+      await expect(fieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of an Image Field on an app from a layout', async () => {
