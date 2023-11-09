@@ -131,14 +131,54 @@ test.describe('image field', () => {
     });
   });
 
-  test('Create a copy of an Image Field on an app from a layout', async () => {
+  test('Create a copy of an Image Field on an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-109',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the image field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Add a copy of the image field', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem('Image');
+
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addImageFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Image', 1);
+
+      await expect(addImageFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addImageFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedField =
+        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
+
+      await expect(copiedField).toBeVisible();
+      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test("Add an Image Field to an app's layout", async () => {
