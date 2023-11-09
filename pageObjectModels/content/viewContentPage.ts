@@ -21,6 +21,9 @@ export class ViewContentPage extends BaseContentPage {
     let locator: string;
 
     switch (fieldType) {
+      case 'Image':
+        locator = this.createFormControlSelector(fieldName, 'div.type-image');
+        break;
       default:
         locator = this.createFormControlSelector(fieldName, 'div.data-text-only');
         break;

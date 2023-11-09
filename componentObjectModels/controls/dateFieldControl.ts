@@ -91,14 +91,14 @@ export class DateFieldControl {
   readonly calendarButton: Locator;
   readonly clockButton: Locator;
 
-  constructor(dateTimePicker: Locator, page: Page) {
-    this.page = page;
-    this.calendarModal = page.locator('div.k-calendar:visible').first();
+  constructor(dateTimePicker: Locator) {
+    this.page = dateTimePicker.page();
+    this.calendarModal = this.page.locator('div.k-calendar:visible').first();
     this.previousMonthButton = this.calendarModal.getByRole('button', { name: 'Previous' });
     this.nextMonthButton = this.calendarModal.getByRole('button', { name: 'Next' });
     this.fastNavButton = this.calendarModal.locator('a.k-nav-fast').first();
-    this.datesTable = page.locator('div.k-calendar-view:visible').first();
-    this.timeSelect = page.locator('div.timepicker-list-container:visible').first();
+    this.datesTable = this.page.locator('div.k-calendar-view:visible').first();
+    this.timeSelect = this.page.locator('div.timepicker-list-container:visible').first();
     this.input = dateTimePicker.locator('input');
     this.calendarButton = dateTimePicker.locator('.k-link-date');
     this.clockButton = dateTimePicker.locator('.k-link-time');

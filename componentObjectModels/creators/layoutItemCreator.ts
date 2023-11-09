@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddOrEditDateFieldModal } from '../modals/addOrEditDateFieldModal';
 import { AddOrEditFormulaFieldModal } from '../modals/addOrEditFormulaFieldModal';
+import { AddOrEditImageFieldModal } from '../modals/addOrEditImageFieldModal';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
 import { AddOrEditListFieldModal } from '../modals/addOrEditListFieldModal';
 import { AddOrEditNumberFieldModal } from '../modals/addOrEditNumberFieldModal';
@@ -17,6 +18,7 @@ export class LayoutItemCreator {
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
+  getLayoutItemModal(itemType: 'Image', frameNumber?: number): AddOrEditImageFieldModal;
   getLayoutItemModal(itemType: 'Text', frameNumber?: number): AddOrEditTextFieldModal;
   getLayoutItemModal(itemType: 'Number', frameNumber?: number): AddOrEditNumberFieldModal;
   getLayoutItemModal(itemType: 'Date/Time', frameNumber?: number): AddOrEditDateFieldModal;
@@ -36,6 +38,7 @@ export class LayoutItemCreator {
         return new AddOrEditTextFieldModal(this.page, frameNumber);
       case 'Attachment':
       case 'Image':
+        return new AddOrEditImageFieldModal(this.page, frameNumber);
       case 'Reference':
       case 'Time Span':
         return new AddOrEditTimeSpanFieldModal(this.page, frameNumber);
