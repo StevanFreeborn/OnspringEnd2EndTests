@@ -61,14 +61,42 @@ test.describe('image field', () => {
     });
   });
 
-  test('Create a copy of an Image Field on an app from the Fields & Objects report using the Add Field button', async () => {
+  test('Create a copy of an Image Field on an app from the Fields & Objects report using the Add Field button', async ({
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-832',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({ name: FakeDataFactory.createFakeFieldName() });
+    const copiedFieldName = `${field.name} (1)`;
+
+    await test.step('Add the image field to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the image field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
+
+      await expect(addImageFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addImageFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+    });
   });
 
   test('Add an Image Field to an app from a layout', async () => {
