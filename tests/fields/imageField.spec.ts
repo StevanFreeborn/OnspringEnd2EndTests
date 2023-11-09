@@ -119,7 +119,7 @@ test.describe('image field', () => {
       await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
     });
 
-    await test.step('Verify the image was added', async () => {
+    await test.step('Verify the image field was added', async () => {
       const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
         field.name
       );
