@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { DateFieldControl } from '../../componentObjectModels/controls/dateFieldControl';
+import { ImageFieldControl } from '../../componentObjectModels/controls/imageFieldControl';
 import { TimeSpanFieldControl } from '../../componentObjectModels/controls/timeSpanFieldControl';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BaseContentPage } from './baseContentPage';
@@ -22,11 +23,16 @@ export type GetTimeSpanFieldParams = BaseGetFieldParams & {
   fieldType: 'Time Span';
 };
 
+export type GetImageFieldParams = BaseGetFieldParams & {
+  fieldType: 'Image';
+};
+
 export class EditableContentPage extends BaseContentPage {
   constructor(page: Page) {
     super(page);
   }
 
+  async getField(params: GetImageFieldParams): Promise<ImageFieldControl>;
   async getField(params: GetTimeSpanFieldParams): Promise<TimeSpanFieldControl>;
   async getField(params: GetDateFieldParams): Promise<DateFieldControl>;
   async getField(params: GetFieldParams): Promise<Locator>;
@@ -36,6 +42,11 @@ export class EditableContentPage extends BaseContentPage {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'Image': {
+        return new ImageFieldControl(
+          section.locator(this.createFormControlSelector(params.fieldName, 'div.type-image')).first()
+        );
+      }
       case 'Time Span': {
         return new TimeSpanFieldControl(
           section.locator(this.createFormControlSelector(params.fieldName, 'div.timespan-base')).first()
@@ -47,7 +58,7 @@ export class EditableContentPage extends BaseContentPage {
         const dateTimePicker = section
           .locator(this.createFormControlSelector(params.fieldName, 'span.k-datetimepicker'))
           .first();
-        return new DateFieldControl(dateTimePicker, this.page);
+        return new DateFieldControl(dateTimePicker);
       }
       case 'Formula':
         locator = this.createFormControlSelector(params.fieldName, 'div.data-text-only');
