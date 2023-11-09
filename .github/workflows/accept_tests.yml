@@ -86,6 +86,7 @@ jobs:
           echo "shards=${shards_array[@]}"
           echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
+    name: 'Playwright Tests - $TEST_ENV - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: [check_for_test_file_changes, generate_shards]
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
     env:
