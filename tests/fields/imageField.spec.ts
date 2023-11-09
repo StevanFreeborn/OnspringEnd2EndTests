@@ -395,7 +395,6 @@ test.describe('image field', () => {
       });
 
       await imageField.addFile(jpegFilePath);
-
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
@@ -413,18 +412,83 @@ test.describe('image field', () => {
         fieldName: field.name,
         fieldType: 'Image',
       });
+
       await expect(imageField).toBeHidden();
     });
   });
 
-  test('Make an Image Field private by role to give access', async () => {
+  test('Make an Image Field private by role to give access', async ({
+    sysAdminPage,
+    appAdminPage,
+    app,
+    role,
+    testUserPage,
+    jpegFilePath,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-833',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({
+      name: FakeDataFactory.createFakeFieldName(),
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+    let fileId: number;
+
+    await test.step('Add the image field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the image field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const imageField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Image',
+      });
+
+      await imageField.addFile(jpegFilePath);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const imageField = await viewContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Image',
+      });
+      const image = await viewContentPage.getImageByFileIdFromField(imageField, fileId);
+
+      await expect(imageField).toBeAttached();
+      await expect(image).toBeVisible();
+    });
   });
 
   test('Make an Image Field public', async () => {

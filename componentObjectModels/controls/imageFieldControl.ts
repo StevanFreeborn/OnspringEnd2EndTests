@@ -16,11 +16,26 @@ export class ImageFieldControl {
   }
 
   async addFile(filePath: string) {
+    let fileId = 0;
+
     const fileChooserPromise = this.page.waitForEvent('filechooser');
-    const addFileResponse = this.page.waitForResponse(this.addFileEndpointRegex);
+    const addFileResponse = this.page.waitForResponse(async res => {
+      const isAddFileResponse = res.url().match(this.addFileEndpointRegex);
+
+      if (isAddFileResponse === null) {
+        return false;
+      }
+
+      const body = await res.json();
+      fileId = body.data[0].fileId;
+      return isAddFileResponse !== null;
+    });
+
     await this.browseButton.click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(filePath);
     await addFileResponse;
+
+    return fileId;
   }
 }

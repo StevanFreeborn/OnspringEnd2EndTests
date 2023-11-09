@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { BASE_URL } from '../../playwright.config';
 import { BaseContentPage } from './baseContentPage';
 import { GetFieldParams } from './editableContentPage';
@@ -30,5 +30,20 @@ export class ViewContentPage extends BaseContentPage {
     }
 
     return section.locator(locator).first();
+  }
+
+  async getImageByFileIdFromField(imageField: Locator, fileId: number) {
+    const alLImages = await imageField.locator('.image').all();
+
+    const image = alLImages.find(async image => {
+      const src = await image.getAttribute('src');
+      return src && src.includes(`fileId=${fileId}`);
+    });
+
+    if (image === undefined) {
+      throw new Error(`Could not find image with fileId: ${fileId}`);
+    }
+
+    return image;
   }
 }
