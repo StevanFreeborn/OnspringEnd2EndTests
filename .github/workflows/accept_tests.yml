@@ -1,4 +1,19 @@
 name: Run Test Acceptance Test
+env:
+  TEST_ENV: BETA
+  CI: true
+  SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
+  SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
+  SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
+  SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
+  SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
+  ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
+  BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
+  QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
+  IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
+  VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
+  VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
+  PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
 on:
   pull_request:
     branches:
@@ -89,21 +104,6 @@ jobs:
     name: 'Playwright Tests - $TEST_ENV - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: [check_for_test_file_changes, generate_shards]
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
-    env:
-      CI: true
-      SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
-      SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
-      SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
-      SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
-      SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
-      TEST_ENV: BETA
-      ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
-      BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
-      QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
-      IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
-      VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
-      VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
-      PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
