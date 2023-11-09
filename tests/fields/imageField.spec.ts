@@ -282,14 +282,35 @@ test.describe('image field', () => {
     });
   });
 
-  test('Update the configuration of an Image Field on an app', async () => {
+  test('Update the configuration of an Image Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-112',
     });
 
-    // Implement test
-    expect(false).toBe(true);
+    const field = new ImageField({ name: FakeDataFactory.createFakeFieldName() });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the image field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the image field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
+      await editImageFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editImageFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete an Image Field from an app', async () => {
