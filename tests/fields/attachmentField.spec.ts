@@ -284,14 +284,35 @@ test.describe('attachment field', () => {
     });
   });
 
-  test('Update the configuration of an Attachment Field on an app', async () => {
+  test('Update the configuration of an Attachment Field on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-94',
     });
 
-    // TODO: Implement this test
-    expect(false).toBe(true);
+    const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
+    const updatedFieldName = `${field.name} updated`;
+
+    await test.step('Add the attachment field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Update the attachment field', async () => {
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
+      await editAttachmentFieldModal.generalTab.fieldInput.fill(updatedFieldName);
+      await editAttachmentFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was updated', async () => {
+      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedFieldName,
+      });
+      await expect(updatedFieldRow).toBeVisible();
+    });
   });
 
   test('Delete an Attachment Field from an app', async () => {
