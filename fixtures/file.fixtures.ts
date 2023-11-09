@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-type FileExtension = '.jpg';
+type FileExtension = '.jpg' | '.txt';
 
 async function getTestFileWithExtension(extension: FileExtension) {
   const testFilesDir = path.join(__dirname, 'testFiles');
@@ -15,5 +15,10 @@ async function getTestFileWithExtension(extension: FileExtension) {
 
 export async function jpgFilePath({}, use: (r: string) => Promise<void>) {
   const filePath = await getTestFileWithExtension('.jpg');
+  await use(filePath);
+}
+
+export async function txtFilePath({}, use: (r: string) => Promise<void>) {
+  const filePath = await getTestFileWithExtension('.txt');
   await use(filePath);
 }

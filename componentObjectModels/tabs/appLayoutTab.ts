@@ -33,6 +33,11 @@ export class AppLayoutTab extends LayoutItemCreator {
     switch (item.type) {
       case 'Formatted Text Block':
         break;
+      case 'Attachment': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        break;
+      }
       case 'Image': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item);

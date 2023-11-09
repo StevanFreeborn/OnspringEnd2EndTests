@@ -2,14 +2,14 @@ import { Locator, Page } from '@playwright/test';
 
 export class ImageFieldControl {
   private readonly page: Page;
-  private readonly addFileEndpointRegex;
+  private readonly saveImageEndpointRegex;
   readonly control: Locator;
   readonly dropzone: Locator;
   readonly browseButton: Locator;
 
   constructor(imageField: Locator) {
     this.page = imageField.page();
-    this.addFileEndpointRegex = /\/Content\/(\d+\/)?\d+\/SaveImages/;
+    this.saveImageEndpointRegex = /\/Content\/(\d+\/)?\d+\/SaveImages/;
     this.control = imageField;
     this.dropzone = imageField.locator('.image-dropzone');
     this.browseButton = imageField.locator('.k-upload-button');
@@ -20,7 +20,7 @@ export class ImageFieldControl {
 
     const fileChooserPromise = this.page.waitForEvent('filechooser');
     const addFileResponse = this.page.waitForResponse(async res => {
-      const isAddFileResponse = res.url().match(this.addFileEndpointRegex);
+      const isAddFileResponse = res.url().match(this.saveImageEndpointRegex);
 
       if (isAddFileResponse === null) {
         return false;

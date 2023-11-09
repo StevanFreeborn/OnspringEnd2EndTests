@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { AttachmentFieldControl } from '../../componentObjectModels/controls/attachmentFieldControl';
 import { DateFieldControl } from '../../componentObjectModels/controls/dateFieldControl';
 import { ImageFieldControl } from '../../componentObjectModels/controls/imageFieldControl';
 import { TimeSpanFieldControl } from '../../componentObjectModels/controls/timeSpanFieldControl';
@@ -27,11 +28,16 @@ export type GetImageFieldParams = BaseGetFieldParams & {
   fieldType: 'Image';
 };
 
+export type GetAttachmentFieldParams = BaseGetFieldParams & {
+  fieldType: 'Attachment';
+};
+
 export class EditableContentPage extends BaseContentPage {
   constructor(page: Page) {
     super(page);
   }
 
+  async getField(params: GetAttachmentFieldParams): Promise<AttachmentFieldControl>;
   async getField(params: GetImageFieldParams): Promise<ImageFieldControl>;
   async getField(params: GetTimeSpanFieldParams): Promise<TimeSpanFieldControl>;
   async getField(params: GetDateFieldParams): Promise<DateFieldControl>;
@@ -42,6 +48,11 @@ export class EditableContentPage extends BaseContentPage {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'Attachment': {
+        return new AttachmentFieldControl(
+          section.locator(this.createFormControlSelector(params.fieldName, 'div.type-attachment')).first()
+        );
+      }
       case 'Image': {
         return new ImageFieldControl(
           section.locator(this.createFormControlSelector(params.fieldName, 'div.type-image')).first()
