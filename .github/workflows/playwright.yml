@@ -101,6 +101,7 @@ jobs:
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
       - name: Rename blob-reports
+        if: always()
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
         if: always()
