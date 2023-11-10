@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { AttachmentFieldGeneralTab } from '../tabs/attachmentFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditAttachmentFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditAttachmentFieldModal extends AddOrEditFieldModal {
   readonly generalTab: AttachmentFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

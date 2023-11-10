@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { ReferenceFieldGeneralTab } from '../tabs/referenceFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditReferenceFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditReferenceFieldModal extends AddOrEditFieldModal {
   readonly generalTab: ReferenceFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

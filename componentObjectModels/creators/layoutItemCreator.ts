@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { LayoutItemType } from '../menus/addLayoutItemMenu';
 import { AddOrEditAttachmentFieldModal } from '../modals/addOrEditAttachmentFieldModal';
 import { AddOrEditDateFieldModal } from '../modals/addOrEditDateFieldModal';
+import { AddOrEditFormattedBlockModal } from '../modals/addOrEditFormattedTextBlockModal';
 import { AddOrEditFormulaFieldModal } from '../modals/addOrEditFormulaFieldModal';
 import { AddOrEditImageFieldModal } from '../modals/addOrEditImageFieldModal';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
@@ -20,6 +21,7 @@ export class LayoutItemCreator {
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
+  getLayoutItemModal(itemType: 'Formatted Text Block', frameNumber?: number): AddOrEditFormattedBlockModal;
   getLayoutItemModal(itemType: 'Reference', frameNumber?: number): AddOrEditReferenceFieldModal;
   getLayoutItemModal(itemType: 'Attachment', frameNumber?: number): AddOrEditAttachmentFieldModal;
   getLayoutItemModal(itemType: 'Image', frameNumber?: number): AddOrEditImageFieldModal;
@@ -51,8 +53,9 @@ export class LayoutItemCreator {
       case 'Formula':
         return new AddOrEditFormulaFieldModal(this.page, frameNumber);
       case 'Formatted Text Block':
+        return new AddOrEditFormattedBlockModal(this.page);
       default:
-        return new AddOrEditLayoutItemModal(this.page, frameNumber);
+        throw new Error(`Unknown layout item type: ${itemType}`);
     }
   }
 }

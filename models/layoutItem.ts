@@ -22,7 +22,7 @@ export type LayoutItemObject = {
   id?: number;
   name: string;
   permissions?: LayoutItemPermission[];
-  type?: LayoutItemType;
+  type: LayoutItemType;
 };
 
 export abstract class LayoutItem {
@@ -31,7 +31,7 @@ export abstract class LayoutItem {
   readonly type: LayoutItemType;
   readonly permissions: LayoutItemPermission[];
 
-  constructor({ name, type = 'Text', id = 0, permissions = [] }: LayoutItemObject) {
+  constructor({ name, type, id = 0, permissions = [] }: LayoutItemObject) {
     this.id = id;
     this.name = name;
     this.type = type;

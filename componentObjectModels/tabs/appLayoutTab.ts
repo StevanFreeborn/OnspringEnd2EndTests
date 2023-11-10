@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { FormattedTextBlock } from '../../models/formattedTextBlock';
 import { FormulaField } from '../../models/formulaField';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
@@ -32,8 +33,11 @@ export class AppLayoutTab extends LayoutItemCreator {
 
   private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
     switch (item.type) {
-      case 'Formatted Text Block':
+      case 'Formatted Text Block': {
+        const addTextBlockModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addTextBlockModal.generalTab.fillOutGeneralTab(item as FormattedTextBlock);
         break;
+      }
       case 'Reference': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item as ReferenceField);
@@ -110,9 +114,21 @@ export class AppLayoutTab extends LayoutItemCreator {
 
   async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
     const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+    const objectTab = this.layoutDesignerModal.layoutItemsSection.objectsTab;
 
-    if ((await fieldTab.addFieldButton.isVisible()) === false) {
-      await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+    switch (item.type) {
+      case 'Formatted Text Block': {
+        if ((await objectTab.addObjectButton.isVisible()) === false) {
+          await this.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+        }
+        break;
+      }
+      default: {
+        if ((await fieldTab.addFieldButton.isVisible()) === false) {
+          await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+        }
+        break;
+      }
     }
 
     await fieldTab.addFieldButton.click();

@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, layoutItemTest as test } from '../../fixtures';
 import { AttachmentField } from '../../models/attachmentField';
 import { LayoutItemPermission } from '../../models/layoutItem';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
