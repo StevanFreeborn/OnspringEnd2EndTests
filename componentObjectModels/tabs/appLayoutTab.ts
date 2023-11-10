@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { FormulaField } from '../../models/formulaField';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
+import { ReferenceField } from '../../models/referenceField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
@@ -33,6 +34,11 @@ export class AppLayoutTab extends LayoutItemCreator {
     switch (item.type) {
       case 'Formatted Text Block':
         break;
+      case 'Reference': {
+        const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as ReferenceField);
+        break;
+      }
       case 'Attachment': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item);
