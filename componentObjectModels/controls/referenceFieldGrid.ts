@@ -4,19 +4,19 @@ import { BASE_URL } from '../../playwright.config';
 export class ReferenceFieldGrid {
   private readonly page: Page;
   private readonly pathRegex: RegExp;
-  private readonly control: Locator;
+  readonly control: Locator;
   readonly filterInput: Locator;
   readonly searchResults: Locator;
   readonly createNewButton: Locator;
   readonly quickAddButton: Locator;
   readonly gridTable: Locator;
 
-  constructor(page: Page, controlLocator: string) {
-    this.page = page;
+  constructor(control: Locator) {
+    this.page = control.page();
     this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/EditReferenceSearchList`);
-    this.control = page.locator(controlLocator);
+    this.control = control;
     this.filterInput = this.control.getByPlaceholder('Select Related');
-    this.searchResults = page.locator('div.grid-search-results:visible');
+    this.searchResults = this.page.locator('div.grid-search-results:visible');
     this.createNewButton = this.control.getByRole('button', { name: 'Create New' });
     this.quickAddButton = this.control.getByRole('button', { name: 'Quick Add' });
     this.gridTable = this.control.getByRole('grid');

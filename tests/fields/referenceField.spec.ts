@@ -8,6 +8,7 @@ import { ReferenceField } from '../../models/referenceField';
 import { AppPermission, Permission, Role } from '../../models/role';
 import { User } from '../../models/user';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
 import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
 import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
@@ -279,14 +280,51 @@ test.describe('reference field', () => {
     });
   });
 
-  test("Add a Reference Field to an app's layout", async () => {
+  test("Add a Reference Field to an app's layout", async ({ sysAdminPage, appAdminPage, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-120',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Add the reference field that will be added to layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add the reference field to the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+
+      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(field.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the field was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+
+      const referenceField = await addContentPage.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+
+      await expect(referenceField.control).toBeVisible();
+    });
   });
 
   test("Remove a Reference Field from an app's layout", async () => {

@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { AttachmentFieldControl } from '../../componentObjectModels/controls/attachmentFieldControl';
 import { DateFieldControl } from '../../componentObjectModels/controls/dateFieldControl';
 import { ImageFieldControl } from '../../componentObjectModels/controls/imageFieldControl';
+import { ReferenceFieldGrid } from '../../componentObjectModels/controls/referenceFieldGrid';
 import { TimeSpanFieldControl } from '../../componentObjectModels/controls/timeSpanFieldControl';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BaseContentPage } from './baseContentPage';
@@ -32,11 +33,16 @@ export type GetAttachmentFieldParams = BaseGetFieldParams & {
   fieldType: 'Attachment';
 };
 
+export type GetReferenceFieldParams = BaseGetFieldParams & {
+  fieldType: 'Reference';
+};
+
 export class EditableContentPage extends BaseContentPage {
   constructor(page: Page) {
     super(page);
   }
 
+  async getField(params: GetReferenceFieldParams): Promise<ReferenceFieldGrid>;
   async getField(params: GetAttachmentFieldParams): Promise<AttachmentFieldControl>;
   async getField(params: GetImageFieldParams): Promise<ImageFieldControl>;
   async getField(params: GetTimeSpanFieldParams): Promise<TimeSpanFieldControl>;
@@ -48,6 +54,10 @@ export class EditableContentPage extends BaseContentPage {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'Reference':
+        return new ReferenceFieldGrid(
+          section.locator(this.createFormControlSelector(params.fieldName, 'div.onx-reference-grid')).first()
+        );
       case 'Attachment': {
         return new AttachmentFieldControl(
           section.locator(this.createFormControlSelector(params.fieldName, 'div.type-attachment')).first()
