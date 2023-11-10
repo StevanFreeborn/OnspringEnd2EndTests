@@ -2,7 +2,7 @@ import { Browser, Page, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { User } from '../models/user';
-import { SYS_ADMIN_AUTH_PATH } from '../playwright.config';
+import { BASE_URL, SYS_ADMIN_AUTH_PATH } from '../playwright.config';
 
 export async function sysAdminPage(
   { browser }: { browser: Browser },
@@ -47,6 +47,16 @@ export async function createBaseAuthPage(
   });
 
   const page = await context.newPage();
+
+  // Onspring servers timeout after 100 seconds.
+  // Want to fail tests when timeouts occur as opposed to hanging.
+  page.on('response', response => {
+    const url = response.url();
+
+    if (url.includes(BASE_URL) && response.status() === 524) {
+      throw new Error(`Request to ${url} timed out.`);
+    }
+  });
 
   try {
     await use(page);
