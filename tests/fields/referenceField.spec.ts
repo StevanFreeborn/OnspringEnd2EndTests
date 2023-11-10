@@ -137,24 +137,88 @@ test.describe('reference field', () => {
     });
   });
 
-  test('Create a copy of a Reference Field on an app from the Fields & Objects report using the Add Field button', async () => {
+  test('Create a copy of a Reference Field on an app from the Fields & Objects report using the Add Field button', async ({
+    appAdminPage,
+    referencedApp,
+    app,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-854',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
+    const copiedFieldName = `${field.name} (1)`;
+    const copiedParallelFieldName = `${app.name} (1)`;
+
+    await test.step('Add the reference field to copy', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+    });
+
+    await test.step('Add a copy of the reference field', async () => {
+      await appAdminPage.layoutTab.addFieldButton.click();
+      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
+
+      await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+
+      await addTextFieldModal.saveButton.click();
+    });
+
+    await test.step('Verify the field was copied', async () => {
+      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedFieldName,
+      });
+      await expect(copiedFieldRow).toBeVisible();
+
+      await appAdminPage.goto(referencedApp.id);
+      await appAdminPage.layoutTabButton.click();
+      const copiedParallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedParallelFieldName,
+      });
+      await expect(copiedParallelFieldRow).toBeVisible();
+    });
   });
 
-  test('Add a Reference Field to an app from a layout', async () => {
+  test('Add a Reference Field to an app from a layout', async ({ appAdminPage, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-118',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the reference field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+    });
+
+    await test.step('Verify the field was added', async () => {
+      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
+        field.name
+      );
+      await expect(fieldInBank).toBeVisible();
+      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await expect(fieldRow).toBeVisible();
+
+      await appAdminPage.goto(referencedApp.id);
+      await appAdminPage.layoutTabButton.click();
+      const parallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: app.name });
+      await expect(parallelFieldRow).toBeVisible();
+    });
   });
 
   test('Create a copy of a Reference Field on an app from a layout', async () => {
