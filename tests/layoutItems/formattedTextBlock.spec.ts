@@ -483,7 +483,7 @@ test.describe('formatted text block', () => {
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
-    await test.step('Create a record with a value in the formatted text block as system admin', async () => {
+    await test.step('Create a record with the formatted text block as system admin', async () => {
       await addContentPage.goto(app.id);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
@@ -506,13 +506,87 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test('Make a Formatted Text Block Object public', async () => {
+  test('Make a Formatted Text Block Object public', async ({ sysAdminPage, role, appAdminPage, app, testUserPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-185',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'This should be visible to the test user',
+      permissions: [new LayoutItemPermission({ roleName: role.name })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the formatted text block', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textBlock);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        objectName: textBlock.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with the formatted text block as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the text block by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the text block is not visible', async () => {
+      const textBlockContent = await viewContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: textBlock.name,
+      });
+      await expect(textBlockContent).toBeHidden();
+    });
+
+    await test.step('Update the text block so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
+      await textBlockRow.hover();
+      await textBlockRow.getByTitle('Edit').click();
+
+      const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
+      await editTextBlockModal.securityTabButton.click();
+      await editTextBlockModal.securityTab.setPermissions([]);
+      await editTextBlockModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+      await viewContentPage.page.reload();
+    });
+
+    await test.step('Verify the text block is visible', async () => {
+      const textBlockContent = await viewContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: textBlock.name,
+      });
+      await expect(textBlockContent).toBeVisible();
+      await expect(textBlockContent).toHaveText(new RegExp(textBlock.formattedText));
+    });
   });
 });
