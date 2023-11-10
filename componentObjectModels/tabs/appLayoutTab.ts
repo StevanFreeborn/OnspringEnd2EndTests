@@ -102,6 +102,7 @@ export class AppLayoutTab extends LayoutItemCreator {
    */
   async openLayout(layoutName: string = 'Default Layout') {
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
