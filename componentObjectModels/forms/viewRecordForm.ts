@@ -13,6 +13,9 @@ export class ViewRecordForm extends BaseForm {
     let locator: string;
 
     switch (fieldType) {
+      case 'Reference':
+        locator = this.createFormControlSelector(fieldName, 'div.type-reference');
+        break;
       case 'Attachment':
         locator = this.createFormControlSelector(fieldName, 'div.type-attachment');
         break;

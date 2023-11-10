@@ -26,8 +26,29 @@ export class CreateRecordModal {
   }
 
   async saveRecord() {
-    const createRecordResponse = this.page.waitForResponse(this.createRecordEndpointRegex);
+    let recordId = 0;
+
+    const createRecordResponse = this.page.waitForResponse(async res => {
+      const method = res.request().method();
+      const isCreateRecordResponse = res.url().match(this.createRecordEndpointRegex);
+
+      if (isCreateRecordResponse === null) {
+        return false;
+      }
+
+      if (method !== 'POST') {
+        return false;
+      }
+
+      const body = await res.json();
+      recordId = body.data.recordId;
+
+      return isCreateRecordResponse !== null;
+    });
+
     await this.saveButton.click();
     await createRecordResponse;
+
+    return recordId;
   }
 }

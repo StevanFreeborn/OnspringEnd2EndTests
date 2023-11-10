@@ -22,6 +22,11 @@ export class ReferenceFieldGrid {
     this.gridTable = this.control.getByRole('grid');
   }
 
+  async openCreateNewRecordModal() {
+    await this.createNewButton.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
   async isGridEmpty() {
     const rowCount = await this.gridTable.locator('tbody > tr').count();
     return rowCount === 0;

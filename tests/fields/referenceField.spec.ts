@@ -501,7 +501,7 @@ test.describe('reference field', () => {
         fieldType: 'Reference',
       });
 
-      await referenceField.createNewButton.click();
+      await referenceField.openCreateNewRecordModal();
       await createRecordModal.saveRecord();
 
       await addContentPage.saveRecordButton.click();
@@ -525,23 +525,186 @@ test.describe('reference field', () => {
     });
   });
 
-  test('Make a Reference Field private by role to give access', async () => {
+  test('Make a Reference Field private by role to give access', async ({
+    sysAdminPage,
+    appAdminPage,
+    referencedApp,
+    app,
+    role,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-855',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new ReferenceField({
+      name: FakeDataFactory.createFakeFieldName(),
+      reference: referencedApp.name,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const createRecordModal = new CreateRecordModal(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+    let referencedRecordId: number;
+
+    await test.step('Add the reference field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the reference field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const referenceField = await addContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+
+      await referenceField.openCreateNewRecordModal();
+      referencedRecordId = await createRecordModal.saveRecord();
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const referenceField = await viewContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+      const referencedRecord = referenceField.getByRole('row', { name: referencedRecordId.toString() });
+
+      await expect(referenceField).toBeVisible();
+      await expect(referencedRecord).toBeVisible();
+    });
   });
 
-  test('Make a Reference Field public', async () => {
+  test('Make a Reference Field public', async ({
+    sysAdminPage,
+    appAdminPage,
+    referencedApp,
+    app,
+    role,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-125',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const field = new ReferenceField({
+      name: FakeDataFactory.createFakeFieldName(),
+      reference: referencedApp.name,
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const createRecordModal = new CreateRecordModal(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+    let referencedRecordId: number;
+
+    await test.step('Add the reference field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the reference field as system admin', async () => {
+      await addContentPage.goto(app.id);
+      const referenceField = await addContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+
+      await referenceField.openCreateNewRecordModal();
+      referencedRecordId = await createRecordModal.saveRecord();
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is not visible', async () => {
+      const referenceField = await viewContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+      await expect(referenceField).toBeHidden();
+    });
+
+    await test.step('Update the reference field so that it is public', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
+      await fieldRow.hover();
+      await fieldRow.getByTitle('Edit').click();
+
+      const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
+      await editReferenceFieldModal.securityTabButton.click();
+      await editReferenceFieldModal.securityTab.setPermissions([]);
+      await editReferenceFieldModal.saveButton.click();
+    });
+
+    await test.step('Navigate to created record again as test user', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the field is visible', async () => {
+      const referenceField = await viewContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Reference',
+      });
+      const referencedRecord = referenceField.getByRole('row', { name: referencedRecordId.toString() });
+
+      await expect(referenceField).toBeVisible();
+      await expect(referencedRecord).toBeVisible();
+    });
   });
 });
