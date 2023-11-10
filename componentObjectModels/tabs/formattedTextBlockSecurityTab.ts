@@ -24,15 +24,15 @@ export class FormattedTextBlockSecurityTab extends LayoutItemSecurityTab {
 
   async setPermissions(permissions: LayoutItemPermission[]): Promise<void> {
     if (permissions.length) {
-      const roleNames = permissions.map(p => p.roleName);
-
       await this.viewSelect.click();
       await this.page.getByRole('option', { name: 'Private by Role' }).click();
 
       await this.roleSelector.click();
 
-      for (const roleName of roleNames) {
-        await this.getUnselectedSelectorOption(roleName).click();
+      for (const permission of permissions) {
+        if (permission.read) {
+          await this.getUnselectedSelectorOption(permission.roleName).click();
+        }
       }
 
       await this.selectorCloseButton.click();
