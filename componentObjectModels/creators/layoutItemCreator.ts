@@ -7,6 +7,7 @@ import { AddOrEditImageFieldModal } from '../modals/addOrEditImageFieldModal';
 import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
 import { AddOrEditListFieldModal } from '../modals/addOrEditListFieldModal';
 import { AddOrEditNumberFieldModal } from '../modals/addOrEditNumberFieldModal';
+import { AddOrEditReferenceFieldModal } from '../modals/addOrEditReferenceFieldModal';
 import { AddOrEditTextFieldModal } from '../modals/addOrEditTextFieldModal';
 import { AddOrEditTimeSpanFieldModal } from '../modals/addOrEditTimeSpanFieldModal';
 
@@ -19,6 +20,7 @@ export class LayoutItemCreator {
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
+  getLayoutItemModal(itemType: 'Reference', frameNumber?: number): AddOrEditReferenceFieldModal;
   getLayoutItemModal(itemType: 'Attachment', frameNumber?: number): AddOrEditAttachmentFieldModal;
   getLayoutItemModal(itemType: 'Image', frameNumber?: number): AddOrEditImageFieldModal;
   getLayoutItemModal(itemType: 'Text', frameNumber?: number): AddOrEditTextFieldModal;
@@ -43,6 +45,7 @@ export class LayoutItemCreator {
       case 'Image':
         return new AddOrEditImageFieldModal(this.page, frameNumber);
       case 'Reference':
+        return new AddOrEditReferenceFieldModal(this.page, frameNumber);
       case 'Time Span':
         return new AddOrEditTimeSpanFieldModal(this.page, frameNumber);
       case 'Formula':

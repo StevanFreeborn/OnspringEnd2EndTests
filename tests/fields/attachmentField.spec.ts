@@ -222,7 +222,7 @@ test.describe('attachment field', () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
 
-      const attachmentField = await addContentPage.getField({
+      const attachmentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -276,7 +276,7 @@ test.describe('attachment field', () => {
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.getField({
+      const attachmentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -389,7 +389,7 @@ test.describe('attachment field', () => {
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.getField({
+      const attachmentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -408,7 +408,7 @@ test.describe('attachment field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const attachmentField = await viewContentPage.getField({
+      const attachmentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -460,7 +460,7 @@ test.describe('attachment field', () => {
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.getField({
+      const attachmentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -479,13 +479,13 @@ test.describe('attachment field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const attachmentField = await viewContentPage.getField({
+      const attachmentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
         fieldType: 'Attachment',
       });
-      const attachment = await viewContentPage.getAttachmentByNameFromField(attachmentField, txtFile.name);
+      const attachment = await viewContentPage.form.getAttachmentByNameFromField(attachmentField, txtFile.name);
 
       await expect(attachmentField).toBeAttached();
       await expect(attachment).toBeVisible();
@@ -526,7 +526,7 @@ test.describe('attachment field', () => {
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.getField({
+      const attachmentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -545,7 +545,7 @@ test.describe('attachment field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const attachmentField = await viewContentPage.getField({
+      const attachmentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -570,16 +570,17 @@ test.describe('attachment field', () => {
 
     await test.step('Navigate to created record again as test user', async () => {
       await viewContentPage.goto(app.id, recordId);
+      await viewContentPage.page.reload();
     });
 
     await test.step('Verify the field is visible', async () => {
-      const attachmentField = await viewContentPage.getField({
+      const attachmentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
         fieldType: 'Attachment',
       });
-      const attachment = await viewContentPage.getAttachmentByNameFromField(attachmentField, txtFile.name);
+      const attachment = await viewContentPage.form.getAttachmentByNameFromField(attachmentField, txtFile.name);
 
       await expect(attachmentField).toBeAttached();
       await expect(attachment).toBeVisible();

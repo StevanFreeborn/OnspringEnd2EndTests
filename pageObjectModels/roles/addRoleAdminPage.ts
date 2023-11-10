@@ -35,6 +35,7 @@ export class AddRoleAdminPage extends RoleAdminPage {
       await this.appPermissionsTabButton.click();
 
       for (const appPermission of role.appPermissions) {
+        await this.appPermTab.filterByInput.clear();
         await this.appPermTab.filterByInput.pressSequentially(appPermission.appName, { delay: 150 });
 
         const appPermissionSection = this.appPermTab.getAppPermissionSection(appPermission.appName);

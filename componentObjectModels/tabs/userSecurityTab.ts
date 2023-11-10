@@ -13,12 +13,10 @@ export class UserSecurityTab {
   constructor(userAdminPage: UserAdminPage) {
     this.page = userAdminPage.page;
     this.rolesReferenceFieldGird = new ReferenceFieldGrid(
-      this.page,
-      userAdminPage.createFormControlSelector('Roles', 'div.onx-reference-grid')
+      this.page.locator(userAdminPage.createFormControlSelector('Roles', 'div.onx-reference-grid'))
     );
     this.groupsReferenceFieldGird = new ReferenceFieldGrid(
-      this.page,
-      userAdminPage.createFormControlSelector('Groups', 'div.onx-reference-grid')
+      this.page.locator(userAdminPage.createFormControlSelector('Groups', 'div.onx-reference-grid'))
     );
     this.changePasswordLink = this.page.getByRole('link', {
       name: 'Change Password',

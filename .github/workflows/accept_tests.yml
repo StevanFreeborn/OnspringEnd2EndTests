@@ -78,6 +78,7 @@ jobs:
             test_count=$((test_count + count))
           done < <(find "$test_directory" -type f -name '*.spec.ts')
 
+          test_count=$((test_count * 3)) # repeat-each 3
           min_shards=10
           max_tests_per_shard=20
 

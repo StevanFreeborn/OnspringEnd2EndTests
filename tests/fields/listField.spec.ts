@@ -237,7 +237,7 @@ test.describe('list field', () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
 
-      const contentField = await addContentPage.getField({
+      const contentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -294,7 +294,7 @@ test.describe('list field', () => {
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
-      const contentField = await addContentPage.getField({
+      const contentField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -413,7 +413,7 @@ test.describe('list field', () => {
 
     await test.step('Create a record with a value in the list field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const listFieldSelector = await addContentPage.getField({
+      const listFieldSelector = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -432,7 +432,7 @@ test.describe('list field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -484,7 +484,7 @@ test.describe('list field', () => {
 
     await test.step('Create a record with a value in the list field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const listFieldSelector = await addContentPage.getField({
+      const listFieldSelector = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -503,7 +503,7 @@ test.describe('list field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -550,7 +550,7 @@ test.describe('list field', () => {
 
     await test.step('Create a record with a value in the list field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const listFieldSelector = await addContentPage.getField({
+      const listFieldSelector = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -569,7 +569,7 @@ test.describe('list field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -593,10 +593,11 @@ test.describe('list field', () => {
 
     await test.step('Navigate to created record again as test user', async () => {
       await viewContentPage.goto(app.id, recordId);
+      await viewContentPage.page.reload();
     });
 
     await test.step('Verify the field is visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
