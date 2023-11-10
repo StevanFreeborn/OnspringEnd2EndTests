@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, layoutItemTest as test } from '../../fixtures';
 import { FormattedTextBlock } from '../../models/formattedTextBlock';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('formatted text block', () => {
@@ -202,14 +203,55 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test("Add a Formatted Text Block Object to an app's layout", async () => {
+  test("Add a Formatted Text Block Object to an app's layout", async ({ appAdminPage, sysAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-180',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'Do I Look Civilized To You?',
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Add the formatted text block that will be added to layout', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textBlock);
+    });
+
+    await test.step('Add the formatted text block to the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+
+      const { object: textBlockInBank, dropzone } =
+        await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          objectName: textBlock.name,
+        });
+
+      await expect(textBlockInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(textBlock.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the text block was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+
+      const textBlockContent = await addContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: textBlock.name,
+      });
+
+      await expect(textBlockContent).toBeVisible();
+      await expect(textBlockContent).toHaveText(new RegExp(textBlock.formattedText));
+    });
   });
 
   test("Remove a Formatted Text Block Object from an app's layout", async () => {

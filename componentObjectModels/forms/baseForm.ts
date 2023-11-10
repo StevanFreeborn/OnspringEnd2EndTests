@@ -1,6 +1,15 @@
 import { Locator, Page } from '@playwright/test';
 import { toPascalCase } from '../../utils';
 
+export type BaseGetParams = {
+  tabName: string;
+  sectionName: string;
+};
+
+export type GetObjectParams = BaseGetParams & {
+  objectName: string;
+};
+
 export class BaseForm {
   protected page: Page;
   readonly contentContainer: Locator;
@@ -55,5 +64,10 @@ export class BaseForm {
         has: this.page.locator('h1').filter({ hasText: sectionName }),
       })
       .first();
+  }
+
+  async getObject(params: GetObjectParams) {
+    const section = await this.getSection(params.tabName, params.sectionName);
+    return section.locator(`td.object-cell-${params.objectName}`).first();
   }
 }
