@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const envSchema = z
   .object({
-    CI: z.boolean().default(false),
+    CI: z.string().default('false'),
     SYS_ADMIN_USERNAME: z.string().min(1),
     SYS_ADMIN_PASSWORD: z.string().min(1),
     SYS_ADMIN_FIRST_NAME: z.string().min(1),

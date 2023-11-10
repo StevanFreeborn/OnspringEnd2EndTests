@@ -9,7 +9,7 @@ export const MS_PER_SEC = 1000;
 export const MS_PER_MIN = 60 * MS_PER_SEC;
 export const AUTH_DIR = '.auth';
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
-const isCI = env.CI === true;
+const isCI = env.CI == 'true';
 const testResultsDir = 'test-results';
 const jsonReportPath = path.join(testResultsDir, 'report.json');
 const TEST_ENV = env.TEST_ENV || 'ALPHA';
