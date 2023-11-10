@@ -121,20 +121,21 @@ export class AppLayoutTab extends LayoutItemCreator {
         if ((await objectTab.addObjectButton.isVisible()) === false) {
           await this.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
         }
+        await objectTab.addObjectButton.click();
+        await objectTab.addObjectMenu.selectItem(item.type);
         break;
       }
       default: {
         if ((await fieldTab.addFieldButton.isVisible()) === false) {
           await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
         }
+        await fieldTab.addFieldButton.click();
+        await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
         break;
       }
     }
 
-    await fieldTab.addFieldButton.click();
-    await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
     await this.addLayoutItemDialog.continueButton.click();
-
     await this.addLayoutItem(item, 1);
   }
 }

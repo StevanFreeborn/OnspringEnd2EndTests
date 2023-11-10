@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { FieldType } from './addFieldTypeMenu';
 
-type ObjectType = 'Formatted Text Block';
+export type ObjectType = 'Formatted Text Block';
 
 export type LayoutItemType = FieldType | ObjectType;
 
