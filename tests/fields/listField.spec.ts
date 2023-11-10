@@ -593,6 +593,7 @@ test.describe('list field', () => {
 
     await test.step('Navigate to created record again as test user', async () => {
       await viewContentPage.goto(app.id, recordId);
+      await viewContentPage.page.reload();
     });
 
     await test.step('Verify the field is visible', async () => {

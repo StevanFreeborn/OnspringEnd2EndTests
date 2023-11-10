@@ -2,7 +2,8 @@ import { Locator, Page } from '@playwright/test';
 import { AddOrEditRecordForm } from '../forms/addOrEditRecordForm';
 
 export class CreateRecordModal {
-  private readonly createRecordEndpointRegex: RegExp;
+  private readonly popupAddEndpointRegex: RegExp;
+  private readonly getReferencedRecordsEndpointRegex: RegExp;
   private readonly page: Page;
   readonly modal: Locator;
   readonly closeButton: Locator;
@@ -12,7 +13,8 @@ export class CreateRecordModal {
 
   constructor(page: Page) {
     this.page = page;
-    this.createRecordEndpointRegex = /\/Content\/\d+\/PopupAdd/;
+    this.popupAddEndpointRegex = /\/Content\/\d+\/PopupAdd/;
+    this.getReferencedRecordsEndpointRegex = /\/Content\/ReferenceGrid\/GetReferenceRecords/;
     this.modal = this.page
       .getByRole('dialog')
       .filter({
@@ -30,7 +32,7 @@ export class CreateRecordModal {
 
     const createRecordResponse = this.page.waitForResponse(async res => {
       const method = res.request().method();
-      const isCreateRecordResponse = res.url().match(this.createRecordEndpointRegex);
+      const isCreateRecordResponse = res.url().match(this.popupAddEndpointRegex);
 
       if (isCreateRecordResponse === null) {
         return false;
@@ -46,8 +48,11 @@ export class CreateRecordModal {
       return isCreateRecordResponse !== null;
     });
 
+    const getReferencedRecordsResponse = this.page.waitForResponse(this.getReferencedRecordsEndpointRegex);
+
     await this.saveButton.click();
     await createRecordResponse;
+    await getReferencedRecordsResponse;
 
     return recordId;
   }
