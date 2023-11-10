@@ -345,14 +345,37 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test('Delete a Formatted Text Block Object from an app', async () => {
+  test('Delete a Formatted Text Block Object from an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-183',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeFieldName(),
+      formattedText: 'Do I Look Civilized To You?',
+    });
+
+    await test.step('Add the formatted text block', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textBlock);
+    });
+
+    await test.step('Delete the formatted text block', async () => {
+      const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
+      await textBlockRow.hover();
+      await textBlockRow.getByTitle('Delete').click();
+
+      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the text block was deleted', async () => {
+      const deletedTextBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: textBlock.name,
+      });
+
+      await expect(deletedTextBlockRow).toBeHidden();
+    });
   });
 
   test('Make a Formatted Text Block Object private by role to prevent access', async () => {
