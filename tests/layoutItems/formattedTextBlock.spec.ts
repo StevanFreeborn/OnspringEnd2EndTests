@@ -144,14 +144,62 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test('Create a copy of a Formatted Text Block Object on an app from a layout', async () => {
+  test('Create a copy of a Formatted Text Block Object on an app from a layout', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-179',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'Do I Look Civilized To You?',
+    });
+    const copiedTextBlockName = `${textBlock.name} (1)`;
+
+    await test.step('Open layout designer for default layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+    });
+
+    await test.step('Add the formatted text block to copy', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textBlock);
+    });
+
+    await test.step('Add a copy of the formatted text block', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTab.addObjectButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTab.addObjectMenu.selectItem(
+        'Formatted Text Block'
+      );
+
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(textBlock.name).click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+
+      const addTextBlockModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal(
+        'Formatted Text Block',
+        1
+      );
+
+      await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
+
+      await addTextBlockModal.saveButton.click();
+    });
+
+    await test.step('Verify the text block was copied', async () => {
+      const copiedTextBlock =
+        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTab.getObjectFromBank(copiedTextBlockName);
+
+      await expect(copiedTextBlock).toBeVisible();
+      await expect(copiedTextBlock).not.toHaveClass(/ui-draggable-disabled/);
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+
+      const copiedTextBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: copiedTextBlockName,
+      });
+
+      await expect(copiedTextBlockRow).toBeVisible();
+    });
   });
 
   test("Add a Formatted Text Block Object to an app's layout", async () => {
