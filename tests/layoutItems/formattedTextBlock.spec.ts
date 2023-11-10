@@ -443,14 +443,67 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test('Make a Formatted Text Block Object private by role to give access', async () => {
+  test('Make a Formatted Text Block Object private by role to give access', async ({
+    sysAdminPage,
+    role,
+    appAdminPage,
+    app,
+    testUserPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-857',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'This should be visible to the test user',
+      permissions: [new LayoutItemPermission({ roleName: role.name, read: true })],
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const addContentPage = new AddContentPage(sysAdminPage);
+    const editContentPage = new EditContentPage(sysAdminPage);
+    const viewContentPage = new ViewContentPage(testUserPage);
+    let recordId: number;
+
+    await test.step('Add the formatted text block', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textBlock);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        objectName: textBlock.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a record with a value in the formatted text block as system admin', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await editContentPage.page.waitForLoadState();
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to created record as test user who does have access to the text block by their role', async () => {
+      await viewContentPage.goto(app.id, recordId);
+    });
+
+    await test.step('Verify the text block is visible', async () => {
+      const textBlockContent = await viewContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: textBlock.name,
+      });
+      await expect(textBlockContent).toBeVisible();
+      await expect(textBlockContent).toHaveText(new RegExp(textBlock.formattedText));
+    });
   });
 
   test('Make a Formatted Text Block Object public', async () => {
