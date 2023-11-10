@@ -311,14 +311,38 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test('Update the configuration of a Formatted Text Block Object on an app', async () => {
+  test('Update the configuration of a Formatted Text Block Object on an app', async ({ appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-182',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'Do I Look Civilized To You?',
+    });
+    const updatedTextBlockName = `${textBlock.name} updated`;
+
+    await test.step('Add the formatted text block', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textBlock);
+    });
+
+    await test.step('Update the formatted text block', async () => {
+      const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
+      await textBlockRow.hover();
+      await textBlockRow.getByTitle('Edit').click();
+
+      const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
+      await editTextBlockModal.generalTab.nameInput.fill(updatedTextBlockName);
+      await editTextBlockModal.saveButton.click();
+    });
+
+    await test.step('Verify the text block was updated', async () => {
+      const updatedTextBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedTextBlockName,
+      });
+      await expect(updatedTextBlockRow).toBeVisible();
+    });
   });
 
   test('Delete a Formatted Text Block Object from an app', async () => {
