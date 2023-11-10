@@ -224,7 +224,7 @@ test.describe('date/time field', () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
 
-      const dateTimePicker = await addContentPage.getField({
+      const dateTimePicker = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -279,7 +279,7 @@ test.describe('date/time field', () => {
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
-      const dateTimePicker = await addContentPage.getField({
+      const dateTimePicker = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -392,7 +392,7 @@ test.describe('date/time field', () => {
 
     await test.step('Create a record with a value in the date/time field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const dateTimePicker = await addContentPage.getField({
+      const dateTimePicker = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -410,7 +410,7 @@ test.describe('date/time field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -461,7 +461,7 @@ test.describe('date/time field', () => {
 
     await test.step('Create a record with a value in the date/time field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const dateTimePicker = await addContentPage.getField({
+      const dateTimePicker = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -479,7 +479,7 @@ test.describe('date/time field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -525,7 +525,7 @@ test.describe('date/time field', () => {
 
     await test.step('Create a record with a value in the date/time field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const dateTimePicker = await addContentPage.getField({
+      const dateTimePicker = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -543,7 +543,7 @@ test.describe('date/time field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -570,7 +570,7 @@ test.describe('date/time field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const contentField = await viewContentPage.getField({
+      const contentField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,

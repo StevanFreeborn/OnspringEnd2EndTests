@@ -220,7 +220,7 @@ test.describe('image field', () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
 
-      const imageField = await addContentPage.getField({
+      const imageField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -274,7 +274,7 @@ test.describe('image field', () => {
     await test.step('Verify the field was removed from the layout', async () => {
       const addContentPage = new AddContentPage(sysAdminPage);
       await addContentPage.goto(app.id);
-      const imageField = await addContentPage.getField({
+      const imageField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -387,7 +387,7 @@ test.describe('image field', () => {
 
     await test.step('Create a record with a value in the image field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const imageField = await addContentPage.getField({
+      const imageField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -406,7 +406,7 @@ test.describe('image field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const imageField = await viewContentPage.getField({
+      const imageField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -459,7 +459,7 @@ test.describe('image field', () => {
 
     await test.step('Create a record with a value in the image field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const imageField = await addContentPage.getField({
+      const imageField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -478,13 +478,13 @@ test.describe('image field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const imageField = await viewContentPage.getField({
+      const imageField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
         fieldType: 'Image',
       });
-      const image = await viewContentPage.getImageByFileIdFromField(imageField, fileId);
+      const image = await viewContentPage.form.getImageByFileIdFromField(imageField, fileId);
 
       await expect(imageField).toBeAttached();
       await expect(image).toBeVisible();
@@ -526,7 +526,7 @@ test.describe('image field', () => {
 
     await test.step('Create a record with a value in the image field as system admin', async () => {
       await addContentPage.goto(app.id);
-      const imageField = await addContentPage.getField({
+      const imageField = await addContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -544,7 +544,7 @@ test.describe('image field', () => {
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const imageField = await viewContentPage.getField({
+      const imageField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
@@ -572,13 +572,13 @@ test.describe('image field', () => {
     });
 
     await test.step('Verify the field is visible', async () => {
-      const imageField = await viewContentPage.getField({
+      const imageField = await viewContentPage.form.getField({
         tabName: tabName,
         sectionName: sectionName,
         fieldName: field.name,
         fieldType: 'Image',
       });
-      const image = await viewContentPage.getImageByFileIdFromField(imageField, fileId);
+      const image = await viewContentPage.form.getImageByFileIdFromField(imageField, fileId);
 
       await expect(imageField).toBeAttached();
       await expect(image).toBeVisible();
