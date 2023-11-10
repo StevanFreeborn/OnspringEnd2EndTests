@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, layoutItemTest as test } from '../../fixtures';
+import { Locator, expect, layoutItemTest as test } from '../../fixtures';
 import { FormattedTextBlock } from '../../models/formattedTextBlock';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
@@ -254,14 +254,61 @@ test.describe('formatted text block', () => {
     });
   });
 
-  test("Remove a Formatted Text Block Object from an app's layout", async () => {
+  test("Remove a Formatted Text Block Object from an app's layout", async ({ appAdminPage, sysAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-181',
     });
 
-    // TODO: Implement test
-    expect(false).toBe(true);
+    const textBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeTextBlockName(),
+      formattedText: 'Do I Look Civilized To You?',
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    let textBlockInBank: Locator;
+    let textBlockLayoutDropzone: Locator;
+
+    await test.step('Add the formatted text block that will be removed from layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textBlock);
+      const { object: textBlockFromBank, dropzone } =
+        await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          objectName: textBlock.name,
+        });
+
+      textBlockLayoutDropzone = dropzone;
+      textBlockInBank = textBlockFromBank;
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Remove the text block from the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await textBlockLayoutDropzone.hover();
+      await textBlockLayoutDropzone.getByTitle('Remove Object from Layout').click();
+
+      await expect(textBlockInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await expect(textBlockLayoutDropzone).not.toHaveText(new RegExp(textBlock.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the text block was removed from the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+      const textBlockContent = await addContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: textBlock.name,
+      });
+
+      await expect(textBlockContent).toBeHidden();
+    });
   });
 
   test('Update the configuration of a Formatted Text Block Object on an app', async () => {
