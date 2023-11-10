@@ -5,7 +5,7 @@ type AppObject = {
 
 export class App {
   id: number;
-  name: string;
+  readonly name: string;
 
   constructor({ id = 0, name }: AppObject) {
     this.id = id;
