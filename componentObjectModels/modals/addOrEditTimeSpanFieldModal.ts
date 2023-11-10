@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { TimeSpanFieldGeneralTab } from '../tabs/timeSpanFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditTimeSpanFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditTimeSpanFieldModal extends AddOrEditFieldModal {
   readonly generalTab: TimeSpanFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

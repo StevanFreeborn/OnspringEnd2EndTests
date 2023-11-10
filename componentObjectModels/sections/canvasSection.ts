@@ -18,7 +18,7 @@ export class CanvasSection {
     this.layoutItemDropzone = this.section.locator('#dropLocation');
   }
 
-  async getFieldDropzone(params: FieldDropzoneParams) {
+  async getItemDropzone(params: FieldDropzoneParams) {
     const { tabName, sectionName, column, row } = params;
     const tab = await this.getTab(tabName);
     const section = tab.getSection(sectionName);

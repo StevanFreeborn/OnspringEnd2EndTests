@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, layoutItemTest as test } from '../../fixtures';
 import { LayoutItemPermission } from '../../models/layoutItem';
 import { NumberFormulaField } from '../../models/numberFormulaField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';

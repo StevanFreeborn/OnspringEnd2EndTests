@@ -4,12 +4,19 @@ import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { CanvasSection } from '../sections/canvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
 
-type DragFieldParams = {
+type DragItemsParams = {
   tabName: string;
   sectionName: string;
   sectionColumn: number;
   sectionRow: number;
+};
+
+type DragFieldParams = DragItemsParams & {
   fieldName: string;
+};
+
+type DragObjectParams = DragItemsParams & {
+  objectName: string;
 };
 
 export class LayoutDesignerModal extends LayoutItemCreator {
@@ -50,7 +57,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
 
-    const dropzone = await this.canvasSection.getFieldDropzone({
+    const dropzone = await this.canvasSection.getItemDropzone({
       tabName: tabName,
       sectionName: sectionName,
       column: sectionColumn,
@@ -64,5 +71,25 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await this.page.mouse.up();
 
     return { field, dropzone };
+  }
+
+  async dragObjectOnToLayout(params: DragObjectParams) {
+    const { tabName, sectionName, sectionColumn, sectionRow, objectName } = params;
+    const object = this.layoutItemsSection.objectsTab.getObjectFromBank(objectName);
+
+    const dropzone = await this.canvasSection.getItemDropzone({
+      tabName: tabName,
+      sectionName: sectionName,
+      column: sectionColumn,
+      row: sectionRow,
+    });
+
+    await object.hover();
+    await this.page.mouse.down();
+    await dropzone.hover();
+    await this.canvasSection.layoutItemDropzone.waitFor({ state: 'visible' });
+    await this.page.mouse.up();
+
+    return { object, dropzone };
   }
 }

@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { FormulaFieldGeneralTab } from '../tabs/formulaFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditFormulaFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditFormulaFieldModal extends AddOrEditFieldModal {
   readonly generalTab: FormulaFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

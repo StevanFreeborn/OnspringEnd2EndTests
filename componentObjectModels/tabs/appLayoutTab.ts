@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { FormattedTextBlock } from '../../models/formattedTextBlock';
 import { FormulaField } from '../../models/formulaField';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
@@ -32,8 +33,11 @@ export class AppLayoutTab extends LayoutItemCreator {
 
   private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
     switch (item.type) {
-      case 'Formatted Text Block':
+      case 'Formatted Text Block': {
+        const addTextBlockModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addTextBlockModal.generalTab.fillOutGeneralTab(item as FormattedTextBlock);
         break;
+      }
       case 'Reference': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
         await addFieldModal.generalTab.fillOutGeneralTab(item as ReferenceField);
@@ -98,6 +102,7 @@ export class AppLayoutTab extends LayoutItemCreator {
    */
   async openLayout(layoutName: string = 'Default Layout') {
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
@@ -110,15 +115,28 @@ export class AppLayoutTab extends LayoutItemCreator {
 
   async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
     const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
+    const objectTab = this.layoutDesignerModal.layoutItemsSection.objectsTab;
 
-    if ((await fieldTab.addFieldButton.isVisible()) === false) {
-      await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+    switch (item.type) {
+      case 'Formatted Text Block': {
+        if ((await objectTab.addObjectButton.isVisible()) === false) {
+          await this.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+        }
+        await objectTab.addObjectButton.click();
+        await objectTab.addObjectMenu.selectItem(item.type);
+        break;
+      }
+      default: {
+        if ((await fieldTab.addFieldButton.isVisible()) === false) {
+          await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
+        }
+        await fieldTab.addFieldButton.click();
+        await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
+        break;
+      }
     }
 
-    await fieldTab.addFieldButton.click();
-    await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
     await this.addLayoutItemDialog.continueButton.click();
-
     await this.addLayoutItem(item, 1);
   }
 }

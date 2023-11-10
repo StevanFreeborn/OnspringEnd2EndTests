@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { NumberFieldGeneralTab } from '../tabs/numberFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditNumberFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditNumberFieldModal extends AddOrEditFieldModal {
   readonly generalTab: NumberFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

@@ -1,6 +1,6 @@
 import { Units } from '../../componentObjectModels/controls/timeSpanFieldControl';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, expect, fieldTest as test } from '../../fixtures';
+import { Locator, expect, layoutItemTest as test } from '../../fixtures';
 import { LayoutItemPermission } from '../../models/layoutItem';
 import { TimeSpanField } from '../../models/timeSpanField';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';

@@ -29,7 +29,7 @@ export const test = base.extend<Fixtures>({
   txtFile: txtFile,
 });
 
-export const fieldTest = test.extend<FieldTestFixtures>({
+export const layoutItemTest = test.extend<FieldTestFixtures>({
   appAdminPage: appAdminPage,
   app: app,
   role: activeRoleWithPermissions,

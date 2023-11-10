@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { DateFieldGeneralTab } from '../tabs/dateFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditDateFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditDateFieldModal extends AddOrEditFieldModal {
   readonly generalTab: DateFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {

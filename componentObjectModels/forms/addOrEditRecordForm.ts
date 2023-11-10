@@ -6,11 +6,9 @@ import { ImageFieldControl } from '../controls/imageFieldControl';
 import { ReferenceFieldGrid } from '../controls/referenceFieldGrid';
 import { TimeSpanFieldControl } from '../controls/timeSpanFieldControl';
 import { FieldType } from '../menus/addFieldTypeMenu';
-import { BaseForm } from './baseForm';
+import { BaseForm, BaseGetParams } from './baseForm';
 
-export type BaseGetFieldParams = {
-  tabName: string;
-  sectionName: string;
+export type BaseGetFieldParams = BaseGetParams & {
   fieldName: string;
 };
 

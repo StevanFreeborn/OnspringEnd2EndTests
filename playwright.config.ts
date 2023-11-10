@@ -2,44 +2,45 @@ import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
 import 'dotenv/config';
 import os from 'os';
 import path from 'path';
+import { env } from './env';
 import { ApiTestOptions } from './fixtures';
 
 export const MS_PER_SEC = 1000;
 export const MS_PER_MIN = 60 * MS_PER_SEC;
 export const AUTH_DIR = '.auth';
 export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
-const isCI = process.env.CI == 'true';
+const isCI = env.CI === true;
 const testResultsDir = 'test-results';
 const jsonReportPath = path.join(testResultsDir, 'report.json');
-const TEST_ENV = process.env.TEST_ENV || 'ALPHA';
-export let BASE_URL: string | undefined;
+const TEST_ENV = env.TEST_ENV || 'ALPHA';
+export let BASE_URL: string;
 
 switch (TEST_ENV) {
   case 'BETA':
-    BASE_URL = process.env.BETA_INSTANCE_URL;
+    BASE_URL = env.BETA_INSTANCE_URL;
     break;
   case 'QA':
-    BASE_URL = process.env.QA_INSTANCE_URL;
+    BASE_URL = env.QA_INSTANCE_URL;
     break;
   case 'IST':
-    BASE_URL = process.env.IST_INSTANCE_URL;
+    BASE_URL = env.IST_INSTANCE_URL;
     break;
   case 'VPRIOR':
-    BASE_URL = process.env.VPRIOR_INSTANCE_URL;
+    BASE_URL = env.VPRIOR_INSTANCE_URL;
     break;
   case 'VNEXT':
-    BASE_URL = process.env.VNEXT_INSTANCE_URL;
+    BASE_URL = env.VNEXT_INSTANCE_URL;
     break;
   case 'PROD':
-    BASE_URL = process.env.PROD_INSTANCE_URL;
+    BASE_URL = env.PROD_INSTANCE_URL;
     break;
   case 'ALPHA':
   default:
-    BASE_URL = process.env.ALPHA_INSTANCE_URL;
+    BASE_URL = env.ALPHA_INSTANCE_URL;
     break;
 }
 
-const API_URL = BASE_URL?.replace(/^https:\/\/[^.]+/, 'https://api');
+const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 
 // Onspring servers timeout after 100 seconds. Want to be able to capture timeouts when they occur.
 const expectAndActionTimeout = 2 * MS_PER_MIN;

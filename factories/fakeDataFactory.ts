@@ -47,4 +47,9 @@ export class FakeDataFactory {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${fieldName}`;
   }
+
+  static createFakeTextBlockName(fieldName: string = 'text-block-test') {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${fieldName}`;
+  }
 }

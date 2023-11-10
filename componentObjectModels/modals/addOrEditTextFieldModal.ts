@@ -1,8 +1,8 @@
 import { Page } from '@playwright/test';
 import { TextFieldGeneralTab } from '../tabs/textFieldGeneralTab';
-import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
+import { AddOrEditFieldModal } from './addOrEditFieldModal';
 
-export class AddOrEditTextFieldModal extends AddOrEditLayoutItemModal {
+export class AddOrEditTextFieldModal extends AddOrEditFieldModal {
   readonly generalTab: TextFieldGeneralTab;
 
   constructor(page: Page, frameNumber: number = 0) {
