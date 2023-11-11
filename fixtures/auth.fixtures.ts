@@ -1,4 +1,4 @@
-import { Browser, Page, TestInfo } from '@playwright/test';
+import { Browser, Page, Response, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { User } from '../models/user';
@@ -48,15 +48,7 @@ export async function createBaseAuthPage(
 
   const page = await context.newPage();
 
-  // Onspring servers timeout after 100 seconds.
-  // Want to fail tests when timeouts occur as opposed to hanging.
-  page.on('response', response => {
-    const url = response.url();
-
-    if (url.includes(BASE_URL) && response.status() === 524) {
-      throw new Error(`Request to ${url} timed out.`);
-    }
-  });
+  page.on('response', timeoutErrorHandler);
 
   try {
     await use(page);
@@ -72,5 +64,15 @@ export async function createBaseAuthPage(
         }
       }
     }
+  }
+}
+
+// Onspring servers timeout after 100 seconds.
+// Want to fail tests when timeouts occur as opposed to hanging.
+export function timeoutErrorHandler(response: Response) {
+  const url = response.url();
+
+  if (url.includes(BASE_URL) && response.status() === 524) {
+    throw new Error(`Request to ${url} timed out.`);
   }
 }

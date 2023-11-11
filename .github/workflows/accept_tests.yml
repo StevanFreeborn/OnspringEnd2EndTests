@@ -55,6 +55,7 @@ jobs:
           fi
   generate_shards:
     name: 'Generate Shards'
+    needs: check_for_test_file_changes
     runs-on: ubuntu-latest
     outputs:
       shards: ${{ steps.generate_shards.outputs.shards }}
@@ -76,7 +77,7 @@ jobs:
           while IFS= read -r file; do
             count=$(grep -c "test(" "$file")
             test_count=$((test_count + count))
-          done < <(find "$test_directory" -type f -name '*.spec.ts')
+          done < <(for filePath in ${{ needs.check_for_test_file_changes.outputs.changed_test_files }}; do basename "$filePath"; done | xargs -I {} find "tests" -type f -name {})
 
           test_count=$((test_count * 3)) # repeat-each 3
           min_shards=10
