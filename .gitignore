@@ -9,3 +9,6 @@ config/.env
 !.env.vault
 .auth
 blob-report/
+browserstack.yml
+playwright-browserstack-sdk.config.js
+usage.log
