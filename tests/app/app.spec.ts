@@ -311,7 +311,6 @@ test.describe('app', () => {
       description: 'Test-8',
     });
 
-    // trigger workflow
     const appName = FakeDataFactory.createFakeAppName();
     appsToDelete.push(appName);
 
