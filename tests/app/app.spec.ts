@@ -244,7 +244,13 @@ test.describe('app', () => {
     await test.step('Create the app to be copied', async () => {
       await appsAdminPage.page.waitForLoadState();
       await appsAdminPage.createApp(appName);
-      await appAdminPage.closeButton.click();
+      await appAdminPage.page.waitForLoadState();
+    });
+
+    await test.step('Navigate back to Apps admin home page', async () => {
+      await appAdminPage.sidebar.adminGearIcon.click();
+      await adminHomePage.page.waitForLoadState();
+      await adminHomePage.appTileLink.click();
     });
 
     await test.step('Create the copy of the app', async () => {
