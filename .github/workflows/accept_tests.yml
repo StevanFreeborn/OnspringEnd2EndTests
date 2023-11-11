@@ -77,7 +77,7 @@ jobs:
           while IFS= read -r file; do
             count=$(grep -c "test(" "$file")
             test_count=$((test_count + count))
-          done < <(for name in ${{ needs.check_for_test_file_changes.outputs.changed_test_files }}; do find "$test_directory" -type f -name "$name"; done)
+          done < <(for filePath in ${{ needs.check_for_test_file_changes.outputs.changed_test_files }}; do basename "$filePath"; done | xargs -I {} find "tests" -type f -name {})
 
           test_count=$((test_count * 3)) # repeat-each 3
           min_shards=10
