@@ -114,6 +114,9 @@ jobs:
     name: 'Merge Reports and Publish'
     if: always()
     needs: [run_tests]
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -139,7 +142,10 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 14
-      - name: Publish to gh pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: playwright-report
+      - name: Install vercel cli
+        run: npm i -g vercel@latest
+      - name: Pull vercel environment information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to vercel
+        id: deploy-to-vercel
+        run: vercel --yes --prod --token ${{ secrets.VERCEL_TOKEN }}

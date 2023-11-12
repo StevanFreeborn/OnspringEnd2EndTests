@@ -9,3 +9,4 @@ config/.env
 !.env.vault
 .auth
 blob-report/
+.vercel
