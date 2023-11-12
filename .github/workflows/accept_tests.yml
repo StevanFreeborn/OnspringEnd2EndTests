@@ -138,10 +138,15 @@ jobs:
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
-    name: 'Merge Reports and Upload'
+    name: 'Merge Reports and Publish'
     needs: run_tests
     if: always()
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    outputs:
+      deployment_url: ${{ steps.deploy-to-vercel.outputs.deployment_url }}
     steps:
       - name: Checkout repository
         if: ${{ needs.run_tests.result != 'skipped' }}
@@ -173,3 +178,37 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 90
+      - name: Install vercel cli
+        if: ${{ needs.run_tests.result != 'skipped' }}
+        run: npm i -g vercel@latest
+      - name: Pull vercel environment information
+        if: ${{ needs.run_tests.result != 'skipped' }}
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to vercel
+        if: ${{ needs.run_tests.result != 'skipped' }}
+        id: deploy-to-vercel
+        run: |
+          vercel --yes --token ${{ secrets.VERCEL_TOKEN }} > deployment_url.txt
+          echo "deployment_url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
+  add_pr_comment:
+    name: 'Add PR Comment'
+    needs: merge_reports_and_publish
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment URL to PR
+        env:
+          DEPLOYMENT_URL: ${{ needs.merge_reports_and_publish.outputs.deployment_url }}
+        uses: actions/github-script@v6
+        id: commment_script
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Playwright Report ${{ github.run_number }}-${{ github.run_attempt }}: ${process.env.DEPLOYMENT_URL}`
+            })
