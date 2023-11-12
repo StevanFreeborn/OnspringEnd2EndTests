@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
+    "test:pwservice": "npx playwright test --config=playwright.service.config.ts",
     "test:chrome": "npm run test -- --project chrome",
     "test:safari": "npm run test -- --project safari",
     "test:edge": "npm run test -- --project edge",
