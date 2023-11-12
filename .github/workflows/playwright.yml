@@ -142,6 +142,11 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 14
+      - name: Download HTML report
+        uses: actions/download-artifact@v3
+        with:
+          name: html-report-attempt-${{ github.run_attempt }}
+          path: playwright-report
       - name: Install vercel cli
         run: npm i -g vercel@latest
       - name: Pull vercel environment information
