@@ -27,6 +27,10 @@ const test = base.extend<LoginTestFixtures>({
 });
 
 test.describe('login', () => {
+  test('will pass', () => {
+    expect(true).toBeTruthy();
+  });
+
   test('user can login using valid username and password.', async ({ loginPage, dashboardPage }) => {
     const user = UserFactory.createSysAdminUser();
 
