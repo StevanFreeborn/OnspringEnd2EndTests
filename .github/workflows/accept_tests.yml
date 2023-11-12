@@ -138,7 +138,7 @@ jobs:
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
-    name: 'Merge Reports and Upload'
+    name: 'Merge Reports and Publish'
     needs: run_tests
     if: always()
     runs-on: ubuntu-latest
@@ -193,6 +193,7 @@ jobs:
   add_pr_comment:
     name: 'Add PR Comment'
     needs: merge_reports_and_publish
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       issues: write
