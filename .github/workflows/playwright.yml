@@ -142,14 +142,21 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 14
-      - name: Download HTML report
-        uses: actions/download-artifact@v3
-        with:
-          name: html-report-attempt-${{ github.run_attempt }}
-          path: playwright-report
       - name: Install vercel cli
         run: npm i -g vercel@latest
-      - name: Pull vercel environment information
+
+      # only deploy to preview if tests fail
+      - name: Pull vercel preview environment information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy to vercel
+        if: ${{ needs.run_tests.result == 'failure' }}
+      - name: Deploy to vercel as preview # this could fail if file size is > 100 MB. This is acceptable for now.
+        run: vercel --yes --token ${{ secrets.VERCEL_TOKEN }}
+        if: ${{ needs.run_tests.result == 'failure' }}
+
+      # only deploy to production if all tests pass
+      - name: Pull vercel production environment information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        if: ${{ needs.run_tests.result == 'success' }}
+      - name: Deploy to vercel as production # this could fail if file size is > 100 MB. This is acceptable for now.
         run: vercel --yes --prod --token ${{ secrets.VERCEL_TOKEN }}
+        if: ${{ needs.run_tests.result == 'success' }}
