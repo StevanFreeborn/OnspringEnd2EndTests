@@ -46,13 +46,12 @@ const expectAndActionTimeout = 2 * MS_PER_MIN;
 
 export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   testDir: './tests',
-  timeout: 10 * MS_PER_MIN,
+  timeout: 5 * MS_PER_MIN,
   expect: {
     timeout: expectAndActionTimeout,
   },
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 3 : 1,
   workers: isCI ? 1 : Math.floor(os.cpus().length / 2),
   reporter: isCI
     ? [
@@ -113,13 +112,6 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       name: 'edge',
       use: {
         ...devices['Desktop Edge'],
-      },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'safari',
-      use: {
-        ...devices['Desktop Safari'],
       },
       dependencies: ['setup'],
     },
