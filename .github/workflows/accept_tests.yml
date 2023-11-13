@@ -192,7 +192,7 @@ jobs:
           echo "deployment_url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
   add_pr_comment:
     name: 'Add PR Comment'
-    needs: merge_reports_and_publish
+    needs: [run_tests, merge_reports_and_publish]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -200,6 +200,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment URL to PR
+        if: ${{ needs.run_tests.result != 'skipped' }}
         env:
           DEPLOYMENT_URL: ${{ needs.merge_reports_and_publish.outputs.deployment_url }}
         uses: actions/github-script@v6
