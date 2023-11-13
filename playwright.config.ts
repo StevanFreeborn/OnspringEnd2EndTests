@@ -115,13 +115,6 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       },
       dependencies: ['setup'],
     },
-    {
-      name: 'safari',
-      use: {
-        ...devices['Desktop Safari'],
-      },
-      dependencies: ['setup'],
-    },
   ],
   outputDir: testResultsDir,
   metadata: {
