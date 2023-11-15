@@ -154,11 +154,11 @@ jobs:
         with:
           source-directory: ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
           destination-github-username: 'StevanFreeborn'
-          user-email: 'stevan.freeborn@gmail.com'
+          user-email: '65925598+StevanFreeborn@users.noreply.github.com'
           destination-repository-name: 'onspring-qa-playwright-reports'
           target-branch: 'main'
           commit-message: 'Add new report'
-          target-directory: 'reports'
+          target-directory: 'reports/${{ steps.date.outputs.value }}/'
       - name: Install vercel cli
         run: npm i -g vercel@latest
       # only deploy to preview if tests fail
