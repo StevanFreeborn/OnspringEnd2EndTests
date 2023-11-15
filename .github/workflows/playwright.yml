@@ -144,7 +144,7 @@ jobs:
           retention-days: 14
       - name: Get date and time
         id: date
-        run: echo "value=$(date +'%Y-%m-%d-%H%M')" >> $GITHUB_OUTPUT
+        run: echo "value=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
       - name: Rename reports
         run: mv playwright-report ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
       - name: Commit report to report site
@@ -158,7 +158,7 @@ jobs:
           destination-repository-name: 'onspring-qa-playwright-reports'
           target-branch: 'main'
           commit-message: 'Add new report'
-          target-directory: 'reports/${{ steps.date.outputs.value }}/'
+          target-directory: 'reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}/'
       - name: Install vercel cli
         run: npm i -g vercel@latest
       # only deploy to preview if tests fail
