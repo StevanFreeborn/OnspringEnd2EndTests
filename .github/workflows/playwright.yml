@@ -15,6 +15,21 @@ on:
           - PROD
         required: true
         default: ALPHA
+env:
+  CI: true
+  SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
+  SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
+  SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
+  SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
+  SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
+  TEST_ENV: ${{ github.event.inputs.environment }}
+  ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
+  BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
+  QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
+  IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
+  VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
+  VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
+  PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
 jobs:
   generate_shards:
     name: 'Generate Shards'
@@ -66,21 +81,6 @@ jobs:
   run_tests:
     name: 'Playwright Tests - ${{ github.event.inputs.environment }} - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: generate_shards
-    env:
-      CI: true
-      SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
-      SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
-      SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
-      SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
-      SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
-      TEST_ENV: ${{ github.event.inputs.environment }}
-      ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
-      BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
-      QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
-      IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
-      VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
-      VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
-      PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
@@ -142,9 +142,25 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 14
+      - name: Get date and time
+        id: date
+        run: echo "value=$(date +'%Y-%m-%d-%H%M')" >> $GITHUB_OUTPUT
+      - name: Rename reports
+        run: mv playwright-report ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
+      - name: Commit report to report site
+        uses: cpina/github-action-push-to-another-repository@v1.7.2
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
+          destination-github-username: 'StevanFreeborn'
+          user-email: 'stevan.freeborn@gmail.com'
+          destination-repository-name: 'onspring-qa-playwright-reports'
+          target-branch: 'main'
+          commit-message: 'Add new report'
+          target-directory: 'reports'
       - name: Install vercel cli
         run: npm i -g vercel@latest
-
       # only deploy to preview if tests fail
       - name: Pull vercel preview environment information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}

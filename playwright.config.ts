@@ -85,7 +85,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: {
-      mode: 'retain-on-failure',
+      mode: isCI ? 'off' : 'retain-on-failure',
       size: { width: 1920, height: 1080 },
     },
   },
