@@ -2,7 +2,7 @@ import { Browser, Page, Response, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { User } from '../models/user';
-import { BASE_URL, SYS_ADMIN_AUTH_PATH, isCI } from '../playwright.config';
+import { BASE_URL, SYS_ADMIN_AUTH_PATH } from '../playwright.config';
 
 export async function sysAdminPage(
   { browser }: { browser: Browser },
@@ -39,12 +39,10 @@ export async function createBaseAuthPage(
 
   const context = await browser.newContext({
     storageState: authStorageLocation,
-    recordVideo: isCI
-      ? undefined
-      : {
-          dir: videoDir,
-          size: { width: 1920, height: 1080 },
-        },
+    recordVideo: {
+      dir: videoDir,
+      size: { width: 1920, height: 1080 },
+    },
     viewport: { width: 1920, height: 1080 },
   });
 
