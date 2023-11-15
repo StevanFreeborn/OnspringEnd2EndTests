@@ -35,7 +35,7 @@ test.describe('login', () => {
     });
 
     await test.step('Enter username and password.', async () => {
-      await loginPage.enterUsername(user.username);
+      await loginPage.enterUsername('wrong');
       await loginPage.enterPassword(user.password);
     });
 
@@ -50,7 +50,7 @@ test.describe('login', () => {
 
       // eslint-disable-next-line playwright/no-conditional-in-test
       if (currentUrl.includes(loginPage.path)) {
-        await loginPage.enterPassword(user.password);
+        await loginPage.enterPassword('wrong');
         await loginPage.clickLoginButton();
       }
     });
