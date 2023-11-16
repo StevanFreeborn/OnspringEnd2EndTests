@@ -21,6 +21,7 @@ on:
     paths-ignore:
       - .vscode/**
       - .github/**
+      - scripts/**
       - '**/README.md'
       - '**/example.env'
       - '**/.gitignore'

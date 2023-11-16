@@ -30,6 +30,8 @@ env:
   VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
   VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
   PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
 jobs:
   generate_shards:
     name: 'Generate Shards'
@@ -157,22 +159,10 @@ jobs:
           user-email: '65925598+StevanFreeborn@users.noreply.github.com'
           destination-repository-name: 'onspring-qa-playwright-reports'
           target-branch: 'main'
-          commit-message: 'Add new report'
+          commit-message: 'chore: add new report [skip deploy]'
           target-directory: 'reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}/'
-      - name: Install vercel cli
-        run: npm i -g vercel@latest
-      # only deploy to preview if tests fail
-      - name: Pull vercel preview environment information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        if: ${{ needs.run_tests.result == 'failure' }}
-      - name: Deploy to vercel as preview # this could fail if file size is > 100 MB. This is acceptable for now.
-        run: vercel --yes --token ${{ secrets.VERCEL_TOKEN }}
-        if: ${{ needs.run_tests.result == 'failure' }}
-
-      # only deploy to production if all tests pass
-      - name: Pull vercel production environment information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        if: ${{ needs.run_tests.result == 'success' }}
-      - name: Deploy to vercel as production # this could fail if file size is > 100 MB. This is acceptable for now.
-        run: vercel --yes --prod --token ${{ secrets.VERCEL_TOKEN }}
-        if: ${{ needs.run_tests.result == 'success' }}
+      - name: Deploy report site
+        run: node ./scripts/deployReportSite.mjs
+      - name: Display report URL
+        run: |
+          echo "Report available at URL: https://onspringqareports.stevanfreeborn.com/reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}"
