@@ -121,6 +121,7 @@ test.describe('reference field', () => {
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addReferenceFieldModal.saveButton.click();
     });
@@ -171,6 +172,7 @@ test.describe('reference field', () => {
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addReferenceFieldModal.saveButton.click();
@@ -258,6 +260,7 @@ test.describe('reference field', () => {
 
       const addReferenceFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Reference', 1);
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addReferenceFieldModal.saveButton.click();
