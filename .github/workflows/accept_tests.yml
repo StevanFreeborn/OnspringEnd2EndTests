@@ -14,6 +14,8 @@ env:
   VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
   VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
   PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
 on:
   pull_request:
     branches:
@@ -143,11 +145,8 @@ jobs:
     needs: run_tests
     if: always()
     runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     outputs:
-      deployment_url: ${{ steps.deploy-to-vercel.outputs.deployment_url }}
+      deployment_url: ${{ steps.report_url.outputs.value }}
     steps:
       - name: Checkout repository
         if: ${{ needs.run_tests.result != 'skipped' }}
@@ -179,18 +178,31 @@ jobs:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 90
-      - name: Install vercel cli
-        if: ${{ needs.run_tests.result != 'skipped' }}
-        run: npm i -g vercel@latest
-      - name: Pull vercel environment information
-        if: ${{ needs.run_tests.result != 'skipped' }}
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy to vercel # This may fail if a file is > 100 MB. Acceptable for now.
-        if: ${{ needs.run_tests.result != 'skipped' }}
-        id: deploy-to-vercel
-        run: |
-          vercel --yes --token ${{ secrets.VERCEL_TOKEN }} > deployment_url.txt
-          echo "deployment_url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
+      - name: Get date and time
+        id: date
+        run: echo "value=$(($(date '+%s%N' | cut -b1-13) / 1))" >> $GITHUB_OUTPUT
+      - name: Create report directory name
+        id: report_directory_name
+        run: echo "value=${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}-${{ github.workflow }}-${{ github.run_number }}-${{ github.run_attempt }}-PR_${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+      - name: Rename reports
+        run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
+      - name: Commit report to report site
+        uses: cpina/github-action-push-to-another-repository@v1.7.2
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: ${{ steps.report_directory_name.outputs.value }}
+          destination-github-username: 'StevanFreeborn'
+          user-email: '65925598+StevanFreeborn@users.noreply.github.com'
+          destination-repository-name: 'onspring-qa-playwright-reports'
+          target-branch: 'main'
+          commit-message: 'chore: add new report for PR [skip deploy]'
+          target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
+      - name: Deploy report site
+        run: node ./scripts/deployReportSite.mjs
+      - name: Output report url
+        id: report_url
+        run: echo "value=https://onspringqareports.stevanfreeborn.com/reports/${{ steps.report_directory_name.outputs.value }}/" >> $GITHUB_OUTPUT
   add_pr_comment:
     name: 'Add PR Comment'
     needs: [run_tests, merge_reports_and_publish]
