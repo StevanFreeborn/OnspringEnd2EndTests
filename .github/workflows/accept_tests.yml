@@ -1,4 +1,4 @@
-name: Run Test Acceptance Test
+name: Acceptance_Test
 env:
   TEST_ENV: BETA # If changed update run_tests job name
   CI: true
