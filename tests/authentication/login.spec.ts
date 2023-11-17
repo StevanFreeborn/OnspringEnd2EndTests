@@ -1,7 +1,7 @@
 import { Page, test as base, expect } from '@playwright/test';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
-import { timeoutErrorHandler } from '../../fixtures/auth.fixtures';
+import { errorResponseHandler } from '../../fixtures/auth.fixtures';
 import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 
@@ -13,7 +13,7 @@ type LoginTestFixtures = {
 
 const test = base.extend<LoginTestFixtures>({
   page: async ({ page }, use) => {
-    page.on('response', timeoutErrorHandler);
+    page.on('response', errorResponseHandler);
     await use(page);
   },
   loginPage: async ({ page }, use) => {

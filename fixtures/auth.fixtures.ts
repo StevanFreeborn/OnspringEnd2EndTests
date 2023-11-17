@@ -50,7 +50,7 @@ export async function createBaseAuthPage(
 
   const page = await context.newPage();
 
-  page.on('response', timeoutErrorHandler);
+  page.on('response', errorResponseHandler);
 
   try {
     await use(page);
@@ -70,11 +70,16 @@ export async function createBaseAuthPage(
 }
 
 // Onspring servers timeout after 100 seconds.
-// Want to fail tests when timeouts occur as opposed to hanging.
-export function timeoutErrorHandler(response: Response) {
+// Want to fail tests when timeouts or unexpected server responses occur as opposed to hanging.
+export function errorResponseHandler(response: Response) {
   const url = response.url();
+  const isBaseUrl = url.includes(BASE_URL);
 
-  if (url.includes(BASE_URL) && response.status() === 524) {
+  if (isBaseUrl && response.status() === 524) {
     throw new Error(`Request to ${url} timed out.`);
+  }
+
+  if (isBaseUrl && response.status() >= 499) {
+    throw new Error(`Request to ${url} failed with status code ${response.status()}.`);
   }
 }
