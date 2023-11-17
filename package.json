@@ -14,7 +14,8 @@
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",
     "format:test": "prettier . --check",
-    "format:fix": "prettier . --write"
+    "format:fix": "prettier . --write",
+    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/"
   },
   "keywords": [
     "onspring",
@@ -33,7 +34,8 @@
     "dotenv": "^16.3.1",
     "eslint": "^8.51.0",
     "eslint-plugin-playwright": "^0.17.0",
-    "prettier": "^3.0.3"
+    "prettier": "^3.0.3",
+    "rimraf": "^5.0.5"
   },
   "dependencies": {
     "zod": "^3.22.4"
