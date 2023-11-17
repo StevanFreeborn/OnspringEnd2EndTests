@@ -165,4 +165,4 @@ jobs:
         run: node ./scripts/deployReportSite.mjs
       - name: Display report URL
         run: |
-          echo "Report available at URL: https://onspringqareports.stevanfreeborn.com/reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}"
+          echo "Report available at URL: https://onspringqareports.stevanfreeborn.com/reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}/"
