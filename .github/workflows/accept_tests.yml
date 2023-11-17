@@ -179,14 +179,18 @@ jobs:
           path: playwright-report
           retention-days: 90
       - name: Get date and time
+        if: ${{ needs.run_tests.result != 'skipped' }}
         id: date
         run: echo "value=$(($(date '+%s%N' | cut -b1-13) / 1))" >> $GITHUB_OUTPUT
       - name: Create report directory name
+        if: ${{ needs.run_tests.result != 'skipped' }}
         id: report_directory_name
         run: echo "value=${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}-${{ github.workflow }}-${{ github.run_number }}-${{ github.run_attempt }}-PR_${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
       - name: Rename reports
+        if: ${{ needs.run_tests.result != 'skipped' }}
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
       - name: Commit report to report site
+        if: ${{ needs.run_tests.result != 'skipped' }}
         uses: cpina/github-action-push-to-another-repository@v1.7.2
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
@@ -199,8 +203,10 @@ jobs:
           commit-message: 'chore: add new report for PR [skip deploy]'
           target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
       - name: Deploy report site
+        if: ${{ needs.run_tests.result != 'skipped' }}
         run: node ./scripts/deployReportSite.mjs
       - name: Output report url
+        if: ${{ needs.run_tests.result != 'skipped' }}
         id: report_url
         run: echo "value=https://onspringqareports.stevanfreeborn.com/reports/${{ steps.report_directory_name.outputs.value }}/" >> $GITHUB_OUTPUT
   add_pr_comment:
