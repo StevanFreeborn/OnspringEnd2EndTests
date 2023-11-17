@@ -224,5 +224,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Playwright Report ${{ github.run_number }}-${{ github.run_attempt }}: ${process.env.DEPLOYMENT_URL}`
+              body: `PR Playwright Report ${{ github.run_number }}-${{ github.run_attempt }}: ${process.env.DEPLOYMENT_URL}`
             })
