@@ -50,6 +50,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   expect: {
     timeout: expectAndActionTimeout,
   },
+  retries: isCI ? 2 : 0,
   fullyParallel: true,
   forbidOnly: isCI,
   workers: isCI ? 1 : Math.floor(os.cpus().length / 2),
