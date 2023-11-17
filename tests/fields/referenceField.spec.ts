@@ -118,6 +118,7 @@ test.describe('reference field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
@@ -168,6 +169,7 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
@@ -255,6 +257,7 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Reference', 1);
 

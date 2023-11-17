@@ -61,7 +61,7 @@ async function run() {
     status = newStatus;
 
     if (status !== 'live') {
-      await await wait(15 * MS_PER_SEC);
+      await wait(15 * MS_PER_SEC);
     }
   } while (
     status === 'created' ||

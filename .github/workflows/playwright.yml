@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Playwright_Tests
 on:
   workflow_dispatch:
     inputs:
@@ -116,9 +116,6 @@ jobs:
     name: 'Merge Reports and Publish'
     if: always()
     needs: [run_tests]
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -147,22 +144,25 @@ jobs:
       - name: Get date and time
         id: date
         run: echo "value=$(($(date '+%s%N' | cut -b1-13) / 1))" >> $GITHUB_OUTPUT
+      - name: Create report directory name
+        id: report_directory_name
+        run: echo "value=${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}-${{ github.workflow }}-${{ github.run_number }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
       - name: Rename reports
-        run: mv playwright-report ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
+        run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
       - name: Commit report to report site
         uses: cpina/github-action-push-to-another-repository@v1.7.2
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source-directory: ${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}
+          source-directory: ${{ steps.report_directory_name.outputs.value }}
           destination-github-username: 'StevanFreeborn'
           user-email: '65925598+StevanFreeborn@users.noreply.github.com'
           destination-repository-name: 'onspring-qa-playwright-reports'
           target-branch: 'main'
           commit-message: 'chore: add new report [skip deploy]'
-          target-directory: 'reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}/'
+          target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
       - name: Deploy report site
         run: node ./scripts/deployReportSite.mjs
       - name: Display report URL
         run: |
-          echo "Report available at URL: https://onspringqareports.stevanfreeborn.com/reports/${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}"
+          echo "Report available at URL: https://onspringqareports.stevanfreeborn.com/reports/${{ steps.report_directory_name.outputs.value }}/"

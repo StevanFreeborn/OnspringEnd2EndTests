@@ -1,4 +1,4 @@
-name: Lint and Format
+name: Lint_and_Format
 on:
   pull_request:
     branches:

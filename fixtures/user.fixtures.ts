@@ -9,7 +9,7 @@ import { AddUserAdminPage } from '../pageObjectModels/users/addUserAdminPage';
 import { EditUserAdminPage } from '../pageObjectModels/users/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityAdminPage';
 import { AUTH_DIR } from '../playwright.config';
-import { timeoutErrorHandler } from './auth.fixtures';
+import { errorResponseHandler } from './auth.fixtures';
 
 export async function activeUserWithRole(
   { browser, sysAdminPage, role }: { browser: Browser; sysAdminPage: Page; role: Role },
@@ -31,7 +31,7 @@ export async function activeUserWithRole(
 
   const context = await browser.newContext();
   const page = await context.newPage();
-  page.on('response', timeoutErrorHandler);
+  page.on('response', errorResponseHandler);
 
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
