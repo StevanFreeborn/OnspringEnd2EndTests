@@ -118,10 +118,10 @@ test.describe('reference field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addReferenceFieldModal.saveButton.click();
     });
@@ -169,10 +169,10 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addReferenceFieldModal.saveButton.click();
@@ -257,10 +257,10 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Reference', 1);
 
+      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addReferenceFieldModal.saveButton.click();
