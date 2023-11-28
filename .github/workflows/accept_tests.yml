@@ -111,7 +111,7 @@ jobs:
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.40.0-jammy
+      image: mcr.microsoft.com/playwright:v1.39.0-jammy
     strategy:
       fail-fast: false
       matrix:
