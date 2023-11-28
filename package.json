@@ -35,9 +35,7 @@
     "eslint": "^8.51.0",
     "eslint-plugin-playwright": "^0.17.0",
     "prettier": "^3.0.3",
-    "rimraf": "^5.0.5"
-  },
-  "dependencies": {
+    "rimraf": "^5.0.5",
     "zod": "^3.22.4"
   }
 }
