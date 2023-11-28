@@ -12,6 +12,7 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-console": "warn",
-    "playwright/no-networkidle": "off"
+    "playwright/no-networkidle": "off",
+    "@typescript-eslint/no-floating-promises": "error"
   }
 }
