@@ -109,7 +109,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(item.type);
     await this.addLayoutItemDialog.continueButton.click();
-
+    await this.page.waitForLoadState('networkidle');
     await this.addLayoutItem(item);
   }
 
@@ -137,6 +137,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     }
 
     await this.addLayoutItemDialog.continueButton.click();
+    await this.page.waitForLoadState('networkidle');
     await this.addLayoutItem(item, 1);
   }
 }
