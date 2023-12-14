@@ -124,7 +124,7 @@ test.describe('reference field', () => {
 
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addReferenceFieldModal.saveButton.click();
+      await addReferenceFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -177,7 +177,7 @@ test.describe('reference field', () => {
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addReferenceFieldModal.saveButton.click();
+      await addReferenceFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -266,7 +266,7 @@ test.describe('reference field', () => {
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addReferenceFieldModal.saveButton.click();
+      await addReferenceFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -415,7 +415,7 @@ test.describe('reference field', () => {
 
       const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
       await editReferenceFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editReferenceFieldModal.saveButton.click();
+      await editReferenceFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -694,7 +694,7 @@ test.describe('reference field', () => {
       const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
       await editReferenceFieldModal.securityTabButton.click();
       await editReferenceFieldModal.securityTab.setPermissions([]);
-      await editReferenceFieldModal.saveButton.click();
+      await editReferenceFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

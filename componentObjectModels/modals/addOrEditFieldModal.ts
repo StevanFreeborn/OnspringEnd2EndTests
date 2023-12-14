@@ -11,6 +11,7 @@ export class AddOrEditFieldModal extends AddOrEditLayoutItemModal {
   readonly usageTabButton: Locator;
   readonly securityTab: LayoutItemSecurityTab;
   readonly usageTab: LayoutItemUsageTab;
+  private readonly addOrEditPathRegex: RegExp = /\/Admin\/App\/\d+\/Field\/(AddUsingSettings|\d+\/Edit)/;
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
@@ -22,5 +23,12 @@ export class AddOrEditFieldModal extends AddOrEditLayoutItemModal {
     this.usageTabButton = this.frame.getByRole('tab', { name: 'Usage' });
     this.securityTab = new FieldSecurityTab(this.frame);
     this.usageTab = new LayoutItemUsageTab();
+  }
+
+  async save() {
+    const addOrEditFieldResponse = this.saveButton.page().waitForResponse(this.addOrEditPathRegex);
+
+    await this.saveButton.click();
+    await addOrEditFieldResponse;
   }
 }

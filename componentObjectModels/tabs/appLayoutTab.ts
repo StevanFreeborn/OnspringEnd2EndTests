@@ -91,8 +91,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     await modal.securityTabButton.click();
     await modal.securityTab.setPermissions(item.permissions);
 
-    await modal.saveButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await modal.save();
   }
 
   /**

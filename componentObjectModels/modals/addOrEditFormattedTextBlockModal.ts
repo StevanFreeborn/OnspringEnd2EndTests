@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
 import { FormattedTextBlockGeneralTab } from '../tabs/formattedTextBlockGeneralTab';
+import { FormattedTextBlockSecurityTab } from '../tabs/formattedTextBlockSecurityTab';
 import { LayoutItemSecurityTab } from '../tabs/layoutItemSecurityTab';
 import { LayoutItemUsageTab } from '../tabs/layoutItemUsageTab';
 import { AddOrEditLayoutItemModal } from './addOrEditLayoutItemModal';
-import { FormattedTextBlockSecurityTab } from '../tabs/formattedTextBlockSecurityTab';
 
 export class AddOrEditFormattedBlockModal extends AddOrEditLayoutItemModal {
   private readonly frame: Locator;
@@ -13,6 +13,7 @@ export class AddOrEditFormattedBlockModal extends AddOrEditLayoutItemModal {
   readonly securityTab: LayoutItemSecurityTab;
   readonly usageTab: LayoutItemUsageTab;
   readonly generalTab: FormattedTextBlockGeneralTab;
+  private readonly addOrEditPathRegex: RegExp = /\/Admin\/App\/\d+\/LayoutObject\/(AddTextObject|\d+\/EditTextObject)/;
 
   constructor(page: Page) {
     super(page);
@@ -23,5 +24,12 @@ export class AddOrEditFormattedBlockModal extends AddOrEditLayoutItemModal {
     this.generalTab = new FormattedTextBlockGeneralTab(this.frame);
     this.securityTab = new FormattedTextBlockSecurityTab(this.frame);
     this.usageTab = new LayoutItemUsageTab();
+  }
+
+  async save() {
+    const addOrEditTextBlockResponse = this.saveButton.page().waitForResponse(this.addOrEditPathRegex);
+
+    await this.saveButton.click();
+    await addOrEditTextBlockResponse;
   }
 }

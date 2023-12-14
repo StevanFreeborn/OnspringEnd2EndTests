@@ -51,11 +51,12 @@ test.describe('number field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
 
       await expect(addNumberFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addNumberFieldModal.saveButton.click();
+      await addNumberFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -89,12 +90,13 @@ test.describe('number field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
 
       await expect(addNumberFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addNumberFieldModal.saveButton.click();
+      await addNumberFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -162,12 +164,13 @@ test.describe('number field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addNumberFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Number', 1);
 
       await expect(addNumberFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addNumberFieldModal.saveButton.click();
+      await addNumberFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -304,10 +307,11 @@ test.describe('number field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
       await editNumberFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editNumberFieldModal.saveButton.click();
+      await editNumberFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -554,11 +558,12 @@ test.describe('number field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editNumberFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Number');
       await editNumberFieldModal.securityTabButton.click();
       await editNumberFieldModal.securityTab.setPermissions([]);
-      await editNumberFieldModal.saveButton.click();
+      await editNumberFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {
