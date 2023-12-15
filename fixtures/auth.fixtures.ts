@@ -79,7 +79,11 @@ export function errorResponseHandler(response: Response) {
     throw new Error(`Request to ${url} timed out.`);
   }
 
-  if (isBaseUrl && response.status() >= 499) {
-    throw new Error(`Request to ${url} failed with status code ${response.status()}.`);
+  if (isBaseUrl && response.status() === 520) {
+    throw new Error(`Request to ${url} returned an unexpected response.`);
+  }
+
+  if (isBaseUrl && response.status() === 502) {
+    throw new Error(`Request to ${url} encountered a bad gateway.`);
   }
 }
