@@ -505,11 +505,6 @@ test.describe('time span field', () => {
       description: 'Test-135',
     });
 
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-105',
-    });
-
     const field = new TimeSpanField({
       name: FakeDataFactory.createFakeFieldName(),
       permissions: [new LayoutItemPermission({ roleName: role.name, read: false, update: false })],
