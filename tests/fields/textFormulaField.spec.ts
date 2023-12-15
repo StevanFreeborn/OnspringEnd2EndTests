@@ -57,11 +57,12 @@ test.describe('text formula field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
       await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addTextFormulaFieldModal.saveButton.click();
+      await addTextFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -98,12 +99,13 @@ test.describe('text formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
       await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addTextFormulaFieldModal.saveButton.click();
+      await addTextFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -177,12 +179,13 @@ test.describe('text formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFormulaFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
 
       await expect(addTextFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addTextFormulaFieldModal.saveButton.click();
+      await addTextFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -328,10 +331,11 @@ test.describe('text formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
       await editTextFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editTextFormulaFieldModal.saveButton.click();
+      await editTextFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -563,11 +567,12 @@ test.describe('text formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
       await editTextFormulaFieldModal.securityTabButton.click();
       await editTextFormulaFieldModal.securityTab.setPermissions([]);
-      await editTextFormulaFieldModal.saveButton.click();
+      await editTextFormulaFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

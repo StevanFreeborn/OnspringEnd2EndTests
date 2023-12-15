@@ -50,10 +50,11 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addAttachmentFieldModal.saveButton.click();
+      await addAttachmentFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -87,12 +88,13 @@ test.describe('attachment field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
 
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addAttachmentFieldModal.saveButton.click();
+      await addAttachmentFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -162,12 +164,13 @@ test.describe('attachment field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Attachment', 1);
 
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addAttachmentFieldModal.saveButton.click();
+      await addAttachmentFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -304,10 +307,11 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
       await editAttachmentFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editAttachmentFieldModal.saveButton.click();
+      await editAttachmentFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -561,11 +565,12 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
       await editAttachmentFieldModal.securityTabButton.click();
       await editAttachmentFieldModal.securityTab.setPermissions([]);
-      await editAttachmentFieldModal.saveButton.click();
+      await editAttachmentFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

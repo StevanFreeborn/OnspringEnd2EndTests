@@ -50,10 +50,11 @@ test.describe('image field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
       await expect(addImageFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addImageFieldModal.saveButton.click();
+      await addImageFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -87,12 +88,13 @@ test.describe('image field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
 
       await expect(addImageFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addImageFieldModal.saveButton.click();
+      await addImageFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -160,12 +162,13 @@ test.describe('image field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addImageFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Image', 1);
 
       await expect(addImageFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addImageFieldModal.saveButton.click();
+      await addImageFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -302,10 +305,11 @@ test.describe('image field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
       await editImageFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editImageFieldModal.saveButton.click();
+      await editImageFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -560,11 +564,12 @@ test.describe('image field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editImageFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Image');
       await editImageFieldModal.securityTabButton.click();
       await editImageFieldModal.securityTab.setPermissions([]);
-      await editImageFieldModal.saveButton.click();
+      await editImageFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

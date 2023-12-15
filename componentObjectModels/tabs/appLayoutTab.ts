@@ -91,8 +91,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     await modal.securityTabButton.click();
     await modal.securityTab.setPermissions(item.permissions);
 
-    await modal.saveButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await modal.save();
   }
 
   /**
@@ -109,7 +108,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(item.type);
     await this.addLayoutItemDialog.continueButton.click();
-
+    await this.page.waitForLoadState('networkidle');
     await this.addLayoutItem(item);
   }
 
@@ -137,6 +136,7 @@ export class AppLayoutTab extends LayoutItemCreator {
     }
 
     await this.addLayoutItemDialog.continueButton.click();
+    await this.page.waitForLoadState('networkidle');
     await this.addLayoutItem(item, 1);
   }
 }

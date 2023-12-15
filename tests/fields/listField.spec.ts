@@ -57,11 +57,12 @@ test.describe('list field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
 
       await expect(addListFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addListFieldModal.saveButton.click();
+      await addListFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -98,12 +99,13 @@ test.describe('list field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
 
       await expect(addListFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addListFieldModal.saveButton.click();
+      await addListFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -174,12 +176,13 @@ test.describe('list field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addListFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('List', 1);
 
       await expect(addListFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addListFieldModal.saveButton.click();
+      await addListFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -358,10 +361,11 @@ test.describe('list field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
       await editListFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editListFieldModal.saveButton.click();
+      await editListFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -584,11 +588,12 @@ test.describe('list field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editListFieldModal = appAdminPage.layoutTab.getLayoutItemModal('List');
       await editListFieldModal.securityTabButton.click();
       await editListFieldModal.securityTab.setPermissions([]);
-      await editListFieldModal.saveButton.click();
+      await editListFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

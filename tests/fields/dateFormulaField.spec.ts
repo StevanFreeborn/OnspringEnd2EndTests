@@ -57,11 +57,12 @@ test.describe('date formula field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addDateFormulaFieldModal.saveButton.click();
+      await addDateFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -98,12 +99,13 @@ test.describe('date formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addDateFormulaFieldModal.saveButton.click();
+      await addDateFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -177,12 +179,13 @@ test.describe('date formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
 
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addDateFormulaFieldModal.saveButton.click();
+      await addDateFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -328,10 +331,11 @@ test.describe('date formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
       await editDateFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editDateFormulaFieldModal.saveButton.click();
+      await editDateFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -565,11 +569,12 @@ test.describe('date formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
       await editDateFormulaFieldModal.securityTabButton.click();
       await editDateFormulaFieldModal.securityTab.setPermissions([]);
-      await editDateFormulaFieldModal.saveButton.click();
+      await editDateFormulaFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

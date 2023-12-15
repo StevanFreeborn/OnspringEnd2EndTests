@@ -57,11 +57,12 @@ test.describe('formatted text block', () => {
 
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
 
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
-      await addTextBlockModal.saveButton.click();
+      await addTextBlockModal.save();
     });
 
     await test.step('Verify the text block was copied', async () => {
@@ -98,12 +99,13 @@ test.describe('formatted text block', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(textBlock.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
 
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
 
-      await addTextBlockModal.saveButton.click();
+      await addTextBlockModal.save();
     });
 
     await test.step('Verify the text block was copied', async () => {
@@ -178,6 +180,7 @@ test.describe('formatted text block', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(textBlock.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal(
         'Formatted Text Block',
@@ -186,7 +189,7 @@ test.describe('formatted text block', () => {
 
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
 
-      await addTextBlockModal.saveButton.click();
+      await addTextBlockModal.save();
     });
 
     await test.step('Verify the text block was copied', async () => {
@@ -334,10 +337,11 @@ test.describe('formatted text block', () => {
       const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
       await editTextBlockModal.generalTab.nameInput.fill(updatedTextBlockName);
-      await editTextBlockModal.saveButton.click();
+      await editTextBlockModal.save();
     });
 
     await test.step('Verify the text block was updated', async () => {
@@ -567,11 +571,12 @@ test.describe('formatted text block', () => {
       const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
       await editTextBlockModal.securityTabButton.click();
       await editTextBlockModal.securityTab.setPermissions([]);
-      await editTextBlockModal.saveButton.click();
+      await editTextBlockModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {

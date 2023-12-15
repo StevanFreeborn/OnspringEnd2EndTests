@@ -51,11 +51,12 @@ test.describe('date/time field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
 
       await expect(addDateFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addDateFieldModal.saveButton.click();
+      await addDateFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -89,12 +90,13 @@ test.describe('date/time field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
 
       await expect(addDateFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addDateFieldModal.saveButton.click();
+      await addDateFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -164,12 +166,13 @@ test.describe('date/time field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Date/Time', 1);
 
       await expect(addDateFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
-      await addDateFieldModal.saveButton.click();
+      await addDateFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
@@ -338,10 +341,11 @@ test.describe('date/time field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
       await editDateFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editDateFieldModal.saveButton.click();
+      await editDateFieldModal.save();
     });
 
     await test.step('Verify the field was updated', async () => {
@@ -558,11 +562,12 @@ test.describe('date/time field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
+      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Date/Time');
       await editDateFieldModal.securityTabButton.click();
       await editDateFieldModal.securityTab.setPermissions([]);
-      await editDateFieldModal.saveButton.click();
+      await editDateFieldModal.save();
     });
 
     await test.step('Navigate to created record again as test user', async () => {
