@@ -69,7 +69,7 @@ test.describe('app', () => {
 
     await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.name).toHaveText(appName);
     });
   });
 
@@ -91,7 +91,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.name).toHaveText(appName);
     });
   });
 
@@ -118,7 +118,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(appName);
+      await expect(appAdminPage.generalTab.name).toHaveText(appName);
     });
   });
 
@@ -168,7 +168,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -218,7 +218,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -273,7 +273,7 @@ test.describe('app', () => {
 
     await test.step('Verify app created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.appName).toHaveText(expectedAppCopyName);
+      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
   });
 
@@ -301,7 +301,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's name was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.appName).toHaveText(updatedAppName);
+      await expect(appAdminPage.generalTab.name).toHaveText(updatedAppName);
     });
   });
 
@@ -316,7 +316,7 @@ test.describe('app', () => {
 
     await test.step('Create the app to be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
@@ -338,7 +338,7 @@ test.describe('app', () => {
     });
 
     await test.step('Verify app was disabled correctly', async () => {
-      await expect(appAdminPage.generalTab.appStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.status).toHaveText('Disabled');
     });
   });
 
@@ -353,7 +353,7 @@ test.describe('app', () => {
 
     await test.step('Create the app to be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
@@ -373,7 +373,7 @@ test.describe('app', () => {
 
       await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
 
-      await expect(appAdminPage.generalTab.appStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.status).toHaveText('Disabled');
     });
 
     await test.step('Enable the app', async () => {
@@ -395,7 +395,7 @@ test.describe('app', () => {
     });
 
     await test.step('Verify app was enabled correctly', async () => {
-      await expect(appAdminPage.generalTab.appStatus).toHaveText('Enabled');
+      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
     });
   });
 
@@ -411,7 +411,7 @@ test.describe('app', () => {
 
     await test.step('Create the app whose description will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appDescription).toHaveText('');
+      await expect(appAdminPage.generalTab.description).toHaveText('');
     });
 
     await test.step("Update the app's description", async () => {
@@ -424,7 +424,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's description was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.appDescription).toHaveText(updatedDescription);
+      await expect(appAdminPage.generalTab.description).toHaveText(updatedDescription);
     });
   });
 
@@ -439,7 +439,7 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be disabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
@@ -465,7 +465,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's content versioning was disabled correctly", async () => {
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
     });
   });
 
@@ -480,14 +480,14 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be enabled', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
       await appAdminPage.generalTab.editGeneralSettingsLink.click();
       await appAdminPage.generalTab.editAppGeneralSettingsModal.contentVersionStatusToggle.click();
       await appAdminPage.generalTab.editAppGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Disabled');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the app's content versioning", async () => {
@@ -513,7 +513,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's content versioning was enabled correctly", async () => {
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
   });
 
@@ -528,7 +528,7 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be changed', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the app's content versioning", async () => {
@@ -555,7 +555,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's content versioning was changed correctly", async () => {
-      await expect(appAdminPage.generalTab.appContentVersionStatus).toHaveText(
+      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText(
         'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
       );
     });
@@ -1135,7 +1135,7 @@ test.describe('app', () => {
 
     await test.step('Create the app whose app notes will be updated', async () => {
       await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.appNotes).toHaveText('');
+      await expect(appAdminPage.generalTab.notes).toHaveText('');
     });
 
     await test.step("Update the app's app notes", async () => {
@@ -1148,7 +1148,7 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's app notes were updated correctly", async () => {
-      await expect(appAdminPage.generalTab.appNotes).toHaveText(note);
+      await expect(appAdminPage.generalTab.notes).toHaveText(note);
     });
   });
 
