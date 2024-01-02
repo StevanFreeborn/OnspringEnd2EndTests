@@ -1,16 +1,50 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { SurveysAdminPage } from '../../pageObjectModels/surveys/surveysAdminPage';
 import { AnnotationType } from '../annotations';
 
-const test = base.extend({});
+type SurveyTestFixtures = {
+  adminHomePage: AdminHomePage;
+  surveysAdminPage: SurveysAdminPage;
+};
+
+const test = base.extend<SurveyTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    await use(adminHomePage);
+  },
+  surveysAdminPage: async ({ sysAdminPage }, use) => {
+    const surveysAdminPage = new SurveysAdminPage(sysAdminPage);
+    await use(surveysAdminPage);
+  },
+});
 
 test.describe('survey supporting data app', () => {
+  let surveysToDelete: string[] = [];
+
+  test.beforeEach(async () => {
+    // await surveysAdminPage.goto();
+  });
+
+  test.afterEach(async () => {
+    // await surveysAdminPage.deleteSurveys(surveysToDelete);
+    surveysToDelete = [];
+  });
+
   test('Create a survey via the create button on the header of on the admin home page', async ({}) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-858',
     });
 
-    // TODO: implement test
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey', async () => {});
+
+    await test.step('Verify the survey was created correctly', async () => {});
+
     expect(false).toBe(true);
   });
 
