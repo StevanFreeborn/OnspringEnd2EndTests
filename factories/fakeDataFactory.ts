@@ -33,6 +33,11 @@ export class FakeDataFactory {
     return `${uniqueId}-app-test`;
   }
 
+  static createFakeSurveyName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-survey-test`;
+  }
+
   static createFakeGroupName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-group-test`;
