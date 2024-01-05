@@ -33,8 +33,8 @@ test.describe('survey supporting data app', () => {
     await adminHomePage.goto();
   });
 
-  test.afterEach(async () => {
-    // await surveysAdminPage.deleteSurveys(surveysToDelete);
+  test.afterEach(async ({ surveysAdminPage }) => {
+    await surveysAdminPage.deleteSurveys(surveysToDelete);
     surveysToDelete = [];
   });
 

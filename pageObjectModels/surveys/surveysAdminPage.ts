@@ -21,4 +21,30 @@ export class SurveysAdminPage extends BaseAdminPage {
     this.createSurveyModal = new CreateSurveyModal(page);
     this.deleteSurveyDialog = new DeleteSurveyDialog(page);
   }
+
+  async goto() {
+    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+  }
+
+  async deleteSurveys(surveysToDelete: string[]) {
+    await this.goto();
+
+    for (const surveyName of surveysToDelete) {
+      const surveyRow = this.surveyGrid.getByRole('row', { name: surveyName }).first();
+      const rowElement = await surveyRow.elementHandle();
+
+      if (rowElement === null) {
+        continue;
+      }
+
+      await surveyRow.hover();
+      await surveyRow.getByTitle('Delete Survey').click();
+      await this.deleteSurveyDialog.confirmationInput.pressSequentially('OK', {
+        delay: 100,
+      });
+      await this.deleteSurveyDialog.deleteButton.click();
+      await this.deleteSurveyDialog.waitForDialogToBeDismissed();
+      await rowElement.waitForElementState('hidden');
+    }
+  }
 }
