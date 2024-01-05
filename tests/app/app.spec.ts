@@ -249,7 +249,6 @@ test.describe('app', () => {
     await test.step('Navigate back to apps admin page', async () => {
       await adminHomePage.page.waitForLoadState();
       await adminHomePage.appTileLink.click();
-      await appsAdminPage.page.waitForLoadState();
     });
 
     await test.step('Create the copy of the app', async () => {
@@ -264,7 +263,6 @@ test.describe('app', () => {
       await appsAdminPage.createAppDialog.continueButton.click();
 
       await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
-
       await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
       await appsAdminPage.createAppModal.saveButton.click();

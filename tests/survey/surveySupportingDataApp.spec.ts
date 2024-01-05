@@ -95,7 +95,7 @@ test.describe('survey supporting data app', () => {
     const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
-    await test.step('Navigate to the Surveys admin page', async () => {
+    await test.step('Navigate to the surveys admin page', async () => {
       await adminHomePage.surveyTileLink.click();
     });
 
@@ -157,14 +157,56 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Create a copy of a survey via the Create Survey button on the Surveys admin page', async ({}) => {
+  test('Create a copy of a survey via the Create Survey button on the Surveys admin page', async ({
+    adminHomePage,
+    surveysAdminPage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-862',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const expectedSurveyCopyName = `${surveyName} (1)`;
+    surveysToDelete.push(surveyName, expectedSurveyCopyName);
+
+    await test.step('Navigate to the surveys admin page', async () => {
+      await adminHomePage.surveyTileLink.click();
+    });
+
+    await test.step('Create the survey to be copied', async () => {
+      await surveysAdminPage.page.waitForLoadState();
+      await surveysAdminPage.createSurvey(surveyName);
+      await surveyAdminPage.sidebar.adminGearIcon.click();
+    });
+
+    await test.step('Navigate back to surveys admin page', async () => {
+      await adminHomePage.page.waitForLoadState();
+      await adminHomePage.surveyTileLink.click();
+    });
+
+    await test.step('Create the copy of the survey', async () => {
+      await surveysAdminPage.page.waitForLoadState();
+      await surveysAdminPage.createSurveyButton.click();
+
+      await expect(surveysAdminPage.createSurveyDialog.copyFromRadioButton).toBeVisible();
+
+      await surveysAdminPage.createSurveyDialog.copyFromRadioButton.click();
+      await surveysAdminPage.createSurveyDialog.selectDropdown.click();
+      await surveysAdminPage.createSurveyDialog.getSurveyToCopy(surveyName).click();
+      await surveysAdminPage.createSurveyDialog.continueButton.click();
+
+      await expect(surveysAdminPage.createSurveyModal.nameInput).toBeVisible();
+      await expect(surveysAdminPage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
+
+      await surveysAdminPage.createSurveyModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey was created correctly', async () => {
+      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
+      await expect(surveyAdminPage.generalTab.name).toHaveText(expectedSurveyCopyName);
+    });
   });
 
   test('Create a copy of a survey via the create button on the Surveys tile on the admin home page', async ({}) => {
