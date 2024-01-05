@@ -1,12 +1,14 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
 import { SurveysAdminPage } from '../../pageObjectModels/surveys/surveysAdminPage';
 import { AnnotationType } from '../annotations';
 
 type SurveyTestFixtures = {
   adminHomePage: AdminHomePage;
   surveysAdminPage: SurveysAdminPage;
+  surveyAdminPage: SurveyAdminPage;
 };
 
 const test = base.extend<SurveyTestFixtures>({
@@ -18,13 +20,17 @@ const test = base.extend<SurveyTestFixtures>({
     const surveysAdminPage = new SurveysAdminPage(sysAdminPage);
     await use(surveysAdminPage);
   },
+  surveyAdminPage: async ({ sysAdminPage }, use) => {
+    const surveyAdminPage = new SurveyAdminPage(sysAdminPage);
+    await use(surveyAdminPage);
+  },
 });
 
 test.describe('survey supporting data app', () => {
   let surveysToDelete: string[] = [];
 
-  test.beforeEach(async () => {
-    // await surveysAdminPage.goto();
+  test.beforeEach(async ({ adminHomePage }) => {
+    await adminHomePage.goto();
   });
 
   test.afterEach(async () => {
@@ -32,7 +38,10 @@ test.describe('survey supporting data app', () => {
     surveysToDelete = [];
   });
 
-  test('Create a survey via the create button on the header of on the admin home page', async ({}) => {
+  test('Create a survey via the create button on the header of on the admin home page', async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-858',
@@ -41,11 +50,14 @@ test.describe('survey supporting data app', () => {
     const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
-    await test.step('Create the survey', async () => {});
+    await test.step('Create the survey', async () => {
+      adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
+    });
 
-    await test.step('Verify the survey was created correctly', async () => {});
-
-    expect(false).toBe(true);
+    await test.step('Verify the survey was created correctly', async () => {
+      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
+      await expect(surveyAdminPage.generalTab.name).toHaveText(surveyName);
+    });
   });
 
   test('Create a survey via the create button on the Surveys tile on the admin home page', async ({}) => {
