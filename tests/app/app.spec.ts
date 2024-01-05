@@ -89,7 +89,7 @@ test.describe('app', () => {
       await adminHomePage.createAppUsingAppTileButton(appName);
     });
 
-    await test.step('Verify app created correctly', async () => {
+    await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
       await expect(appAdminPage.generalTab.name).toHaveText(appName);
     });
@@ -116,7 +116,7 @@ test.describe('app', () => {
       await appsAdminPage.createApp(appName);
     });
 
-    await test.step('Verify app created correctly', async () => {
+    await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
       await expect(appAdminPage.generalTab.name).toHaveText(appName);
     });
@@ -166,7 +166,7 @@ test.describe('app', () => {
       await adminHomePage.createAppModal.saveButton.click();
     });
 
-    await test.step('Verify app created correctly', async () => {
+    await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
       await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
@@ -216,7 +216,7 @@ test.describe('app', () => {
       await adminHomePage.createAppModal.saveButton.click();
     });
 
-    await test.step('Verify app created correctly', async () => {
+    await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
       await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
@@ -271,7 +271,7 @@ test.describe('app', () => {
       await appsAdminPage.createAppModal.saveButton.click();
     });
 
-    await test.step('Verify app created correctly', async () => {
+    await test.step('Verify the app was created correctly', async () => {
       await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
       await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
     });
