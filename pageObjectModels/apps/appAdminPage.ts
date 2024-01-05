@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { TextField } from '../../models/textField';
@@ -15,7 +15,6 @@ type GeocodeFields = {
 export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   readonly path: string;
   readonly pathRegex: RegExp;
-  readonly closeButton: Locator;
 
   readonly generalTab: AppGeneralTab;
   readonly layoutTab: AppLayoutTab;
@@ -24,7 +23,6 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
     super(page);
     this.path = '/Admin/App/';
     this.pathRegex = new RegExp(`${BASE_URL}${this.path}[0-9]+`);
-    this.closeButton = page.locator('a:has-text("Close")');
 
     this.generalTab = new AppGeneralTab(page);
     this.layoutTab = new AppLayoutTab(page);

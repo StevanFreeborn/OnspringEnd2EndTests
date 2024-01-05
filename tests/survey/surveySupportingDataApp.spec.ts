@@ -339,4 +339,53 @@ test.describe('survey supporting data app', () => {
     // TODO: implement test
     expect(false).toBe(true);
   });
+
+  test('Delete a survey supporting data app', async ({ adminHomePage, surveysAdminPage, surveyAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-865',
+    });
+
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const surveyRow = surveysAdminPage.surveyGrid.getByRole('row', { name: surveyName }).first();
+    const surveyDeleteButton = surveyRow.getByTitle('Delete Survey');
+
+    await test.step('Navigate to the Surveys admin page', async () => {
+      adminHomePage.surveyTileLink.click();
+    });
+
+    await test.step('Create the survey supporting data app to be deleted', async () => {
+      await surveysAdminPage.createSurvey(surveyName);
+      await surveyAdminPage.page.waitForLoadState();
+      await surveyAdminPage.closeButton.click();
+    });
+
+    await test.step('Navigate to the surveys admin page', async () => {
+      await surveysAdminPage.goto();
+      await expect(surveyRow).toBeVisible();
+    });
+
+    await test.step('Delete the survey supporting data app', async () => {
+      await surveyRow.hover();
+
+      await surveyDeleteButton.click();
+
+      await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toBeVisible();
+
+      await surveysAdminPage.deleteSurveyDialog.confirmationInput.pressSequentially('OK', {
+        delay: 100,
+      });
+
+      await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toHaveValue('OK');
+      await expect(surveysAdminPage.deleteSurveyDialog.deleteButton).toBeEnabled();
+
+      await surveysAdminPage.deleteSurveyDialog.deleteButton.click();
+      await surveysAdminPage.deleteSurveyDialog.waitForDialogToBeDismissed();
+      await surveysAdminPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the survey supporting data app was deleted', async () => {
+      await expect(surveyRow).not.toBeAttached();
+    });
+  });
 });

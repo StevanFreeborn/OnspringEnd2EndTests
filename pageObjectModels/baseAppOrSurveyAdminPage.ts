@@ -24,7 +24,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
 
   protected constructor(page: Page) {
     super(page);
-    this.closeButton = page.locator('.close-button');
+    this.closeButton = page.locator('a:has-text("Close")');
 
     this.generalTabButton = page.locator('#tab-strip').getByText('General');
     this.layoutTabButton = page.locator('#tab-strip').getByText('Layout');

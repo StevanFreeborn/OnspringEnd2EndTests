@@ -17,24 +17,30 @@ export class AdminHomePage extends BaseAdminPage {
   readonly securityTileCreateButton: Locator;
   readonly securityCreateMenu: Locator;
 
+  readonly surveyTileLink: Locator;
   readonly createSurveyDialog: CreateSurveyDialog;
   readonly createSurveyModal: CreateSurveyModal;
+
+  private getTileLink(tilePosition: number) {
+    return this.page.locator(
+      `div.landing-list-item-container:nth-child(${tilePosition}) > div:nth-child(1) > a:nth-child(1)`
+    );
+  }
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Home';
 
-    this.appTileLink = page.locator('div.landing-list-item-container:nth-child(1) > div:nth-child(1) > a:nth-child(1)');
+    this.appTileLink = this.getTileLink(1);
     this.appTileCreateButton = page.locator('#card-create-button-Apps');
     this.createAppDialog = new CreateAppDialog(page);
     this.createAppModal = new CreateAppModal(page);
 
-    this.securityTileLink = page.locator(
-      'div.landing-list-item-container:nth-child(6) > div:nth-child(1) > a:nth-child(1)'
-    );
+    this.securityTileLink = this.getTileLink(6);
     this.securityTileCreateButton = page.locator('#card-create-button-Security');
     this.securityCreateMenu = page.locator('[data-create-menu-for="card-create-button-Security"]');
 
+    this.surveyTileLink = this.getTileLink(2);
     this.createSurveyDialog = new CreateSurveyDialog(page);
     this.createSurveyModal = new CreateSurveyModal(page);
   }

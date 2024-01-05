@@ -26,6 +26,19 @@ export class SurveysAdminPage extends BaseAdminPage {
     await this.page.goto(this.path, { waitUntil: 'networkidle' });
   }
 
+  async createSurvey(surveyName: string) {
+    await this.createSurveyButton.click();
+
+    await this.createSurveyDialog.continueButton.waitFor();
+    await this.createSurveyDialog.continueButton.click();
+
+    await this.page.waitForLoadState('networkidle');
+    await this.createSurveyModal.nameInput.waitFor();
+
+    await this.createSurveyModal.nameInput.fill(surveyName);
+    await this.createSurveyModal.saveButton.click();
+  }
+
   async deleteSurveys(surveysToDelete: string[]) {
     await this.goto();
 
