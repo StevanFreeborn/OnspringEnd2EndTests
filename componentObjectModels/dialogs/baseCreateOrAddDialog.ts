@@ -13,7 +13,7 @@ export class BaseCreateOrAddDialog {
     this.selectDropdown = page.getByRole('listbox').first();
   }
 
-  getItemToCopy(itemName: string) {
+  protected getItemToCopy(itemName: string) {
     return this.page.getByRole('option', { name: itemName });
   }
 }

@@ -109,14 +109,52 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Create a copy of a survey via the create button on the header of the admin home page', async ({}) => {
+  test('Create a copy of a survey via the create button on the header of the admin home page', async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-861',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const expectedSurveyCopyName = `${surveyName} (1)`;
+    surveysToDelete.push(surveyName, expectedSurveyCopyName);
+
+    await test.step('Create the survey to be copied', async () => {
+      await adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
+    });
+
+    await test.step('Navigate back to admin home page', async () => {
+      await surveyAdminPage.sidebar.adminGearIcon.click();
+    });
+
+    await test.step('Create the copy of the survey', async () => {
+      await adminHomePage.page.waitForLoadState();
+      await adminHomePage.adminNav.adminCreateButton.hover();
+
+      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
+
+      await adminHomePage.adminNav.surveyCreateMenuOption.click();
+
+      await expect(adminHomePage.createSurveyDialog.copyFromRadioButton).toBeVisible();
+
+      await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
+      await adminHomePage.createSurveyDialog.selectDropdown.click();
+      await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
+      await adminHomePage.createSurveyDialog.continueButton.click();
+
+      await expect(adminHomePage.createSurveyModal.nameInput).toBeVisible();
+      await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
+
+      await adminHomePage.createSurveyModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey was created correctly', async () => {
+      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
+      await expect(surveyAdminPage.generalTab.name).toHaveText(expectedSurveyCopyName);
+    });
   });
 
   test('Create a copy of a survey via the Create Survey button on the Surveys admin page', async ({}) => {

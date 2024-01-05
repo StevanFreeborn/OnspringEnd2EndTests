@@ -160,7 +160,6 @@ test.describe('app', () => {
       await adminHomePage.createAppDialog.continueButton.click();
 
       await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
-
       await expect(adminHomePage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
 
       await adminHomePage.createAppModal.saveButton.click();
