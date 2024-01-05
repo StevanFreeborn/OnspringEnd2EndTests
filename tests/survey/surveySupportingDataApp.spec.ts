@@ -82,14 +82,31 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Create a survey via the "Create Survey" button on the Surveys admin page', async ({}) => {
+  test('Create a survey via the Create Survey button on the Surveys admin page', async ({
+    adminHomePage,
+    surveysAdminPage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-860',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Navigate to the Surveys admin page', async () => {
+      await adminHomePage.surveyTileLink.click();
+    });
+
+    await test.step('Create the survey', async () => {
+      await surveysAdminPage.createSurvey(surveyName);
+    });
+
+    await test.step('Verify the survey was created correctly', async () => {
+      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
+      await expect(surveyAdminPage.generalTab.name).toHaveText(surveyName);
+    });
   });
 
   test('Create a copy of a survey via the create button on the header of the admin home page', async ({}) => {
@@ -102,7 +119,7 @@ test.describe('survey supporting data app', () => {
     expect(false).toBe(true);
   });
 
-  test('Create a copy of a survey via the "Create Survey" button on the Surveys admin page', async ({}) => {
+  test('Create a copy of a survey via the Create Survey button on the Surveys admin page', async ({}) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-862',
