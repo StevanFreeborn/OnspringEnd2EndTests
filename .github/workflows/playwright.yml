@@ -13,6 +13,7 @@ on:
           - VPRIOR
           - VNEXT
           - PROD
+          - FEDSPRING_IST
         required: true
         default: ALPHA
 env:
@@ -30,6 +31,7 @@ env:
   VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
   VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
   PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
+  FEDSPRING_IST_INSTANCE_URL: ${{ secrets.FEDSPRING_IST_INSTANCE_URL }}
   RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
   RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
 jobs:
