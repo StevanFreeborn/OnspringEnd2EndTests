@@ -20,6 +20,7 @@ const envSchema = z
       z.literal('VPRIOR'),
       z.literal('VNEXT'),
       z.literal('PROD'),
+      z.literal('FEDSPRING_IST'),
     ]),
     ALPHA_INSTANCE_URL: z.string(),
     BETA_INSTANCE_URL: z.string(),
@@ -28,6 +29,7 @@ const envSchema = z
     VPRIOR_INSTANCE_URL: z.string(),
     VNEXT_INSTANCE_URL: z.string(),
     PROD_INSTANCE_URL: z.string(),
+    FEDSPRING_IST_INSTANCE_URL: z.string(),
     PLAYWRIGHT_SERVICE_RUN_ID: z
       .string()
       .transform(v => (!v ? undefined : v))
