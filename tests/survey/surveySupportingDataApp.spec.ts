@@ -690,14 +690,35 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's primary sort field", async ({}) => {
+  test("Update a survey supporting data app's primary sort field", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-708',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose primary sort field will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.sort).toHaveText('None');
+    });
+
+    await test.step("Update the survey supporting data app's primary sort field", async () => {
+      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.selectPrimarySortField('Record Id');
+
+      await expect(surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
+        'Ascending'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's primary sort field was updated correctly", async () => {
+      await expect(surveyAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
+    });
   });
 
   test("Update a survey supporting data app's secondary sort field", async ({}) => {
