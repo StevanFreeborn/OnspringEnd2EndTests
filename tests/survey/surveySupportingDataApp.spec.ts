@@ -447,23 +447,10 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Enable a survey supporting data app's content versioning", async ({}) => {
+  test("Enable a survey supporting data app's content versioning", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-701',
-    });
-
-    // TODO: implement test
-    expect(false).toBe(true);
-  });
-
-  test("Change the save types of a survey supporting data app's content versioning", async ({
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-702',
     });
 
     const surveyName = FakeDataFactory.createFakeAppName();
@@ -503,6 +490,52 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Verify survey supporting data app's content versioning was enabled correctly", async () => {
       await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+    });
+  });
+
+  test("Change the save types of a survey supporting data app's content versioning", async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-702',
+    });
+
+    const surveyName = FakeDataFactory.createFakeAppName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose content versioning will be changed', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+    });
+
+    await test.step("Change the survey supporting data app's content versioning", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
+      ).toHaveAttribute('aria-checked', 'true');
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.indirectUserSavesCheckbox.check();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.apiSavesCheckbox.check();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.systemSavesCheckbox.check();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's content versioning was changed correctly", async () => {
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText(
+        'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
+      );
     });
   });
 
