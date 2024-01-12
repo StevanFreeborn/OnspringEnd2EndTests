@@ -32,7 +32,7 @@ export abstract class BaseGeneralTab {
     this.sort = page.locator(this.createSettingSelector('Sort'));
     this.notes = page.locator(this.createSettingSelector('Notes'));
 
-    this.editGeneralSettingsLink = page.getByRole('heading', { name: 'Edit General Settings' }).getByRole('link');
+    this.editGeneralSettingsLink = page.locator('a[data-dialog-name="EditGeneralSettings"]');
     this.editDisplaySettingsLink = page.getByRole('heading', { name: 'Edit Display Settings' }).getByRole('link');
     this.editNotesSettingLink = page.getByRole('heading', { name: 'Edit Notes' }).getByRole('link');
   }

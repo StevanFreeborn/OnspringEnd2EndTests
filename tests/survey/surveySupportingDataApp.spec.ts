@@ -258,14 +258,32 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's name", async ({}) => {
+  test("Update a survey supporting data app's name", async ({ adminHomePage, surveysAdminPage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-696',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const updatedSurveyName = `${surveyName}-updated`;
+    surveysToDelete.push(updatedSurveyName);
+
+    await test.step('Create the survey supporting data app whose name will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+    });
+
+    await test.step("Update the survey supporting data app's name", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.nameInput).toHaveValue(surveyName);
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.nameInput.fill(updatedSurveyName);
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey supporting data app was updated correctly', async () => {
+      await expect(surveyAdminPage.generalTab.name).toHaveText(updatedSurveyName);
+    });
   });
 
   test('Disable a survey supporting data app', async ({}) => {

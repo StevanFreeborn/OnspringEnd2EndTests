@@ -121,4 +121,9 @@ export class AdminHomePage extends BaseAdminPage {
     await this.goto();
     await this.createAppUsingHeaderCreateButton(appName);
   }
+
+  async createSurvey(surveyName: string) {
+    await this.goto();
+    await this.createSurveyUsingHeaderCreateButton(surveyName);
+  }
 }
