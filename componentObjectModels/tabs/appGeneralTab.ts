@@ -7,18 +7,18 @@ import { EditGeocodingSettingsModal } from '../modals/editGeocodingSettingsModal
 import { BaseAppOrSurveyGeneralTab } from './baseAppOrSurveyGeneralTab';
 
 export class AppGeneralTab extends BaseAppOrSurveyGeneralTab {
-  readonly editAppGeneralSettingsModal: EditAppGeneralSettingsModal;
-  readonly editAppDisplaySettingsModal: EditAppDisplaySettingsModal;
-  readonly editAppAdminSettingsModal: EditAppAdminSettingsModal;
-  readonly editAppNotesSettingsModal: EditAppNotesSettingsModal;
+  readonly editGeneralSettingsModal: EditAppGeneralSettingsModal;
+  readonly editDisplaySettingsModal: EditAppDisplaySettingsModal;
+  readonly editAdminSettingsModal: EditAppAdminSettingsModal;
+  readonly editNotesSettingsModal: EditAppNotesSettingsModal;
   readonly editGeocodingSettingsModal: EditGeocodingSettingsModal;
 
   constructor(page: Page) {
     super(page);
-    this.editAppGeneralSettingsModal = new EditAppGeneralSettingsModal(page);
-    this.editAppDisplaySettingsModal = new EditAppDisplaySettingsModal(page);
-    this.editAppAdminSettingsModal = new EditAppAdminSettingsModal(page);
-    this.editAppNotesSettingsModal = new EditAppNotesSettingsModal(page);
+    this.editGeneralSettingsModal = new EditAppGeneralSettingsModal(page);
+    this.editDisplaySettingsModal = new EditAppDisplaySettingsModal(page);
+    this.editAdminSettingsModal = new EditAppAdminSettingsModal(page);
+    this.editNotesSettingsModal = new EditAppNotesSettingsModal(page);
     this.editGeocodingSettingsModal = new EditGeocodingSettingsModal(page);
   }
 }

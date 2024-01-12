@@ -4,12 +4,12 @@ import { EditSurveyGeneralSettingsModal } from '../modals/editSurveyGeneralSetti
 import { BaseAppOrSurveyGeneralTab } from './baseAppOrSurveyGeneralTab';
 
 export class SurveyGeneralTab extends BaseAppOrSurveyGeneralTab {
-  readonly editSurveyGeneralSettingsModal: EditSurveyGeneralSettingsModal;
-  readonly editSurveyDisplaySettingsModal: EditSurveyDisplaySettingsModal;
+  readonly editGeneralSettingsModal: EditSurveyGeneralSettingsModal;
+  readonly editDisplaySettingsModal: EditSurveyDisplaySettingsModal;
 
   constructor(page: Page) {
     super(page);
-    this.editSurveyGeneralSettingsModal = new EditSurveyGeneralSettingsModal(page);
-    this.editSurveyDisplaySettingsModal = new EditSurveyDisplaySettingsModal(page);
+    this.editGeneralSettingsModal = new EditSurveyGeneralSettingsModal(page);
+    this.editDisplaySettingsModal = new EditSurveyDisplaySettingsModal(page);
   }
 }

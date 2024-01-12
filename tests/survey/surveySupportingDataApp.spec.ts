@@ -275,10 +275,10 @@ test.describe('survey supporting data app', () => {
     await test.step("Update the survey supporting data app's name", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.nameInput).toHaveValue(surveyName);
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.nameInput).toHaveValue(surveyName);
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.nameInput.fill(updatedSurveyName);
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.nameInput.fill(updatedSurveyName);
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step('Verify the survey supporting data app was updated correctly', async () => {
@@ -303,19 +303,19 @@ test.describe('survey supporting data app', () => {
     await test.step('Disable the survey supporting data app', async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step('Verify the survey supporting data app was disabled correctly', async () => {
@@ -339,19 +339,19 @@ test.describe('survey supporting data app', () => {
     await test.step('Disable the survey supporting data app', async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
 
       await expect(surveyAdminPage.generalTab.status).toHaveText('Disabled');
     });
@@ -359,19 +359,19 @@ test.describe('survey supporting data app', () => {
     await test.step('Enable the survey supporting data app', async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'false'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
         'aria-checked',
         'true'
       );
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step('Verify the survey supporting data app was enabled correctly', async () => {
@@ -397,10 +397,10 @@ test.describe('survey supporting data app', () => {
     await test.step("Update the survey supporting data app's description", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.descriptionEditor).toHaveText('');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor).toHaveText('');
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's description was updated correctly", async () => {
@@ -425,21 +425,23 @@ test.describe('survey supporting data app', () => {
     await test.step("Disable the survey supporting data app's content versioning", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's content versioning was disabled correctly", async () => {
@@ -463,29 +465,31 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Disable the survey supporting data app's content versioning", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
       await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the survey supporting data app's content versioning", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'false');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's content versioning was enabled correctly", async () => {
@@ -513,23 +517,24 @@ test.describe('survey supporting data app', () => {
     await test.step("Change the survey supporting data app's content versioning", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
-      ).toHaveAttribute('aria-checked', 'true');
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.indirectUserSavesCheckbox.check();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.apiSavesCheckbox.check();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.systemSavesCheckbox.check();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox.check();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox.check();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox.check();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's content versioning was changed correctly", async () => {
@@ -556,15 +561,13 @@ test.describe('survey supporting data app', () => {
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).not.toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's concurrent edit alert was disabled correctly", async () => {
@@ -588,23 +591,21 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
       await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
 
-      await expect(
-        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox
-      ).not.toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.check();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.check();
 
-      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
+      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
 
-      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's concurrent edit alert was enabled correctly", async () => {
@@ -628,9 +629,9 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Update the survey supporting data app's display link field", async () => {
       await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.displayLinkSelect.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.displayLinkSelect.click();
       await surveyAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's display link field was updated correctly", async () => {
@@ -654,9 +655,9 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Update the survey supporting data app's integration link field", async () => {
       await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.integrationLinkSelect.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.integrationLinkSelect.click();
       await surveyAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's integration link field was updated correctly", async () => {
@@ -680,8 +681,8 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Update the survey supporting data app's display fields", async () => {
       await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.addDisplayField('Created Date');
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's display fields were updated correctly", async () => {
@@ -706,14 +707,14 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Update the survey supporting data app's primary sort field", async () => {
       await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
 
-      await expect(surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
+      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
         'Ascending'
       );
 
-      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
     });
 
     await test.step("Verify survey supporting data app's primary sort field was updated correctly", async () => {
@@ -721,14 +722,39 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's secondary sort field", async ({}) => {
+  test("Update a survey supporting data app's secondary sort field", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-709',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const appName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(appName);
+
+    await test.step('Create the survey supporting data app whose secondary sort field will be updated', async () => {
+      await adminHomePage.createSurvey(appName);
+      await expect(surveyAdminPage.generalTab.sort).toHaveText('None');
+    });
+
+    await test.step("Update the survey supporting data app's secondary sort field", async () => {
+      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
+
+      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toHaveText(
+        'Ascending'
+      );
+
+      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's secondary sort field was updated correctly", async () => {
+      await expect(surveyAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
+      await expect(surveyAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
+    });
   });
 
   test("Change a survey supporting data app's administration permissions to private", async ({}) => {
