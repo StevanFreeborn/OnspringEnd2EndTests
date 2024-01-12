@@ -578,11 +578,11 @@ test.describe('survey supporting data app', () => {
       description: 'Test-704',
     });
 
-    const appName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(appName);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose concurrent edit alert will be enabled', async () => {
-      await adminHomePage.createSurvey(appName);
+      await adminHomePage.createSurvey(surveyName);
       await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
     });
 
@@ -664,14 +664,30 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's display fields", async ({}) => {
+  test("Update a survey supporting data app's display fields", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-707',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose display fields will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.displayFields).toHaveText('Record Id');
+    });
+
+    await test.step("Update the survey supporting data app's display fields", async () => {
+      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.addDisplayField('Created Date');
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's display fields were updated correctly", async () => {
+      await expect(surveyAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
+      await expect(surveyAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
+    });
   });
 
   test("Update a survey supporting data app's primary sort field", async ({}) => {
