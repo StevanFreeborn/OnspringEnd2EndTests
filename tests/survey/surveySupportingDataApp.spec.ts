@@ -258,7 +258,7 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's name", async ({ adminHomePage, surveysAdminPage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's name", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-696',
@@ -286,14 +286,41 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Disable a survey supporting data app', async ({}) => {
+  test('Disable a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-697',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app to be disabled', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+    });
+
+    await test.step('Disable the survey supporting data app', async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey supporting data app was disabled correctly', async () => {
+      await expect(surveyAdminPage.generalTab.status).toHaveText('Disabled');
+    });
   });
 
   test('Enable a survey supporting data app', async ({}) => {
