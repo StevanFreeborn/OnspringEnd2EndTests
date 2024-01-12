@@ -414,7 +414,7 @@ test.describe('survey supporting data app', () => {
       description: 'Test-700',
     });
 
-    const surveyName = FakeDataFactory.createFakeAppName();
+    const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be disabled', async () => {
@@ -453,7 +453,7 @@ test.describe('survey supporting data app', () => {
       description: 'Test-701',
     });
 
-    const surveyName = FakeDataFactory.createFakeAppName();
+    const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be enabled', async () => {
@@ -502,7 +502,7 @@ test.describe('survey supporting data app', () => {
       description: 'Test-702',
     });
 
-    const surveyName = FakeDataFactory.createFakeAppName();
+    const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be changed', async () => {
@@ -545,7 +545,7 @@ test.describe('survey supporting data app', () => {
       description: 'Test-703',
     });
 
-    const surveyName = FakeDataFactory.createFakeAppName();
+    const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose concurrent edit alert will be disabled', async () => {
@@ -572,14 +572,44 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Enable a survey supporting data app's concurrent edit alert", async ({}) => {
+  test("Enable a survey supporting data app's concurrent edit alert", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-704',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const appName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(appName);
+
+    await test.step('Create the survey supporting data app whose concurrent edit alert will be enabled', async () => {
+      await adminHomePage.createSurvey(appName);
+      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+    });
+
+    await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+    });
+
+    await test.step("Enable the survey supporting data app's concurrent edit alert", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox
+      ).not.toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.check();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's concurrent edit alert was enabled correctly", async () => {
+      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+    });
   });
 
   test("Update a survey supporting data's display link field", async ({}) => {
