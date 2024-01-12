@@ -539,14 +539,37 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Disable a survey supporting data app's concurrent edit alert", async ({}) => {
+  test("Disable a survey supporting data app's concurrent edit alert", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-703',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeAppName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose concurrent edit alert will be disabled', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+    });
+
+    await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.concurrentEditAlertCheckbox
+      ).not.toBeChecked();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's concurrent edit alert was disabled correctly", async () => {
+      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+    });
   });
 
   test("Enable a survey supporting data app's concurrent edit alert", async ({}) => {
