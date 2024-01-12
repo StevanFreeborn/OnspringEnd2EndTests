@@ -379,24 +379,72 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's description", async ({}) => {
+  test("Update a survey supporting data app's description", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-699',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const updatedDescription = 'This is an updated description';
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose description will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.description).toHaveText('');
+    });
+
+    await test.step("Update the survey supporting data app's description", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.descriptionEditor).toHaveText('');
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's description was updated correctly", async () => {
+      await expect(surveyAdminPage.generalTab.description).toHaveText(updatedDescription);
+    });
   });
 
-  test("Disable a survey supporting data app's content versioning", async ({}) => {
+  test("Disable a survey supporting data app's content versioning", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-700',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeAppName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose content versioning will be disabled', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+    });
+
+    await test.step("Disable the survey supporting data app's content versioning", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
+      ).toHaveAttribute('aria-checked', 'true');
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
+      ).toHaveAttribute('aria-checked', 'false');
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeHidden();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's content versioning was disabled correctly", async () => {
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+    });
   });
 
   test("Enable a survey supporting data app's content versioning", async ({}) => {
