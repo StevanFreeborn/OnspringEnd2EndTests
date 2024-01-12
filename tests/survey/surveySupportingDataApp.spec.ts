@@ -323,14 +323,60 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Enable a survey supporting data app', async ({}) => {
+  test('Enable a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-698',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+
+    await test.step('Create the survey supporting data app to be enabled', async () => {
+      await adminHomePage.createApp(surveyName);
+      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+    });
+
+    await test.step('Disable the survey supporting data app', async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+
+      await expect(surveyAdminPage.generalTab.status).toHaveText('Disabled');
+    });
+
+    await test.step('Enable the survey supporting data app', async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusToggle.click();
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.statusSwitch).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey supporting data app was enabled correctly', async () => {
+      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+    });
   });
 
   test("Update a survey supporting data app's description", async ({}) => {
