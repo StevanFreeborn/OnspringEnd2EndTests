@@ -638,14 +638,30 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's integration link field", async ({}) => {
+  test("Update a survey supporting data app's integration link field", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-706',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose integration link field will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.integrationLink).toHaveText('Record Id');
+    });
+
+    await test.step("Update the survey supporting data app's integration link field", async () => {
+      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.integrationLinkSelect.click();
+      await surveyAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
+      await surveyAdminPage.generalTab.editSurveyDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's integration link field was updated correctly", async () => {
+      await expect(surveyAdminPage.generalTab.integrationLink).toHaveText('Created Date');
+    });
   });
 
   test("Update a survey supporting data app's display fields", async ({}) => {
