@@ -457,14 +457,53 @@ test.describe('survey supporting data app', () => {
     expect(false).toBe(true);
   });
 
-  test("Change the save types of a survey supporting data app's content versioning", async ({}) => {
+  test("Change the save types of a survey supporting data app's content versioning", async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-702',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeAppName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose content versioning will be enabled', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+    });
+
+    await test.step("Disable the survey supporting data app's content versioning", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+    });
+
+    await test.step("Enable the survey supporting data app's content versioning", async () => {
+      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
+      ).toHaveAttribute('aria-checked', 'false');
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeHidden();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusToggle.click();
+
+      await expect(
+        surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionStatusSwitch
+      ).toHaveAttribute('aria-checked', 'true');
+
+      await expect(surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.contentVersionTypes).toBeVisible();
+
+      await surveyAdminPage.generalTab.editSurveyGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's content versioning was enabled correctly", async () => {
+      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+    });
   });
 
   test("Disable a survey supporting data app's concurrent edit alert", async ({}) => {
