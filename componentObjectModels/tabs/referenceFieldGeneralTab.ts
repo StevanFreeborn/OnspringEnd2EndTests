@@ -15,9 +15,11 @@ export class ReferenceFieldGeneralTab extends FieldGeneralTab {
   }
 
   async selectReference(reference: string) {
+    const displayFieldResponse = this.referenceSelect.page().waitForResponse(this.referenceDisplayFieldsPathRegex);
+
     await this.referenceSelect.click();
     await this.frame.getByRole('option', { name: reference }).click();
-    await this.referenceSelect.page().waitForResponse(this.referenceDisplayFieldsPathRegex);
+    await displayFieldResponse;
   }
 
   async fillOutGeneralTab(referenceField: ReferenceField) {

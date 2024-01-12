@@ -33,6 +33,9 @@ switch (TEST_ENV) {
   case 'PROD':
     BASE_URL = env.PROD_INSTANCE_URL;
     break;
+  case 'FEDSPRING_IST':
+    BASE_URL = env.FEDSPRING_IST_INSTANCE_URL;
+    break;
   case 'ALPHA':
   default:
     BASE_URL = env.ALPHA_INSTANCE_URL;
