@@ -1072,7 +1072,7 @@ test.describe('app', () => {
       await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
     });
 
-    await test.step('Verify geocoding was disabled correctly', async () => {
+    await test.step('Verify geocoding was updated correctly', async () => {
       await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
       await expect(appAdminPage.generalTab.geocodingData.grid).toBeVisible();
       await expect(appAdminPage.generalTab.geocodingData.address).toHaveText(secondAddressFieldName);

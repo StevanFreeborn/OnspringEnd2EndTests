@@ -999,7 +999,7 @@ test.describe('survey supporting data app', () => {
 
     const fieldNames = [addressFieldName, cityFieldName, stateFieldName, zipFieldName];
 
-    await test.step('Create app whose geocoding will be enabled', async () => {
+    await test.step('Create survey supporting data app whose geocoding will be enabled', async () => {
       await adminHomePage.createSurvey(surveyName);
       await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
     });
@@ -1012,7 +1012,7 @@ test.describe('survey supporting data app', () => {
       }
     });
 
-    await test.step('Enable geocoding for app', async () => {
+    await test.step('Enable geocoding for survey supporting data app', async () => {
       await surveyAdminPage.generalTabButton.click();
       await surveyAdminPage.generalTab.editGeocodingSettingsLink.click();
       await surveyAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
@@ -1036,14 +1036,54 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Update a survey supporting data app's geocoding field mapping", async ({}) => {
+  test("Update a survey supporting data app's geocoding field mapping", async ({ adminHomePage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-716',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    const addressFieldName = FakeDataFactory.createFakeFieldName('address');
+    const cityFieldName = FakeDataFactory.createFakeFieldName('city');
+    const stateFieldName = FakeDataFactory.createFakeFieldName('state');
+    const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
+    const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
+
+    await test.step('Create survey supporting data app whose geocode mapping will be updated', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+    });
+
+    await test.step('Enable geocoding for survey supporting data app', async () => {
+      await surveyAdminPage.enableGeocoding({
+        address: new TextField({ name: addressFieldName }),
+        city: new TextField({ name: cityFieldName }),
+        state: new TextField({ name: stateFieldName }),
+        zip: new TextField({ name: zipFieldName }),
+      });
+    });
+
+    await test.step('Create field to update geocoding mapping', async () => {
+      await surveyAdminPage.layoutTabButton.click();
+      await surveyAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(
+        new TextField({ name: secondAddressFieldName })
+      );
+    });
+
+    await test.step('Update geocoding field mapping', async () => {
+      await surveyAdminPage.generalTabButton.click();
+      await surveyAdminPage.generalTab.editGeocodingSettingsLink.click();
+      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(secondAddressFieldName);
+      await surveyAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify geocoding was updated correctly', async () => {
+      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
+      await expect(surveyAdminPage.generalTab.geocodingData.grid).toBeVisible();
+      await expect(surveyAdminPage.generalTab.geocodingData.address).toHaveText(secondAddressFieldName);
+    });
   });
 
   test('Disable geocoding for a survey supporting data app', async ({}) => {
