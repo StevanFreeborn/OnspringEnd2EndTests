@@ -757,14 +757,37 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Change a survey supporting data app's administration permissions to private", async ({}) => {
+  test("Change a survey supporting data app's administration permissions to private", async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-710',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+    });
+
+    await test.step("Change the survey supporting data app's administration permissions to private", async () => {
+      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+
+      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's administration permissions were set to private", async () => {
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
+    });
   });
 
   test('Give survey supporting data app administration permissions to specific users', async ({}) => {
