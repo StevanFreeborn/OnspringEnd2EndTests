@@ -1,8 +1,15 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
+import { Role } from '../../models/role';
 import { UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
+import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
+import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
+import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
+import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
+import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
 import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
 import { SurveysAdminPage } from '../../pageObjectModels/surveys/surveysAdminPage';
 import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
@@ -842,24 +849,98 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Give survey supporting data app administration permissions to specific roles', async ({}) => {
+  test('Give survey supporting data app administration permissions to specific roles', async ({
+    sysAdminPage,
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-712',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const roleName = FakeDataFactory.createFakeRoleName();
+    surveysToDelete.push(surveyName);
+    const rolesToDelete = [roleName];
+
+    await test.step('Create role that will be given admin permissions', async () => {
+      const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
+      const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
+      await addRoleAdminPage.addRole(new Role({ name: roleName }));
+      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+    });
+
+    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+      await adminHomePage.createSurvey(surveyName);
+    });
+
+    await test.step('Give survey supporting data app admin permissions to role', async () => {
+      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectRole(roleName);
+      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify survey supporting data app admin permissions were given to role', async () => {
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await expect(surveyAdminPage.generalTab.adminRoles).toHaveText(roleName);
+    });
+
+    await test.step('Delete role', async () => {
+      const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+      await roleSecurityAdminPage.deleteRoles(rolesToDelete);
+    });
   });
 
-  test('Give survey supporting data app administration permissions to specific groups', async ({}) => {
+  test('Give survey supporting data app administration permissions to specific groups', async ({
+    sysAdminPage,
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-713',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
+    const groupName = FakeDataFactory.createFakeGroupName();
+    surveysToDelete.push(surveyName);
+    const groupsToDelete = [groupName];
+
+    await test.step('Create group that will be given admin permissions', async () => {
+      const addGroupAdminPage = new AddGroupAdminPage(sysAdminPage);
+      const editGroupAdminPage = new EditGroupAdminPage(sysAdminPage);
+      await addGroupAdminPage.addGroup(groupName);
+      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+    });
+
+    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+      await adminHomePage.createSurvey(surveyName);
+    });
+
+    await test.step('Give survey supporting data app admin permissions to group', async () => {
+      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
+
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectGroup(groupName);
+      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify survey supporting data app admin permissions were given to group', async () => {
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await expect(surveyAdminPage.generalTab.adminGroups).toHaveText(groupName);
+    });
+
+    await test.step('Delete group', async () => {
+      const groupSecurityAdminPage = new GroupsSecurityAdminPage(sysAdminPage);
+      await groupSecurityAdminPage.deleteGroups(groupsToDelete);
+    });
   });
 
   test("Change a survey supporting data app's administration permissions to public", async ({}) => {
