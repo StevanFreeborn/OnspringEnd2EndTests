@@ -943,14 +943,43 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test("Change a survey supporting data app's administration permissions to public", async ({}) => {
+  test("Change a survey supporting data app's administration permissions to public", async ({
+    adminHomePage,
+    surveyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-714',
     });
 
-    // TODO: implement test
-    expect(false).toBe(true);
+    const surveyName = FakeDataFactory.createFakeAppName();
+    surveysToDelete.push(surveyName);
+
+    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+      await adminHomePage.createSurvey(surveyName);
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+    });
+
+    await test.step("Change the survey supporting data app's administration permissions to private", async () => {
+      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step("Change the survey supporting data app's administration permissions to public", async () => {
+      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Public');
+
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeHidden();
+
+      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey supporting data app's administration permissions were set to public", async () => {
+      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+    });
   });
 
   test('Enable geocoding for a survey supporting data app', async ({}) => {
