@@ -953,7 +953,7 @@ test.describe('survey supporting data app', () => {
       description: 'Test-714',
     });
 
-    const surveyName = FakeDataFactory.createFakeAppName();
+    const surveyName = FakeDataFactory.createFakeSurveyName();
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
