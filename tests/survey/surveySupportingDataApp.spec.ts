@@ -40,6 +40,8 @@ const test = base.extend<SurveyTestFixtures>({
 });
 
 test.describe('survey supporting data app', () => {
+  test.describe.configure({ mode: 'default' });
+
   let surveysToDelete: string[] = [];
 
   test.beforeEach(async ({ adminHomePage }) => {
@@ -1157,13 +1159,11 @@ test.describe('survey supporting data app', () => {
     });
   });
 
-  test('Delete a survey supporting data app', async ({ adminHomePage, surveysAdminPage, surveyAdminPage }) => {
+  test('Delete a survey supporting data app', async ({ surveysAdminPage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-865',
     });
-
-    test.skip();
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const surveyRow = surveysAdminPage.surveyGrid.getByRole('row', { name: surveyName }).first();
@@ -1181,12 +1181,18 @@ test.describe('survey supporting data app', () => {
 
     await test.step('Navigate to the surveys admin page', async () => {
       await surveysAdminPage.goto();
-      await expect(surveyRow).toBeVisible();
     });
 
     await test.step('Delete the survey supporting data app', async () => {
-      await surveyRow.hover();
+      const scrollableElement = surveysAdminPage.surveyGrid.locator('.k-grid-content.k-auto-scrollable').first();
+      let isVisible = await surveyRow.isVisible();
 
+      while (isVisible === false) {
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        isVisible = await surveyRow.isVisible();
+      }
+
+      await surveyRow.hover();
       await surveyDeleteButton.click();
 
       await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toBeVisible();

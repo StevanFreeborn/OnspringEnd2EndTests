@@ -103,7 +103,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     {
       name: 'teardown',
       testDir: 'teardowns',
-      testMatch: '**/*.teardown.ts',
+      testMatch: '**/global.teardown.ts',
     },
     {
       name: 'chrome',
