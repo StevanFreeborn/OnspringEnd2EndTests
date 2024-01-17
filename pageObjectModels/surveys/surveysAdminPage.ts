@@ -58,6 +58,7 @@ export class SurveysAdminPage extends BaseAdminPage {
 
     await this.createSurveyModal.nameInput.fill(surveyName);
     await this.createSurveyModal.saveButton.click();
+    await this.page.waitForTimeout(2000);
   }
 
   async deleteSurveys(surveysToDelete: string[]) {

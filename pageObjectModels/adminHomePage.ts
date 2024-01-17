@@ -69,6 +69,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createSurveyModal.nameInput.fill(surveyName);
     await this.createSurveyModal.saveButton.click();
+    await this.page.waitForTimeout(2000);
   }
 
   async createSurveyUsingHeaderCreateButton(surveyName: string) {
@@ -84,6 +85,7 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createSurveyModal.nameInput.waitFor();
     await this.createSurveyModal.nameInput.fill(surveyName);
     await this.createSurveyModal.saveButton.click();
+    await this.page.waitForTimeout(2000);
   }
 
   async createAppUsingHeaderCreateButton(appName: string) {

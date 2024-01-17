@@ -162,6 +162,7 @@ test.describe('survey supporting data app', () => {
       await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await adminHomePage.createSurveyModal.saveButton.click();
+      await adminHomePage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
@@ -214,6 +215,7 @@ test.describe('survey supporting data app', () => {
       await expect(surveysAdminPage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await surveysAdminPage.createSurveyModal.saveButton.click();
+      await surveysAdminPage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
@@ -263,6 +265,7 @@ test.describe('survey supporting data app', () => {
       await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await adminHomePage.createSurveyModal.saveButton.click();
+      await adminHomePage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
@@ -1165,7 +1168,7 @@ test.describe('survey supporting data app', () => {
     const surveyDeleteButton = surveyRow.getByTitle('Delete Survey');
 
     await test.step('Navigate to the Surveys admin page', async () => {
-      await adminHomePage.surveyTileLink.click();
+      await surveysAdminPage.goto();
     });
 
     await test.step('Create the survey supporting data app to be deleted', async () => {
