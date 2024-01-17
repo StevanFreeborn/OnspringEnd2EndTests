@@ -131,8 +131,6 @@ test.describe('app', () => {
       description: 'Test-4',
     });
 
-    test.skip();
-
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
     appsToDelete.push(appName);
@@ -181,8 +179,6 @@ test.describe('app', () => {
       type: AnnotationType.TestId,
       description: 'Test-808',
     });
-
-    test.skip();
 
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;
@@ -234,8 +230,6 @@ test.describe('app', () => {
       type: AnnotationType.TestId,
       description: 'Test-6',
     });
-
-    test.skip();
 
     const appName = FakeDataFactory.createFakeAppName();
     const expectedAppCopyName = `${appName} (1)`;

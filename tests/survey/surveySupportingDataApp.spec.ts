@@ -131,6 +131,9 @@ test.describe('survey supporting data app', () => {
       description: 'Test-861',
     });
 
+    // skipping because: https://corp.onspring.com/Content/8/4162
+    test.skip();
+
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
     surveysToDelete.push(surveyName, expectedSurveyCopyName);
@@ -180,6 +183,9 @@ test.describe('survey supporting data app', () => {
       type: AnnotationType.TestId,
       description: 'Test-862',
     });
+
+    // skipping because: https://corp.onspring.com/Content/8/4162
+    test.skip();
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
@@ -232,6 +238,9 @@ test.describe('survey supporting data app', () => {
       type: AnnotationType.TestId,
       description: 'Test-863',
     });
+
+    // skipping because: https://corp.onspring.com/Content/8/4162
+    test.skip();
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
