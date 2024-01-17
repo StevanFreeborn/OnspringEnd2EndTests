@@ -46,7 +46,7 @@ test.describe('survey supporting data app', () => {
     await adminHomePage.goto();
   });
 
-  test.afterAll(async ({ surveysAdminPage }) => {
+  test.afterEach(async ({ surveysAdminPage }) => {
     await surveysAdminPage.deleteSurveys(surveysToDelete);
     surveysToDelete = [];
   });
