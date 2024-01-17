@@ -1165,7 +1165,7 @@ test.describe('survey supporting data app', () => {
     const surveyDeleteButton = surveyRow.getByTitle('Delete Survey');
 
     await test.step('Navigate to the Surveys admin page', async () => {
-      adminHomePage.surveyTileLink.click();
+      await adminHomePage.surveyTileLink.click();
     });
 
     await test.step('Create the survey supporting data app to be deleted', async () => {
