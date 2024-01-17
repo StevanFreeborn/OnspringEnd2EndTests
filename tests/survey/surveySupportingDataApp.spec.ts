@@ -156,13 +156,13 @@ test.describe('survey supporting data app', () => {
       await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
       await adminHomePage.createSurveyDialog.selectDropdown.click();
       await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
+      await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await adminHomePage.createSurveyDialog.continueButton.click();
 
       await expect(adminHomePage.createSurveyModal.nameInput).toBeVisible();
       await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await adminHomePage.createSurveyModal.saveButton.click();
-      await adminHomePage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
@@ -209,13 +209,13 @@ test.describe('survey supporting data app', () => {
       await surveysAdminPage.createSurveyDialog.copyFromRadioButton.click();
       await surveysAdminPage.createSurveyDialog.selectDropdown.click();
       await surveysAdminPage.createSurveyDialog.getSurveyToCopy(surveyName).click();
+      await surveysAdminPage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await surveysAdminPage.createSurveyDialog.continueButton.click();
 
       await expect(surveysAdminPage.createSurveyModal.nameInput).toBeVisible();
       await expect(surveysAdminPage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await surveysAdminPage.createSurveyModal.saveButton.click();
-      await surveysAdminPage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
@@ -258,6 +258,7 @@ test.describe('survey supporting data app', () => {
       await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
       await adminHomePage.createSurveyDialog.selectDropdown.click();
       await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
+      await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await adminHomePage.createSurveyDialog.continueButton.click();
 
       await expect(adminHomePage.createSurveyModal.nameInput).toBeVisible();
@@ -265,7 +266,6 @@ test.describe('survey supporting data app', () => {
       await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
 
       await adminHomePage.createSurveyModal.saveButton.click();
-      await adminHomePage.page.waitForTimeout(2000);
     });
 
     await test.step('Verify the survey was created correctly', async () => {
