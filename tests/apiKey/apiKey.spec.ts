@@ -152,14 +152,49 @@ test.describe('API Key', () => {
     });
   });
 
-  test('Create a copy of an API Key via the create button on the Security tile on the admin home page', async ({}) => {
+  test('Create a copy of an API Key via the create button on the Security tile on the admin home page', async ({
+    adminHomePage,
+    apiKeyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-805',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeAppName();
+    const apiKeyCopyName = FakeDataFactory.createFakeAppName();
+    apiKeysToDelete.push(apiKeyName, apiKeyCopyName);
+
+    await test.step('Create the api key to be copied', async () => {
+      await adminHomePage.createApiKeyUsingSecurityTileButton(apiKeyName);
+    });
+
+    await test.step('Navigate back to admin home page', async () => {
+      await apiKeyAdminPage.sidebar.adminGearIcon.click();
+    });
+
+    await test.step('Create the copy of the api key', async () => {
+      await adminHomePage.page.waitForLoadState();
+      await adminHomePage.securityTileLink.hover();
+
+      await expect(adminHomePage.securityTileCreateButton).toBeVisible();
+
+      await adminHomePage.securityTileCreateButton.click();
+
+      await expect(adminHomePage.securityCreateMenu).toBeVisible();
+
+      await adminHomePage.securityCreateMenu.getByText('API Key').click();
+      await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
+      await adminHomePage.createApiKeyDialog.selectDropdown.click();
+      await adminHomePage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
+      await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
+      await adminHomePage.createApiKeyDialog.saveButton.click();
+    });
+
+    await test.step('Verify the app was created correctly', async () => {
+      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+    });
   });
 
   test('Create a copy of an API Key via the Create API Key button on the Api Key home page', async ({}) => {
