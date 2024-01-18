@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
-import { BaseCreateOrAddDialog } from './baseCreateOrAddDialog';
+import { BaseCreateOrAddDialogWithContinueButton } from './baseCreateOrAddDialog';
 
-export class AddLayoutItemDialog extends BaseCreateOrAddDialog {
+export class AddLayoutItemDialog extends BaseCreateOrAddDialogWithContinueButton {
   constructor(page: Page) {
     super(page);
   }

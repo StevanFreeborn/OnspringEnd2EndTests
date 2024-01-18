@@ -4,6 +4,7 @@ import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurve
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
 import { BaseAdminPage } from './baseAdminPage';
+import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 
 export class AdminHomePage extends BaseAdminPage {
   readonly path: string;
@@ -21,6 +22,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly surveyTileCreateButton: Locator;
   readonly createSurveyDialog: CreateSurveyDialog;
   readonly createSurveyModal: CreateSurveyModal;
+
+  readonly createApiKeyDialog: CreateApiKeyDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -49,10 +52,22 @@ export class AdminHomePage extends BaseAdminPage {
     this.surveyTileCreateButton = this.getTileCreateButton('Surveys');
     this.createSurveyDialog = new CreateSurveyDialog(page);
     this.createSurveyModal = new CreateSurveyModal(page);
+
+    this.createApiKeyDialog = new CreateApiKeyDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.apiKeyCreateMenuOption.click();
+
+    await this.createApiKeyDialog.nameInput.waitFor();
+    await this.createApiKeyDialog.nameInput.fill(apiKeyName);
+    await this.createApiKeyDialog.saveButton.click();
   }
 
   async createSurveyUsingSurveyTileButton(surveyName: string) {

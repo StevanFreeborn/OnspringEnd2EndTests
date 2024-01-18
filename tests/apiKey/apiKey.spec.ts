@@ -1,11 +1,14 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { ApiKeyAdminPage } from '../../pageObjectModels/apiKeys/apiKeyAdminPage';
 import { ApiKeysAdminPage } from '../../pageObjectModels/apiKeys/apiKeysAdminPage';
 import { AnnotationType } from '../annotations';
 
 type ApiKeyTestFixtures = {
   adminHomePage: AdminHomePage;
   apiKeysAdminPage: ApiKeysAdminPage;
+  apiKeyAdminPage: ApiKeyAdminPage;
 };
 
 const test = base.extend<ApiKeyTestFixtures>({
@@ -16,6 +19,10 @@ const test = base.extend<ApiKeyTestFixtures>({
   apiKeysAdminPage: async ({ sysAdminPage }, use) => {
     const apiKeysAdminPage = new ApiKeysAdminPage(sysAdminPage);
     await use(apiKeysAdminPage);
+  },
+  apiKeyAdminPage: async ({ sysAdminPage }, use) => {
+    const apiKeyAdminPage = new ApiKeyAdminPage(sysAdminPage);
+    await use(apiKeyAdminPage);
   },
 });
 
@@ -31,14 +38,26 @@ test.describe('API Key', () => {
     apiKeysToDelete = [];
   });
 
-  test('Create an API Key via the create button in the header of the admin home page', async ({}) => {
+  test('Create an API Key via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    apiKeyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-266',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeApiKeyName();
+    apiKeysToDelete.push(apiKeyName);
+
+    await test.step('Create the api key', async () => {
+      await adminHomePage.createApiKeyUsingHeaderCreateButton(apiKeyName);
+    });
+
+    await test.step('Verify the api key was created correctly', async () => {
+      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyName);
+    });
   });
 
   test('Create an API Key via the create button on the Security tile on the admin home page', async ({}) => {
