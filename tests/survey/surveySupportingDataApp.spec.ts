@@ -40,14 +40,17 @@ const test = base.extend<SurveyTestFixtures>({
 });
 
 test.describe('survey supporting data app', () => {
-  test.describe.configure({ mode: 'default' });
-
   let surveysToDelete: string[] = [];
 
   test.beforeEach(async ({ adminHomePage }) => {
     await adminHomePage.goto();
   });
 
+  // TODO: Not handling cleanup here because when
+  // deleting surveys an exception sometimes
+  // occurs when another user simultaneously
+  // loads the surveys admin page.
+  // reference: https://corp.onspring.com/Content/8/4162
   // test.afterEach(async ({ surveysAdminPage }) => {
   //   await surveysAdminPage.deleteSurveys(surveysToDelete);
   //   surveysToDelete = [];

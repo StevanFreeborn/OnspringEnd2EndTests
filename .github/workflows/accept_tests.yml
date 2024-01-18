@@ -150,48 +150,48 @@ jobs:
       deployment_url: ${{ steps.report_url.outputs.value }}
     steps:
       - name: Checkout repository
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/checkout@v3
       - name: Setup Node.js
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/setup-node@v3
         with:
           node-version: latest
       - name: Install dependencies
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm ci
       - name: Download blob reports
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/download-artifact@v3
         with:
           name: all-blob-reports
           path: all-blob-reports
       - name: Rename reports
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: count=1; for file in $(find ./all-blob-reports -maxdepth 1 -type f -name "*.zip"); do mv "$file" "all-blob-reports/report-$count.zip"; count=$((count+1)); done
       - name: Merge into HTML Report
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npx playwright merge-reports --reporter html ./all-blob-reports
       - name: Upload HTML report
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/upload-artifact@v3
         with:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report
           retention-days: 90
       - name: Get date and time
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         id: date
         run: echo "value=$(($(date '+%s%N' | cut -b1-13) / 1))" >> $GITHUB_OUTPUT
       - name: Create report directory name
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         id: report_directory_name
         run: echo "value=${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}-${{ github.workflow }}-${{ github.run_number }}-${{ github.run_attempt }}-PR_${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
       - name: Rename reports
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
       - name: Commit report to report site
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: cpina/github-action-push-to-another-repository@v1.7.2
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
@@ -204,10 +204,10 @@ jobs:
           commit-message: 'chore: add new report for PR [skip deploy]'
           target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
       - name: Deploy report site
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: node ./scripts/deployReportSite.mjs
       - name: Output report url
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         id: report_url
         run: echo "value=https://onspringqareports.stevanfreeborn.com/reports/${{ steps.report_directory_name.outputs.value }}/" >> $GITHUB_OUTPUT
   add_pr_comment:
@@ -220,7 +220,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment URL to PR
-        if: ${{ needs.run_tests.result != 'skipped' }}
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         env:
           DEPLOYMENT_URL: ${{ needs.merge_reports_and_publish.outputs.deployment_url }}
         uses: actions/github-script@v6
@@ -233,3 +233,23 @@ jobs:
               repo: context.repo.repo,
               body: `PR Playwright Report ${{ github.run_number }}-${{ github.run_attempt }}: ${process.env.DEPLOYMENT_URL}`
             })
+  cleanup:
+    name: 'Cleanup test artifacts'
+    needs: [check_for_test_file_changes, generate_shards]
+    if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.39.0-jammy
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      - name: Install dependencies
+        run: npm ci
+      - name: Run your tests
+        run: npm run cleanup

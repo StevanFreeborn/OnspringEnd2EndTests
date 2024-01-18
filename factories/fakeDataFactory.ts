@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker';
 
+export const TEST_SURVEY_NAME = 'survey-test';
+
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
@@ -35,7 +37,7 @@ export class FakeDataFactory {
 
   static createFakeSurveyName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-survey-test`;
+    return `${uniqueId}-${TEST_SURVEY_NAME}`;
   }
 
   static createFakeGroupName() {

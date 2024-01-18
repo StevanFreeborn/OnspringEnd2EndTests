@@ -10,3 +10,4 @@ config/.env
 .auth
 blob-report/
 .vercel
+cleanUpTestResultsDir/
