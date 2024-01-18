@@ -171,7 +171,7 @@ jobs:
   cleanup:
     name: 'Cleanup test artifacts'
     if: always()
-    needs: [merge_reports_and_publish]
+    needs: [run_tests, merge_reports_and_publish]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
