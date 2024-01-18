@@ -1,10 +1,10 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
 import { BaseAdminPage } from './baseAdminPage';
-import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 
 export class AdminHomePage extends BaseAdminPage {
   readonly path: string;
@@ -58,6 +58,19 @@ export class AdminHomePage extends BaseAdminPage {
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createApiKeyUsingSecurityTileButton(apiKeyName: string) {
+    await this.securityTileLink.hover();
+    await this.securityTileCreateButton.waitFor();
+    await this.securityTileCreateButton.click();
+    await this.securityCreateMenu.getByText('API Key').click();
+
+    await this.page.waitForLoadState('networkidle');
+
+    await this.createApiKeyDialog.nameInput.waitFor();
+    await this.createApiKeyDialog.nameInput.fill(apiKeyName);
+    await this.createApiKeyDialog.saveButton.click();
   }
 
   async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {
