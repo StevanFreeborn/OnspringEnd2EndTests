@@ -197,14 +197,47 @@ test.describe('API Key', () => {
     });
   });
 
-  test('Create a copy of an API Key via the Create API Key button on the Api Key home page', async ({}) => {
+  test('Create a copy of an API Key via the Create API Key button on the Api Key home page', async ({
+    apiKeysAdminPage,
+    apiKeyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-269',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeAppName();
+    const apiKeyCopyName = FakeDataFactory.createFakeAppName();
+    apiKeysToDelete.push(apiKeyName, apiKeyCopyName);
+
+    await test.step('Navigate to the api key admin page', async () => {
+      await apiKeysAdminPage.goto();
+    });
+
+    await test.step('Create the api key to be copied', async () => {
+      await apiKeysAdminPage.createApiKey(apiKeyName);
+    });
+
+    await test.step('Navigate back to api keys admin page', async () => {
+      await apiKeysAdminPage.goto();
+    });
+
+    await test.step('Create the copy of the api key', async () => {
+      await apiKeysAdminPage.createApiKeyButton.click();
+
+      await expect(apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
+
+      await apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton.click();
+      await apiKeysAdminPage.createApiKeyDialog.selectDropdown.click();
+      await apiKeysAdminPage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
+      await apiKeysAdminPage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
+      await apiKeysAdminPage.createApiKeyDialog.saveButton.click();
+    });
+
+    await test.step('Verify the api key was created correctly', async () => {
+      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+    });
   });
 
   test('Update an API Key', async ({}) => {
