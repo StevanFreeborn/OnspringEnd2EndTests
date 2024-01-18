@@ -82,14 +82,30 @@ test.describe('API Key', () => {
     });
   });
 
-  test('Create an API Key via the Create API Key button on the Api Key home page', async ({}) => {
+  test('Create an API Key via the Create API Key button on the API key home page', async ({
+    apiKeysAdminPage,
+    apiKeyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-267',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeApiKeyName();
+    apiKeysToDelete.push(apiKeyName);
+
+    await test.step('Navigate to the api key admin page', async () => {
+      await apiKeysAdminPage.goto();
+    });
+
+    await test.step('Create the api key', async () => {
+      await apiKeysAdminPage.createApiKey(apiKeyName);
+    });
+
+    await test.step('Verify the api key was created correctly', async () => {
+      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyName);
+    });
   });
 
   test('Create a copy of an API Key via the create button in the header of the admin home page', async ({}) => {
