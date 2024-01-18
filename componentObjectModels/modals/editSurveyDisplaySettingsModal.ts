@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { EditBaseDisplaySettingsModal } from './editBaseDisplaySettingsModal';
 
-export class EditAppDisplaySettingsModal extends EditBaseDisplaySettingsModal {
+export class EditSurveyDisplaySettingsModal extends EditBaseDisplaySettingsModal {
   constructor(page: Page) {
     super(page);
   }

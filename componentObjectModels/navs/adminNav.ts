@@ -5,17 +5,23 @@ export class AdminNav {
   readonly adminCreateButton: Locator;
   readonly adminCreateMenu: Locator;
   readonly appCreateMenuOption: Locator;
+  readonly surveyCreateMenuOption: Locator;
   readonly userCreateMenuOption: Locator;
   readonly roleCreateMenuOption: Locator;
   readonly groupCreateMenuOption: Locator;
+
+  private getMenuOption(menuOptionText: string) {
+    return this.adminCreateMenu.getByText(menuOptionText);
+  }
 
   constructor(page: Page) {
     this.page = page;
     this.adminCreateButton = page.locator('#admin-create-button');
     this.adminCreateMenu = page.locator('#admin-create-menu');
-    this.appCreateMenuOption = this.adminCreateMenu.getByText('App');
-    this.userCreateMenuOption = this.adminCreateMenu.getByText('User');
-    this.roleCreateMenuOption = this.adminCreateMenu.getByText('Role');
-    this.groupCreateMenuOption = this.adminCreateMenu.getByText('Group');
+    this.appCreateMenuOption = this.getMenuOption('App');
+    this.surveyCreateMenuOption = this.getMenuOption('Survey');
+    this.userCreateMenuOption = this.getMenuOption('User');
+    this.roleCreateMenuOption = this.getMenuOption('Role');
+    this.groupCreateMenuOption = this.getMenuOption('Group');
   }
 }

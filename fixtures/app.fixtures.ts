@@ -19,7 +19,7 @@ export async function app({ sysAdminPage }: { sysAdminPage: Page }, use: (r: App
   await adminHomePage.goto();
   await adminHomePage.createApp(appName);
   await appAdminPage.page.waitForURL(appAdminPage.pathRegex);
-  const appId = appAdminPage.getAppIdFromUrl();
+  const appId = appAdminPage.getIdFromUrl();
   const app = new App({ id: appId, name: appName });
 
   await use(app);

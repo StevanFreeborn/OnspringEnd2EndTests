@@ -12,7 +12,6 @@ export class CanvasSection {
   readonly layoutItemDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
-  // https://corp.onspring.com/Content/8/4092
   constructor(frame: FrameLocator) {
     this.section = frame.locator('.canvas-section').first();
     this.layoutItemDropzone = this.section.locator('#dropLocation');

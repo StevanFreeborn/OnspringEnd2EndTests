@@ -1,9 +1,9 @@
-import { Locator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { TextField } from '../../models/textField';
 import { BASE_URL } from '../../playwright.config';
-import { BaseAdminPage } from '../baseAdminPage';
+import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
 
 type GeocodeFields = {
   address: TextField;
@@ -12,13 +12,9 @@ type GeocodeFields = {
   zip: TextField;
 };
 
-export class AppAdminPage extends BaseAdminPage {
+export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   readonly path: string;
   readonly pathRegex: RegExp;
-  readonly closeButton: Locator;
-
-  readonly generalTabButton: Locator;
-  readonly layoutTabButton: Locator;
 
   readonly generalTab: AppGeneralTab;
   readonly layoutTab: AppLayoutTab;
@@ -27,10 +23,6 @@ export class AppAdminPage extends BaseAdminPage {
     super(page);
     this.path = '/Admin/App/';
     this.pathRegex = new RegExp(`${BASE_URL}${this.path}[0-9]+`);
-    this.closeButton = page.locator('a:has-text("Close")');
-
-    this.generalTabButton = page.locator('#tab-strip').getByText('General');
-    this.layoutTabButton = page.locator('#tab-strip').getByText('Layout');
 
     this.generalTab = new AppGeneralTab(page);
     this.layoutTab = new AppLayoutTab(page);
@@ -41,7 +33,7 @@ export class AppAdminPage extends BaseAdminPage {
     await this.page.goto(path);
   }
 
-  getAppIdFromUrl() {
+  getIdFromUrl() {
     if (this.page.url().includes(this.path) === false) {
       throw new Error('The current page is not an app admin page.');
     }

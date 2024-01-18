@@ -103,7 +103,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     {
       name: 'teardown',
       testDir: 'teardowns',
-      testMatch: '**/*.teardown.ts',
+      testMatch: '**/**.teardown.ts',
     },
     {
       name: 'chrome',
@@ -118,6 +118,18 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
         ...devices['Desktop Edge'],
       },
       dependencies: ['setup'],
+    },
+    {
+      name: 'cleanup',
+      testDir: 'cleanup',
+      testMatch: '**/*.cleanup.ts',
+      dependencies: ['setup'],
+      outputDir: 'cleanUpTestResultsDir',
+      use: {
+        ...devices['Desktop Edge'],
+        video: 'off',
+        trace: 'off',
+      },
     },
   ],
   outputDir: testResultsDir,

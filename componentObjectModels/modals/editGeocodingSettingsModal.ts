@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export class EditAppGeocodingSettingsModal {
+export class EditGeocodingSettingsModal {
   private readonly page: Page;
   readonly statusSwitch: Locator;
   readonly statusToggle: Locator;
