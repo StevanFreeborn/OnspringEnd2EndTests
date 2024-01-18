@@ -108,14 +108,48 @@ test.describe('API Key', () => {
     });
   });
 
-  test('Create a copy of an API Key via the create button in the header of the admin home page', async ({}) => {
+  test('Create a copy of an API Key via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    apiKeyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-268',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const appName = FakeDataFactory.createFakeAppName();
+    const apiKeyCopyName = FakeDataFactory.createFakeAppName();
+    apiKeysToDelete.push(appName, apiKeyCopyName);
+
+    await test.step('Create the api key to be copied', async () => {
+      await adminHomePage.createApiKey(appName);
+    });
+
+    await test.step('Navigate back to admin home page', async () => {
+      await apiKeyAdminPage.sidebar.adminGearIcon.click();
+    });
+
+    await test.step('Create the copy of the api key', async () => {
+      await adminHomePage.page.waitForLoadState();
+      await adminHomePage.adminNav.adminCreateButton.hover();
+
+      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
+
+      await adminHomePage.adminNav.apiKeyCreateMenuOption.click();
+
+      await expect(adminHomePage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
+
+      await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
+      await adminHomePage.createApiKeyDialog.selectDropdown.click();
+      await adminHomePage.createApiKeyDialog.getApiKeyToCopy(appName).click();
+      await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
+      await adminHomePage.createApiKeyDialog.saveButton.click();
+    });
+
+    await test.step('Verify the api key was created correctly', async () => {
+      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+    });
   });
 
   test('Create a copy of an API Key via the create button on the Security tile on the admin home page', async ({}) => {
