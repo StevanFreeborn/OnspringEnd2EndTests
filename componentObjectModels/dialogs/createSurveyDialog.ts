@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseCreateOrAddDialog } from './baseCreateOrAddDialog';
+import { BaseCreateOrAddDialogWithContinueButton } from './baseCreateOrAddDialog';
 
-export class CreateSurveyDialog extends BaseCreateOrAddDialog {
+export class CreateSurveyDialog extends BaseCreateOrAddDialogWithContinueButton {
   readonly copyResponsesAppCheckbox: Locator;
 
   constructor(page: Page) {

@@ -59,4 +59,9 @@ export class FakeDataFactory {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${fieldName}`;
   }
+
+  static createFakeApiKeyName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-api-key-test`;
+  }
 }

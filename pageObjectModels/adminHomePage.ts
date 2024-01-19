@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
@@ -21,6 +22,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly surveyTileCreateButton: Locator;
   readonly createSurveyDialog: CreateSurveyDialog;
   readonly createSurveyModal: CreateSurveyModal;
+
+  readonly createApiKeyDialog: CreateApiKeyDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -49,10 +52,35 @@ export class AdminHomePage extends BaseAdminPage {
     this.surveyTileCreateButton = this.getTileCreateButton('Surveys');
     this.createSurveyDialog = new CreateSurveyDialog(page);
     this.createSurveyModal = new CreateSurveyModal(page);
+
+    this.createApiKeyDialog = new CreateApiKeyDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createApiKeyUsingSecurityTileButton(apiKeyName: string) {
+    await this.securityTileLink.hover();
+    await this.securityTileCreateButton.waitFor();
+    await this.securityTileCreateButton.click();
+    await this.securityCreateMenu.getByText('API Key').click();
+
+    await this.page.waitForLoadState('networkidle');
+
+    await this.createApiKeyDialog.nameInput.waitFor();
+    await this.createApiKeyDialog.nameInput.fill(apiKeyName);
+    await this.createApiKeyDialog.saveButton.click();
+  }
+
+  async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.apiKeyCreateMenuOption.click();
+
+    await this.createApiKeyDialog.nameInput.waitFor();
+    await this.createApiKeyDialog.nameInput.fill(apiKeyName);
+    await this.createApiKeyDialog.saveButton.click();
   }
 
   async createSurveyUsingSurveyTileButton(surveyName: string) {
@@ -125,5 +153,10 @@ export class AdminHomePage extends BaseAdminPage {
   async createSurvey(surveyName: string) {
     await this.goto();
     await this.createSurveyUsingHeaderCreateButton(surveyName);
+  }
+
+  async createApiKey(apiKeyName: string) {
+    await this.goto();
+    await this.createApiKeyUsingHeaderCreateButton(apiKeyName);
   }
 }

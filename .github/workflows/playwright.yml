@@ -109,9 +109,9 @@ jobs:
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: all-blob-reports
+          name: all-blob-reports-${{ matrix.project }}-${{ strategy.job-index }}
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
@@ -129,16 +129,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Download blob reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: all-blob-reports
+          pattern: all-blob-reports-*
+          merge-multiple: true
           path: all-blob-reports
       - name: Rename reports
         run: count=1; for file in $(find ./all-blob-reports -maxdepth 1 -type f -name "*.zip"); do mv "$file" "all-blob-reports/report-$count.zip"; count=$((count+1)); done
       - name: Merge into HTML Report
         run: npx playwright merge-reports --reporter html ./all-blob-reports
       - name: Upload HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: html-report-attempt-${{ github.run_attempt }}
           path: playwright-report

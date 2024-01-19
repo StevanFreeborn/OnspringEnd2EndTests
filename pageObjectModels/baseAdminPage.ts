@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 import { AdminNav } from '../componentObjectModels/navs/adminNav';
 import { BasePage } from './basePage';
 
-export class BaseAdminPage extends BasePage {
+export abstract class BaseAdminPage extends BasePage {
   readonly adminNav: AdminNav;
 
   protected constructor(page: Page) {
