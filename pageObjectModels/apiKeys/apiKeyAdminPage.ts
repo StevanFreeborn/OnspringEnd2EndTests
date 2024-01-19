@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { ApiKeyGeneralTab } from '../../componentObjectModels/tabs/apiKeyGeneralTab';
 import { BaseAdminPage } from '../baseAdminPage';
+import { ApiKeyDevInfoTab } from '../../componentObjectModels/tabs/apiKeyDevInfoTab';
 
 export class ApiKeyAdminPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
@@ -12,6 +13,7 @@ export class ApiKeyAdminPage extends BaseAdminPage {
   readonly generalTabButton: Locator;
   readonly devInfoTabButton: Locator;
   readonly generalTab: ApiKeyGeneralTab;
+  readonly devInfoTab: ApiKeyDevInfoTab;
 
   constructor(page: Page) {
     super(page);
@@ -24,6 +26,7 @@ export class ApiKeyAdminPage extends BaseAdminPage {
     this.generalTabButton = page.locator('#tab-strip').getByText('General');
     this.devInfoTabButton = page.locator('#tab-strip').getByText('Developer Information');
     this.generalTab = new ApiKeyGeneralTab(page);
+    this.devInfoTab = new ApiKeyDevInfoTab(page);
   }
 
   async goto(apiKeyId: number) {
