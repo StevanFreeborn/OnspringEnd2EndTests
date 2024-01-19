@@ -5,8 +5,9 @@ import { BaseAdminPage } from '../baseAdminPage';
 export class ApiKeyAdminPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
   readonly closeButton: Locator;
-  readonly saveButton: Locator;
-  readonly saveAndCloseButton: Locator;
+  private readonly saveApiKeyPathRegex: RegExp;
+  private readonly saveButton: Locator;
+  private readonly saveAndCloseButton: Locator;
   readonly cancelButton: Locator;
   readonly generalTabButton: Locator;
   readonly devInfoTabButton: Locator;
@@ -16,6 +17,7 @@ export class ApiKeyAdminPage extends BaseAdminPage {
     super(page);
     this.pathRegex = /\/Admin\/Security\/ApiKey\/\d+\/Edit/;
     this.closeButton = page.getByRole('link', { name: 'Close' });
+    this.saveApiKeyPathRegex = /\/Admin\/Security\/ApiKey\/\d+\/Edit/;
     this.saveButton = page.getByRole('link', { name: 'Save Changes' });
     this.saveAndCloseButton = page.getByRole('link', { name: 'Save & Close' });
     this.cancelButton = page.getByRole('link', { name: 'Cancel' });
@@ -38,5 +40,13 @@ export class ApiKeyAdminPage extends BaseAdminPage {
     const urlParts = url.split('/');
     const apiKeyId = urlParts[urlParts.length - 2];
     return parseInt(apiKeyId);
+  }
+
+  async save() {
+    const saveResponsePromise = this.page.waitForResponse(
+      r => r.url().match(this.saveApiKeyPathRegex) !== null && r.request().method() === 'POST'
+    );
+    await this.saveButton.click();
+    await saveResponsePromise;
   }
 }

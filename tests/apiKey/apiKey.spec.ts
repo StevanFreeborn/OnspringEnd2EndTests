@@ -1,5 +1,9 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { createRoleFixture } from '../../fixtures/role.fixures';
+import { App } from '../../models/app';
+import { AppPermission, Permission, Role } from '../../models/role';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { ApiKeyAdminPage } from '../../pageObjectModels/apiKeys/apiKeyAdminPage';
 import { ApiKeysAdminPage } from '../../pageObjectModels/apiKeys/apiKeysAdminPage';
@@ -9,6 +13,8 @@ type ApiKeyTestFixtures = {
   adminHomePage: AdminHomePage;
   apiKeysAdminPage: ApiKeysAdminPage;
   apiKeyAdminPage: ApiKeyAdminPage;
+  app: App;
+  role: Role;
 };
 
 const test = base.extend<ApiKeyTestFixtures>({
@@ -23,6 +29,22 @@ const test = base.extend<ApiKeyTestFixtures>({
   apiKeyAdminPage: async ({ sysAdminPage }, use) => {
     const apiKeyAdminPage = new ApiKeyAdminPage(sysAdminPage);
     await use(apiKeyAdminPage);
+  },
+  app: app,
+  role: async ({ sysAdminPage, app }, use) => {
+    await createRoleFixture(
+      {
+        sysAdminPage,
+        roleStatus: 'Active',
+        appPermissions: [
+          new AppPermission({
+            appName: app.name,
+            contentRecords: new Permission({ read: true }),
+          }),
+        ],
+      },
+      use
+    );
   },
 });
 
@@ -240,14 +262,35 @@ test.describe('API Key', () => {
     });
   });
 
-  test('Update an API Key', async ({}) => {
+  test('Update an API Key', async ({ role, adminHomePage, apiKeyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-270',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeApiKeyName();
+    const updatedName = `${apiKeyName} updated`;
+    const updatedDescription = 'This is a description for the api key updated';
+
+    apiKeysToDelete.push(apiKeyName);
+
+    await test.step('Create the api key to be updated', async () => {
+      await adminHomePage.createApiKey(apiKeyName);
+    });
+
+    await test.step('Update the api key', async () => {
+      await apiKeyAdminPage.generalTab.nameInput.fill(updatedName);
+      await apiKeyAdminPage.generalTab.descriptionEditor.fill(updatedDescription);
+      await apiKeyAdminPage.generalTab.selectRole(role.name);
+      await apiKeyAdminPage.save();
+    });
+
+    await test.step('Verify the api key was updated correctly', async () => {
+      await apiKeyAdminPage.page.reload();
+      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(updatedName);
+      await expect(apiKeyAdminPage.generalTab.descriptionEditor).toHaveText(updatedDescription);
+      await expect(apiKeyAdminPage.generalTab.roleSelect).toHaveText(role.name);
+    });
   });
 
   test('Enable an API Key', async ({}) => {
