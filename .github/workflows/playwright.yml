@@ -111,7 +111,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: all-blob-reports-${{ matrix.project }}-${{ matrix.shard }}
+          name: all-blob-reports-${{ matrix.project }}-${{ strategy.job-index }}
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
