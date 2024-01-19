@@ -8,7 +8,7 @@ export class ApiKeysAdminPage extends BaseAdminPage {
   readonly createApiKeyButton: Locator;
   readonly apiKeyGrid: Locator;
   readonly createApiKeyDialog: CreateApiKeyDialog;
-  readonly deleteAppDialog: DeleteApiKeyDialog;
+  readonly deleteApiKeyDialog: DeleteApiKeyDialog;
 
   constructor(page: Page) {
     super(page);
@@ -16,7 +16,7 @@ export class ApiKeysAdminPage extends BaseAdminPage {
     this.createApiKeyButton = page.getByRole('button', { name: 'Create API Key' });
     this.apiKeyGrid = page.locator('#grid');
     this.createApiKeyDialog = new CreateApiKeyDialog(page);
-    this.deleteAppDialog = new DeleteApiKeyDialog(page);
+    this.deleteApiKeyDialog = new DeleteApiKeyDialog(page);
   }
 
   async goto() {
@@ -43,8 +43,8 @@ export class ApiKeysAdminPage extends BaseAdminPage {
 
       await apiKeyRow.hover();
       await apiKeyRow.getByTitle('Delete API Key').click();
-      await this.deleteAppDialog.deleteButton.click();
-      await this.deleteAppDialog.waitForDialogToBeDismissed();
+      await this.deleteApiKeyDialog.deleteButton.click();
+      await this.deleteApiKeyDialog.waitForDialogToBeDismissed();
       await rowElement.waitForElementState('hidden');
     }
   }

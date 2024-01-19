@@ -238,6 +238,7 @@ test.describe('API Key', () => {
 
     await test.step('Create the api key to be copied', async () => {
       await apiKeysAdminPage.createApiKey(apiKeyName);
+      await apiKeysAdminPage.page.waitForURL(apiKeyAdminPage.pathRegex);
     });
 
     await test.step('Navigate back to api keys admin page', async () => {
@@ -339,8 +340,9 @@ test.describe('API Key', () => {
 
     await test.step('Verify the api key was enabled', async () => {
       await apiKeyAdminPage.page.reload();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
+
+      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
       expect(getAppResponse.status()).toBe(200);
     });
   });
@@ -374,8 +376,9 @@ test.describe('API Key', () => {
 
     await test.step('Verify the api key is enabled', async () => {
       await apiKeyAdminPage.page.reload();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
+
+      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
       expect(getAppResponse.status()).toBe(200);
     });
 
@@ -388,19 +391,44 @@ test.describe('API Key', () => {
 
     await test.step('Verify the api key was disabled', async () => {
       await apiKeyAdminPage.page.reload();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
+
+      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
       expect(getAppResponse.status()).toBe(401);
     });
   });
 
-  test('Delete an API Key', async ({}) => {
+  test('Delete an API Key', async ({ adminHomePage, apiKeysAdminPage, apiKeyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-273',
     });
 
-    // TODO: Implement this test
-    expect(true).toBeFalsy();
+    const apiKeyName = FakeDataFactory.createFakeApiKeyName();
+    const apiKeyRow = apiKeysAdminPage.apiKeyGrid.getByRole('row', { name: apiKeyName });
+    const apiKeyDeleteButton = apiKeyRow.getByTitle('Delete API Key');
+
+    await test.step('Create the api key to be deleted', async () => {
+      await adminHomePage.createApiKey(apiKeyName);
+      await adminHomePage.page.waitForURL(apiKeyAdminPage.pathRegex);
+    });
+
+    await test.step('Navigate to the api keys admin page', async () => {
+      await apiKeysAdminPage.goto();
+      await expect(apiKeyRow).toBeVisible();
+    });
+
+    await test.step('Delete the api key', async () => {
+      await apiKeyRow.hover();
+      await apiKeyDeleteButton.click();
+
+      await expect(apiKeysAdminPage.deleteApiKeyDialog.deleteButton).toBeVisible();
+      await apiKeysAdminPage.deleteApiKeyDialog.deleteButton.click();
+      await apiKeysAdminPage.deleteApiKeyDialog.waitForDialogToBeDismissed();
+      await apiKeysAdminPage.page.waitForLoadState('networkidle');
+    });
+    await test.step('Verify the api key was deleted correctly', async () => {
+      await expect(apiKeyRow).not.toBeAttached();
+    });
   });
 });
