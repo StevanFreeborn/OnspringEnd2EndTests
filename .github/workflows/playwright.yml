@@ -42,7 +42,7 @@ jobs:
       shards: ${{ steps.generate_shards.outputs.shards }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install jq
         run: |
           sudo apt-get update
@@ -95,9 +95,9 @@ jobs:
         shard: ${{ fromJson(needs.generate_shards.outputs.shards) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Install dependencies
@@ -121,9 +121,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Install dependencies
@@ -171,7 +171,7 @@ jobs:
   cleanup:
     name: 'Cleanup test artifacts'
     if: always()
-    needs: [run_tests, merge_reports_and_publish]
+    needs: [generate_shards, run_tests, merge_reports_and_publish]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
@@ -179,9 +179,9 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Install dependencies
