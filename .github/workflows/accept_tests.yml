@@ -138,7 +138,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: all-blob-reports
+          name: all-blob-reports-${{ matrix.project }}-${{ matrix.shard }}
           path: blob-report
           retention-days: 1
   merge_reports_and_publish:
@@ -164,7 +164,8 @@ jobs:
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/download-artifact@v4
         with:
-          name: all-blob-reports
+          pattern: all-blob-reports-*
+          merge-multiple: true
           path: all-blob-reports
       - name: Rename reports
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
