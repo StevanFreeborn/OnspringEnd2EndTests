@@ -105,10 +105,10 @@ jobs:
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
       - name: Rename blob-reports
-        if: !cancelled()
+        if: ${{ cancelled() != 'true' }}
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
       - name: Upload blob report'
-        if: !cancelled()
+        if: ${{ cancelled() != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: all-blob-reports-${{ matrix.project }}-${{ strategy.job-index }}
@@ -116,7 +116,7 @@ jobs:
           retention-days: 1
   merge_reports_and_publish:
     name: 'Merge Reports and Publish'
-    if: !cancelled()
+    if: ${{ cancelled() != 'true' }}
     needs: [run_tests]
     runs-on: ubuntu-latest
     steps:
