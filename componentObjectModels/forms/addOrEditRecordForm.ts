@@ -40,7 +40,7 @@ export class AddOrEditRecordForm extends BaseForm {
   readonly contentContainer: Locator;
   createFormControlSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = toPascalCase(field);
-    return `td.data-${pascalCaseFieldName} ${controlSelector}`;
+    return `.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 
   constructor(container: Locator) {
