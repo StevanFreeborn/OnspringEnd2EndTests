@@ -15,7 +15,7 @@ export class BaseForm {
   readonly contentContainer: Locator;
   createFormControlSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = toPascalCase(field);
-    return `td.data-${pascalCaseFieldName} ${controlSelector}`;
+    return `.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 
   protected constructor(contentContainer: Locator) {
