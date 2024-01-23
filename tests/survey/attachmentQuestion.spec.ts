@@ -1,5 +1,7 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { survey } from '../../fixtures/survey.fixtures';
+import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { Survey } from '../../models/survey';
 import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
 import { AnnotationType } from '../annotations';
@@ -24,48 +26,31 @@ test.describe('attachment question', function () {
       description: 'Test-274',
     });
 
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const attachmentQuestion = new AttachmentQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
     await test.step('Navigate to survey admin page', async () => {
       await surveyAdminPage.goto(survey.id);
     });
 
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.designSurveyLink.click();
-      await surveyAdminPage.page.waitForLoadState('networkidle');
-
-      if (await surveyAdminPage.designTab.surveyDesignerModal.autoSaveDialog.isVisible()) {
-        await surveyAdminPage.designTab.surveyDesignerModal.autoSaveDialog.dismiss();
-      }
+      await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
     await test.step('Add an attachment question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.attachmentButton.click();
-      const attachmentQuestionEditForm =
-        surveyAdminPage.designTab.surveyDesignerModal.getQuestionEditForm('Attachment');
-      await attachmentQuestionEditForm.questionTextEditor.fill('Attachment Question');
-      await attachmentQuestionEditForm.questionIdInput.fill('attachmentQuestion');
-      await attachmentQuestionEditForm.dragBar.click();
-      await surveyAdminPage.designTab.surveyDesignerModal.saveIndicator.waitFor({ state: 'hidden' });
-      await surveyAdminPage.page.waitForTimeout(10000);
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
     });
 
     await test.step('Preview the survey and confirm the attachment question is present', async () => {
-      const context = surveyAdminPage.page.context();
-      const previewPagePromise = context.waitForEvent('page');
-      await surveyAdminPage.designTab.surveyDesignerModal.previewButton.click();
-      const previewPage = await previewPagePromise;
-      const attachmentQuestion = previewPage.locator('.survey-item', { hasText: /Attachment Question/ });
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const attachmentQuestion = previewPage.locator('.survey-item', { hasText: new RegExp(questionId) });
       await expect(attachmentQuestion).toBeVisible();
     });
-
-    // TODO: implement this test
-    // create the survey
-    // navigate to the designer
-    // create an attachment questions
-    // complete required fields then leave defaults as is
-    // preview the survey...surveys auto save so might need to
-    // detect the save and wait for it to complete before previewing
-    // confirm the attachment question is present
   });
 
   test('Create a copy of an attachment question', function () {

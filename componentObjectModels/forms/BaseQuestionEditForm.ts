@@ -1,4 +1,5 @@
 import { FrameLocator, Locator } from '@playwright/test';
+import { Question } from '../../models/question';
 
 export abstract class BaseQuestionEditForm {
   readonly questionTextEditor: Locator;
@@ -18,4 +19,24 @@ export abstract class BaseQuestionEditForm {
     this.helpTextEditor = frame.locator('.content-area.mce-content-body').last();
     this.dragBar = frame.locator('.survey-item.edit-mode .drag-bar');
   }
+
+  protected async baseFillOutForm(question: Question) {
+    await this.questionIdInput.fill(question.questionId);
+    await this.questionTextEditor.fill(question.questionText);
+    await this.helpTextEditor.fill(question.helpText);
+
+    if (question.required) {
+      await this.requiredCheckbox.check();
+    }
+
+    if (question.correctness) {
+      await this.correctnessCheckbox.check();
+    }
+
+    if (question.relateToContent) {
+      await this.relateToContentCheckbox.check();
+    }
+  }
+
+  abstract fillOutForm(question: Question): Promise<void>;
 }

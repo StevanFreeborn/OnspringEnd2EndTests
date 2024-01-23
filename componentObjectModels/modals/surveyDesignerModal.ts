@@ -1,5 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { QuestionType } from '../../models/question';
+import { Question, QuestionType } from '../../models/question';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { AttachmentQuestionEditForm } from '../forms/AttachmentQuestionEditForm';
 import { BaseQuestionEditForm } from '../forms/BaseQuestionEditForm';
@@ -29,5 +29,29 @@ export class SurveyDesignerModal {
       default:
         throw new Error(`Question type ${questionType} is not supported.`);
     }
+  }
+
+  async previewSurvey() {
+    const context = this.designer.page().context();
+    const previewPagePromise = context.waitForEvent('page');
+    await this.previewButton.click();
+    return await previewPagePromise;
+  }
+
+  async addQuestion(question: Question) {
+    let questionEditForm;
+
+    switch (question.type) {
+      case 'Attachment':
+        await this.attachmentButton.click();
+        questionEditForm = this.getQuestionEditForm(question.type);
+        questionEditForm.fillOutForm(question);
+        break;
+      default:
+        throw new Error(`Question type ${question.type} is not supported.`);
+    }
+
+    await questionEditForm.dragBar.click();
+    await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 }
