@@ -1,7 +1,7 @@
 import { FrameLocator, Locator } from '@playwright/test';
 import { Question } from '../../models/question';
 
-export abstract class BaseQuestionEditForm {
+export class BaseAddOrEditQuestionForm {
   readonly questionTextEditor: Locator;
   readonly questionIdInput: Locator;
   readonly requiredCheckbox: Locator;
@@ -10,7 +10,7 @@ export abstract class BaseQuestionEditForm {
   readonly helpTextEditor: Locator;
   readonly dragBar: Locator;
 
-  protected constructor(frame: FrameLocator) {
+  constructor(frame: FrameLocator) {
     this.questionTextEditor = frame.getByLabel('Question Text');
     this.questionIdInput = frame.getByLabel('Question Id');
     this.requiredCheckbox = frame.getByLabel('Required');
@@ -38,5 +38,7 @@ export abstract class BaseQuestionEditForm {
     }
   }
 
-  abstract fillOutForm(question: Question): Promise<void>;
+  async fillOutForm(question: Question) {
+    await this.baseFillOutForm(question);
+  }
 }

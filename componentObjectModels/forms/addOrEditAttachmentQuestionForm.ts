@@ -1,8 +1,8 @@
 import { FrameLocator } from '@playwright/test';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
-import { BaseQuestionEditForm } from './BaseQuestionEditForm';
+import { BaseAddOrEditQuestionForm } from './baseAddOrEditQuestionForm';
 
-export class AttachmentQuestionEditForm extends BaseQuestionEditForm {
+export class AddOrEditAttachmentQuestionForm extends BaseAddOrEditQuestionForm {
   constructor(frame: FrameLocator) {
     super(frame);
   }

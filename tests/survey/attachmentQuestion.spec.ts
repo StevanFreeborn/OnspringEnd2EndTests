@@ -33,6 +33,8 @@ test.describe('attachment question', function () {
       questionText: questionId,
     });
 
+    let surveyItemId: string;
+
     await test.step('Navigate to survey admin page', async () => {
       await surveyAdminPage.goto(survey.id);
     });
@@ -43,24 +45,60 @@ test.describe('attachment question', function () {
     });
 
     await test.step('Add an attachment question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
     });
 
     await test.step('Preview the survey and confirm the attachment question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const attachmentQuestion = previewPage.locator('.survey-item', { hasText: new RegExp(questionId) });
-      await expect(attachmentQuestion).toBeVisible();
+      const createdQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Create a copy of an attachment question', function () {
+  test('Create a copy of an attachment question', async function ({ survey, surveyAdminPage }) {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-275',
     });
 
-    // TODO: implement this test
-    expect(false).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const attachmentQuestion = new AttachmentQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    let surveyItemId: string;
+    let surveyItemIdCopy: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add an attachment question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    });
+
+    await test.step('Copy the attachment question', async () => {
+      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
+        surveyItemId,
+        attachmentQuestion.questionText
+      );
+    });
+
+    await test.step('Preview the survey and confirm the copied attachment question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, attachmentQuestion.questionText);
+
+      await expect(copiedQuestion).toBeVisible();
+      await expect(questionCopy).toBeVisible();
+    });
   });
 
   test('Import an attachment question', function () {
