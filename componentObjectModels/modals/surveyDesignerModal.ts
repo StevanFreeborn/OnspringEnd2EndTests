@@ -4,6 +4,7 @@ import { SurveyPage } from '../../models/surveyPage';
 import { SurveyPreviewPage } from '../../pageObjectModels/surveys/surveyPreviewPage';
 import { AddSurveyPageDialog } from '../dialogs/addSurveyPageDialog';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
+import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
@@ -21,6 +22,7 @@ export class SurveyDesignerModal {
   readonly addPageButton: Locator;
   readonly addSurveyPageDialog: AddSurveyPageDialog;
   readonly addOrEditSurveyPageModal: AddOrEditSurveyPageModal;
+  readonly deleteSurveyQuestionDialog: DeleteSurveyQuestionDialog;
 
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
@@ -34,6 +36,7 @@ export class SurveyDesignerModal {
     this.addPageButton = this.frame.getByRole('button', { name: 'Add Page' });
     this.addSurveyPageDialog = new AddSurveyPageDialog(page);
     this.addOrEditSurveyPageModal = new AddOrEditSurveyPageModal(page);
+    this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
   getQuestionEditForm(questionType: 'Attachment'): AddOrEditAttachmentQuestionForm;
@@ -113,6 +116,19 @@ export class SurveyDesignerModal {
     await this.saveIndicator.waitFor({ state: 'hidden' });
 
     return itemId;
+  }
+
+  async deleteQuestion(surveyItemId: string, questionText: string) {
+    const surveyItem = this.frame.locator(`[data-item-id="${surveyItemId}"]`, { hasText: new RegExp(questionText) });
+    await surveyItem.hover();
+
+    const deleteButton = surveyItem.getByTitle('Delete Question');
+    await deleteButton.click();
+
+    await this.deleteSurveyQuestionDialog.deleteButton.waitFor();
+    await this.deleteSurveyQuestionDialog.deleteButton.click();
+
+    await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 
   /**

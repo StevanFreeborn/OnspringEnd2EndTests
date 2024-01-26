@@ -295,13 +295,42 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Delete an attachment question', async () => {
+  test('Delete an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-312',
     });
 
-    // TODO: implement this test
-    expect(false).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const attachmentQuestion = new AttachmentQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add an attachment question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    });
+
+    await test.step('Delete the attachment question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, attachmentQuestion.questionText);
+    });
+
+    await test.step('Preview the survey and confirm the attachment question is not present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      await expect(question).not.toBeVisible();
+    });
   });
 });
