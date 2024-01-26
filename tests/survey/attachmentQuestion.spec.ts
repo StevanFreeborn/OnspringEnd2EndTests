@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { survey } from '../../fixtures/survey.fixtures';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { Survey } from '../../models/survey';
+import { SurveyPage } from '../../models/surveyPage';
 import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
 import { AnnotationType } from '../annotations';
 
@@ -21,8 +22,8 @@ const test = base.extend<AttachmentQuestionTestFixtures>({
   targetSurvey: survey,
 });
 
-test.describe('attachment question', function () {
-  test('Create an attachment question', async function ({ targetSurvey: survey, surveyAdminPage }) {
+test.describe('attachment question', () => {
+  test('Create an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-274',
@@ -57,7 +58,7 @@ test.describe('attachment question', function () {
     });
   });
 
-  test('Create a copy of an attachment question', async function ({ targetSurvey: survey, surveyAdminPage }) {
+  test('Create a copy of an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-275',
@@ -103,7 +104,7 @@ test.describe('attachment question', function () {
     });
   });
 
-  test('Import an attachment question', async function ({ sourceSurvey, targetSurvey, surveyAdminPage }) {
+  test('Import an attachment question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-276',
@@ -154,7 +155,7 @@ test.describe('attachment question', function () {
     });
   });
 
-  test('Update an attachment question', async function ({ targetSurvey: survey, surveyAdminPage }) {
+  test('Update an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-277',
@@ -195,27 +196,106 @@ test.describe('attachment question', function () {
     });
   });
 
-  test('Move an attachment question on a page', function () {
+  test('Move an attachment question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-278',
     });
 
-    // TODO: implement this test
-    expect(false).toBe(true);
+    const attachmentQuestions = [
+      new AttachmentQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Attachment Question 1',
+      }),
+      new AttachmentQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Attachment Question 2',
+      }),
+    ];
+
+    let surveyItemIds: string[] = [];
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create attachment questions', async () => {
+      for (const attachmentQuestion of attachmentQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+        surveyItemIds.push(surveyItemId);
+      }
+    });
+
+    await test.step('Move the second attachment question above the first attachment question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second attachment question is displayed above the first attachment question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
+    });
   });
 
-  test('Move an attachment question to another page', function () {
+  test('Move an attachment question to another page', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-279',
     });
 
-    // TODO: implement this test
-    expect(false).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const attachmentQuestion = new AttachmentQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create an attachment question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the attachment question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    // preview the survey and confirm the attachment question is on the new page
+    await test.step('Preview the survey and confirm the attachment question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      await expect(question).toBeVisible();
+    });
   });
 
-  test('Delete an attachment question', function () {
+  test('Delete an attachment question', async () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-312',

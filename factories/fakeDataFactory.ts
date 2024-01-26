@@ -69,4 +69,9 @@ export class FakeDataFactory {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-api-key-test`;
   }
+
+  static createFakeSurveyPageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-page-test`;
+  }
 }

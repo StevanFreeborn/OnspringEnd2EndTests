@@ -1,9 +1,12 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { Question, QuestionType } from '../../models/question';
+import { SurveyPage } from '../../models/surveyPage';
 import { SurveyPreviewPage } from '../../pageObjectModels/surveys/surveyPreviewPage';
+import { AddSurveyPageDialog } from '../dialogs/addSurveyPageDialog';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
+import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
 
 export class SurveyDesignerModal {
@@ -15,6 +18,9 @@ export class SurveyDesignerModal {
   readonly autoSaveDialog: AutoSaveDialog;
   readonly importQuestionButton: Locator;
   readonly importQuestionModal: ImportQuestionModal;
+  readonly addPageButton: Locator;
+  readonly addSurveyPageDialog: AddSurveyPageDialog;
+  readonly addOrEditSurveyPageModal: AddOrEditSurveyPageModal;
 
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
@@ -25,6 +31,9 @@ export class SurveyDesignerModal {
     this.autoSaveDialog = new AutoSaveDialog(page);
     this.importQuestionButton = this.frame.getByRole('button', { name: 'Import Question' });
     this.importQuestionModal = new ImportQuestionModal(page);
+    this.addPageButton = this.frame.getByRole('button', { name: 'Add Page' });
+    this.addSurveyPageDialog = new AddSurveyPageDialog(page);
+    this.addOrEditSurveyPageModal = new AddOrEditSurveyPageModal(page);
   }
 
   getQuestionEditForm(questionType: 'Attachment'): AddOrEditAttachmentQuestionForm;
@@ -49,6 +58,7 @@ export class SurveyDesignerModal {
     const previewPagePromise = context.waitForEvent('page');
     await this.previewButton.click();
     const page = await previewPagePromise;
+    await page.waitForLoadState('networkidle');
     return new SurveyPreviewPage(page);
   }
 
@@ -152,6 +162,54 @@ export class SurveyDesignerModal {
     }
 
     await editQuestionForm.dragBar.click();
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+  }
+
+  async moveQuestionAbove(surveyItemIdToMove: string, surveyItemIdToMoveAbove: string) {
+    const surveyItemToMove = this.frame.locator(`[data-item-id="${surveyItemIdToMove}"]`);
+    const surveyItemToMoveAbove = this.frame.locator(`[data-item-id="${surveyItemIdToMoveAbove}"]`);
+
+    const surveyItemToMovePos = await surveyItemToMove.boundingBox();
+    const surveyItemToMoveAbovePos = await surveyItemToMoveAbove.boundingBox();
+
+    if (surveyItemToMovePos == null) {
+      throw new Error(`Could not find survey item with id ${surveyItemIdToMove}.`);
+    }
+
+    if (surveyItemToMoveAbovePos == null) {
+      throw new Error(`Could not find survey item with id ${surveyItemIdToMoveAbove}.`);
+    }
+
+    if (surveyItemToMovePos.y < surveyItemToMoveAbovePos.y) {
+      // item to move above is already above the item to move
+      return;
+    }
+
+    await surveyItemToMove.locator('.drag-bar').dragTo(surveyItemToMoveAbove.locator('.display-item'));
+
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+  }
+
+  async addPage(newPage: SurveyPage) {
+    await this.addPageButton.click();
+    await this.addSurveyPageDialog.okButton.click();
+    await this.addOrEditSurveyPageModal.nameInput.fill(newPage.name);
+    await this.addOrEditSurveyPageModal.descriptionEditor.fill(newPage.description);
+    await this.addOrEditSurveyPageModal.saveButton.click();
+  }
+
+  async goToPage(pageName: string) {
+    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    await page.click();
+  }
+
+  async moveQuestionToPage(surveyItemToMove: string, pageName: string) {
+    const surveyItem = this.frame.locator(`[data-item-id="${surveyItemToMove}"]`);
+    await surveyItem.hover();
+    await surveyItem.getByTitle('Move Question').click();
+
+    const moveToPageMenu = this.frame.locator('#move-to-page-menu');
+    await moveToPageMenu.getByText(pageName).click();
     await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 }
