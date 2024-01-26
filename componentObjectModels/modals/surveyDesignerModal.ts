@@ -134,4 +134,24 @@ export class SurveyDesignerModal {
 
     return itemId;
   }
+
+  async updateQuestion(surveyItemId: string, question: Question) {
+    const surveyQuestion = this.frame.locator(`[data-item-id="${surveyItemId}"]`);
+    await surveyQuestion.locator('.display-item').click();
+
+    let editQuestionForm;
+
+    switch (question.type) {
+      case 'Attachment':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question);
+        break;
+      default:
+        throw new Error(`Question type ${question.type} is not supported.`);
+    }
+
+    await editQuestionForm.dragBar.click();
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+  }
 }

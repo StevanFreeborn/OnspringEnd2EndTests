@@ -154,14 +154,45 @@ test.describe('attachment question', function () {
     });
   });
 
-  test('Update an attachment question', function () {
+  test('Update an attachment question', async function ({ targetSurvey: survey, surveyAdminPage }) {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-277',
     });
 
-    // TODO: implement this test
-    expect(false).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const attachmentQuestion = new AttachmentQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    const updatedQuestion = { ...attachmentQuestion, questionText: `${attachmentQuestion.questionText} updated` };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the attachment question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    });
+
+    await test.step('Update the attachment question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated attachment question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
   });
 
   test('Move an attachment question on a page', function () {

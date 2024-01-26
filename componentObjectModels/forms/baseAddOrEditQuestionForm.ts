@@ -38,7 +38,20 @@ export class BaseAddOrEditQuestionForm {
     }
   }
 
+  protected async baseClearForm() {
+    await this.questionIdInput.clear();
+    await this.questionTextEditor.clear();
+    await this.helpTextEditor.clear();
+    await this.requiredCheckbox.uncheck();
+    await this.correctnessCheckbox.uncheck();
+    await this.relateToContentCheckbox.uncheck();
+  }
+
   async fillOutForm(question: Question) {
     await this.baseFillOutForm(question);
+  }
+
+  async clearForm() {
+    await this.baseClearForm();
   }
 }
