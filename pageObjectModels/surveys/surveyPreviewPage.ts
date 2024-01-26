@@ -36,6 +36,10 @@ export class SurveyPreviewPage {
   async questionIsAbove(itemIdToCheck: string, itemIdToCheckAgainst: string) {
     const itemToCheck = this.page.locator(`.survey-item[data-item-id="${itemIdToCheck}"]`);
     const itemToCheckAgainst = this.page.locator(`.survey-item[data-item-id="${itemIdToCheckAgainst}"]`);
+
+    await itemToCheck.waitFor();
+    await itemToCheckAgainst.waitFor();
+
     const itemToCheckBounds = await itemToCheck.boundingBox();
     const itemToCheckAgainstBounds = await itemToCheckAgainst.boundingBox();
 
