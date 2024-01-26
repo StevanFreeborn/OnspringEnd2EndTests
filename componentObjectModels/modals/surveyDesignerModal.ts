@@ -143,7 +143,7 @@ export class SurveyDesignerModal {
       case 'Attachment':
         await this.attachmentButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
-        addQuestionForm.fillOutForm(question);
+        await addQuestionForm.fillOutForm(question);
         break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
