@@ -55,6 +55,11 @@ export class FakeDataFactory {
     return `${uniqueId}-${fieldName}`;
   }
 
+  static createFakeQuestionId(questionText: string = 'question-test') {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${questionText}`;
+  }
+
   static createFakeTextBlockName(fieldName: string = 'text-block-test') {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${fieldName}`;
@@ -63,5 +68,10 @@ export class FakeDataFactory {
   static createFakeApiKeyName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-api-key-test`;
+  }
+
+  static createFakeSurveyPageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-page-test`;
   }
 }

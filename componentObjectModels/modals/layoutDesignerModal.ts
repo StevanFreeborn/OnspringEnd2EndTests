@@ -22,7 +22,7 @@ type DragObjectParams = DragItemsParams & {
 export class LayoutDesignerModal extends LayoutItemCreator {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
-  private readonly pathRegex: RegExp;
+  private readonly saveLayoutPathRegex: RegExp;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: CanvasSection;
   readonly saveButton: Locator;
@@ -33,7 +33,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     super(page);
     this.designer = page.getByRole('dialog');
     this.frame = this.designer.frameLocator('iframe').first();
-    this.pathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
+    this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
     this.saveButton = this.designer.getByRole('button', { name: 'Save' });
@@ -42,13 +42,13 @@ export class LayoutDesignerModal extends LayoutItemCreator {
   }
 
   async saveLayout() {
-    const saveResponse = this.page.waitForResponse(this.pathRegex);
+    const saveResponse = this.page.waitForResponse(this.saveLayoutPathRegex);
     await this.saveButton.click();
     await saveResponse;
   }
 
   async saveAndCloseLayout() {
-    const saveResponse = this.page.waitForResponse(this.pathRegex);
+    const saveResponse = this.page.waitForResponse(this.saveLayoutPathRegex);
     await this.saveAndCloseButton.click();
     await saveResponse;
   }
