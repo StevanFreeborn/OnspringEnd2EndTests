@@ -4,6 +4,7 @@ import { SurveyPreviewPage } from '../../pageObjectModels/surveys/surveyPreviewP
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
+import { ImportQuestionModal } from './importQuestionModal';
 
 export class SurveyDesignerModal {
   private readonly designer: Locator;
@@ -12,6 +13,8 @@ export class SurveyDesignerModal {
   readonly previewButton: Locator;
   readonly saveIndicator: Locator;
   readonly autoSaveDialog: AutoSaveDialog;
+  readonly importQuestionButton: Locator;
+  readonly importQuestionModal: ImportQuestionModal;
 
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
@@ -20,6 +23,8 @@ export class SurveyDesignerModal {
     this.previewButton = this.frame.getByRole('link', { name: 'Preview' });
     this.saveIndicator = this.frame.locator('#record-status .animation');
     this.autoSaveDialog = new AutoSaveDialog(page);
+    this.importQuestionButton = this.frame.getByRole('button', { name: 'Import Question' });
+    this.importQuestionModal = new ImportQuestionModal(page);
   }
 
   getQuestionEditForm(questionType: 'Attachment'): AddOrEditAttachmentQuestionForm;
@@ -47,6 +52,35 @@ export class SurveyDesignerModal {
     return new SurveyPreviewPage(page);
   }
 
+  /**
+   * Imports a question into the survey via the survey designer modal.
+   * @param sourceSurveyName The name of the survey to import the question from.
+   * @param sourceQuestion The question to import.
+   * @returns The item id of the created survey question.
+   */
+  async importQuestion(sourceSurveyName: string, sourceQuestion: Question) {
+    await this.importQuestionButton.click();
+    await this.importQuestionModal.selectQuestionToImport(sourceSurveyName, sourceQuestion.questionId);
+    await this.importQuestionModal.importButton.click();
+
+    const createdQuestion = this.frame.locator('[data-item-id]', { hasText: new RegExp(sourceQuestion.questionText) });
+    const itemId = await createdQuestion.getAttribute('data-item-id');
+
+    if (itemId === null) {
+      throw new Error('Item id was not found on the created survey question.');
+    }
+
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+
+    return itemId;
+  }
+
+  /**
+   * Copies a question in the survey via the survey designer modal.
+   * @param surveyItemId The item id of the question to copy.
+   * @param questionText The text of the question to copy.
+   * @returns The item id of the copied survey question.
+   */
   async copyQuestion(surveyItemId: string, questionText: string) {
     const surveyItem = this.frame.locator(`[data-item-id="${surveyItemId}"]`, { hasText: new RegExp(questionText) });
     await surveyItem.hover();
