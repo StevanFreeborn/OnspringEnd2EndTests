@@ -35,3 +35,12 @@ export abstract class BaseCreateOrAddDialogWithSaveButton extends BaseCreateOrAd
     this.saveButton = page.getByRole('button', { name: 'Save' });
   }
 }
+
+export abstract class BaseCreateOrAddDialogWithOkButton extends BaseCreateOrAddDialog {
+  readonly okButton: Locator;
+
+  protected constructor(page: Page) {
+    super(page);
+    this.okButton = page.getByRole('button', { name: 'OK' });
+  }
+}
