@@ -19,5 +19,10 @@ export async function survey({ sysAdminPage }: { sysAdminPage: Page }, use: (r: 
 
   await use(survey);
 
-  await surveysAdminPage.deleteSurveys([surveyName]);
+  // TODO: Not handling cleanup here because when
+  // deleting surveys an exception sometimes
+  // occurs when another user simultaneously
+  // loads the surveys admin page.
+  // reference: https://corp.onspring.com/Content/8/4162
+  // await surveysAdminPage.deleteSurveys([surveyName]);
 }
