@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { DateQuestion } from '../../models/dateQuestion';
+import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('date/time question', () => {
@@ -224,23 +225,93 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Move a date/time question to another page.', async ({}) => {
+  test('Move a date/time question to another page.', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-349',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const dateQuestion = new DateQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create an date question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the date question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    await test.step('Preview the survey and confirm the date question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      await expect(question).toBeVisible();
+    });
   });
 
-  test('Delete a date/time question', async ({}) => {
+  test('Delete a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-350',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const dateQuestion = new DateQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add an date question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+    });
+
+    await test.step('Delete the date question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, dateQuestion.questionText);
+    });
+
+    await test.step('Preview the survey and confirm the date question is not present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      await expect(question).not.toBeVisible();
+    });
   });
 });
