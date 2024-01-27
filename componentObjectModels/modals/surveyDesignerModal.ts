@@ -188,6 +188,11 @@ export class SurveyDesignerModal {
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question);
         break;
+      case 'Date/Time':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }

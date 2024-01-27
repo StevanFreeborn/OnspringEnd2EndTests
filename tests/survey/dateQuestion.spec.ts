@@ -39,14 +39,50 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Create a copy of a date/time question', async ({}) => {
+  test('Create a copy of a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-345',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const dateQuestion = new DateQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    let surveyItemId: string;
+    let surveyItemIdCopy: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a date question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+    });
+
+    await test.step('Copy the date question', async () => {
+      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
+        surveyItemId,
+        dateQuestion.questionText
+      );
+    });
+
+    await test.step('Preview the survey and confirm the copied date question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, dateQuestion.questionText);
+
+      await expect(copiedQuestion).toBeVisible();
+      await expect(questionCopy).toBeVisible();
+    });
   });
 
   test('Import a date/time question', async ({}) => {
