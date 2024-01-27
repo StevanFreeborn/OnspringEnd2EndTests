@@ -136,14 +136,45 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Update a date/time question', async ({}) => {
+  test('Update a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-347',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const dateQuestion = new DateQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    const updatedQuestion = { ...dateQuestion, questionText: `${dateQuestion.questionText} updated` };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the date question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+    });
+
+    await test.step('Update the date question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated date question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
   });
 
   test('Move a date/time question on a page', async ({}) => {
