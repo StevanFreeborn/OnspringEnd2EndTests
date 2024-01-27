@@ -177,14 +177,51 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Move a date/time question on a page', async ({}) => {
+  test('Move a date/time question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-348',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const dateQuestions = [
+      new DateQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Date Question 1',
+      }),
+      new DateQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Date Question 2',
+      }),
+    ];
+
+    let surveyItemIds: string[] = [];
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create date questions', async () => {
+      for (const dateQuestion of dateQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+        surveyItemIds.push(surveyItemId);
+      }
+    });
+
+    await test.step('Move the second date question above the first date question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second date question is displayed above the first date question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
+    });
   });
 
   test('Move a date/time question to another page.', async ({}) => {
