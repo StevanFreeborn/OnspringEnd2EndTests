@@ -85,14 +85,55 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Import a date/time question', async ({}) => {
+  test('Import a date/time question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-346',
     });
 
-    // TODO: Implement test
-    expect(true).toBeTruthy();
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const sourceDateQuestion = new DateQuestion({
+      questionId: questionId,
+      questionText: questionId,
+    });
+
+    let questionCreatedViaImport: string;
+
+    await test.step("Navigate to the source survey's admin page", async () => {
+      await surveyAdminPage.goto(sourceSurvey.id);
+    });
+
+    await test.step("Open the source survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add an date question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceDateQuestion);
+    });
+
+    await test.step("Navigate to the target survey's admin page", async () => {
+      await surveyAdminPage.goto(targetSurvey.id);
+    });
+
+    await test.step("Open the target survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Import the date question into the target survey', async () => {
+      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
+        sourceSurvey.name,
+        sourceDateQuestion
+      );
+    });
+
+    await test.step('Preview the target survey and confirm the date question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceDateQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Update a date/time question', async ({}) => {
