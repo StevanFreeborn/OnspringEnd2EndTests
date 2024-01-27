@@ -6,6 +6,7 @@ import { AddSurveyPageDialog } from '../dialogs/addSurveyPageDialog';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
+import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
@@ -13,7 +14,10 @@ import { ImportQuestionModal } from './importQuestionModal';
 export class SurveyDesignerModal {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
+
   readonly attachmentButton: Locator;
+  readonly dateButton: Locator;
+
   readonly previewButton: Locator;
   readonly saveIndicator: Locator;
   readonly autoSaveDialog: AutoSaveDialog;
@@ -27,7 +31,10 @@ export class SurveyDesignerModal {
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
     this.frame = this.designer.frameLocator('iframe').first();
+
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
+    this.dateButton = this.frame.getByRole('button', { name: 'Date/Time' });
+
     this.previewButton = this.frame.getByRole('link', { name: 'Preview' });
     this.saveIndicator = this.frame.locator('#record-status .animation');
     this.autoSaveDialog = new AutoSaveDialog(page);
@@ -39,12 +46,15 @@ export class SurveyDesignerModal {
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
+  getQuestionEditForm(questionType: 'Date/Time'): AddOrEditDateQuestionForm;
   getQuestionEditForm(questionType: 'Attachment'): AddOrEditAttachmentQuestionForm;
   getQuestionEditForm(questionType?: QuestionType): BaseAddOrEditQuestionForm;
   getQuestionEditForm(questionType: QuestionType): BaseAddOrEditQuestionForm {
     switch (questionType) {
       case 'Attachment':
         return new AddOrEditAttachmentQuestionForm(this.frame);
+      case 'Date/Time':
+        return new AddOrEditDateQuestionForm(this.frame);
       case undefined:
         return new BaseAddOrEditQuestionForm(this.frame);
       default:
@@ -145,6 +155,11 @@ export class SurveyDesignerModal {
         addQuestionForm = this.getQuestionEditForm(question.type);
         await addQuestionForm.fillOutForm(question);
         break;
+      case 'Date/Time':
+        await this.dateButton.click();
+        addQuestionForm = this.getQuestionEditForm(question.type);
+        await addQuestionForm.fillOutForm(question);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }
@@ -169,6 +184,11 @@ export class SurveyDesignerModal {
 
     switch (question.type) {
       case 'Attachment':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question);
+        break;
+      case 'Date/Time':
         editQuestionForm = this.getQuestionEditForm(question.type);
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question);
