@@ -16,6 +16,8 @@ export class SurveyDesignerModal {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
 
+  private readonly saveItemSortPathRegex: RegExp;
+
   readonly attachmentButton: Locator;
   readonly dateButton: Locator;
   readonly numberButton: Locator;
@@ -33,6 +35,8 @@ export class SurveyDesignerModal {
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
     this.frame = this.designer.frameLocator('iframe').first();
+
+    this.saveItemSortPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/SaveItemSort/;
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
     this.dateButton = this.frame.getByRole('button', { name: 'Date/Time' });
@@ -237,9 +241,15 @@ export class SurveyDesignerModal {
       return;
     }
 
+    const saveSortItemPromise = this.designer
+      .page()
+      .waitForResponse(
+        res => res.url().match(this.saveItemSortPathRegex) !== null && res.request().method() === 'POST'
+      );
+
     await surveyItemToMove.locator('.drag-bar').dragTo(surveyItemToMoveAbove.locator('.display-item'));
 
-    await this.saveIndicator.waitFor({ state: 'hidden' });
+    await Promise.allSettled([this.saveIndicator.waitFor({ state: 'hidden' }), saveSortItemPromise]);
   }
 
   async addPage(newPage: SurveyPage) {
