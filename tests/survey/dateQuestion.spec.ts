@@ -110,7 +110,7 @@ test.describe('date/time question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an date question to the source survey', async () => {
+    await test.step('Add a date question to the source survey', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceDateQuestion);
     });
 
@@ -254,7 +254,7 @@ test.describe('date/time question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create an date question', async () => {
+    await test.step('Create a date question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
     });
 
@@ -300,7 +300,7 @@ test.describe('date/time question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an date question', async () => {
+    await test.step('Add a date question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
     });
 
