@@ -7,6 +7,7 @@ import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
+import { AddOrEditNumberQuestionForm } from '../forms/addOrEditNumberQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
@@ -17,6 +18,7 @@ export class SurveyDesignerModal {
 
   readonly attachmentButton: Locator;
   readonly dateButton: Locator;
+  readonly numberButton: Locator;
 
   readonly previewButton: Locator;
   readonly saveIndicator: Locator;
@@ -34,6 +36,7 @@ export class SurveyDesignerModal {
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
     this.dateButton = this.frame.getByRole('button', { name: 'Date/Time' });
+    this.numberButton = this.frame.getByRole('button', { name: 'Number' });
 
     this.previewButton = this.frame.getByRole('link', { name: 'Preview' });
     this.saveIndicator = this.frame.locator('#record-status .animation');
@@ -46,6 +49,7 @@ export class SurveyDesignerModal {
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
+  getQuestionEditForm(questionType: 'Number'): AddOrEditNumberQuestionForm;
   getQuestionEditForm(questionType: 'Date/Time'): AddOrEditDateQuestionForm;
   getQuestionEditForm(questionType: 'Attachment'): AddOrEditAttachmentQuestionForm;
   getQuestionEditForm(questionType?: QuestionType): BaseAddOrEditQuestionForm;
@@ -55,6 +59,8 @@ export class SurveyDesignerModal {
         return new AddOrEditAttachmentQuestionForm(this.frame);
       case 'Date/Time':
         return new AddOrEditDateQuestionForm(this.frame);
+      case 'Number':
+        return new AddOrEditNumberQuestionForm(this.frame);
       case undefined:
         return new BaseAddOrEditQuestionForm(this.frame);
       default:
@@ -160,6 +166,11 @@ export class SurveyDesignerModal {
         addQuestionForm = this.getQuestionEditForm(question.type);
         await addQuestionForm.fillOutForm(question);
         break;
+      case 'Number':
+        await this.numberButton.click();
+        addQuestionForm = this.getQuestionEditForm(question.type);
+        await addQuestionForm.fillOutForm(question);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }
@@ -189,6 +200,11 @@ export class SurveyDesignerModal {
         await editQuestionForm.fillOutForm(question);
         break;
       case 'Date/Time':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question);
+        break;
+      case 'Number':
         editQuestionForm = this.getQuestionEditForm(question.type);
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question);
