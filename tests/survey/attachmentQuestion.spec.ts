@@ -285,7 +285,6 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
     });
 
-    // preview the survey and confirm the attachment question is on the new page
     await test.step('Preview the survey and confirm the attachment question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       await previewPage.nextButton.click();
