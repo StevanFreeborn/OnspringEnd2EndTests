@@ -1,5 +1,5 @@
 import { Locator } from '@playwright/test';
-import { ListValue } from '../../models/listField';
+import { ListValue } from '../../models/listValue';
 
 export class ListValuesGrid {
   private readonly control: Locator;
@@ -32,6 +32,18 @@ export class ListValuesGrid {
     await this.addValueButton.click();
     const row = this.getLastValueRow();
     await row.valueInput.fill(listValue.value);
+  }
+
+  async clearGrid() {
+    let valuesCount = await this.gridBody.getByRole('row').count();
+
+    while (valuesCount > 0) {
+      const row = this.gridBody.getByRole('row').last();
+      await row.hover();
+      await row.getByTitle('Delete List Value').click();
+      await row.waitFor({ state: 'detached' });
+      valuesCount = await this.gridBody.getByRole('row').count();
+    }
   }
 }
 
