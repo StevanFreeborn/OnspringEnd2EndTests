@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { ListValue } from '../../models/listValue';
 import { SingleSelectQuestion } from '../../models/singleSelectQuestion';
+import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('single select question', () => {
@@ -238,6 +239,51 @@ test.describe('single select question', () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-650',
+    });
+
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const singleSelectQuestion = new SingleSelectQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create a single select question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the single select question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    await test.step('Preview the survey and confirm the single select question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
+      await expect(question).toBeVisible();
     });
   });
 
