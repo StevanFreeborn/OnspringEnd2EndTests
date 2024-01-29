@@ -37,12 +37,13 @@ export class ListValuesGrid {
   async clearGrid() {
     let valuesCount = await this.gridBody.getByRole('row').count();
 
-    while (valuesCount > 0) {
-      const row = this.gridBody.getByRole('row').last();
-      await row.hover();
+    for (let i = 0; i < valuesCount; i++) {
+      const row = this.gridBody.getByRole('row').first();
+      await row.hover({ force: true });
+
+      const rowDeletionPromise = row.waitFor({ state: 'attached' });
       await row.getByTitle('Delete List Value').click();
-      await row.waitFor({ state: 'detached' });
-      valuesCount = await this.gridBody.getByRole('row').count();
+      await rowDeletionPromise;
     }
   }
 }

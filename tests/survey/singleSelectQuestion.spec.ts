@@ -148,12 +148,89 @@ test.describe('single select question', () => {
       type: AnnotationType.TestId,
       description: 'Test-648',
     });
+
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const singleSelectQuestion = new SingleSelectQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const updatedQuestion = { ...singleSelectQuestion, questionText: `${singleSelectQuestion.questionText} updated` };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the single select question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+    });
+
+    await test.step('Update the single select question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated single select question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
   });
 
   test('Move a single select question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-649',
+    });
+
+    const singleSelectQuestions = [
+      new SingleSelectQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Single Select Question 1',
+        answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+      }),
+      new SingleSelectQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Single Select Question 2',
+        answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+      }),
+    ];
+
+    let surveyItemIds: string[] = [];
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create single select questions', async () => {
+      for (const singleSelectQuestion of singleSelectQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+        surveyItemIds.push(surveyItemId);
+      }
+    });
+
+    await test.step('Move the second single select question above the first single select question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second single select question is displayed above the first single select question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
     });
   });
 
