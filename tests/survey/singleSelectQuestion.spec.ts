@@ -292,5 +292,41 @@ test.describe('single select question', () => {
       type: AnnotationType.TestId,
       description: 'Test-651',
     });
+
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const singleSelectQuestion = new SingleSelectQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a single select question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+    });
+
+    await test.step('Delete the single select question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(
+        surveyItemId,
+        singleSelectQuestion.questionText
+      );
+    });
+
+    await test.step('Preview the survey and confirm the single select question is not present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
+      await expect(question).not.toBeVisible();
+    });
   });
 });
