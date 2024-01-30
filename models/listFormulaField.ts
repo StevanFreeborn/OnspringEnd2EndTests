@@ -1,5 +1,5 @@
 import { FormulaField, FormulaFieldObject } from './formulaField';
-import { ListValue } from './listField';
+import { ListValue } from './listValue';
 
 type ListFormulaFieldObject = Omit<FormulaFieldObject, 'outputType'> & {
   values?: ListValue[];
