@@ -158,7 +158,11 @@ test.describe('single select question', () => {
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    const updatedQuestion = { ...singleSelectQuestion, questionText: `${singleSelectQuestion.questionText} updated` };
+    const updatedQuestion = {
+      ...singleSelectQuestion,
+      questionText: `${singleSelectQuestion.questionText} updated`,
+      answerValues: [new ListValue({ value: 'Nah' }), new ListValue({ value: 'Yeah' })],
+    };
 
     let createdQuestionItemId: string;
 
