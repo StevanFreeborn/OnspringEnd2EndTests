@@ -213,6 +213,7 @@ export class SurveyDesignerModal {
         await this.multiSelectButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
         await addQuestionForm.fillOutForm(question as MultiSelectQuestion);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }

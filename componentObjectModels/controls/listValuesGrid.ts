@@ -35,7 +35,7 @@ export class ListValuesGrid {
   }
 
   async clearGrid() {
-    let valuesCount = await this.gridBody.getByRole('row').count();
+    const valuesCount = await this.gridBody.getByRole('row').count();
 
     for (let i = 0; i < valuesCount; i++) {
       const row = this.gridBody.getByRole('row').last();
