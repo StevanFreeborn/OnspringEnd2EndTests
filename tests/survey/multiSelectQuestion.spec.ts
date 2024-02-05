@@ -139,4 +139,50 @@ test.describe('multi select question', () => {
       await expect(createdQuestion).toBeVisible();
     });
   });
+
+  test('Update a multi select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-562',
+    });
+
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const multiSelectQuestion = new MultiSelectQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const updatedQuestion = {
+      ...multiSelectQuestion,
+      questionText: `${multiSelectQuestion.questionText} updated`,
+      answerValues: [new ListValue({ value: 'Nah' }), new ListValue({ value: 'Yeah' })],
+    };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Navigate to survey admin page', async () => {
+      await surveyAdminPage.goto(survey.id);
+    });
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the multi select question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
+    });
+
+    await test.step('Update the multi select question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated multi select question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
+  });
 });
