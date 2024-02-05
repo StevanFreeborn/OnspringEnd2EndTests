@@ -21,10 +21,13 @@ import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
 
-export type DeleteQuestionRequest = {
+type DeleteItemRequest = {
   surveyItemId: string;
-  questionText?: string;
   pageName?: string;
+};
+
+export type DeleteQuestionRequest = DeleteItemRequest & {
+  questionText?: string;
 };
 
 export class SurveyDesignerModal {

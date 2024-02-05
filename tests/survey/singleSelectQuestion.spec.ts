@@ -1,12 +1,44 @@
+import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { ListValue } from '../../models/listValue';
 import { SingleSelectQuestion } from '../../models/singleSelectQuestion';
+import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('single select question', () => {
-  test('Create a single select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let targetSurvey: Survey;
+  let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
+
+  test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
+    targetSurvey = survey;
+  });
+
+  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+  });
+
+  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+    await surveyAdminPage.designTabButton.click();
+    await surveyAdminPage.designTab.openSurveyDesigner();
+
+    for (const itemToBeDeleted of surveyItemsToBeDeleted) {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: itemToBeDeleted.surveyItemId,
+        pageName: itemToBeDeleted.pageName,
+      });
+    }
+
+    surveyItemsToBeDeleted = [];
+  });
+
+  test('Create a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-645',
@@ -22,10 +54,6 @@ test.describe('single select question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -33,6 +61,7 @@ test.describe('single select question', () => {
 
     await test.step('Add a single select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the single select question is present', async () => {
@@ -42,7 +71,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Create a copy of a single select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Create a copy of a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-646',
@@ -59,10 +88,6 @@ test.describe('single select question', () => {
     let surveyItemId: string;
     let surveyItemIdCopy: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -70,6 +95,7 @@ test.describe('single select question', () => {
 
     await test.step('Add a single select question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
     await test.step('Copy the single select question', async () => {
@@ -77,6 +103,7 @@ test.describe('single select question', () => {
         surveyItemId,
         singleSelectQuestion.questionText
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied single select question is present', async () => {
@@ -89,7 +116,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Import a single select question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+  test('Import a single select question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-647',
@@ -132,6 +159,7 @@ test.describe('single select question', () => {
         sourceSurvey.name,
         sourceSingleSelectQuestion
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the single select question is present', async () => {
@@ -144,7 +172,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Update a single select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Update a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-648',
@@ -166,10 +194,6 @@ test.describe('single select question', () => {
 
     let createdQuestionItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -177,6 +201,7 @@ test.describe('single select question', () => {
 
     await test.step('Create the single select question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the single select question', async () => {
@@ -190,7 +215,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Move a single select question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a single select question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-649',
@@ -211,10 +236,6 @@ test.describe('single select question', () => {
 
     const surveyItemIds: string[] = [];
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -224,6 +245,7 @@ test.describe('single select question', () => {
       for (const singleSelectQuestion of singleSelectQuestions) {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
         surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
       }
     });
 
@@ -239,7 +261,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Move a single select question to another page.', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a single select question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-650',
@@ -260,10 +282,6 @@ test.describe('single select question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -271,6 +289,7 @@ test.describe('single select question', () => {
 
     await test.step('Create a single select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
@@ -291,7 +310,7 @@ test.describe('single select question', () => {
     });
   });
 
-  test('Delete a single select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Delete a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-651',
@@ -306,10 +325,6 @@ test.describe('single select question', () => {
     });
 
     let surveyItemId: string;
-
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
 
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();

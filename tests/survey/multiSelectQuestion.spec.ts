@@ -1,3 +1,4 @@
+import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { ListValue } from '../../models/listValue';
 import { MultiSelectQuestion } from '../../models/multiSelectQuestion';
@@ -12,7 +13,7 @@ test.describe('multi select question', () => {
   });
 
   let targetSurvey: Survey;
-  let surveyItemsToBeDeleted: { itemId: string; pageName?: string }[] = [];
+  let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
 
   test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
     targetSurvey = survey;
@@ -29,7 +30,7 @@ test.describe('multi select question', () => {
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
       await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.itemId,
+        surveyItemId: itemToBeDeleted.surveyItemId,
         pageName: itemToBeDeleted.pageName,
       });
     }
@@ -61,7 +62,7 @@ test.describe('multi select question', () => {
     await test.step('Add a multi select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
       surveyItemsToBeDeleted.push({
-        itemId: surveyItemId,
+        surveyItemId: surveyItemId,
       });
     });
 
@@ -97,7 +98,7 @@ test.describe('multi select question', () => {
     await test.step('Add a multi select question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
       surveyItemsToBeDeleted.push({
-        itemId: surveyItemId,
+        surveyItemId: surveyItemId,
       });
     });
 
@@ -107,7 +108,7 @@ test.describe('multi select question', () => {
         multiSelectQuestion.questionText
       );
       surveyItemsToBeDeleted.push({
-        itemId: surveyItemIdCopy,
+        surveyItemId: surveyItemIdCopy,
       });
     });
 
@@ -161,7 +162,7 @@ test.describe('multi select question', () => {
         sourceMultiSelectQuestion
       );
       surveyItemsToBeDeleted.push({
-        itemId: questionCreatedViaImport,
+        surveyItemId: questionCreatedViaImport,
       });
     });
 
@@ -202,7 +203,7 @@ test.describe('multi select question', () => {
     await test.step('Create the multi select question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
       surveyItemsToBeDeleted.push({
-        itemId: createdQuestionItemId,
+        surveyItemId: createdQuestionItemId,
       });
     });
 
@@ -248,7 +249,7 @@ test.describe('multi select question', () => {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({
-          itemId: surveyItemId,
+          surveyItemId: surveyItemId,
         });
       }
     });
@@ -294,7 +295,7 @@ test.describe('multi select question', () => {
     await test.step('Create a multi select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
       surveyItemsToBeDeleted.push({
-        itemId: surveyItemId,
+        surveyItemId: surveyItemId,
         pageName: newPage.name,
       });
     });
