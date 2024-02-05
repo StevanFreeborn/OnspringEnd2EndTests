@@ -1,12 +1,43 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { ListValue } from '../../models/listValue';
 import { MultiSelectQuestion } from '../../models/multiSelectQuestion';
+import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 import { expect, surveyQuestionTest as test } from './../../fixtures/index';
 
 test.describe('multi select question', () => {
-  test('Create a multi select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let targetSurvey: Survey;
+  let surveyItemsToBeDeleted: { itemId: string; pageName?: string }[] = [];
+
+  test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
+    targetSurvey = survey;
+  });
+
+  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+  });
+
+  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+    await surveyAdminPage.designTabButton.click();
+    await surveyAdminPage.designTab.openSurveyDesigner();
+
+    for (const itemToBeDeleted of surveyItemsToBeDeleted) {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: itemToBeDeleted.itemId,
+        pageName: itemToBeDeleted.pageName,
+      });
+    }
+
+    surveyItemsToBeDeleted = [];
+  });
+
+  test('Create a multi select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-559',
@@ -22,10 +53,6 @@ test.describe('multi select question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -33,6 +60,9 @@ test.describe('multi select question', () => {
 
     await test.step('Add a multi select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
+      surveyItemsToBeDeleted.push({
+        itemId: surveyItemId,
+      });
     });
 
     await test.step('Preview the survey and confirm the multi select question is present', async () => {
@@ -42,7 +72,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Create a copy of a multi select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Create a copy of a multi select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-560',
@@ -59,10 +89,6 @@ test.describe('multi select question', () => {
     let surveyItemId: string;
     let surveyItemIdCopy: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -70,6 +96,9 @@ test.describe('multi select question', () => {
 
     await test.step('Add a multi select question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
+      surveyItemsToBeDeleted.push({
+        itemId: surveyItemId,
+      });
     });
 
     await test.step('Copy the multi select question', async () => {
@@ -77,6 +106,9 @@ test.describe('multi select question', () => {
         surveyItemId,
         multiSelectQuestion.questionText
       );
+      surveyItemsToBeDeleted.push({
+        itemId: surveyItemIdCopy,
+      });
     });
 
     await test.step('Preview the survey and confirm the copied multi select question is present', async () => {
@@ -89,7 +121,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Import a multi select question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+  test('Import a multi select question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-561',
@@ -104,10 +136,6 @@ test.describe('multi select question', () => {
     });
 
     let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
 
     await test.step("Open the source survey's survey designer", async () => {
       await surveyAdminPage.designTabButton.click();
@@ -132,6 +160,9 @@ test.describe('multi select question', () => {
         sourceSurvey.name,
         sourceMultiSelectQuestion
       );
+      surveyItemsToBeDeleted.push({
+        itemId: questionCreatedViaImport,
+      });
     });
 
     await test.step('Preview the target survey and confirm the multi select question is present', async () => {
@@ -141,7 +172,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Update a multi select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Update a multi select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-562',
@@ -163,10 +194,6 @@ test.describe('multi select question', () => {
 
     let createdQuestionItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -174,6 +201,9 @@ test.describe('multi select question', () => {
 
     await test.step('Create the multi select question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
+      surveyItemsToBeDeleted.push({
+        itemId: createdQuestionItemId,
+      });
     });
 
     await test.step('Update the multi select question', async () => {
@@ -187,7 +217,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Move a multi select question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a multi select question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-563',
@@ -208,10 +238,6 @@ test.describe('multi select question', () => {
 
     const surveyItemIds: string[] = [];
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -221,6 +247,9 @@ test.describe('multi select question', () => {
       for (const multiSelectQuestion of multiSelectQuestions) {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
         surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({
+          itemId: surveyItemId,
+        });
       }
     });
 
@@ -236,7 +265,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Move a multi select question to another page.', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a multi select question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-564',
@@ -257,10 +286,6 @@ test.describe('multi select question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -268,6 +293,10 @@ test.describe('multi select question', () => {
 
     await test.step('Create a multi select question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(multiSelectQuestion);
+      surveyItemsToBeDeleted.push({
+        itemId: surveyItemId,
+        pageName: newPage.name,
+      });
     });
 
     await test.step('Create a new survey page', async () => {
@@ -288,7 +317,7 @@ test.describe('multi select question', () => {
     });
   });
 
-  test('Delete a multi select question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Delete a multi select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-565',
@@ -304,10 +333,6 @@ test.describe('multi select question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -318,10 +343,10 @@ test.describe('multi select question', () => {
     });
 
     await test.step('Delete the multi select question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(
-        surveyItemId,
-        multiSelectQuestion.questionText
-      );
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: multiSelectQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the multi select question is not present', async () => {

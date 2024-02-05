@@ -305,7 +305,10 @@ test.describe('number question', () => {
     });
 
     await test.step('Delete the number question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, numberQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: numberQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the number question is not present', async () => {

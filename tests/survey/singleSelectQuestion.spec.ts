@@ -321,10 +321,10 @@ test.describe('single select question', () => {
     });
 
     await test.step('Delete the single select question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(
-        surveyItemId,
-        singleSelectQuestion.questionText
-      );
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: singleSelectQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the single select question is not present', async () => {

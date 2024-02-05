@@ -21,6 +21,12 @@ import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
 
+export type DeleteQuestionRequest = {
+  surveyItemId: string;
+  questionText?: string;
+  pageName?: string;
+};
+
 export class SurveyDesignerModal {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
@@ -162,8 +168,15 @@ export class SurveyDesignerModal {
     return itemId;
   }
 
-  async deleteQuestion(surveyItemId: string, questionText: string) {
-    const surveyItem = this.frame.locator(`[data-item-id="${surveyItemId}"]`, { hasText: new RegExp(questionText) });
+  async deleteQuestion(req: DeleteQuestionRequest) {
+    if (req.pageName) {
+      await this.goToPage(req.pageName);
+    }
+
+    const surveyItem = this.frame.locator(`[data-item-id="${req.surveyItemId}"]`, {
+      hasText: new RegExp(req.questionText ?? '.*'),
+    });
+
     await surveyItem.hover();
 
     const deleteButton = surveyItem.getByTitle('Delete Question');
@@ -173,6 +186,8 @@ export class SurveyDesignerModal {
     await this.deleteSurveyQuestionDialog.deleteButton.click();
 
     await this.saveIndicator.waitFor({ state: 'hidden' });
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.saveIndicator.page().waitForTimeout(1000);
   }
 
   /**

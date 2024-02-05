@@ -305,7 +305,10 @@ test.describe('date/time question', () => {
     });
 
     await test.step('Delete the date question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, dateQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: dateQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the date question is not present', async () => {

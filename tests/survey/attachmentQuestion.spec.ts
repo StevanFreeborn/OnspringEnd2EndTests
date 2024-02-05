@@ -323,7 +323,10 @@ test.describe('attachment question', () => {
     });
 
     await test.step('Delete the attachment question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, attachmentQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: attachmentQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the attachment question is not present', async () => {
