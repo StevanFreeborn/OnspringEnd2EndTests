@@ -195,7 +195,7 @@ test.describe('number question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
+    const surveyItemIds: string[] = [];
 
     await test.step('Navigate to survey admin page', async () => {
       await surveyAdminPage.goto(survey.id);
@@ -311,7 +311,7 @@ test.describe('number question', () => {
     await test.step('Preview the survey and confirm the number question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, numberQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });

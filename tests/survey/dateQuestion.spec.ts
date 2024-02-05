@@ -195,7 +195,7 @@ test.describe('date/time question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
+    const surveyItemIds: string[] = [];
 
     await test.step('Navigate to survey admin page', async () => {
       await surveyAdminPage.goto(survey.id);
@@ -311,7 +311,7 @@ test.describe('date/time question', () => {
     await test.step('Preview the survey and confirm the date question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });

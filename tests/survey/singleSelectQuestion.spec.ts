@@ -209,7 +209,7 @@ test.describe('single select question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
+    const surveyItemIds: string[] = [];
 
     await test.step('Navigate to survey admin page', async () => {
       await surveyAdminPage.goto(survey.id);
@@ -330,7 +330,7 @@ test.describe('single select question', () => {
     await test.step('Preview the survey and confirm the single select question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });
