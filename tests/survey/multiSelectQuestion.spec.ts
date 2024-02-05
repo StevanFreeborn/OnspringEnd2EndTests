@@ -87,4 +87,56 @@ test.describe('multi select question', () => {
       await expect(questionCopy).toBeVisible();
     });
   });
+
+  test('Import a multi select question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-561',
+    });
+
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const sourceMultiSelectQuestion = new MultiSelectQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    let questionCreatedViaImport: string;
+
+    await test.step("Navigate to the source survey's admin page", async () => {
+      await surveyAdminPage.goto(sourceSurvey.id);
+    });
+
+    await test.step("Open the source survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a multi select question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceMultiSelectQuestion);
+    });
+
+    await test.step("Navigate to the target survey's admin page", async () => {
+      await surveyAdminPage.goto(targetSurvey.id);
+    });
+
+    await test.step("Open the target survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Import the multi select question into the target survey', async () => {
+      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
+        sourceSurvey.name,
+        sourceMultiSelectQuestion
+      );
+    });
+
+    await test.step('Preview the target survey and confirm the multi select question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceMultiSelectQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
+  });
 });
