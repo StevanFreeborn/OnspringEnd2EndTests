@@ -245,16 +245,12 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout repository
-        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/checkout@v4
       - name: Setup Node.js
-        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Install dependencies
-        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm ci
       - name: Run your tests
-        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm run cleanup
