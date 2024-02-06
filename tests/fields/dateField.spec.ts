@@ -377,6 +377,7 @@ test.describe('date/time field', () => {
     const addContentPage = new AddContentPage(sysAdminPage);
     const editContentPage = new EditContentPage(sysAdminPage);
     const viewContentPage = new ViewContentPage(testUserPage);
+    const { year, month, day } = getTestDate();
     let recordId: number;
 
     await test.step('Add the date/time field', async () => {
@@ -402,7 +403,7 @@ test.describe('date/time field', () => {
         fieldName: field.name,
         fieldType: 'Date/Time',
       });
-      await dateTimePicker.selectDateUsingCalendar(2024, 1, 1);
+      await dateTimePicker.selectDateUsingCalendar(year, month, day);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
       await editContentPage.page.waitForLoadState();
