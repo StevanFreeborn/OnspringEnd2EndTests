@@ -1,12 +1,15 @@
 import { Page, test as base } from '@playwright/test';
 import { App } from '../models/app';
 import { Role } from '../models/role';
+import { Survey } from '../models/survey';
 import { User } from '../models/user';
 import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
+import { SurveyAdminPage } from '../pageObjectModels/surveys/surveyAdminPage';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
 import { TestFile, jpgFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
+import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
 
 type Fixtures = {
@@ -23,6 +26,12 @@ type FieldTestFixtures = {
   testUserPage: Page;
 };
 
+type QuestionTestFixtures = {
+  surveyAdminPage: SurveyAdminPage;
+  sourceSurvey: Survey;
+  targetSurvey: Survey;
+};
+
 export const test = base.extend<Fixtures>({
   sysAdminPage: sysAdminPage,
   jpgFile: jpgFile,
@@ -35,6 +44,15 @@ export const layoutItemTest = test.extend<FieldTestFixtures>({
   role: activeRoleWithPermissions,
   user: activeUserWithRole,
   testUserPage: testUserPage,
+});
+
+export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
+  surveyAdminPage: async ({ sysAdminPage }, use) => {
+    const surveyAdminPage = new SurveyAdminPage(sysAdminPage);
+    await use(surveyAdminPage);
+  },
+  sourceSurvey: survey,
+  targetSurvey: survey,
 });
 
 export type ApiTestOptions = {
