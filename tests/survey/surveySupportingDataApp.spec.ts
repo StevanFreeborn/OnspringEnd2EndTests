@@ -40,7 +40,7 @@ const test = base.extend<SurveyTestFixtures>({
 });
 
 test.describe('survey supporting data app', () => {
-  let surveysToDelete: string[] = [];
+  const surveysToDelete: string[] = [];
 
   test.beforeEach(async ({ adminHomePage }) => {
     await adminHomePage.goto();
@@ -69,7 +69,7 @@ test.describe('survey supporting data app', () => {
     surveysToDelete.push(surveyName);
 
     await test.step('Create the survey', async () => {
-      adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
+      await adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
     });
 
     await test.step('Verify the survey was created correctly', async () => {

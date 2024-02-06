@@ -22,5 +22,6 @@
     "timespan",
     "VNEXT",
     "VPRIOR"
-  ]
+  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
 }

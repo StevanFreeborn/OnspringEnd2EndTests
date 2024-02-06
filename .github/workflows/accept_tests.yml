@@ -1,6 +1,6 @@
 name: Acceptance_Test
 env:
-  TEST_ENV: BETA # If changed update name property of run_tests job
+  TEST_ENV: IST # If changed update name property of run_tests job
   CI: true
   SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
   SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
@@ -107,7 +107,7 @@ jobs:
           echo "shards=${shards_array[@]}"
           echo "shards=$json_shards_array" >> $GITHUB_OUTPUT
   run_tests:
-    name: 'Playwright Tests - BETA - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
+    name: 'Playwright Tests - IST - ${{ matrix.project }} - Shard ${{ matrix.shard }}'
     needs: [check_for_test_file_changes, generate_shards]
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
     runs-on: ubuntu-latest
@@ -237,7 +237,7 @@ jobs:
   cleanup:
     name: 'Cleanup test artifacts'
     needs: [check_for_test_file_changes, generate_shards, run_tests, merge_reports_and_publish, add_pr_comment]
-    if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
+    if: always()
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
@@ -245,12 +245,16 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout repository
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/checkout@v4
       - name: Setup Node.js
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/setup-node@v4
         with:
           node-version: latest
       - name: Install dependencies
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm ci
       - name: Run your tests
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm run cleanup

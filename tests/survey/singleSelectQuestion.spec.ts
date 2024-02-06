@@ -1,12 +1,13 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { AttachmentQuestion } from '../../models/attachmentQuestion';
+import { ListValue } from '../../models/listValue';
+import { SingleSelectQuestion } from '../../models/singleSelectQuestion';
 import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
-test.describe('attachment question', () => {
+test.describe('single select question', () => {
   test.describe.configure({
     mode: 'default',
   });
@@ -37,17 +38,18 @@ test.describe('attachment question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create an attachment question', async ({ surveyAdminPage }) => {
+  test('Create a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-274',
+      description: 'Test-645',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const singleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
     let surveyItemId: string;
@@ -57,29 +59,30 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId });
+    await test.step('Add a single select question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
-    await test.step('Preview the survey and confirm the attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the single select question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Create a copy of an attachment question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-275',
+      description: 'Test-646',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const singleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
     let surveyItemId: string;
@@ -90,40 +93,41 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Add a single select question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
-    await test.step('Copy the attachment question', async () => {
+    await test.step('Copy the single select question', async () => {
       surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
         surveyItemId,
-        attachmentQuestion.questionText
+        singleSelectQuestion.questionText
       );
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
-    await test.step('Preview the survey and confirm the copied attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the copied single select question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, attachmentQuestion.questionText);
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, singleSelectQuestion.questionText);
 
       await expect(copiedQuestion).toBeVisible();
       await expect(questionCopy).toBeVisible();
     });
   });
 
-  test('Import an attachment question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a single select question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-276',
+      description: 'Test-647',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const sourceAttachmentQuestion = new AttachmentQuestion({
+    const sourceSingleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
     let questionCreatedViaImport: string;
@@ -137,8 +141,8 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceAttachmentQuestion);
+    await test.step('Add a single select question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceSingleSelectQuestion);
     });
 
     await test.step("Navigate to the target survey's admin page", async () => {
@@ -150,35 +154,43 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Import the attachment question into the target survey', async () => {
+    await test.step('Import the single select question into the target survey', async () => {
       questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
         sourceSurvey.name,
-        sourceAttachmentQuestion
+        sourceSingleSelectQuestion
       );
       surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
-    await test.step('Preview the target survey and confirm the attachment question is present', async () => {
+    await test.step('Preview the target survey and confirm the single select question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceAttachmentQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(
+        questionCreatedViaImport,
+        sourceSingleSelectQuestion.questionText
+      );
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Update an attachment question', async ({ surveyAdminPage }) => {
+  test('Update a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-277',
+      description: 'Test-648',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const singleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    const updatedQuestion = { ...attachmentQuestion, questionText: `${attachmentQuestion.questionText} updated` };
+    const updatedQuestion = {
+      ...singleSelectQuestion,
+      questionText: `${singleSelectQuestion.questionText} updated`,
+      answerValues: [new ListValue({ value: 'Nah' }), new ListValue({ value: 'Yeah' })],
+    };
 
     let createdQuestionItemId: string;
 
@@ -187,36 +199,38 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create the attachment question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create the single select question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
-    await test.step('Update the attachment question', async () => {
+    await test.step('Update the single select question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
     });
 
-    await test.step('Preview the survey and confirm the updated attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the updated single select question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
       await expect(updatedQuestionElement).toBeVisible();
     });
   });
 
-  test('Move an attachment question on a page', async ({ surveyAdminPage }) => {
+  test('Move a single select question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-278',
+      description: 'Test-649',
     });
 
-    const attachmentQuestions = [
-      new AttachmentQuestion({
+    const singleSelectQuestions = [
+      new SingleSelectQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Attachment Question 1',
+        questionText: 'Single Select Question 1',
+        answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
       }),
-      new AttachmentQuestion({
+      new SingleSelectQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Attachment Question 2',
+        questionText: 'Single Select Question 2',
+        answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
       }),
     ];
 
@@ -227,19 +241,19 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create attachment questions', async () => {
-      for (const attachmentQuestion of attachmentQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create single select questions', async () => {
+      for (const singleSelectQuestion of singleSelectQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
       }
     });
 
-    await test.step('Move the second attachment question above the first attachment question', async () => {
+    await test.step('Move the second single select question above the first single select question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
     });
 
-    await test.step('Preview the survey and confirm the second attachment question is displayed above the first attachment question', async () => {
+    await test.step('Preview the survey and confirm the second single select question is displayed above the first single select question', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
 
@@ -247,18 +261,19 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Move an attachment question to another page', async ({ surveyAdminPage }) => {
+  test('Move a single select question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-279',
+      description: 'Test-650',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
     const firstPageName = 'Page 1';
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const singleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
     const newPage = new SurveyPage({
@@ -272,8 +287,8 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create a single select question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
     });
 
@@ -281,31 +296,32 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
     });
 
-    await test.step('Move the attachment question to the new page', async () => {
+    await test.step('Move the single select question to the new page', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
     });
 
-    await test.step('Preview the survey and confirm the attachment question is on the new page', async () => {
+    await test.step('Preview the survey and confirm the single select question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       await previewPage.nextButton.click();
 
-      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
       await expect(question).toBeVisible();
     });
   });
 
-  test('Delete an attachment question', async ({ surveyAdminPage }) => {
+  test('Delete a single select question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-312',
+      description: 'Test-651',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const singleSelectQuestion = new SingleSelectQuestion({
       questionId: questionId,
       questionText: questionId,
+      answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
     let surveyItemId: string;
@@ -315,20 +331,20 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Add a single select question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
     });
 
-    await test.step('Delete the attachment question', async () => {
+    await test.step('Delete the single select question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
         surveyItemId: surveyItemId,
-        questionText: attachmentQuestion.questionText,
+        questionText: singleSelectQuestion.questionText,
       });
     });
 
-    await test.step('Preview the survey and confirm the attachment question is not present', async () => {
+    await test.step('Preview the survey and confirm the single select question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
       await expect(question).toBeHidden();
     });
   });
