@@ -40,8 +40,6 @@ const test = base.extend<SurveyTestFixtures>({
 });
 
 test.describe('survey supporting data app', () => {
-  test.skip();
-
   const surveysToDelete: string[] = [];
 
   test.beforeEach(async ({ adminHomePage }) => {
