@@ -1,8 +1,8 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, expect, layoutItemTest as test } from '../../fixtures';
 import { LayoutItemPermission } from '../../models/layoutItem';
-import { ListValue } from '../../models/listField';
 import { ListFormulaField } from '../../models/listFormulaField';
+import { ListValue } from '../../models/listValue';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';

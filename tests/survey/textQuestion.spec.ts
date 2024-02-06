@@ -1,12 +1,12 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
+import { TextQuestion } from '../../models/textQuestion';
 import { AnnotationType } from '../annotations';
 
-test.describe('attachment question', () => {
+test.describe('text question', () => {
   test.describe.configure({
     mode: 'default',
   });
@@ -37,15 +37,15 @@ test.describe('attachment question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create an attachment question', async ({ surveyAdminPage }) => {
+  test('Create a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-274',
+      description: 'Test-661',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const textQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
@@ -57,27 +57,27 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId });
+    await test.step('Add a text question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
-    await test.step('Preview the survey and confirm the attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the text question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Create a copy of an attachment question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-275',
+      description: 'Test-662',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const textQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
@@ -90,38 +90,38 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Add a text question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
-    await test.step('Copy the attachment question', async () => {
+    await test.step('Copy the text question', async () => {
       surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
         surveyItemId,
-        attachmentQuestion.questionText
+        textQuestion.questionText
       );
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
-    await test.step('Preview the survey and confirm the copied attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the copied text question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, attachmentQuestion.questionText);
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, textQuestion.questionText);
 
       await expect(copiedQuestion).toBeVisible();
       await expect(questionCopy).toBeVisible();
     });
   });
 
-  test('Import an attachment question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a text question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-276',
+      description: 'Test-663',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const sourceAttachmentQuestion = new AttachmentQuestion({
+    const sourceTextQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
@@ -137,8 +137,8 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceAttachmentQuestion);
+    await test.step('Add a text question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceTextQuestion);
     });
 
     await test.step("Navigate to the target survey's admin page", async () => {
@@ -150,35 +150,35 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Import the attachment question into the target survey', async () => {
+    await test.step('Import the text question into the target survey', async () => {
       questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
         sourceSurvey.name,
-        sourceAttachmentQuestion
+        sourceTextQuestion
       );
       surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
-    await test.step('Preview the target survey and confirm the attachment question is present', async () => {
+    await test.step('Preview the target survey and confirm the text question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceAttachmentQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceTextQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Update an attachment question', async ({ surveyAdminPage }) => {
+  test('Update a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-277',
+      description: 'Test-664',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const textQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
 
-    const updatedQuestion = { ...attachmentQuestion, questionText: `${attachmentQuestion.questionText} updated` };
+    const updatedQuestion = { ...textQuestion, questionText: `${textQuestion.questionText} updated` };
 
     let createdQuestionItemId: string;
 
@@ -187,36 +187,36 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create the attachment question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create the text question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
-    await test.step('Update the attachment question', async () => {
+    await test.step('Update the text question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
     });
 
-    await test.step('Preview the survey and confirm the updated attachment question is present', async () => {
+    await test.step('Preview the survey and confirm the updated text question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
       await expect(updatedQuestionElement).toBeVisible();
     });
   });
 
-  test('Move an attachment question on a page', async ({ surveyAdminPage }) => {
+  test('Move a text question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-278',
+      description: 'Test-665',
     });
 
-    const attachmentQuestions = [
-      new AttachmentQuestion({
+    const textQuestions = [
+      new TextQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Attachment Question 1',
+        questionText: 'Text Question 1',
       }),
-      new AttachmentQuestion({
+      new TextQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Attachment Question 2',
+        questionText: 'Text Question 2',
       }),
     ];
 
@@ -227,19 +227,19 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create attachment questions', async () => {
-      for (const attachmentQuestion of attachmentQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create text questions', async () => {
+      for (const textQuestion of textQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
       }
     });
 
-    await test.step('Move the second attachment question above the first attachment question', async () => {
+    await test.step('Move the second text question above the first text question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
     });
 
-    await test.step('Preview the survey and confirm the second attachment question is displayed above the first attachment question', async () => {
+    await test.step('Preview the survey and confirm the second text question is displayed above the first text question', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
 
@@ -247,16 +247,16 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Move an attachment question to another page', async ({ surveyAdminPage }) => {
+  test('Move a text question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-279',
+      description: 'Test-666',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
     const firstPageName = 'Page 1';
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const textQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
@@ -272,8 +272,8 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Create a text question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
     });
 
@@ -281,29 +281,29 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
     });
 
-    await test.step('Move the attachment question to the new page', async () => {
+    await test.step('Move the text question to the new page', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
     });
 
-    await test.step('Preview the survey and confirm the attachment question is on the new page', async () => {
+    await test.step('Preview the survey and confirm the text question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       await previewPage.nextButton.click();
 
-      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
       await expect(question).toBeVisible();
     });
   });
 
-  test('Delete an attachment question', async ({ surveyAdminPage }) => {
+  test('Delete a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-312',
+      description: 'Test-667',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const attachmentQuestion = new AttachmentQuestion({
+    const textQuestion = new TextQuestion({
       questionId: questionId,
       questionText: questionId,
     });
@@ -315,20 +315,20 @@ test.describe('attachment question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add an attachment question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+    await test.step('Add a text question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
     });
 
-    await test.step('Delete the attachment question', async () => {
+    await test.step('Delete the text question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
         surveyItemId: surveyItemId,
-        questionText: attachmentQuestion.questionText,
+        questionText: textQuestion.questionText,
       });
     });
 
-    await test.step('Preview the survey and confirm the attachment question is not present', async () => {
+    await test.step('Preview the survey and confirm the text question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
       await expect(question).toBeHidden();
     });
   });
