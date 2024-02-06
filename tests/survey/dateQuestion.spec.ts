@@ -1,11 +1,43 @@
+import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { DateQuestion } from '../../models/dateQuestion';
+import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('date/time question', () => {
-  test('Create a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let targetSurvey: Survey;
+  let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
+
+  test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
+    targetSurvey = survey;
+  });
+
+  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+  });
+
+  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+    await surveyAdminPage.designTabButton.click();
+    await surveyAdminPage.designTab.openSurveyDesigner();
+
+    for (const itemToBeDeleted of surveyItemsToBeDeleted) {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: itemToBeDeleted.surveyItemId,
+        pageName: itemToBeDeleted.pageName,
+      });
+    }
+
+    surveyItemsToBeDeleted = [];
+  });
+
+  test('Create a date/time question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-344',
@@ -20,10 +52,6 @@ test.describe('date/time question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -31,6 +59,9 @@ test.describe('date/time question', () => {
 
     await test.step('Add a date question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
     });
 
     await test.step('Preview the survey and confirm the date question is present', async () => {
@@ -40,7 +71,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Create a copy of a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Create a copy of a date/time question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-345',
@@ -56,10 +87,6 @@ test.describe('date/time question', () => {
     let surveyItemId: string;
     let surveyItemIdCopy: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -67,6 +94,9 @@ test.describe('date/time question', () => {
 
     await test.step('Add a date question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
     });
 
     await test.step('Copy the date question', async () => {
@@ -74,6 +104,9 @@ test.describe('date/time question', () => {
         surveyItemId,
         dateQuestion.questionText
       );
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemIdCopy,
+      });
     });
 
     await test.step('Preview the survey and confirm the copied date question is present', async () => {
@@ -86,7 +119,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Import a date/time question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+  test('Import a date/time question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-346',
@@ -128,6 +161,9 @@ test.describe('date/time question', () => {
         sourceSurvey.name,
         sourceDateQuestion
       );
+      surveyItemsToBeDeleted.push({
+        surveyItemId: questionCreatedViaImport,
+      });
     });
 
     await test.step('Preview the target survey and confirm the date question is present', async () => {
@@ -137,7 +173,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Update a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Update a date/time question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-347',
@@ -154,10 +190,6 @@ test.describe('date/time question', () => {
 
     let createdQuestionItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -165,6 +197,9 @@ test.describe('date/time question', () => {
 
     await test.step('Create the date question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: createdQuestionItemId,
+      });
     });
 
     await test.step('Update the date question', async () => {
@@ -178,7 +213,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Move a date/time question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a date/time question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-348',
@@ -195,11 +230,7 @@ test.describe('date/time question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
-
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
+    const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
@@ -210,6 +241,9 @@ test.describe('date/time question', () => {
       for (const dateQuestion of dateQuestions) {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
         surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({
+          surveyItemId: surveyItemId,
+        });
       }
     });
 
@@ -225,7 +259,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Move a date/time question to another page.', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a date/time question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-349',
@@ -245,10 +279,6 @@ test.describe('date/time question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -256,6 +286,10 @@ test.describe('date/time question', () => {
 
     await test.step('Create a date question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+        pageName: newPage.name,
+      });
     });
 
     await test.step('Create a new survey page', async () => {
@@ -276,7 +310,7 @@ test.describe('date/time question', () => {
     });
   });
 
-  test('Delete a date/time question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Delete a date/time question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-350',
@@ -291,10 +325,6 @@ test.describe('date/time question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -305,13 +335,16 @@ test.describe('date/time question', () => {
     });
 
     await test.step('Delete the date question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, dateQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: dateQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the date question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });

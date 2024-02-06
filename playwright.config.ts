@@ -45,13 +45,13 @@ switch (TEST_ENV) {
 const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 
 // Onspring servers timeout after 100 seconds. Want to be able to capture timeouts when they occur.
-const expectAndActionTimeout = 2 * MS_PER_MIN;
+const expectNavAndActionTimeout = 2 * MS_PER_MIN;
 
 export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   testDir: './tests',
   timeout: 5 * MS_PER_MIN,
   expect: {
-    timeout: expectAndActionTimeout,
+    timeout: expectNavAndActionTimeout,
   },
   retries: isCI ? 2 : 0,
   fullyParallel: true,
@@ -83,7 +83,8 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       ],
   use: {
     viewport: { width: 1920, height: 1080 },
-    actionTimeout: expectAndActionTimeout,
+    actionTimeout: expectNavAndActionTimeout,
+    navigationTimeout: expectNavAndActionTimeout,
     baseURL: BASE_URL,
     apiURL: API_URL,
     trace: 'retain-on-failure',

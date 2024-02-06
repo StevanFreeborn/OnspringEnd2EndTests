@@ -1,29 +1,43 @@
+import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { survey } from '../../fixtures/survey.fixtures';
+import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
-import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
 import { AnnotationType } from '../annotations';
 
-type AttachmentQuestionTestFixtures = {
-  surveyAdminPage: SurveyAdminPage;
-  sourceSurvey: Survey;
-  targetSurvey: Survey;
-};
-
-const test = base.extend<AttachmentQuestionTestFixtures>({
-  surveyAdminPage: async ({ sysAdminPage }, use) => {
-    const surveyAdminPage = new SurveyAdminPage(sysAdminPage);
-    await use(surveyAdminPage);
-  },
-  sourceSurvey: survey,
-  targetSurvey: survey,
-});
-
 test.describe('attachment question', () => {
-  test('Create an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let targetSurvey: Survey;
+  let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
+
+  test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
+    targetSurvey = survey;
+  });
+
+  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+  });
+
+  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+    await surveyAdminPage.designTabButton.click();
+    await surveyAdminPage.designTab.openSurveyDesigner();
+
+    for (const itemToBeDeleted of surveyItemsToBeDeleted) {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: itemToBeDeleted.surveyItemId,
+        pageName: itemToBeDeleted.pageName,
+      });
+    }
+
+    surveyItemsToBeDeleted = [];
+  });
+
+  test('Create an attachment question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-274',
@@ -38,10 +52,6 @@ test.describe('attachment question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -49,6 +59,7 @@ test.describe('attachment question', () => {
 
     await test.step('Add an attachment question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the attachment question is present', async () => {
@@ -58,7 +69,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Create a copy of an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Create a copy of an attachment question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-275',
@@ -74,10 +85,6 @@ test.describe('attachment question', () => {
     let surveyItemId: string;
     let surveyItemIdCopy: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -85,6 +92,7 @@ test.describe('attachment question', () => {
 
     await test.step('Add an attachment question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
     await test.step('Copy the attachment question', async () => {
@@ -92,6 +100,7 @@ test.describe('attachment question', () => {
         surveyItemId,
         attachmentQuestion.questionText
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied attachment question is present', async () => {
@@ -104,7 +113,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Import an attachment question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+  test('Import an attachment question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-276',
@@ -146,6 +155,7 @@ test.describe('attachment question', () => {
         sourceSurvey.name,
         sourceAttachmentQuestion
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the attachment question is present', async () => {
@@ -155,7 +165,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Update an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Update an attachment question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-277',
@@ -172,10 +182,6 @@ test.describe('attachment question', () => {
 
     let createdQuestionItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -183,6 +189,7 @@ test.describe('attachment question', () => {
 
     await test.step('Create the attachment question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the attachment question', async () => {
@@ -196,7 +203,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Move an attachment question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move an attachment question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-278',
@@ -213,11 +220,7 @@ test.describe('attachment question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
-
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
+    const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
@@ -228,6 +231,7 @@ test.describe('attachment question', () => {
       for (const attachmentQuestion of attachmentQuestions) {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
         surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
       }
     });
 
@@ -243,7 +247,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Move an attachment question to another page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move an attachment question to another page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-279',
@@ -263,10 +267,6 @@ test.describe('attachment question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -274,6 +274,7 @@ test.describe('attachment question', () => {
 
     await test.step('Create an attachment question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(attachmentQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
@@ -294,7 +295,7 @@ test.describe('attachment question', () => {
     });
   });
 
-  test('Delete an attachment question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Delete an attachment question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-312',
@@ -309,10 +310,6 @@ test.describe('attachment question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -323,13 +320,16 @@ test.describe('attachment question', () => {
     });
 
     await test.step('Delete the attachment question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, attachmentQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: attachmentQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the attachment question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, attachmentQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });

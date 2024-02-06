@@ -1,11 +1,43 @@
+import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
+import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { TextQuestion } from '../../models/textQuestion';
 import { AnnotationType } from '../annotations';
 
 test.describe('text question', () => {
-  test('Create a text question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let targetSurvey: Survey;
+  let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
+
+  test.beforeAll('Create target survey', ({ targetSurvey: survey }) => {
+    targetSurvey = survey;
+  });
+
+  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+  });
+
+  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
+    await surveyAdminPage.goto(targetSurvey.id);
+    await surveyAdminPage.designTabButton.click();
+    await surveyAdminPage.designTab.openSurveyDesigner();
+
+    for (const itemToBeDeleted of surveyItemsToBeDeleted) {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: itemToBeDeleted.surveyItemId,
+        pageName: itemToBeDeleted.pageName,
+      });
+    }
+
+    surveyItemsToBeDeleted = [];
+  });
+
+  test('Create a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-661',
@@ -20,10 +52,6 @@ test.describe('text question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -31,6 +59,7 @@ test.describe('text question', () => {
 
     await test.step('Add a text question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the text question is present', async () => {
@@ -40,7 +69,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Create a copy of a text question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Create a copy of a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-662',
@@ -56,10 +85,6 @@ test.describe('text question', () => {
     let surveyItemId: string;
     let surveyItemIdCopy: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -67,6 +92,7 @@ test.describe('text question', () => {
 
     await test.step('Add a text question to copy', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
     await test.step('Copy the text question', async () => {
@@ -74,6 +100,7 @@ test.describe('text question', () => {
         surveyItemId,
         textQuestion.questionText
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied text question is present', async () => {
@@ -86,7 +113,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Import a text question', async ({ sourceSurvey, targetSurvey, surveyAdminPage }) => {
+  test('Import a text question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-663',
@@ -128,6 +155,7 @@ test.describe('text question', () => {
         sourceSurvey.name,
         sourceTextQuestion
       );
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the text question is present', async () => {
@@ -137,7 +165,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Update a text question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Update a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-664',
@@ -154,10 +182,6 @@ test.describe('text question', () => {
 
     let createdQuestionItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -165,6 +189,7 @@ test.describe('text question', () => {
 
     await test.step('Create the text question to update', async () => {
       createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the text question', async () => {
@@ -178,7 +203,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Move a text question on a page', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a text question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-665',
@@ -195,11 +220,7 @@ test.describe('text question', () => {
       }),
     ];
 
-    let surveyItemIds: string[] = [];
-
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
+    const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
@@ -210,6 +231,7 @@ test.describe('text question', () => {
       for (const textQuestion of textQuestions) {
         const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
         surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
       }
     });
 
@@ -225,7 +247,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Move a text question to another page.', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Move a text question to another page.', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-666',
@@ -245,10 +267,6 @@ test.describe('text question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -256,6 +274,7 @@ test.describe('text question', () => {
 
     await test.step('Create a text question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
@@ -276,7 +295,7 @@ test.describe('text question', () => {
     });
   });
 
-  test('Delete a text question', async ({ targetSurvey: survey, surveyAdminPage }) => {
+  test('Delete a text question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-667',
@@ -291,10 +310,6 @@ test.describe('text question', () => {
 
     let surveyItemId: string;
 
-    await test.step('Navigate to survey admin page', async () => {
-      await surveyAdminPage.goto(survey.id);
-    });
-
     await test.step('Open the survey designer', async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
@@ -305,13 +320,16 @@ test.describe('text question', () => {
     });
 
     await test.step('Delete the text question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion(surveyItemId, textQuestion.questionText);
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: textQuestion.questionText,
+      });
     });
 
     await test.step('Preview the survey and confirm the text question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const question = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
-      await expect(question).not.toBeVisible();
+      await expect(question).toBeHidden();
     });
   });
 });
