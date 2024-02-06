@@ -128,6 +128,10 @@ test.describe('text question', () => {
 
     let questionCreatedViaImport: string;
 
+    await test.step("Navigate to the source survey's admin page", async () => {
+      await surveyAdminPage.goto(sourceSurvey.id);
+    });
+
     await test.step("Open the source survey's survey designer", async () => {
       await surveyAdminPage.designTabButton.click();
       await surveyAdminPage.designTab.openSurveyDesigner();
