@@ -124,6 +124,7 @@ test.describe('reference field', () => {
 
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
       await addReferenceFieldModal.save();
     });
 
@@ -176,6 +177,7 @@ test.describe('reference field', () => {
 
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
 
       await addReferenceFieldModal.save();
     });
@@ -265,6 +267,7 @@ test.describe('reference field', () => {
 
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
+      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
 
       await addReferenceFieldModal.save();
     });

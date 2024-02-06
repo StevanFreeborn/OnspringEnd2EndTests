@@ -5,12 +5,14 @@ import { FieldGeneralTab } from './fieldGeneralTab';
 export class ReferenceFieldGeneralTab extends FieldGeneralTab {
   readonly referenceSelect: Locator;
   readonly gridFieldsSelect: Locator;
+  readonly selectedGridFields: Locator;
   private readonly referenceDisplayFieldsPathRegex: RegExp;
 
   constructor(frame: FrameLocator) {
     super(frame);
     this.referenceSelect = this.frame.getByRole('listbox', { name: 'Reference' });
     this.gridFieldsSelect = this.frame.locator('td:has-text("Grid Fields") + td div.onx-selector');
+    this.selectedGridFields = this.gridFieldsSelect.locator('.selector-select-list li');
     this.referenceDisplayFieldsPathRegex = /\/Admin\/App\/\d+\/Field\/ReferenceDisplayFields/;
   }
 
@@ -25,5 +27,6 @@ export class ReferenceFieldGeneralTab extends FieldGeneralTab {
   async fillOutGeneralTab(referenceField: ReferenceField) {
     await this.fieldInput.fill(referenceField.name);
     await this.selectReference(referenceField.reference);
+    await this.selectedGridFields.waitFor();
   }
 }
