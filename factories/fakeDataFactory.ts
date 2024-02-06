@@ -1,6 +1,11 @@
 import { faker } from '@faker-js/faker';
 
+export const TEST_APP_NAME = 'app-test';
 export const TEST_SURVEY_NAME = 'survey-test';
+export const TEST_USER_NAME = 'user-test';
+export const TEST_ROLE_NAME = 'role-test';
+export const TEST_GROUP_NAME = 'group-test';
+export const TEST_API_KEY_NAME = 'api-key-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -19,7 +24,7 @@ export class FakeDataFactory {
 
   static createFakeUsername() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-${faker.internet.userName()}`;
+    return `${uniqueId}-${TEST_USER_NAME}`;
   }
 
   static createFakePassword() {
@@ -32,7 +37,7 @@ export class FakeDataFactory {
 
   static createFakeAppName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-app-test`;
+    return `${uniqueId}-${TEST_APP_NAME}`;
   }
 
   static createFakeSurveyName() {
@@ -42,12 +47,12 @@ export class FakeDataFactory {
 
   static createFakeGroupName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-group-test`;
+    return `${uniqueId}-${TEST_GROUP_NAME}`;
   }
 
   static createFakeRoleName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-role-test`;
+    return `${uniqueId}-${TEST_ROLE_NAME}`;
   }
 
   static createFakeFieldName(fieldName: string = 'field-test') {
@@ -67,7 +72,7 @@ export class FakeDataFactory {
 
   static createFakeApiKeyName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-api-key-test`;
+    return `${uniqueId}-${TEST_API_KEY_NAME}`;
   }
 
   static createFakeSurveyPageName() {
