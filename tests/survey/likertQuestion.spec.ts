@@ -3,6 +3,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { LikertQuestion } from '../../models/likertQuestion';
 import { BaseListValue } from '../../models/listValue';
 import { Survey } from '../../models/survey';
+import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 import { expect, surveyQuestionTest as test } from './../../fixtures/index';
 
@@ -267,13 +268,56 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Move a likert scale question to another page', async ({}) => {
+  test('Move a likert scale question to another page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-547',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const dateQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create a likert question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+        pageName: newPage.name,
+      });
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the likert question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    await test.step('Preview the survey and confirm the likert question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      await expect(question).toBeVisible();
+    });
   });
 
   test('Delete a likert scale question', async ({}) => {
