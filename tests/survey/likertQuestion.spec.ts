@@ -58,27 +58,67 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add a date question', async () => {
+    await test.step('Add a likert question', async () => {
       surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemId,
       });
     });
 
-    await test.step('Preview the survey and confirm the date question is present', async () => {
+    await test.step('Preview the survey and confirm the likert question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const createdQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Create a copy of a likert scale question', async ({}) => {
+  test('Create a copy of a likert scale question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-543',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const likertQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    let surveyItemId: string;
+    let surveyItemIdCopy: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a likert question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
+    });
+
+    await test.step('Copy the likert question', async () => {
+      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
+        surveyItemId,
+        likertQuestion.questionText
+      );
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemIdCopy,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the copied likert question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, likertQuestion.questionText);
+
+      await expect(copiedQuestion).toBeVisible();
+      await expect(questionCopy).toBeVisible();
+    });
   });
 
   test('Import a likert scale question', async ({}) => {
