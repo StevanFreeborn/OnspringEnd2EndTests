@@ -217,13 +217,54 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Move a likert scale question on a page', async ({}) => {
+  test('Move a likert scale question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-546',
     });
 
-    expect(true).toBe(true);
+    const values = [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })];
+
+    const likertQuestions = [
+      new LikertQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Likert Question 1',
+        answerValues: values,
+      }),
+      new LikertQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Likert Question 2',
+        answerValues: values,
+      }),
+    ];
+
+    const surveyItemIds: string[] = [];
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create likert questions', async () => {
+      for (const dateQuestion of likertQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+        surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({
+          surveyItemId: surveyItemId,
+        });
+      }
+    });
+
+    await test.step('Move the second likert question above the first likert question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second likert question is displayed above the first likert question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
+    });
   });
 
   test('Move a likert scale question to another page', async ({}) => {
