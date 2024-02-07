@@ -121,13 +121,59 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Import a likert scale question', async ({}) => {
+  test('Import a likert scale question', async ({ surveyAdminPage, sourceSurvey }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-544',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const sourceLikertQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    let questionCreatedViaImport: string;
+
+    await test.step("Navigate to the source survey's admin page", async () => {
+      await surveyAdminPage.goto(sourceSurvey.id);
+    });
+
+    await test.step("Open the source survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a likert question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceLikertQuestion);
+    });
+
+    await test.step("Navigate to the target survey's admin page", async () => {
+      await surveyAdminPage.goto(targetSurvey.id);
+    });
+
+    await test.step("Open the target survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Import the likert question into the target survey', async () => {
+      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
+        sourceSurvey.name,
+        sourceLikertQuestion
+      );
+      surveyItemsToBeDeleted.push({
+        surveyItemId: questionCreatedViaImport,
+      });
+    });
+
+    await test.step('Preview the target survey and confirm the likert question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceLikertQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Update a likert scale question', async ({}) => {
