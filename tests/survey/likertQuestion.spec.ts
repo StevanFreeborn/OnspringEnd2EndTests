@@ -320,12 +320,42 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Delete a likert scale question', async ({}) => {
+  test('Delete a likert scale question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-548',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const dateQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a likert question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+    });
+
+    await test.step('Delete the likert question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: dateQuestion.questionText,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the likert question is not present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      await expect(question).toBeHidden();
+    });
   });
 });
