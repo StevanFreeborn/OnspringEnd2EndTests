@@ -1,4 +1,7 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
+import { LikertQuestion } from '../../models/likertQuestion';
+import { BaseListValue } from '../../models/listValue';
 import { Survey } from '../../models/survey';
 import { AnnotationType } from '../annotations';
 import { expect, surveyQuestionTest as test } from './../../fixtures/index';
@@ -34,13 +37,39 @@ test.describe('likert question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a likert scale question', async ({}) => {
+  test('Create a likert scale question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-542',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const likertQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a date question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the date question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Create a copy of a likert scale question', async ({}) => {
