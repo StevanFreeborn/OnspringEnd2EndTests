@@ -176,13 +176,45 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Update a likert scale question', async ({}) => {
+  test('Update a likert scale question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-545',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const likertQuestion = new LikertQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+    });
+
+    const updatedQuestion = { ...likertQuestion, questionText: `${likertQuestion.questionText} updated` };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the likert question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: createdQuestionItemId,
+      });
+    });
+
+    await test.step('Update the likert question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated likert question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
   });
 
   test('Move a likert scale question on a page', async ({}) => {

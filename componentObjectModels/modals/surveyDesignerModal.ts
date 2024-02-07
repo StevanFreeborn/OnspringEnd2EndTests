@@ -297,6 +297,11 @@ export class SurveyDesignerModal {
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as MultiSelectQuestion);
         break;
+      case 'Likert Scale':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question as LikertQuestion);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }
