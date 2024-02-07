@@ -1,6 +1,7 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { DateQuestion } from '../../models/dateQuestion';
+import { LikertQuestion } from '../../models/likertQuestion';
 import { MultiSelectQuestion } from '../../models/multiSelectQuestion';
 import { NumberQuestion } from '../../models/numberQuestion';
 import { Question, QuestionType } from '../../models/question';
@@ -13,6 +14,7 @@ import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
+import { AddOrEditLikertQuestionForm } from '../forms/addOrEditLikertQuestionForm';
 import { AddOrEditMultiSelectQuestionForm } from '../forms/addOrEditMultiSelectQuestionForm';
 import { AddOrEditNumberQuestionForm } from '../forms/addOrEditNumberQuestionForm';
 import { AddOrEditSingleSelectQuestionForm } from '../forms/addOrEditSingleSelectQuestionForm';
@@ -42,6 +44,7 @@ export class SurveyDesignerModal {
   readonly textButton: Locator;
   readonly singleSelectButton: Locator;
   readonly multiSelectButton: Locator;
+  readonly likertScaleButton: Locator;
 
   readonly previewButton: Locator;
   readonly saveIndicator: Locator;
@@ -65,6 +68,7 @@ export class SurveyDesignerModal {
     this.textButton = this.frame.getByRole('button', { name: 'Text', exact: true });
     this.singleSelectButton = this.frame.getByRole('button', { name: 'Single Select' });
     this.multiSelectButton = this.frame.getByRole('button', { name: 'Multi-Select' });
+    this.likertScaleButton = this.frame.getByRole('button', { name: 'Likert Scale' });
 
     this.previewButton = this.frame.getByRole('link', { name: 'Preview' });
     this.saveIndicator = this.frame.locator('#record-status .animation');
@@ -77,6 +81,7 @@ export class SurveyDesignerModal {
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
+  getQuestionEditForm(questionType: 'Likert Scale'): AddOrEditLikertQuestionForm;
   getQuestionEditForm(questionType: 'Multi Select'): AddOrEditMultiSelectQuestionForm;
   getQuestionEditForm(questionType: 'Single Select'): AddOrEditSingleSelectQuestionForm;
   getQuestionEditForm(questionType: 'Text'): AddOrEditTextQuestionForm;
@@ -98,6 +103,8 @@ export class SurveyDesignerModal {
         return new AddOrEditSingleSelectQuestionForm(this.frame);
       case 'Multi Select':
         return new AddOrEditMultiSelectQuestionForm(this.frame);
+      case 'Likert Scale':
+        return new AddOrEditLikertQuestionForm(this.frame);
       case undefined:
         return new BaseAddOrEditQuestionForm(this.frame);
       default:
@@ -232,6 +239,11 @@ export class SurveyDesignerModal {
         addQuestionForm = this.getQuestionEditForm(question.type);
         await addQuestionForm.fillOutForm(question as MultiSelectQuestion);
         break;
+      case 'Likert Scale':
+        await this.likertScaleButton.click();
+        addQuestionForm = this.getQuestionEditForm(question.type);
+        await addQuestionForm.fillOutForm(question as LikertQuestion);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }
@@ -284,6 +296,11 @@ export class SurveyDesignerModal {
         editQuestionForm = this.getQuestionEditForm(question.type);
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as MultiSelectQuestion);
+        break;
+      case 'Likert Scale':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question as LikertQuestion);
         break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
