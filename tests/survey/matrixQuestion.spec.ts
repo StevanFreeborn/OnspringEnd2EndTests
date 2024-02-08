@@ -221,13 +221,57 @@ test.describe('matrix question', () => {
     });
   });
 
-  test('Move a matrix question on a page', async ({}) => {
+  test('Move a matrix question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-556',
     });
 
-    expect(true).toBe(true);
+    const rowValues = [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })];
+    const columnValues = [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })];
+
+    const matrixQuestions = [
+      new MatrixQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Matrix Question 1',
+        rowValues: rowValues,
+        columnValues: columnValues,
+      }),
+      new MatrixQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Matrix Question 2',
+        rowValues: rowValues,
+        columnValues: columnValues,
+      }),
+    ];
+
+    const surveyItemIds: string[] = [];
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create matrix questions', async () => {
+      for (const dateQuestion of matrixQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+        surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({
+          surveyItemId: surveyItemId,
+        });
+      }
+    });
+
+    await test.step('Move the second matrix question above the first matrix question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second matrix question is displayed above the first matrix question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
+    });
   });
 
   test('Move a matrix question to another page', async ({}) => {
