@@ -1,5 +1,8 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, surveyQuestionTest as test } from '../../fixtures';
+import { BaseListValue } from '../../models/listValue';
+import { MatrixQuestion } from '../../models/matrixQuestion';
 import { Survey } from '../../models/survey';
 import { AnnotationType } from '../annotations';
 
@@ -34,13 +37,40 @@ test.describe('matrix question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a matrix question', async ({}) => {
+  test('Create a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-552',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const matrixQuestion = new MatrixQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a matrix question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the matrix question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Create a copy of a matrix question', async ({}) => {
