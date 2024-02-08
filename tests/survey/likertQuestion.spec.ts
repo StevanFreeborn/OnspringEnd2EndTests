@@ -247,8 +247,8 @@ test.describe('likert question', () => {
     });
 
     await test.step('Create likert questions', async () => {
-      for (const dateQuestion of likertQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      for (const likertQuestion of likertQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({
           surveyItemId: surveyItemId,
@@ -277,7 +277,7 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
     const firstPageName = 'Page 1';
 
-    const dateQuestion = new LikertQuestion({
+    const likertQuestion = new LikertQuestion({
       questionId: questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
@@ -295,7 +295,7 @@ test.describe('likert question', () => {
     });
 
     await test.step('Create a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemId,
         pageName: newPage.name,
@@ -315,7 +315,7 @@ test.describe('likert question', () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       await previewPage.nextButton.click();
 
-      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
       await expect(question).toBeVisible();
     });
   });
@@ -328,7 +328,7 @@ test.describe('likert question', () => {
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const dateQuestion = new LikertQuestion({
+    const likertQuestion = new LikertQuestion({
       questionId: questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
@@ -342,19 +342,19 @@ test.describe('likert question', () => {
     });
 
     await test.step('Add a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
     });
 
     await test.step('Delete the likert question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
         surveyItemId: surveyItemId,
-        questionText: dateQuestion.questionText,
+        questionText: likertQuestion.questionText,
       });
     });
 
     await test.step('Preview the survey and confirm the likert question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
       await expect(question).toBeHidden();
     });
   });
