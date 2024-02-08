@@ -73,13 +73,54 @@ test.describe('matrix question', () => {
     });
   });
 
-  test('Create a copy of a matrix question', async ({}) => {
+  test('Create a copy of a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-553',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const matrixQuestion = new MatrixQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
+    });
+
+    let surveyItemId: string;
+    let surveyItemIdCopy: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a matrix question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+      });
+    });
+
+    await test.step('Copy the matrix question', async () => {
+      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
+        surveyItemId,
+        matrixQuestion.questionText
+      );
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemIdCopy,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the copied matrix question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, matrixQuestion.questionText);
+
+      await expect(copiedQuestion).toBeVisible();
+      await expect(questionCopy).toBeVisible();
+    });
   });
 
   test('Import a matrix question', async ({}) => {
