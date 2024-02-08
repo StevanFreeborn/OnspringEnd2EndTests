@@ -4,6 +4,7 @@ import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { BaseListValue } from '../../models/listValue';
 import { MatrixQuestion } from '../../models/matrixQuestion';
 import { Survey } from '../../models/survey';
+import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('matrix question', () => {
@@ -253,8 +254,8 @@ test.describe('matrix question', () => {
     });
 
     await test.step('Create matrix questions', async () => {
-      for (const dateQuestion of matrixQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(dateQuestion);
+      for (const matrixQuestion of matrixQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({
           surveyItemId: surveyItemId,
@@ -274,13 +275,57 @@ test.describe('matrix question', () => {
     });
   });
 
-  test('Move a matrix question to another page', async ({}) => {
+  test('Move a matrix question to another page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-557',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const matrixQuestion = new MatrixQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create a matrix question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
+      surveyItemsToBeDeleted.push({
+        surveyItemId: surveyItemId,
+        pageName: newPage.name,
+      });
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the matrix question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    await test.step('Preview the survey and confirm the matrix question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
+      await expect(question).toBeVisible();
+    });
   });
 
   test('Delete a matrix question', async ({}) => {
