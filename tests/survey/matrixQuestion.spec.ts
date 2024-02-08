@@ -1,13 +1,13 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { LikertQuestion } from '../../models/likertQuestion';
+import { expect, surveyQuestionTest as test } from '../../fixtures';
 import { BaseListValue } from '../../models/listValue';
+import { MatrixQuestion } from '../../models/matrixQuestion';
 import { Survey } from '../../models/survey';
 import { SurveyPage } from '../../models/surveyPage';
 import { AnnotationType } from '../annotations';
-import { expect, surveyQuestionTest as test } from './../../fixtures/index';
 
-test.describe('likert question', () => {
+test.describe('matrix question', () => {
   test.describe.configure({
     mode: 'default',
   });
@@ -38,18 +38,19 @@ test.describe('likert question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a likert scale question', async ({ surveyAdminPage }) => {
+  test('Create a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-542',
+      description: 'Test-552',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const likertQuestion = new LikertQuestion({
+    const matrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
     let surveyItemId: string;
@@ -59,32 +60,33 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Add a matrix question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemId,
       });
     });
 
-    await test.step('Preview the survey and confirm the likert question is present', async () => {
+    await test.step('Preview the survey and confirm the matrix question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Create a copy of a likert scale question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-543',
+      description: 'Test-553',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const likertQuestion = new LikertQuestion({
+    const matrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
     let surveyItemId: string;
@@ -95,45 +97,46 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add a likert question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Add a matrix question to copy', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemId,
       });
     });
 
-    await test.step('Copy the likert question', async () => {
+    await test.step('Copy the matrix question', async () => {
       surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
         surveyItemId,
-        likertQuestion.questionText
+        matrixQuestion.questionText
       );
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemIdCopy,
       });
     });
 
-    await test.step('Preview the survey and confirm the copied likert question is present', async () => {
+    await test.step('Preview the survey and confirm the copied matrix question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, likertQuestion.questionText);
+      const copiedQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
+      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, matrixQuestion.questionText);
 
       await expect(copiedQuestion).toBeVisible();
       await expect(questionCopy).toBeVisible();
     });
   });
 
-  test('Import a likert scale question', async ({ surveyAdminPage, sourceSurvey }) => {
+  test('Import a matrix question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-544',
+      description: 'Test-554',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const sourceLikertQuestion = new LikertQuestion({
+    const sourceMatrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
     let questionCreatedViaImport: string;
@@ -147,8 +150,8 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add a likert question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceLikertQuestion);
+    await test.step('Add a matrix question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceMatrixQuestion);
     });
 
     await test.step("Navigate to the target survey's admin page", async () => {
@@ -160,38 +163,39 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Import the likert question into the target survey', async () => {
+    await test.step('Import the matrix question into the target survey', async () => {
       questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
         sourceSurvey.name,
-        sourceLikertQuestion
+        sourceMatrixQuestion
       );
       surveyItemsToBeDeleted.push({
         surveyItemId: questionCreatedViaImport,
       });
     });
 
-    await test.step('Preview the target survey and confirm the likert question is present', async () => {
+    await test.step('Preview the target survey and confirm the matrix question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceLikertQuestion.questionText);
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceMatrixQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
     });
   });
 
-  test('Update a likert scale question', async ({ surveyAdminPage }) => {
+  test('Update a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-545',
+      description: 'Test-555',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const likertQuestion = new LikertQuestion({
+    const matrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    const updatedQuestion = { ...likertQuestion, questionText: `${likertQuestion.questionText} updated` };
+    const updatedQuestion = { ...matrixQuestion, questionText: `${matrixQuestion.questionText} updated` };
 
     let createdQuestionItemId: string;
 
@@ -200,42 +204,45 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create the likert question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Create the matrix question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: createdQuestionItemId,
       });
     });
 
-    await test.step('Update the likert question', async () => {
+    await test.step('Update the matrix question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
     });
 
-    await test.step('Preview the survey and confirm the updated likert question is present', async () => {
+    await test.step('Preview the survey and confirm the updated matrix question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
       await expect(updatedQuestionElement).toBeVisible();
     });
   });
 
-  test('Move a likert scale question on a page', async ({ surveyAdminPage }) => {
+  test('Move a matrix question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-546',
+      description: 'Test-556',
     });
 
-    const values = [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })];
+    const rowValues = [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })];
+    const columnValues = [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })];
 
-    const likertQuestions = [
-      new LikertQuestion({
+    const matrixQuestions = [
+      new MatrixQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Likert Question 1',
-        answerValues: values,
+        questionText: 'Matrix Question 1',
+        rowValues: rowValues,
+        columnValues: columnValues,
       }),
-      new LikertQuestion({
+      new MatrixQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
-        questionText: 'Likert Question 2',
-        answerValues: values,
+        questionText: 'Matrix Question 2',
+        rowValues: rowValues,
+        columnValues: columnValues,
       }),
     ];
 
@@ -246,9 +253,9 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create likert questions', async () => {
-      for (const likertQuestion of likertQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Create matrix questions', async () => {
+      for (const matrixQuestion of matrixQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
         surveyItemIds.push(surveyItemId);
         surveyItemsToBeDeleted.push({
           surveyItemId: surveyItemId,
@@ -256,11 +263,11 @@ test.describe('likert question', () => {
       }
     });
 
-    await test.step('Move the second likert question above the first likert question', async () => {
+    await test.step('Move the second matrix question above the first matrix question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
     });
 
-    await test.step('Preview the survey and confirm the second likert question is displayed above the first likert question', async () => {
+    await test.step('Preview the survey and confirm the second matrix question is displayed above the first matrix question', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
 
@@ -268,19 +275,20 @@ test.describe('likert question', () => {
     });
   });
 
-  test('Move a likert scale question to another page', async ({ surveyAdminPage }) => {
+  test('Move a matrix question to another page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-547',
+      description: 'Test-557',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
     const firstPageName = 'Page 1';
 
-    const likertQuestion = new LikertQuestion({
+    const matrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
     const newPage = new SurveyPage({
@@ -294,8 +302,8 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Create a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Create a matrix question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
       surveyItemsToBeDeleted.push({
         surveyItemId: surveyItemId,
         pageName: newPage.name,
@@ -306,32 +314,33 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
     });
 
-    await test.step('Move the likert question to the new page', async () => {
+    await test.step('Move the matrix question to the new page', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
       await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
     });
 
-    await test.step('Preview the survey and confirm the likert question is on the new page', async () => {
+    await test.step('Preview the survey and confirm the matrix question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       await previewPage.nextButton.click();
 
-      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
       await expect(question).toBeVisible();
     });
   });
 
-  test('Delete a likert scale question', async ({ surveyAdminPage }) => {
+  test('Delete a matrix question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-548',
+      description: 'Test-558',
     });
 
     const questionId = FakeDataFactory.createFakeQuestionId();
 
-    const likertQuestion = new LikertQuestion({
+    const matrixQuestion = new MatrixQuestion({
       questionId: questionId,
       questionText: questionId,
-      answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
+      rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
+      columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
     let surveyItemId: string;
@@ -341,20 +350,20 @@ test.describe('likert question', () => {
       await surveyAdminPage.designTab.openSurveyDesigner();
     });
 
-    await test.step('Add a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+    await test.step('Add a matrix question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
     });
 
-    await test.step('Delete the likert question', async () => {
+    await test.step('Delete the matrix question', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
         surveyItemId: surveyItemId,
-        questionText: likertQuestion.questionText,
+        questionText: matrixQuestion.questionText,
       });
     });
 
-    await test.step('Preview the survey and confirm the likert question is not present', async () => {
+    await test.step('Preview the survey and confirm the matrix question is not present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
+      const question = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
       await expect(question).toBeHidden();
     });
   });

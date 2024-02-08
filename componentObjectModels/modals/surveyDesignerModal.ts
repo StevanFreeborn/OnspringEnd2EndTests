@@ -2,6 +2,7 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { DateQuestion } from '../../models/dateQuestion';
 import { LikertQuestion } from '../../models/likertQuestion';
+import { MatrixQuestion } from '../../models/matrixQuestion';
 import { MultiSelectQuestion } from '../../models/multiSelectQuestion';
 import { NumberQuestion } from '../../models/numberQuestion';
 import { Question, QuestionType } from '../../models/question';
@@ -15,6 +16,7 @@ import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialo
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
 import { AddOrEditLikertQuestionForm } from '../forms/addOrEditLikertQuestionForm';
+import { AddOrEditMatrixQuestionForm } from '../forms/addOrEditMatrixQuestionForm';
 import { AddOrEditMultiSelectQuestionForm } from '../forms/addOrEditMultiSelectQuestionForm';
 import { AddOrEditNumberQuestionForm } from '../forms/addOrEditNumberQuestionForm';
 import { AddOrEditSingleSelectQuestionForm } from '../forms/addOrEditSingleSelectQuestionForm';
@@ -45,6 +47,7 @@ export class SurveyDesignerModal {
   readonly singleSelectButton: Locator;
   readonly multiSelectButton: Locator;
   readonly likertScaleButton: Locator;
+  readonly matrixButton: Locator;
 
   readonly previewButton: Locator;
   readonly saveIndicator: Locator;
@@ -69,6 +72,7 @@ export class SurveyDesignerModal {
     this.singleSelectButton = this.frame.getByRole('button', { name: 'Single Select' });
     this.multiSelectButton = this.frame.getByRole('button', { name: 'Multi-Select' });
     this.likertScaleButton = this.frame.getByRole('button', { name: 'Likert Scale' });
+    this.matrixButton = this.frame.getByRole('button', { name: 'Matrix' });
 
     this.previewButton = this.frame.getByRole('link', { name: 'Preview' });
     this.saveIndicator = this.frame.locator('#record-status .animation');
@@ -81,6 +85,7 @@ export class SurveyDesignerModal {
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
+  getQuestionEditForm(questionType: 'Matrix'): AddOrEditMatrixQuestionForm;
   getQuestionEditForm(questionType: 'Likert Scale'): AddOrEditLikertQuestionForm;
   getQuestionEditForm(questionType: 'Multi Select'): AddOrEditMultiSelectQuestionForm;
   getQuestionEditForm(questionType: 'Single Select'): AddOrEditSingleSelectQuestionForm;
@@ -105,6 +110,8 @@ export class SurveyDesignerModal {
         return new AddOrEditMultiSelectQuestionForm(this.frame);
       case 'Likert Scale':
         return new AddOrEditLikertQuestionForm(this.frame);
+      case 'Matrix':
+        return new AddOrEditMatrixQuestionForm(this.frame);
       case undefined:
         return new BaseAddOrEditQuestionForm(this.frame);
       default:
@@ -244,6 +251,11 @@ export class SurveyDesignerModal {
         addQuestionForm = this.getQuestionEditForm(question.type);
         await addQuestionForm.fillOutForm(question as LikertQuestion);
         break;
+      case 'Matrix':
+        await this.matrixButton.click();
+        addQuestionForm = this.getQuestionEditForm(question.type);
+        await addQuestionForm.fillOutForm(question as MatrixQuestion);
+        break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
     }
@@ -301,6 +313,11 @@ export class SurveyDesignerModal {
         editQuestionForm = this.getQuestionEditForm(question.type);
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as LikertQuestion);
+        break;
+      case 'Matrix':
+        editQuestionForm = this.getQuestionEditForm(question.type);
+        await editQuestionForm.clearForm();
+        await editQuestionForm.fillOutForm(question as MatrixQuestion);
         break;
       default:
         throw new Error(`Question type ${question.type} is not supported.`);
