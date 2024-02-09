@@ -331,12 +331,43 @@ test.describe('reference question', () => {
     });
   });
 
-  test('Delete a reference question', async ({}) => {
+  test('Delete a reference question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-593',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const referenceQuestion = new ReferenceQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a reference question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+    });
+
+    await test.step('Delete the reference question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
+        surveyItemId: surveyItemId,
+        questionText: referenceQuestion.questionText,
+      });
+    });
+
+    await test.step('Preview the survey and confirm the reference question is not present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const question = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
+      await expect(question).toBeHidden();
+    });
   });
 });
