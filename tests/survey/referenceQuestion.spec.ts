@@ -138,13 +138,58 @@ test.describe('reference question', () => {
     });
   });
 
-  test('Import a reference question', async ({}) => {
+  test('Import a reference question', async ({ sourceSurvey, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-589',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const sourceReferenceQuestion = new ReferenceQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
+
+    let questionCreatedViaImport: string;
+
+    await test.step("Navigate to the source survey's admin page", async () => {
+      await surveyAdminPage.goto(sourceSurvey.id);
+    });
+
+    await test.step("Open the source survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a reference question to the source survey', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceReferenceQuestion);
+    });
+
+    await test.step("Navigate to the target survey's admin page", async () => {
+      await surveyAdminPage.goto(targetSurvey.id);
+    });
+
+    await test.step("Open the target survey's survey designer", async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Import the reference question into the target survey', async () => {
+      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
+        sourceSurvey.name,
+        sourceReferenceQuestion
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
+    });
+
+    await test.step('Preview the target survey and confirm the reference question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceReferenceQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Update a reference question', async ({}) => {
