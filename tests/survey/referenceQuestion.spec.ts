@@ -5,6 +5,7 @@ import { createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ReferenceQuestion } from '../../models/referenceQuestion';
 import { Survey } from '../../models/survey';
+import { SurveyPage } from '../../models/surveyPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
@@ -280,13 +281,54 @@ test.describe('reference question', () => {
     });
   });
 
-  test('Move a reference question to another page', async ({}) => {
+  test('Move a reference question to another page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-592',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+    const firstPageName = 'Page 1';
+
+    const referenceQuestion = new ReferenceQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
+
+    const newPage = new SurveyPage({
+      name: FakeDataFactory.createFakeSurveyPageName(),
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create a reference question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
+    });
+
+    await test.step('Create a new survey page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+    });
+
+    await test.step('Move the reference question to the new page', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+    });
+
+    await test.step('Preview the survey and confirm the reference question is on the new page', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      await previewPage.nextButton.click();
+
+      const question = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
+      await expect(question).toBeVisible();
+    });
   });
 
   test('Delete a reference question', async ({}) => {
