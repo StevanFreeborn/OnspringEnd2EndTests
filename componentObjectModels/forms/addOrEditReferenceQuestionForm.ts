@@ -22,7 +22,15 @@ export class AddOrEditReferenceQuestionForm extends BaseAddOrEditQuestionForm {
 
   async fillOutForm(question: ReferenceQuestion) {
     await this.baseFillOutForm(question);
-    await this.selectAppReference(question.appReference);
+
+    const isAppReferenceSelectVisible = await this.appReferenceSelect.isVisible();
+
+    // if you are editing a reference question
+    // the app reference select is not longer
+    // present as it is no longer editable
+    if (isAppReferenceSelectVisible) {
+      await this.selectAppReference(question.appReference);
+    }
 
     if (question.answerValues === 'ALL') {
       await this.answerValuesGrid.addAllValues();

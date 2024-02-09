@@ -192,13 +192,44 @@ test.describe('reference question', () => {
     });
   });
 
-  test('Update a reference question', async ({}) => {
+  test('Update a reference question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-590',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const referenceQuestion = new ReferenceQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
+
+    const updatedQuestion = { ...referenceQuestion, questionText: `${referenceQuestion.questionText} updated` };
+
+    let createdQuestionItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create the reference question to update', async () => {
+      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
+    });
+
+    await test.step('Update the reference question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+    });
+
+    await test.step('Preview the survey and confirm the updated reference question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
+      await expect(updatedQuestionElement).toBeVisible();
+    });
   });
 
   test('Move a reference question on a page', async ({}) => {
