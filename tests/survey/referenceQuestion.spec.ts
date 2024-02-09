@@ -85,7 +85,7 @@ test.describe('reference question', () => {
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
     });
 
-    await test.step('Preview the survey and confirm the number question is present', async () => {
+    await test.step('Preview the survey and confirm the reference question is present', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
       const createdQuestion = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
       await expect(createdQuestion).toBeVisible();
