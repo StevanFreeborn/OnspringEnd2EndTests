@@ -1,17 +1,14 @@
 import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { surveyQuestionTest as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
+import { expect, surveyQuestionTest as test } from '../../fixtures';
+import { createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { ReferenceQuestion } from '../../models/referenceQuestion';
 import { Survey } from '../../models/survey';
+import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { AnnotationType } from '../annotations';
-
-type ReferenceQuestionTest = {
-  referencedApp: App;
-};
-
-const test = base.extend<ReferenceQuestionTest>({
-  referencedApp: app,
-});
 
 test.describe('reference question', () => {
   test.describe.configure({
@@ -22,10 +19,20 @@ test.describe('reference question', () => {
   let referencedApp: App;
   let surveyItemsToBeDeleted: DeleteQuestionRequest[] = [];
 
-  test.beforeAll('Create target survey', ({ targetSurvey: survey, referencedApp: app }) => {
-    targetSurvey = survey;
-    referencedApp = app;
-  });
+  test.beforeAll(
+    'Create target survey, referenced app, and answer value content record',
+    async ({ sysAdminPage, targetSurvey: survey }) => {
+      targetSurvey = survey;
+      referencedApp = await createApp(sysAdminPage);
+
+      const addContentPage = new AddContentPage(sysAdminPage);
+      const editContentPage = new EditContentPage(sysAdminPage);
+
+      await addContentPage.goto(referencedApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    }
+  );
 
   test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
     await surveyAdminPage.goto(targetSurvey.id);
@@ -46,13 +53,43 @@ test.describe('reference question', () => {
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a reference question question', async ({}) => {
+  test.afterAll('Delete the referenced app created during the test', async ({ sysAdminPage }) => {
+    const appsAdminPage = new AppsAdminPage(sysAdminPage);
+    await appsAdminPage.deleteApps([referencedApp.name]);
+  });
+
+  test('Create a reference question question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-587',
     });
 
-    expect(true).toBe(true);
+    const questionId = FakeDataFactory.createFakeQuestionId();
+
+    const referenceQuestion = new ReferenceQuestion({
+      questionId: questionId,
+      questionText: questionId,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
+
+    let surveyItemId: string;
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Add a reference question', async () => {
+      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+    });
+
+    await test.step('Preview the survey and confirm the number question is present', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const createdQuestion = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
+      await expect(createdQuestion).toBeVisible();
+    });
   });
 
   test('Create a copy of a reference question', async ({}) => {
