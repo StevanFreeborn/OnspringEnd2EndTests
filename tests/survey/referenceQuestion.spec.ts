@@ -232,13 +232,52 @@ test.describe('reference question', () => {
     });
   });
 
-  test('Move a reference question on a page', async ({}) => {
+  test('Move a reference question on a page', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-591',
     });
 
-    expect(true).toBe(true);
+    const referenceQuestions = [
+      new ReferenceQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Reference Question 1',
+        appReference: referencedApp.name,
+        answerValues: 'ALL',
+      }),
+      new ReferenceQuestion({
+        questionId: FakeDataFactory.createFakeQuestionId(),
+        questionText: 'Reference Question 2',
+        appReference: referencedApp.name,
+        answerValues: 'ALL',
+      }),
+    ];
+
+    const surveyItemIds: string[] = [];
+
+    await test.step('Open the survey designer', async () => {
+      await surveyAdminPage.designTabButton.click();
+      await surveyAdminPage.designTab.openSurveyDesigner();
+    });
+
+    await test.step('Create reference questions', async () => {
+      for (const referenceQuestion of referenceQuestions) {
+        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+        surveyItemIds.push(surveyItemId);
+        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      }
+    });
+
+    await test.step('Move the second reference question above the first reference question', async () => {
+      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+    });
+
+    await test.step('Preview the survey and confirm the second reference question is displayed above the first reference question', async () => {
+      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+
+      expect(isAbove).toBe(true);
+    });
   });
 
   test('Move a reference question to another page', async ({}) => {
