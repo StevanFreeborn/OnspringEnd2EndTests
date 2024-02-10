@@ -21,8 +21,11 @@ export class BaseAddOrEditQuestionForm {
   }
 
   protected async baseFillOutForm(question: Question) {
-    await this.questionIdInput.fill(question.questionId);
+    const helpTextEditorElement = await this.helpTextEditor.elementHandle();
+    await helpTextEditorElement?.waitForElementState('stable');
+
     await this.questionTextEditor.fill(question.questionText);
+    await this.questionIdInput.fill(question.questionId);
     await this.helpTextEditor.fill(question.helpText);
 
     if (question.required) {

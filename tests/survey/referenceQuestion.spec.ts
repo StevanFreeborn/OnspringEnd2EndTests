@@ -59,7 +59,7 @@ test.describe('reference question', () => {
     await appsAdminPage.deleteApps([referencedApp.name]);
   });
 
-  test('Create a reference question question', async ({ surveyAdminPage }) => {
+  test('Create a reference question', async ({ surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-587',
