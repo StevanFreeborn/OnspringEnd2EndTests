@@ -11,8 +11,17 @@ export async function appAdminPage({ sysAdminPage }: { sysAdminPage: Page }, use
 }
 
 export async function app({ sysAdminPage }: { sysAdminPage: Page }, use: (r: App) => Promise<void>) {
-  const adminHomePage = new AdminHomePage(sysAdminPage);
   const appsAdminPage = new AppsAdminPage(sysAdminPage);
+
+  const app = await createApp(sysAdminPage);
+
+  await use(app);
+
+  await appsAdminPage.deleteApps([app.name]);
+}
+
+export async function createApp(sysAdminPage: Page) {
+  const adminHomePage = new AdminHomePage(sysAdminPage);
   const appAdminPage = new AppAdminPage(sysAdminPage);
   const appName = FakeDataFactory.createFakeAppName();
 
@@ -21,8 +30,5 @@ export async function app({ sysAdminPage }: { sysAdminPage: Page }, use: (r: App
   await appAdminPage.page.waitForURL(appAdminPage.pathRegex);
   const appId = appAdminPage.getIdFromUrl();
   const app = new App({ id: appId, name: appName });
-
-  await use(app);
-
-  await appsAdminPage.deleteApps([appName]);
+  return app;
 }

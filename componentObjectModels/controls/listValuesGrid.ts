@@ -1,6 +1,12 @@
 import { Locator } from '@playwright/test';
-import { ListValue } from '../../models/listValue';
+import { BaseListValue } from '../../models/listValue';
 
+// TODO: Might make sense
+// to create a base class for this kind of grid
+// to better represent differences
+// between grids for lists
+// vs. grids for list questions
+// vs. grids for matrix/likert questions
 export class ListValuesGrid {
   private readonly control: Locator;
   private readonly gridHeader: Locator;
@@ -28,7 +34,7 @@ export class ListValuesGrid {
     return new ListValueRow(this.gridBody.getByRole('row').last());
   }
 
-  async addValue(listValue: ListValue) {
+  async addValue(listValue: BaseListValue) {
     await this.addValueButton.click();
     const row = this.getLastValueRow();
     await row.valueInput.fill(listValue.value);
