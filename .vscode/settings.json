@@ -10,6 +10,7 @@
     "FULLNAME",
     "iife",
     "jsxdev",
+    "likert",
     "listbox",
     "navs",
     "networkidle",
@@ -23,5 +24,6 @@
     "VNEXT",
     "VPRIOR"
   ],
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "githubIssues.issueBranchTitle": "${user}/issue-${issueNumber}-${sanitizedIssueTitle}"
 }

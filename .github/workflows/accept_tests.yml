@@ -236,8 +236,8 @@ jobs:
             })
   cleanup:
     name: 'Cleanup test artifacts'
-    needs: [check_for_test_file_changes, generate_shards, run_tests, merge_reports_and_publish, add_pr_comment]
     if: always()
+    needs: [check_for_test_file_changes, generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
