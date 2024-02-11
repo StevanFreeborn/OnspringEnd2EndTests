@@ -172,7 +172,7 @@ jobs:
   cleanup:
     name: 'Cleanup test artifacts'
     if: always()
-    needs: [generate_shards, run_tests, merge_reports_and_publish]
+    needs: [generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.39.0-jammy
