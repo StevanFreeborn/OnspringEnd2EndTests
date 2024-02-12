@@ -29,7 +29,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   async deleteAllTestUsers() {
     await this.goto();
 
-    const userRow = this.userGrid.getByRole('row', { name: new RegExp(TEST_USER_NAME, 'i') }).first();
+    const userRow = this.userGrid.getByRole('row', { name: new RegExp(TEST_USER_NAME, 'i') }).last();
     let isVisible = await userRow.isVisible();
 
     while (isVisible) {
