@@ -13,6 +13,7 @@ import { TextQuestion } from '../../models/textQuestion';
 import { SurveyPreviewPage } from '../../pageObjectModels/surveys/surveyPreviewPage';
 import { AddSurveyPageDialog } from '../dialogs/addSurveyPageDialog';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
+import { DeleteSurveyPageDialog } from '../dialogs/deleteSurveyPageDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
@@ -24,6 +25,7 @@ import { AddOrEditReferenceQuestionForm } from '../forms/addOrEditReferenceQuest
 import { AddOrEditSingleSelectQuestionForm } from '../forms/addOrEditSingleSelectQuestionForm';
 import { AddOrEditTextQuestionForm } from '../forms/addOrEditTextQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
+import { SurveyPageMenu } from '../menus/surveyPageMenu';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
 
@@ -57,9 +59,12 @@ export class SurveyDesignerModal {
   readonly autoSaveDialog: AutoSaveDialog;
   readonly importQuestionButton: Locator;
   readonly importQuestionModal: ImportQuestionModal;
+
   readonly addPageButton: Locator;
   readonly addSurveyPageDialog: AddSurveyPageDialog;
   readonly addOrEditSurveyPageModal: AddOrEditSurveyPageModal;
+  readonly pageMenu: SurveyPageMenu;
+  readonly deleteSurveyPageDialog: DeleteSurveyPageDialog;
   readonly deleteSurveyQuestionDialog: DeleteSurveyQuestionDialog;
 
   constructor(page: Page) {
@@ -83,9 +88,12 @@ export class SurveyDesignerModal {
     this.autoSaveDialog = new AutoSaveDialog(page);
     this.importQuestionButton = this.frame.getByRole('button', { name: 'Import Question' });
     this.importQuestionModal = new ImportQuestionModal(page);
+
     this.addPageButton = this.frame.getByRole('button', { name: 'Add Page' });
     this.addSurveyPageDialog = new AddSurveyPageDialog(page);
     this.addOrEditSurveyPageModal = new AddOrEditSurveyPageModal(page);
+    this.pageMenu = new SurveyPageMenu(this.frame);
+    this.deleteSurveyPageDialog = new DeleteSurveyPageDialog(page);
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
@@ -381,6 +389,20 @@ export class SurveyDesignerModal {
     await this.addOrEditSurveyPageModal.nameInput.fill(newPage.name);
     await this.addOrEditSurveyPageModal.descriptionEditor.fill(newPage.description);
     await this.addOrEditSurveyPageModal.saveButton.click();
+  }
+
+  async deletePage(pageName: string) {
+    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const pageMenuButton = page.locator('.page-menu-button');
+
+    await pageMenuButton.click();
+    await this.pageMenu.deleteButton.waitFor();
+    await this.pageMenu.deleteButton.click();
+
+    await this.deleteSurveyPageDialog.deleteButton.waitFor();
+    await this.deleteSurveyPageDialog.deleteButton.click();
+
+    await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 
   async goToPage(pageName: string) {
