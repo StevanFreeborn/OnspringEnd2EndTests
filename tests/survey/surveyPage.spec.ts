@@ -47,6 +47,7 @@ test.describe('survey page', () => {
 
     await test.step('Add a question to page 1', async () => {
       const questionId = FakeDataFactory.createFakeQuestionId();
+
       await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(
         new TextQuestion({
           questionId: questionId,
@@ -61,6 +62,7 @@ test.describe('survey page', () => {
 
     await test.step('Add a question to page 2', async () => {
       const questionId = FakeDataFactory.createFakeQuestionId();
+
       await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(
         new TextQuestion({
           questionId: questionId,
