@@ -45,7 +45,7 @@ export class AppsAdminPage extends BaseAdminPage {
   async deleteAllTestApps() {
     await this.goto();
 
-    const appRow = this.appGrid.getByRole('row', { name: new RegExp(TEST_APP_NAME, 'i') }).first();
+    const appRow = this.appGrid.getByRole('row', { name: new RegExp(TEST_APP_NAME, 'i') }).last();
     let isVisible = await appRow.isVisible();
 
     while (isVisible) {
