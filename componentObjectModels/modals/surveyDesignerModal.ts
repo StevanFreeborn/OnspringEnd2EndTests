@@ -42,6 +42,7 @@ export class SurveyDesignerModal {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
 
+  private readonly savePageSortPathRegex: RegExp;
   private readonly saveItemSortPathRegex: RegExp;
 
   readonly attachmentButton: Locator;
@@ -71,6 +72,7 @@ export class SurveyDesignerModal {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
     this.frame = this.designer.frameLocator('iframe').first();
 
+    this.savePageSortPathRegex = /\/Admin\/App\/\d+\/SurveyPage\/\d+\/SavePageSort/;
     this.saveItemSortPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/SaveItemSort/;
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
@@ -391,8 +393,12 @@ export class SurveyDesignerModal {
     await this.addOrEditSurveyPageModal.saveButton.click();
   }
 
+  private getPageLocator(pageName: string) {
+    return this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+  }
+
   async updatePage(pageName: string, updatedPage: SurveyPage) {
-    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const page = this.getPageLocator(pageName);
     const pageMenuButton = page.locator('.page-menu-button');
 
     await pageMenuButton.click();
@@ -408,7 +414,7 @@ export class SurveyDesignerModal {
   }
 
   async deletePage(pageName: string) {
-    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const page = this.getPageLocator(pageName);
     const pageMenuButton = page.locator('.page-menu-button');
 
     await pageMenuButton.click();
@@ -422,8 +428,39 @@ export class SurveyDesignerModal {
   }
 
   async goToPage(pageName: string) {
-    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const page = await this.getPageLocator(pageName);
     await page.click();
+  }
+
+  async movePageAbove(pageToMove: string, pageToMoveAbove: string) {
+    const page = this.getPageLocator(pageToMove);
+    const pageAbove = this.getPageLocator(pageToMoveAbove);
+
+    const pagePos = await page.boundingBox();
+    const pageAbovePos = await pageAbove.boundingBox();
+
+    if (pagePos == null) {
+      throw new Error(`Could not find page with name ${pageToMove}.`);
+    }
+
+    if (pageAbovePos == null) {
+      throw new Error(`Could not find page with name ${pageToMoveAbove}.`);
+    }
+
+    if (pagePos.y < pageAbovePos.y) {
+      // page to move above is already above the page to move
+      return;
+    }
+
+    const saveSortPagePromise = this.designer
+      .page()
+      .waitForResponse(
+        res => res.url().match(this.savePageSortPathRegex) !== null && res.request().method() === 'POST'
+      );
+
+    await page.locator('.page-drag').dragTo(pageAbove);
+
+    await Promise.allSettled([this.saveIndicator.waitFor({ state: 'hidden' }), saveSortPagePromise]);
   }
 
   async moveQuestionToPage(surveyItemToMove: string, pageName: string) {
