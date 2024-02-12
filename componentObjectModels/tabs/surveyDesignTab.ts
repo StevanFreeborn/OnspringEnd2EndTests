@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page, Response } from '@playwright/test';
 import { SurveyDesignerModal } from '../modals/surveyDesignerModal';
 
 export class SurveyDesignTab {
@@ -15,13 +15,17 @@ export class SurveyDesignTab {
   }
 
   async openSurveyDesigner() {
-    this.page.once('response', async response => {
+    const handleDesignerAlert = async (response: Response) => {
       if (response.url().match(this.autoSaveAlertPathRegex)) {
         await this.surveyDesignerModal.autoSaveDialog.dismiss();
       }
-    });
+    };
+
+    this.page.on('response', handleDesignerAlert);
 
     await this.designSurveyLink.click();
     await this.page.waitForLoadState('networkidle');
+
+    this.page.off('response', handleDesignerAlert);
   }
 }

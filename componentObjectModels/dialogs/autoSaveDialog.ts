@@ -10,7 +10,7 @@ export class AutoSaveDialog {
   }
 
   async dismiss() {
-    await this.dismissCheckbox.check();
+    await this.dismissCheckbox.click();
     await this.closeButton.click();
   }
 }
