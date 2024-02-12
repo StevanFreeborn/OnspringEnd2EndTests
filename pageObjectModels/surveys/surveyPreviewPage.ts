@@ -3,11 +3,13 @@ import { Locator, Page } from '@playwright/test';
 export class SurveyPreviewPage {
   readonly page: Page;
   readonly pathRegex: RegExp;
+  readonly pageSelect: Locator;
   readonly nextButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.pathRegex = /\/Survey\/\d+\/Preview/;
+    this.pageSelect = page.locator('#page-selector-cell .k-dropdown');
     this.nextButton = page.getByRole('link', { name: 'Next' });
   }
 

@@ -13,6 +13,7 @@ import { TextQuestion } from '../../models/textQuestion';
 import { SurveyPreviewPage } from '../../pageObjectModels/surveys/surveyPreviewPage';
 import { AddSurveyPageDialog } from '../dialogs/addSurveyPageDialog';
 import { AutoSaveDialog } from '../dialogs/autoSaveDialog';
+import { DeleteSurveyPageDialog } from '../dialogs/deleteSurveyPageDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
@@ -24,6 +25,7 @@ import { AddOrEditReferenceQuestionForm } from '../forms/addOrEditReferenceQuest
 import { AddOrEditSingleSelectQuestionForm } from '../forms/addOrEditSingleSelectQuestionForm';
 import { AddOrEditTextQuestionForm } from '../forms/addOrEditTextQuestionForm';
 import { BaseAddOrEditQuestionForm } from '../forms/baseAddOrEditQuestionForm';
+import { SurveyPageMenu } from '../menus/surveyPageMenu';
 import { AddOrEditSurveyPageModal } from './addOrEditSurveyPageModal';
 import { ImportQuestionModal } from './importQuestionModal';
 
@@ -40,6 +42,7 @@ export class SurveyDesignerModal {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
 
+  private readonly savePageSortPathRegex: RegExp;
   private readonly saveItemSortPathRegex: RegExp;
 
   readonly attachmentButton: Locator;
@@ -57,15 +60,19 @@ export class SurveyDesignerModal {
   readonly autoSaveDialog: AutoSaveDialog;
   readonly importQuestionButton: Locator;
   readonly importQuestionModal: ImportQuestionModal;
+
   readonly addPageButton: Locator;
   readonly addSurveyPageDialog: AddSurveyPageDialog;
   readonly addOrEditSurveyPageModal: AddOrEditSurveyPageModal;
+  readonly pageMenu: SurveyPageMenu;
+  readonly deleteSurveyPageDialog: DeleteSurveyPageDialog;
   readonly deleteSurveyQuestionDialog: DeleteSurveyQuestionDialog;
 
   constructor(page: Page) {
     this.designer = page.getByRole('dialog', { name: /Survey Designer/ });
     this.frame = this.designer.frameLocator('iframe').first();
 
+    this.savePageSortPathRegex = /\/Admin\/App\/\d+\/SurveyPage\/\d+\/SavePageSort/;
     this.saveItemSortPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/SaveItemSort/;
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
@@ -83,9 +90,12 @@ export class SurveyDesignerModal {
     this.autoSaveDialog = new AutoSaveDialog(page);
     this.importQuestionButton = this.frame.getByRole('button', { name: 'Import Question' });
     this.importQuestionModal = new ImportQuestionModal(page);
+
     this.addPageButton = this.frame.getByRole('button', { name: 'Add Page' });
     this.addSurveyPageDialog = new AddSurveyPageDialog(page);
     this.addOrEditSurveyPageModal = new AddOrEditSurveyPageModal(page);
+    this.pageMenu = new SurveyPageMenu(this.frame);
+    this.deleteSurveyPageDialog = new DeleteSurveyPageDialog(page);
     this.deleteSurveyQuestionDialog = new DeleteSurveyQuestionDialog(page);
   }
 
@@ -383,9 +393,74 @@ export class SurveyDesignerModal {
     await this.addOrEditSurveyPageModal.saveButton.click();
   }
 
+  private getPageLocator(pageName: string) {
+    return this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+  }
+
+  async updatePage(pageName: string, updatedPage: SurveyPage) {
+    const page = this.getPageLocator(pageName);
+    const pageMenuButton = page.locator('.page-menu-button');
+
+    await pageMenuButton.click();
+    await this.pageMenu.editPropertiesButton.waitFor();
+    await this.pageMenu.editPropertiesButton.click();
+
+    await this.addOrEditSurveyPageModal.nameInput.clear();
+    await this.addOrEditSurveyPageModal.descriptionEditor.clear();
+
+    await this.addOrEditSurveyPageModal.nameInput.fill(updatedPage.name);
+    await this.addOrEditSurveyPageModal.descriptionEditor.fill(updatedPage.description);
+    await this.addOrEditSurveyPageModal.saveButton.click();
+  }
+
+  async deletePage(pageName: string) {
+    const page = this.getPageLocator(pageName);
+    const pageMenuButton = page.locator('.page-menu-button');
+
+    await pageMenuButton.click();
+    await this.pageMenu.deleteButton.waitFor();
+    await this.pageMenu.deleteButton.click();
+
+    await this.deleteSurveyPageDialog.deleteButton.waitFor();
+    await this.deleteSurveyPageDialog.deleteButton.click();
+
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+  }
+
   async goToPage(pageName: string) {
-    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const page = await this.getPageLocator(pageName);
     await page.click();
+  }
+
+  async movePageAbove(pageToMove: string, pageToMoveAbove: string) {
+    const page = this.getPageLocator(pageToMove);
+    const pageAbove = this.getPageLocator(pageToMoveAbove);
+
+    const pagePos = await page.boundingBox();
+    const pageAbovePos = await pageAbove.boundingBox();
+
+    if (pagePos == null) {
+      throw new Error(`Could not find page with name ${pageToMove}.`);
+    }
+
+    if (pageAbovePos == null) {
+      throw new Error(`Could not find page with name ${pageToMoveAbove}.`);
+    }
+
+    if (pagePos.y < pageAbovePos.y) {
+      // page to move above is already above the page to move
+      return;
+    }
+
+    const saveSortPagePromise = this.designer
+      .page()
+      .waitForResponse(
+        res => res.url().match(this.savePageSortPathRegex) !== null && res.request().method() === 'POST'
+      );
+
+    await page.locator('.page-drag').dragTo(pageAbove);
+
+    await Promise.allSettled([this.saveIndicator.waitFor({ state: 'hidden' }), saveSortPagePromise]);
   }
 
   async moveQuestionToPage(surveyItemToMove: string, pageName: string) {
