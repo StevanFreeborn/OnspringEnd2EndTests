@@ -391,6 +391,22 @@ export class SurveyDesignerModal {
     await this.addOrEditSurveyPageModal.saveButton.click();
   }
 
+  async updatePage(pageName: string, updatedPage: SurveyPage) {
+    const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
+    const pageMenuButton = page.locator('.page-menu-button');
+
+    await pageMenuButton.click();
+    await this.pageMenu.editPropertiesButton.waitFor();
+    await this.pageMenu.editPropertiesButton.click();
+
+    await this.addOrEditSurveyPageModal.nameInput.clear();
+    await this.addOrEditSurveyPageModal.descriptionEditor.clear();
+
+    await this.addOrEditSurveyPageModal.nameInput.fill(updatedPage.name);
+    await this.addOrEditSurveyPageModal.descriptionEditor.fill(updatedPage.description);
+    await this.addOrEditSurveyPageModal.saveButton.click();
+  }
+
   async deletePage(pageName: string) {
     const page = this.frame.locator('#page-list [data-page-id]', { hasText: new RegExp(pageName) });
     const pageMenuButton = page.locator('.page-menu-button');
