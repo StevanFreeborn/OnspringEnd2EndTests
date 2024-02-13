@@ -25,6 +25,10 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createApiKeyDialog: CreateApiKeyDialog;
 
+  readonly dashboardTileLink: Locator;
+  readonly dashboardTileCreateButton: Locator;
+  readonly dashboardCreateMenu: Locator;
+
   private getTileLink(tilePosition: number) {
     return this.page.locator(
       `div.landing-list-item-container:nth-child(${tilePosition}) > div:nth-child(1) > a:nth-child(1)`
@@ -54,6 +58,10 @@ export class AdminHomePage extends BaseAdminPage {
     this.createSurveyModal = new CreateSurveyModal(page);
 
     this.createApiKeyDialog = new CreateApiKeyDialog(page);
+
+    this.dashboardTileLink = this.getTileLink(4);
+    this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
+    this.dashboardCreateMenu = page.locator('[data-create-menu-for="card-create-button-Dashboards"]');
   }
 
   async goto() {
@@ -64,6 +72,13 @@ export class AdminHomePage extends BaseAdminPage {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();
     await this.adminNav.containerCreateMenuOption.click();
+  }
+
+  async createContainerUsingDashboardTileButton() {
+    await this.dashboardTileLink.hover();
+    await this.dashboardTileCreateButton.waitFor();
+    await this.dashboardTileCreateButton.click();
+    await this.dashboardCreateMenu.getByText('Container').click();
   }
 
   async createApiKeyUsingSecurityTileButton(apiKeyName: string) {
