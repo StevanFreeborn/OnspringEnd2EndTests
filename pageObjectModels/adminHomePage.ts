@@ -60,6 +60,12 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createContainerUsingHeaderCreateButton() {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.containerCreateMenuOption.click();
+  }
+
   async createApiKeyUsingSecurityTileButton(apiKeyName: string) {
     await this.securityTileLink.hover();
     await this.securityTileCreateButton.waitFor();

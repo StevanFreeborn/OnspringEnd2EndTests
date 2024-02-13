@@ -1,3 +1,4 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AddContainerPage } from '../../pageObjectModels/containers/addContainerPage';
@@ -32,10 +33,45 @@ const test = base.extend<ContainerTestFixtures>({
 });
 
 test.describe('container', () => {
-  test('Create a container via the create button in the header of the admin home page', async () => {
+  const containersToBeDeleted: string[] = [];
+
+  test.afterEach(async ({ containersAdminPage }) => {
+    await containersAdminPage.deleteContainers(containersToBeDeleted);
+  });
+
+  test('Create a container via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    addContainerPage,
+    editContainerPage,
+    containersAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-292',
+    });
+
+    const containerName = FakeDataFactory.createFakeContainerName();
+    containersToBeDeleted.push(containerName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the container', async () => {
+      await adminHomePage.createContainerUsingHeaderCreateButton();
+      await adminHomePage.page.waitForURL(addContainerPage.pathRegex);
+
+      await addContainerPage.nameInput.fill(containerName);
+      await addContainerPage.saveChangesButton.click();
+      await addContainerPage.page.waitForURL(editContainerPage.pathRegex);
+    });
+
+    await test.step('Verify the container was created', async () => {
+      await containersAdminPage.goto();
+
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await expect(containerRow).toBeVisible();
     });
 
     expect(true).toBeTruthy();

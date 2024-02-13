@@ -6,6 +6,7 @@ export const TEST_USER_NAME = 'user-test';
 export const TEST_ROLE_NAME = 'role-test';
 export const TEST_GROUP_NAME = 'group-test';
 export const TEST_API_KEY_NAME = 'api-key-test';
+export const TEST_CONTAINER_NAME = 'container-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -78,5 +79,10 @@ export class FakeDataFactory {
   static createFakeSurveyPageName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-page-test`;
+  }
+
+  static createFakeContainerName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_CONTAINER_NAME}`;
   }
 }
