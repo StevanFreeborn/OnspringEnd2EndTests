@@ -500,6 +500,7 @@ export class SurveyDesignerModal {
     await editFormattedTextForm.clearForm();
     await editFormattedTextForm.fillOutForm(formattedText);
 
+    await editFormattedTextForm.formattedTextEditor.blur();
     await editFormattedTextForm.dragBar.click();
     await this.saveIndicator.waitFor({ state: 'hidden' });
   }
