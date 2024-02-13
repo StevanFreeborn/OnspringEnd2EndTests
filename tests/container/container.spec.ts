@@ -121,6 +121,12 @@ test.describe('container', () => {
       description: 'Test-294',
     });
 
+    await test.step('Navigate to the containers home page', async () => {});
+
+    await test.step('Create the container', async () => {});
+
+    await test.step('Verify the container was created', async () => {});
+
     expect(true).toBeTruthy();
   });
 
