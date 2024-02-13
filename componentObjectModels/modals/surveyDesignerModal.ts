@@ -1,6 +1,7 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { AttachmentQuestion } from '../../models/attachmentQuestion';
 import { DateQuestion } from '../../models/dateQuestion';
+import { FormattedText } from '../../models/formattedText';
 import { LikertQuestion } from '../../models/likertQuestion';
 import { MatrixQuestion } from '../../models/matrixQuestion';
 import { MultiSelectQuestion } from '../../models/multiSelectQuestion';
@@ -17,6 +18,7 @@ import { DeleteSurveyPageDialog } from '../dialogs/deleteSurveyPageDialog';
 import { DeleteSurveyQuestionDialog } from '../dialogs/deleteSurveyQuestionDialog';
 import { AddOrEditAttachmentQuestionForm } from '../forms/addOrEditAttachmentQuestionForm';
 import { AddOrEditDateQuestionForm } from '../forms/addOrEditDateQuestionForm';
+import { AddOrEditFormattedTextForm } from '../forms/addOrEditFormattedTextForm';
 import { AddOrEditLikertQuestionForm } from '../forms/addOrEditLikertQuestionForm';
 import { AddOrEditMatrixQuestionForm } from '../forms/addOrEditMatrixQuestionForm';
 import { AddOrEditMultiSelectQuestionForm } from '../forms/addOrEditMultiSelectQuestionForm';
@@ -470,6 +472,35 @@ export class SurveyDesignerModal {
 
     const moveToPageMenu = this.frame.locator('#move-to-page-menu');
     await moveToPageMenu.getByText(pageName).click();
+    await this.saveIndicator.waitFor({ state: 'hidden' });
+  }
+
+  /**
+   * Gets the item id of the nth survey item displayed on the current page.
+   * @param n The zero-based index of the survey item to get the item id of.
+   * @returns The item id of the nth survey item.
+   */
+  async getNthSurveyItemId(n: number) {
+    const surveyItem = this.frame.locator('[data-item-id]').nth(n);
+    const itemId = await surveyItem.getAttribute('data-item-id');
+
+    if (itemId === null) {
+      throw new Error(`Could not find item id for ${n} survey item.`);
+    }
+
+    return itemId;
+  }
+
+  async updatedFormattedText(surveyItemId: string, formattedText: FormattedText) {
+    const existingFormattedText = this.frame.locator(`[data-item-id="${surveyItemId}"]`);
+    await existingFormattedText.locator('.display-item').click();
+
+    const editFormattedTextForm = new AddOrEditFormattedTextForm(this.frame);
+
+    await editFormattedTextForm.clearForm();
+    await editFormattedTextForm.fillOutForm(formattedText);
+
+    await editFormattedTextForm.dragBar.click();
     await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 }
