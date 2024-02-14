@@ -115,17 +115,39 @@ test.describe('container', () => {
     expect(true).toBeTruthy();
   });
 
-  test('Create a container via the "Create Container" button on the Containers home page', async () => {
+  test('Create a container via the "Create Container" button on the Containers home page', async ({
+    containersAdminPage,
+    addContainerPage,
+    editContainerPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-294',
     });
 
-    await test.step('Navigate to the containers home page', async () => {});
+    const containerName = FakeDataFactory.createFakeContainerName();
+    containersToBeDeleted.push(containerName);
 
-    await test.step('Create the container', async () => {});
+    await test.step('Navigate to the containers home page', async () => {
+      await containersAdminPage.goto();
+    });
 
-    await test.step('Verify the container was created', async () => {});
+    await test.step('Create the container', async () => {
+      await containersAdminPage.createContainerButton.click();
+      await containersAdminPage.page.waitForURL(addContainerPage.pathRegex);
+
+      await addContainerPage.nameInput.fill(containerName);
+      await addContainerPage.saveChangesButton.click();
+      await addContainerPage.page.waitForURL(editContainerPage.pathRegex);
+    });
+
+    await test.step('Verify the container was created', async () => {
+      await containersAdminPage.goto();
+
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await expect(containerRow).toBeVisible();
+    });
 
     expect(true).toBeTruthy();
   });

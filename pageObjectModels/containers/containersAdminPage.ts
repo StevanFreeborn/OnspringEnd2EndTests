@@ -7,6 +7,7 @@ export class ContainersAdminPage extends BaseAdminPage {
   private readonly path: string;
   private readonly getListPagePath: string;
   private readonly deleteContainerPathRegex: RegExp;
+  readonly createContainerButton: Locator;
   readonly containerGrid: Locator;
   readonly deleteContainerDialog: DeleteContainerDialog;
 
@@ -15,6 +16,7 @@ export class ContainersAdminPage extends BaseAdminPage {
     this.path = '/Admin/Dashboard/Container';
     this.getListPagePath = '/Admin/Dashboard/Container/GetListPage';
     this.deleteContainerPathRegex = /\/Admin\/Dashboard\/Container\/\d+\/Delete/;
+    this.createContainerButton = page.getByRole('button', { name: 'Create Container' });
     this.containerGrid = page.getByRole('grid');
     this.deleteContainerDialog = new DeleteContainerDialog(page);
   }
