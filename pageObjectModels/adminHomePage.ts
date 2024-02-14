@@ -180,4 +180,9 @@ export class AdminHomePage extends BaseAdminPage {
     await this.goto();
     await this.createApiKeyUsingHeaderCreateButton(apiKeyName);
   }
+
+  async createContainer() {
+    await this.goto();
+    await this.createContainerUsingHeaderCreateButton();
+  }
 }

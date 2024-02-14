@@ -148,25 +148,86 @@ test.describe('container', () => {
 
       await expect(containerRow).toBeVisible();
     });
-
-    expect(true).toBeTruthy();
   });
 
-  test('Update a container', async () => {
+  test('Update a container', async ({ adminHomePage, addContainerPage, editContainerPage, containersAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-298',
     });
 
-    expect(true).toBeTruthy();
+    const containerName = FakeDataFactory.createFakeContainerName();
+    const updatedContainerName = `${containerName} Updated`;
+    containersToBeDeleted.push(updatedContainerName);
+
+    let containerId: number;
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the container to update', async () => {
+      await adminHomePage.createContainer();
+      await adminHomePage.page.waitForURL(addContainerPage.pathRegex);
+
+      await addContainerPage.nameInput.fill(containerName);
+      await addContainerPage.saveChangesButton.click();
+      await addContainerPage.page.waitForURL(editContainerPage.pathRegex);
+      containerId = editContainerPage.getIdFromUrl();
+    });
+
+    await test.step('Verify the container was created', async () => {
+      await containersAdminPage.goto();
+
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await expect(containerRow).toBeVisible();
+    });
+
+    await test.step('Update the container', async () => {
+      await editContainerPage.goto(containerId);
+      await editContainerPage.nameInput.clear();
+      await editContainerPage.nameInput.pressSequentially(updatedContainerName);
+      await editContainerPage.save();
+    });
+
+    await test.step('Verify the container was updated', async () => {
+      await containersAdminPage.goto();
+
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: updatedContainerName });
+
+      await expect(containerRow).toBeVisible();
+    });
   });
 
-  test('Delete a container', async () => {
+  test('Delete a container', async ({ containersAdminPage, addContainerPage, editContainerPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-299',
     });
 
-    expect(true).toBeTruthy();
+    const containerName = FakeDataFactory.createFakeContainerName();
+
+    await test.step('Navigate to the containers home page', async () => {
+      await containersAdminPage.goto();
+    });
+
+    await test.step('Create the container to delete', async () => {
+      await containersAdminPage.createContainerButton.click();
+      await containersAdminPage.page.waitForURL(addContainerPage.pathRegex);
+      await addContainerPage.nameInput.fill(containerName);
+      await addContainerPage.saveChangesButton.click();
+      await addContainerPage.page.waitForURL(editContainerPage.pathRegex);
+    });
+
+    await test.step('Delete the container', async () => {
+      await containersAdminPage.deleteContainers([containerName]);
+    });
+
+    await test.step('Verify the container was deleted', async () => {
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await expect(containerRow).toBeHidden();
+    });
   });
 });
