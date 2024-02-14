@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AddContainerPage } from '../../pageObjectModels/containers/addContainerPage';
 import { ContainersAdminPage } from '../../pageObjectModels/containers/containersAdminPage';
+import { CopyContainerPage } from '../../pageObjectModels/containers/copyContainerPage';
 import { EditContainerPage } from '../../pageObjectModels/containers/editContainerPage';
 import { AnnotationType } from '../annotations';
 
@@ -33,10 +34,11 @@ const test = base.extend<ContainerTestFixtures>({
 });
 
 test.describe('container', () => {
-  const containersToBeDeleted: string[] = [];
+  let containersToBeDeleted: string[] = [];
 
   test.afterEach(async ({ containersAdminPage }) => {
     await containersAdminPage.deleteContainers(containersToBeDeleted);
+    containersToBeDeleted = [];
   });
 
   test('Create a container via the create button in the header of the admin home page', async ({
@@ -145,6 +147,63 @@ test.describe('container', () => {
       await containersAdminPage.goto();
 
       const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await expect(containerRow).toBeVisible();
+    });
+  });
+
+  test('Create a copy of a container', async ({
+    sysAdminPage,
+    adminHomePage,
+    addContainerPage,
+    editContainerPage,
+    containersAdminPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-783',
+    });
+
+    const containerName = FakeDataFactory.createFakeContainerName();
+    const containerCopyName = `${containerName} Copy`;
+    containersToBeDeleted.push(containerName, containerCopyName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the container to copy', async () => {
+      await adminHomePage.createContainer();
+      await adminHomePage.page.waitForURL(addContainerPage.pathRegex);
+
+      await addContainerPage.nameInput.fill(containerName);
+      await addContainerPage.saveChangesButton.click();
+      await addContainerPage.page.waitForURL(editContainerPage.pathRegex);
+    });
+
+    await test.step('Create a copy of the container', async () => {
+      const copyContainerPage = new CopyContainerPage(sysAdminPage);
+
+      await containersAdminPage.goto();
+
+      const containerToCopyRow = containersAdminPage.containerGrid.getByRole('row', { name: containerName });
+
+      await containerToCopyRow.hover();
+      await containerToCopyRow.getByTitle('Copy Container').click();
+      await containersAdminPage.page.waitForURL(copyContainerPage.pathRegex);
+
+      await expect(copyContainerPage.nameInput).toHaveValue(containerName);
+
+      await copyContainerPage.nameInput.clear();
+      await copyContainerPage.nameInput.fill(containerCopyName);
+      await copyContainerPage.saveChangesButton.click();
+      await copyContainerPage.page.waitForURL(editContainerPage.pathRegex);
+    });
+
+    await test.step('Verify the container was copied', async () => {
+      await containersAdminPage.goto();
+
+      const containerRow = containersAdminPage.containerGrid.getByRole('row', { name: containerCopyName });
 
       await expect(containerRow).toBeVisible();
     });
