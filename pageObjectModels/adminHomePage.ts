@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
@@ -28,6 +29,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly dashboardTileLink: Locator;
   readonly dashboardTileCreateButton: Locator;
   readonly dashboardCreateMenu: Locator;
+
+  readonly createImportConfigDialog: CreateImportConfigDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -62,10 +65,22 @@ export class AdminHomePage extends BaseAdminPage {
     this.dashboardTileLink = this.getTileLink(4);
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
     this.dashboardCreateMenu = page.locator('[data-create-menu-for="card-create-button-Dashboards"]');
+
+    this.createImportConfigDialog = new CreateImportConfigDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createImportConfigUsingHeaderCreateButton(importName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.importConfigCreateMenuOption.click();
+
+    await this.createImportConfigDialog.nameInput.waitFor();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
   }
 
   async createContainerUsingHeaderCreateButton() {
@@ -184,5 +199,10 @@ export class AdminHomePage extends BaseAdminPage {
   async createContainer() {
     await this.goto();
     await this.createContainerUsingHeaderCreateButton();
+  }
+
+  async createImportConfig(importName: string) {
+    await this.goto();
+    await this.createImportConfigUsingHeaderCreateButton(importName);
   }
 }

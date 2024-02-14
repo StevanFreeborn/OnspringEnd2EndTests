@@ -7,6 +7,7 @@ export const TEST_ROLE_NAME = 'role-test';
 export const TEST_GROUP_NAME = 'group-test';
 export const TEST_API_KEY_NAME = 'api-key-test';
 export const TEST_CONTAINER_NAME = 'container-test';
+export const TEST_DATA_IMPORT_NAME = 'data-import-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -84,5 +85,10 @@ export class FakeDataFactory {
   static createFakeContainerName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_CONTAINER_NAME}`;
+  }
+
+  static createFakeDataImportName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_DATA_IMPORT_NAME}`;
   }
 }
