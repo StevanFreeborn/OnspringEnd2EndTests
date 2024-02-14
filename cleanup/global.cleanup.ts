@@ -1,6 +1,7 @@
 import { test as teardown } from '../fixtures';
 import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
 import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
+import { ContainersAdminPage } from '../pageObjectModels/containers/containersAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
 import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityAdminPage';
 import { SurveysAdminPage } from '../pageObjectModels/surveys/surveysAdminPage';
@@ -33,5 +34,9 @@ teardown.describe('cleanup', () => {
 
   teardown('delete all api keys created as part of tests', async ({ sysAdminPage }) => {
     await new ApiKeysAdminPage(sysAdminPage).deleteAllTestApiKeys();
+  });
+
+  teardown('delete all containers created as part of tests', async ({ sysAdminPage }) => {
+    await new ContainersAdminPage(sysAdminPage).deleteAllTestContainers();
   });
 });
