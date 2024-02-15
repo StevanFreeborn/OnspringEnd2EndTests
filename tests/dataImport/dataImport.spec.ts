@@ -177,13 +177,37 @@ test.describe('data import', () => {
     });
   });
 
-  test('Create a copy of a Data Import via the "Create Import Configuration" button on the data import home page', async ({}) => {
+  test('Create a copy of a Data Import via the "Create Import Configuration" button on the data import home page', async ({
+    dataImportsAdminPage,
+    editDataImportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-340',
     });
 
-    expect(true).toBeTruthy();
+    const dataImportToCopyName = FakeDataFactory.createFakeDataImportName();
+    const dataImportCopyName = `${dataImportToCopyName} (1)`;
+    dataImportsToDelete.push(dataImportToCopyName, dataImportCopyName);
+
+    await test.step('Navigate to the data import home page', async () => {
+      await dataImportsAdminPage.goto();
+    });
+
+    await test.step('Create the data import to copy', async () => {
+      await dataImportsAdminPage.createDataImport(dataImportToCopyName);
+      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Create a copy of the data import', async () => {
+      await dataImportsAdminPage.goto();
+      await dataImportsAdminPage.createDataImportCopy(dataImportToCopyName, dataImportCopyName);
+      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Verify the data import was copied', async () => {
+      await expect(editDataImportPage.nameInput).toHaveValue(dataImportCopyName);
+    });
   });
 
   test('Update a Data Import', async ({}) => {

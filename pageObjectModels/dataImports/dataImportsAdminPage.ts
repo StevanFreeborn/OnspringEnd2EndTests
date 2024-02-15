@@ -67,6 +67,16 @@ export class DataImportsAdminPage extends BaseAdminPage {
     }
   }
 
+  async createDataImportCopy(importNameToCopy: string, newImportName: string) {
+    await this.createImportButton.click();
+    await this.createImportConfigDialog.copyFromRadioButton.waitFor();
+    await this.createImportConfigDialog.copyFromRadioButton.click();
+    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.getImportToCopy(importNameToCopy).click();
+    await this.createImportConfigDialog.nameInput.fill(newImportName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
   async createDataImport(importName: string) {
     await this.createImportButton.click();
     await this.createImportConfigDialog.nameInput.waitFor();
