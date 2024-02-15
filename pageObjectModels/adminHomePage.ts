@@ -30,6 +30,9 @@ export class AdminHomePage extends BaseAdminPage {
   readonly dashboardTileCreateButton: Locator;
   readonly dashboardCreateMenu: Locator;
 
+  readonly integrationTileLink: Locator;
+  readonly integrationTileCreateButton: Locator;
+  readonly integrationCreateMenu: Locator;
   readonly createImportConfigDialog: CreateImportConfigDialog;
 
   private getTileLink(tilePosition: number) {
@@ -40,6 +43,10 @@ export class AdminHomePage extends BaseAdminPage {
 
   private getTileCreateButton(tileName: string) {
     return this.page.locator(`#card-create-button-${tileName}`);
+  }
+
+  private getTileCreateMenu(tileName: string) {
+    return this.page.locator(`[data-create-menu-for="card-create-button-${tileName}"]`);
   }
 
   constructor(page: Page) {
@@ -53,7 +60,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.securityTileLink = this.getTileLink(6);
     this.securityTileCreateButton = this.getTileCreateButton('Security');
-    this.securityCreateMenu = page.locator('[data-create-menu-for="card-create-button-Security"]');
+    this.securityCreateMenu = this.getTileCreateMenu('Security');
 
     this.surveyTileLink = this.getTileLink(2);
     this.surveyTileCreateButton = this.getTileCreateButton('Surveys');
@@ -64,13 +71,29 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.dashboardTileLink = this.getTileLink(4);
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
-    this.dashboardCreateMenu = page.locator('[data-create-menu-for="card-create-button-Dashboards"]');
+    this.dashboardCreateMenu = this.getTileCreateMenu('Dashboards');
 
+    this.integrationTileLink = this.getTileLink(7);
+    this.integrationTileCreateButton = this.getTileCreateButton('Integration');
+    this.integrationCreateMenu = this.getTileCreateMenu('Integration');
     this.createImportConfigDialog = new CreateImportConfigDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createImportConfigUsingIntegrationsTileButton(importName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+    await this.integrationCreateMenu.getByText('Import Configuration').click();
+
+    await this.page.waitForLoadState('networkidle');
+
+    await this.createImportConfigDialog.nameInput.waitFor();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
   }
 
   async createImportConfigUsingHeaderCreateButton(importName: string) {
