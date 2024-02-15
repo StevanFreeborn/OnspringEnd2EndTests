@@ -83,13 +83,29 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createImportCopyUsingIntegrationsTileButton(importToCopy: string, importName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Import Configuration').click();
+
+    await this.createImportConfigDialog.copyFromRadioButton.waitFor();
+    await this.createImportConfigDialog.copyFromRadioButton.click();
+    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
   async createImportConfigUsingIntegrationsTileButton(importName: string) {
     await this.integrationTileLink.hover();
     await this.integrationTileCreateButton.waitFor();
     await this.integrationTileCreateButton.click();
-    await this.integrationCreateMenu.getByText('Import Configuration').click();
 
-    await this.page.waitForLoadState('networkidle');
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Import Configuration').click();
 
     await this.createImportConfigDialog.nameInput.waitFor();
     await this.createImportConfigDialog.nameInput.fill(importName);
