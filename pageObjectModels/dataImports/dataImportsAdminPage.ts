@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateImportConfigDialog } from '../../componentObjectModels/dialogs/createImportConfigDialog';
 import { DeleteDataImportDialog } from '../../componentObjectModels/dialogs/deleteDataImportDialog';
 import { TEST_DATA_IMPORT_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
@@ -8,6 +9,8 @@ export class DataImportsAdminPage extends BaseAdminPage {
   private readonly deleteImportPathRegex: RegExp;
   readonly dataImportGrid: Locator;
   readonly deleteDataImportsDialog: DeleteDataImportDialog;
+  readonly createImportButton: Locator;
+  readonly createImportConfigDialog: CreateImportConfigDialog;
 
   constructor(page: Page) {
     super(page);
@@ -15,6 +18,8 @@ export class DataImportsAdminPage extends BaseAdminPage {
     this.dataImportGrid = page.locator('#grid');
     this.deleteDataImportsDialog = new DeleteDataImportDialog(page);
     this.deleteImportPathRegex = /\/Admin\/Integration\/Import\/\d+\/Delete/;
+    this.createImportButton = page.getByRole('button', { name: 'Create Import Configuration' });
+    this.createImportConfigDialog = new CreateImportConfigDialog(page);
   }
 
   async goto() {
@@ -60,5 +65,12 @@ export class DataImportsAdminPage extends BaseAdminPage {
       await this.deleteDataImportsDialog.waitForDialogToBeDismissed();
       await rowElement.waitForElementState('hidden');
     }
+  }
+
+  async createDataImport(importName: string) {
+    await this.createImportButton.click();
+    await this.createImportConfigDialog.nameInput.waitFor();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
   }
 }

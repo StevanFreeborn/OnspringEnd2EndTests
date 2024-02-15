@@ -85,13 +85,30 @@ test.describe('data import', () => {
     });
   });
 
-  test('Create a Data Import via the "Create Import Configuration" button on the data import home page', async ({}) => {
+  test('Create a Data Import via the "Create Import Configuration" button on the data import home page', async ({
+    dataImportsAdminPage,
+    editDataImportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-337',
     });
 
-    expect(true).toBeTruthy();
+    const dataImportName = FakeDataFactory.createFakeDataImportName();
+    dataImportsToDelete.push(dataImportName);
+
+    await test.step('Navigate to the data import home page', async () => {
+      await dataImportsAdminPage.goto();
+    });
+
+    await test.step('Create the data import', async () => {
+      await dataImportsAdminPage.createDataImport(dataImportName);
+      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Verify the data import was created', async () => {
+      await expect(editDataImportPage.nameInput).toHaveValue(dataImportName);
+    });
   });
 
   test('Create a copy of a Data Import via the create button in the header of the admin home page', async ({}) => {
