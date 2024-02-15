@@ -12,4 +12,13 @@ export class EditDataImportPage extends BaseDataImportPage {
   async goto(importId: number) {
     await this.page.goto(`/Admin/Integration/Import/${importId}/Edit`);
   }
+
+  async save() {
+    const saveResponse = this.page.waitForResponse(
+      response => response.url().match(this.pathRegex) !== null && response.request().method() === 'POST'
+    );
+
+    await this.saveChangesButton.click();
+    await saveResponse;
+  }
 }

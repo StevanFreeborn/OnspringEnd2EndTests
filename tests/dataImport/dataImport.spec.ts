@@ -1,6 +1,12 @@
+import fs from 'fs';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { writeCsvFile } from '../../fixtures/file.fixtures';
+import { App } from '../../models/app';
+import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DataImportsAdminPage } from '../../pageObjectModels/dataImports/dataImportsAdminPage';
 import { EditDataImportPage } from '../../pageObjectModels/dataImports/editDataImportPage';
 import { AnnotationType } from '../annotations';
@@ -9,6 +15,8 @@ type DataImportTestFixtures = {
   adminHomePage: AdminHomePage;
   editDataImportPage: EditDataImportPage;
   dataImportsAdminPage: DataImportsAdminPage;
+  targetApp: App;
+  createDataImportFile: () => Promise<string>;
 };
 
 const test = base.extend<DataImportTestFixtures>({
@@ -24,14 +32,26 @@ const test = base.extend<DataImportTestFixtures>({
     const dataImportsAdminPage = new DataImportsAdminPage(sysAdminPage);
     await use(dataImportsAdminPage);
   },
+  targetApp: app,
 });
 
 test.describe('data import', () => {
   let dataImportsToDelete: string[] = [];
+  let importFilesToDelete: string[] = [];
 
   test.afterEach(async ({ dataImportsAdminPage }) => {
     await dataImportsAdminPage.deleteDataImports(dataImportsToDelete);
+
+    for (const importFilePath of importFilesToDelete) {
+      if (fs.existsSync(importFilePath) === false) {
+        continue;
+      }
+
+      fs.rmSync(importFilePath);
+    }
+
     dataImportsToDelete = [];
+    importFilesToDelete = [];
   });
 
   test('Create a Data Import via the create button in the header of the admin home page', async ({
@@ -55,7 +75,7 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
     });
   });
 
@@ -81,7 +101,7 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
     });
   });
 
@@ -107,7 +127,7 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
     });
   });
 
@@ -140,7 +160,7 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportCopyName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
     });
   });
 
@@ -173,7 +193,7 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportCopyName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
     });
   });
 
@@ -206,26 +226,104 @@ test.describe('data import', () => {
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.nameInput).toHaveValue(dataImportCopyName);
+      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
     });
   });
 
-  test('Update a Data Import', async ({}) => {
+  test('Update a Data Import', async ({
+    sysAdminPage,
+    adminHomePage,
+    editDataImportPage,
+    dataImportsAdminPage,
+    targetApp,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-342',
     });
 
-    expect(true).toBeTruthy();
+    const textField = new TextField({ name: 'Text Field' });
+
+    const dataToImport = [
+      {
+        [textField.name]: 'Text Field Value',
+      },
+    ];
+
+    const dataImportName = FakeDataFactory.createFakeDataImportName();
+    const updatedDataImportName = `${dataImportName} (Updated)`;
+    dataImportsToDelete.push(updatedDataImportName);
+
+    let importFilePath: string;
+
+    await test.step('Create the fields to import data into', async () => {
+      const appAdminPage = new AppAdminPage(sysAdminPage);
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Create the import file to be imported', () => {
+      importFilePath = writeCsvFile(dataToImport);
+      importFilesToDelete.push(importFilePath);
+    });
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the data import to be updated', async () => {
+      await adminHomePage.createImportConfig(dataImportName);
+      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Update the data import', async () => {
+      await editDataImportPage.dataFileTab.nameInput.fill(updatedDataImportName);
+      await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
+      await editDataImportPage.dataFileTab.addImportFile(importFilePath);
+      await editDataImportPage.save();
+    });
+
+    await test.step('Verify the data import was updated', async () => {
+      await dataImportsAdminPage.goto();
+
+      const updatedDataImportRow = dataImportsAdminPage.dataImportGrid.getByRole('row', {
+        name: updatedDataImportName,
+      });
+
+      await expect(updatedDataImportRow).toBeVisible();
+    });
   });
 
-  test('Delete a Data Import', async ({}) => {
+  test('Delete a Data Import', async ({ adminHomePage, editDataImportPage, dataImportsAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-343',
     });
 
-    expect(true).toBeTruthy();
+    const dataImportName = FakeDataFactory.createFakeDataImportName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the data import to be deleted', async () => {
+      await adminHomePage.createImportConfig(dataImportName);
+      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Delete the data import', async () => {
+      await dataImportsAdminPage.goto();
+      await dataImportsAdminPage.deleteDataImports([dataImportName]);
+    });
+
+    await test.step('Verify the data import was deleted', async () => {
+      const dataImportRow = dataImportsAdminPage.dataImportGrid.getByRole('row', {
+        name: dataImportName,
+      });
+
+      await expect(dataImportRow).toBeHidden();
+    });
   });
 
   test('Run a Data Import', async ({}) => {
