@@ -96,6 +96,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createImportConfigDialog.saveButton.click();
   }
 
+  async createImportCopyUsingHeaderCreateButton(importToCopy: string, importName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.importConfigCreateMenuOption.click();
+
+    await this.createImportConfigDialog.copyFromRadioButton.waitFor();
+    await this.createImportConfigDialog.copyFromRadioButton.click();
+    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
   async createImportConfigUsingHeaderCreateButton(importName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();

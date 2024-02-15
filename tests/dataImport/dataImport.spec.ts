@@ -111,13 +111,37 @@ test.describe('data import', () => {
     });
   });
 
-  test('Create a copy of a Data Import via the create button in the header of the admin home page', async ({}) => {
+  test('Create a copy of a Data Import via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    editDataImportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-338',
     });
 
-    expect(true).toBeTruthy();
+    const dataImportToCopyName = FakeDataFactory.createFakeDataImportName();
+    const dataImportCopyName = `${dataImportToCopyName} (1)`;
+    dataImportsToDelete.push(dataImportToCopyName, dataImportCopyName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the data import to copy', async () => {
+      await adminHomePage.createImportConfig(dataImportToCopyName);
+      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Create a copy of the data import', async () => {
+      await adminHomePage.goto();
+      await adminHomePage.createImportCopyUsingHeaderCreateButton(dataImportToCopyName, dataImportCopyName);
+      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Verify the data import was copied', async () => {
+      await expect(editDataImportPage.nameInput).toHaveValue(dataImportCopyName);
+    });
   });
 
   test('Create a copy of a Data Import via the create button on the Integrations tile on the admin home page', async ({}) => {
