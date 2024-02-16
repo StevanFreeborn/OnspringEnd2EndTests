@@ -21,4 +21,16 @@ export class EditDataImportPage extends BaseDataImportPage {
     await this.saveChangesButton.click();
     await saveResponse;
   }
+
+  async saveAndRun() {
+    const saveResponse = this.page.waitForResponse(
+      response => response.url().match(this.pathRegex) !== null && response.request().method() === 'POST'
+    );
+
+    await this.saveChangesAndRunButton.click();
+    await saveResponse;
+
+    await this.runDataImportDialog.runButton.waitFor();
+    await this.runDataImportDialog.runButton.click();
+  }
 }

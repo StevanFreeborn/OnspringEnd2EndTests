@@ -326,12 +326,71 @@ test.describe('data import', () => {
     });
   });
 
-  test('Run a Data Import', async ({}) => {
+  test('Run a Data Import', async ({ sysAdminPage, adminHomePage, editDataImportPage, targetApp, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-341',
     });
 
-    expect(true).toBeTruthy();
+    const textField = new TextField({ name: 'Text Field' });
+
+    const dataToImport = [
+      {
+        [textField.name]: 'Text Field Value',
+      },
+    ];
+
+    const dataImportName = FakeDataFactory.createFakeDataImportName();
+    dataImportsToDelete.push(dataImportName);
+
+    let importFilePath: string;
+
+    await test.step('Create the fields to import data into', async () => {
+      const appAdminPage = new AppAdminPage(sysAdminPage);
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Create the import file to be imported', () => {
+      importFilePath = writeCsvFile(dataToImport);
+      importFilesToDelete.push(importFilePath);
+    });
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the data import to be updated', async () => {
+      await adminHomePage.createImportConfig(dataImportName);
+      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+    });
+
+    await test.step('Run the data import', async () => {
+      await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
+      await editDataImportPage.dataFileTab.addImportFile(importFilePath);
+      await editDataImportPage.saveAndRun();
+    });
+
+    await test.step('Verify the data import was run', async () => {
+      await expect(editDataImportPage.importProcessingMessage).toBeVisible();
+
+      await expect(async () => {
+        const searchCriteria = [['TEXT', dataImportName]];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+        expect(email.subject).toBe('Onspring Data Import Complete');
+
+        if (email.html !== false) {
+          expect(email.html).toContain('New Content Created: 1');
+        }
+      }).toPass({
+        intervals: [5000],
+        timeout: 60_000,
+      });
+    });
   });
 });
