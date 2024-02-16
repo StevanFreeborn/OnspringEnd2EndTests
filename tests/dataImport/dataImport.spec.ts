@@ -334,6 +334,19 @@ test.describe('data import', () => {
       description: 'Test-341',
     });
 
+    // TODO: add all importable fields
+    // - date/time field
+    // - number field
+    // - ref field => will need to create record
+    // - list field
+    // - timespan
+    // const importData = [
+    //   {
+    //     field: new TextField({ name: 'Text Field' }),
+    //     value: 'Text Field Value',
+    //   },
+    // ];
+
     const textField = new TextField({ name: 'Text Field' });
     const textFieldValue = 'Text Field Value';
 
