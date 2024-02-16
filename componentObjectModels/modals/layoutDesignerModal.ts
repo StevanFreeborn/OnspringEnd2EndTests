@@ -53,6 +53,11 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await saveResponse;
   }
 
+  /**
+   * Drag a field from the field bank and drop it onto the layout. The section column and row are zero-based indexes.
+   * @param params - The parameters for dragging and dropping the field
+   * @returns A promise that resolves to the field and dropzone elements
+   */
   async dragFieldOnToLayout(params: DragFieldParams) {
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);

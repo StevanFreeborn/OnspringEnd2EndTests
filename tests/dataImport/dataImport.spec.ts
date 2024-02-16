@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
@@ -7,6 +8,7 @@ import { App } from '../../models/app';
 import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { DataImportsAdminPage } from '../../pageObjectModels/dataImports/dataImportsAdminPage';
 import { EditDataImportPage } from '../../pageObjectModels/dataImports/editDataImportPage';
 import { AnnotationType } from '../annotations';
@@ -333,10 +335,11 @@ test.describe('data import', () => {
     });
 
     const textField = new TextField({ name: 'Text Field' });
+    const textFieldValue = 'Text Field Value';
 
     const dataToImport = [
       {
-        [textField.name]: 'Text Field Value',
+        [textField.name]: textFieldValue,
       },
     ];
 
@@ -349,7 +352,16 @@ test.describe('data import', () => {
       const appAdminPage = new AppAdminPage(sysAdminPage);
       await appAdminPage.goto(targetApp.id);
       await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: textField.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Create the import file to be imported', () => {
@@ -391,6 +403,19 @@ test.describe('data import', () => {
         intervals: [5000],
         timeout: 60_000,
       });
+
+      const viewContentPage = new ViewContentPage(sysAdminPage);
+      await viewContentPage.goto(targetApp.id, 1);
+
+      const question = await viewContentPage.form.getField({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        fieldName: textField.name,
+        fieldType: textField.type as FieldType,
+      });
+
+      await expect(question).toBeVisible();
+      await expect(question).toHaveText(textFieldValue);
     });
   });
 });

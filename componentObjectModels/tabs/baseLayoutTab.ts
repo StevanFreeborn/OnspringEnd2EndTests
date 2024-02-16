@@ -112,6 +112,11 @@ export class BaseLayoutTab extends LayoutItemCreator {
     await this.addLayoutItem(item);
   }
 
+  /**
+   * Adds a layout item to the layout from the layout designer. This method does NOT open the layout designer.
+   * @param item - The layout item to add to the layout.
+   * @returns A promise that resolves when the layout item is added to the layout.
+   */
   async addLayoutItemFromLayoutDesigner(item: LayoutItem) {
     const fieldTab = this.layoutDesignerModal.layoutItemsSection.fieldsTab;
     const objectTab = this.layoutDesignerModal.layoutItemsSection.objectsTab;
