@@ -13,7 +13,6 @@ import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
   private readonly addUsingSettingsPathRegex: RegExp;
-  private readonly layoutDesignPathRegex: RegExp;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -25,7 +24,6 @@ export class BaseLayoutTab extends LayoutItemCreator {
   constructor(page: Page) {
     super(page);
     this.addUsingSettingsPathRegex = /\/Admin\/App\/\d+\/Field\/AddUsingSettings/;
-    this.layoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
     this.layoutsGrid = page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(page);
     this.addFieldButton = page.getByText('Add Field');
@@ -104,9 +102,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
    * @returns A promise that resolves when the layout is opened.
    */
   async openLayout(layoutName: string = 'Default Layout') {
-    const layoutResponse = this.page.waitForResponse(this.layoutDesignPathRegex);
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
-    await layoutResponse;
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
