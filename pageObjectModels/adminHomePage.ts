@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
@@ -29,6 +30,11 @@ export class AdminHomePage extends BaseAdminPage {
   readonly dashboardTileCreateButton: Locator;
   readonly dashboardCreateMenu: Locator;
 
+  readonly integrationTileLink: Locator;
+  readonly integrationTileCreateButton: Locator;
+  readonly integrationCreateMenu: Locator;
+  readonly createImportConfigDialog: CreateImportConfigDialog;
+
   private getTileLink(tilePosition: number) {
     return this.page.locator(
       `div.landing-list-item-container:nth-child(${tilePosition}) > div:nth-child(1) > a:nth-child(1)`
@@ -37,6 +43,10 @@ export class AdminHomePage extends BaseAdminPage {
 
   private getTileCreateButton(tileName: string) {
     return this.page.locator(`#card-create-button-${tileName}`);
+  }
+
+  private getTileCreateMenu(tileName: string) {
+    return this.page.locator(`[data-create-menu-for="card-create-button-${tileName}"]`);
   }
 
   constructor(page: Page) {
@@ -50,7 +60,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.securityTileLink = this.getTileLink(6);
     this.securityTileCreateButton = this.getTileCreateButton('Security');
-    this.securityCreateMenu = page.locator('[data-create-menu-for="card-create-button-Security"]');
+    this.securityCreateMenu = this.getTileCreateMenu('Security');
 
     this.surveyTileLink = this.getTileLink(2);
     this.surveyTileCreateButton = this.getTileCreateButton('Surveys');
@@ -61,11 +71,68 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.dashboardTileLink = this.getTileLink(4);
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
-    this.dashboardCreateMenu = page.locator('[data-create-menu-for="card-create-button-Dashboards"]');
+    this.dashboardCreateMenu = this.getTileCreateMenu('Dashboards');
+
+    this.integrationTileLink = this.getTileLink(7);
+    this.integrationTileCreateButton = this.getTileCreateButton('Integration');
+    this.integrationCreateMenu = this.getTileCreateMenu('Integration');
+    this.createImportConfigDialog = new CreateImportConfigDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createImportCopyUsingIntegrationsTileButton(importToCopy: string, importName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Import Configuration').click();
+
+    await this.createImportConfigDialog.copyFromRadioButton.waitFor();
+    await this.createImportConfigDialog.copyFromRadioButton.click();
+    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
+  async createImportConfigUsingIntegrationsTileButton(importName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Import Configuration').click();
+
+    await this.createImportConfigDialog.nameInput.waitFor();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
+  async createImportCopyUsingHeaderCreateButton(importToCopy: string, importName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.importConfigCreateMenuOption.click();
+
+    await this.createImportConfigDialog.copyFromRadioButton.waitFor();
+    await this.createImportConfigDialog.copyFromRadioButton.click();
+    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
+  }
+
+  async createImportConfigUsingHeaderCreateButton(importName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.importConfigCreateMenuOption.click();
+
+    await this.createImportConfigDialog.nameInput.waitFor();
+    await this.createImportConfigDialog.nameInput.fill(importName);
+    await this.createImportConfigDialog.saveButton.click();
   }
 
   async createContainerUsingHeaderCreateButton() {
@@ -184,5 +251,10 @@ export class AdminHomePage extends BaseAdminPage {
   async createContainer() {
     await this.goto();
     await this.createContainerUsingHeaderCreateButton();
+  }
+
+  async createImportConfig(importName: string) {
+    await this.goto();
+    await this.createImportConfigUsingHeaderCreateButton(importName);
   }
 }

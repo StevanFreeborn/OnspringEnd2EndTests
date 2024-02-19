@@ -36,7 +36,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
-    this.saveButton = this.designer.getByRole('button', { name: 'Save' });
+    this.saveButton = this.designer.getByRole('button', { name: 'Save', exact: true });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
   }
@@ -53,6 +53,11 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await saveResponse;
   }
 
+  /**
+   * Drag a field from the field bank and drop it onto the layout. The section column and row are zero-based indexes.
+   * @param params - The parameters for dragging and dropping the field
+   * @returns A promise that resolves to the field and dropzone elements
+   */
   async dragFieldOnToLayout(params: DragFieldParams) {
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);

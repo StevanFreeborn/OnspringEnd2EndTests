@@ -11,3 +11,4 @@ config/.env
 blob-report/
 .vercel
 cleanUpTestResultsDir/
+**/dataImportFiles/

@@ -11,6 +11,7 @@ export class AdminNav {
   readonly groupCreateMenuOption: Locator;
   readonly apiKeyCreateMenuOption: Locator;
   readonly containerCreateMenuOption: Locator;
+  readonly importConfigCreateMenuOption: Locator;
 
   private getMenuOption(menuOptionText: string) {
     return this.adminCreateMenu.getByText(menuOptionText);
@@ -27,5 +28,6 @@ export class AdminNav {
     this.groupCreateMenuOption = this.getMenuOption('Group');
     this.apiKeyCreateMenuOption = this.getMenuOption('API Key');
     this.containerCreateMenuOption = this.getMenuOption('Container');
+    this.importConfigCreateMenuOption = this.getMenuOption('Import Configuration');
   }
 }

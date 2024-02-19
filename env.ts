@@ -12,6 +12,9 @@ const envSchema = z
     SYS_ADMIN_FIRST_NAME: z.string().min(1),
     SYS_ADMIN_LAST_NAME: z.string().min(1),
     SYS_ADMIN_EMAIL: z.string().min(1),
+    SYS_ADMIN_EMAIL_PASSWORD: z.string().min(1),
+    SYS_ADMIN_EMAIL_HOST: z.string().min(1),
+    SYS_ADMIN_EMAIL_PORT: z.coerce.number(),
     TEST_ENV: z.union([
       z.literal('ALPHA'),
       z.literal('BETA'),
