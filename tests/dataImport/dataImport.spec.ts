@@ -5,7 +5,13 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { writeCsvFile } from '../../fixtures/file.fixtures';
 import { App } from '../../models/app';
+import { DateField } from '../../models/dateField';
+import { LayoutItem } from '../../models/layoutItem';
+import { ListField } from '../../models/listField';
+import { ListValue } from '../../models/listValue';
+import { NumberField } from '../../models/numberField';
 import { TextField } from '../../models/textField';
+import { TimeSpanField } from '../../models/timeSpanField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
@@ -334,27 +340,45 @@ test.describe('data import', () => {
       description: 'Test-341',
     });
 
-    // TODO: add all importable fields
-    // - date/time field
-    // - number field
-    // - ref field => will need to create record
-    // - list field
-    // - timespan
-    // const importData = [
-    //   {
-    //     field: new TextField({ name: 'Text Field' }),
-    //     value: 'Text Field Value',
-    //   },
-    // ];
+    const today = new Date();
 
-    const textField = new TextField({ name: 'Text Field' });
-    const textFieldValue = 'Text Field Value';
-
-    const dataToImport = [
+    const importData = [
       {
-        [textField.name]: textFieldValue,
+        field: new TextField({ name: 'Text Field' }),
+        value: 'Text Field Value',
       },
-    ];
+      {
+        field: new DateField({ name: 'Date Field' }),
+        value: `${today.getMonth()}/${today.getDate()}/${today.getFullYear()}`,
+      },
+      {
+        field: new NumberField({ name: 'Number Field' }),
+        value: '123',
+      },
+      {
+        field: new ListField({
+          name: 'List Field',
+          values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+        }),
+        value: 'Yes',
+      },
+      {
+        field: new TimeSpanField({ name: 'Timespan Field' }),
+        value: '1 Second(s)',
+      },
+    ] as { field: LayoutItem; value: string }[];
+
+    const fields = importData.map(data => data.field);
+
+    const recordToImport = importData.reduce(
+      (acc, data) => {
+        acc[data.field.name] = data.value;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+    const dataToImport = [recordToImport];
 
     const dataImportName = FakeDataFactory.createFakeDataImportName();
     dataImportsToDelete.push(dataImportName);
@@ -366,15 +390,20 @@ test.describe('data import', () => {
       await appAdminPage.goto(targetApp.id);
       await appAdminPage.layoutTabButton.click();
       await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: textField.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+
+      for (const [i, field] of fields.entries()) {
+        await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          sectionColumn: 0,
+          sectionRow: i,
+          fieldName: field.name,
+        });
+        await appAdminPage.layoutTab.layoutDesignerModal.saveLayout();
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
     });
 
     await test.step('Create the import file to be imported', () => {
@@ -420,15 +449,17 @@ test.describe('data import', () => {
       const viewContentPage = new ViewContentPage(sysAdminPage);
       await viewContentPage.goto(targetApp.id, 1);
 
-      const question = await viewContentPage.form.getField({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        fieldName: textField.name,
-        fieldType: textField.type as FieldType,
-      });
+      for (const { field, value } of importData) {
+        const fieldComponent = await viewContentPage.form.getField({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          fieldName: field.name,
+          fieldType: field.type as FieldType,
+        });
 
-      await expect(question).toBeVisible();
-      await expect(question).toHaveText(textFieldValue);
+        await expect(fieldComponent).toBeVisible();
+        await expect(fieldComponent).toHaveText(value);
+      }
     });
   });
 });

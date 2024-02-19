@@ -36,7 +36,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
-    this.saveButton = this.designer.getByRole('button', { name: 'Save' });
+    this.saveButton = this.designer.getByRole('button', { name: 'Save', exact: true });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
   }
