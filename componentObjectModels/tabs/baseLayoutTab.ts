@@ -12,6 +12,8 @@ import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
+  private readonly addUsingSettingsPathRegex: RegExp;
+  private readonly layoutDesignPathRegex: RegExp;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -22,6 +24,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
 
   constructor(page: Page) {
     super(page);
+    this.addUsingSettingsPathRegex = /\/Admin\/App\/\d+\/Field\/AddUsingSettings/;
+    this.layoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
     this.layoutsGrid = page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(page);
     this.addFieldButton = page.getByText('Add Field');
@@ -100,15 +104,17 @@ export class BaseLayoutTab extends LayoutItemCreator {
    * @returns A promise that resolves when the layout is opened.
    */
   async openLayout(layoutName: string = 'Default Layout') {
+    const layoutResponse = this.page.waitForResponse(this.layoutDesignPathRegex);
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
-    await this.page.waitForLoadState('networkidle');
+    await layoutResponse;
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(item.type);
+    const addItemResponse = this.page.waitForResponse(this.addUsingSettingsPathRegex);
     await this.addLayoutItemDialog.continueButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await addItemResponse;
     await this.addLayoutItem(item);
   }
 
@@ -126,6 +132,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
         if ((await objectTab.addObjectButton.isVisible()) === false) {
           await this.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
         }
+        await objectTab.addObjectButton.waitFor();
         await objectTab.addObjectButton.click();
         await objectTab.addObjectMenu.selectItem(item.type);
         break;
@@ -134,14 +141,16 @@ export class BaseLayoutTab extends LayoutItemCreator {
         if ((await fieldTab.addFieldButton.isVisible()) === false) {
           await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
         }
+        await fieldTab.addFieldButton.waitFor();
         await fieldTab.addFieldButton.click();
         await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
         break;
       }
     }
 
+    const addItemResponse = this.page.waitForResponse(this.addUsingSettingsPathRegex);
     await this.addLayoutItemDialog.continueButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await addItemResponse;
     await this.addLayoutItem(item, 1);
   }
 }
