@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { ContentLandingToolbar } from '../../componentObjectModels/toolbars/contentToolbar';
+import { ContentLandingToolbar } from '../../componentObjectModels/toolbars/contentLandingToolbar';
 import { BasePage } from '../basePage';
 
 export class ContentHomePage extends BasePage {
