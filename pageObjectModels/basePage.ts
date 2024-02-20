@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { SidebarNav } from '../componentObjectModels/navs/sidebarNav';
 
-export class BasePage {
+export abstract class BasePage {
   readonly page: Page;
   readonly sidebar: SidebarNav;
 

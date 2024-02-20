@@ -2,7 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { toPascalCase } from '../../utils';
 
 export type BaseGetParams = {
-  tabName: string;
+  tabName: string | undefined;
   sectionName: string;
 };
 
@@ -55,7 +55,11 @@ export class BaseForm {
     return this.contentContainer.locator(`section[data-tab-id="${tabId}"]`).first();
   }
 
-  async getSection(tabName: string, sectionName: string) {
+  async getSection(tabName: string | undefined, sectionName: string) {
+    if (tabName === undefined) {
+      return this.contentContainer.locator('section.section').filter({ hasText: sectionName }).first();
+    }
+
     const tab = await this.getTab(tabName);
 
     return tab
