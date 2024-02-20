@@ -15,7 +15,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
-    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/"
+    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanUpTestResultsDir/"
   },
   "keywords": [
     "onspring",
@@ -24,7 +24,7 @@
     "playwright"
   ],
   "author": "stevan freeborn",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
     "@playwright/test": "^1.39.0",
