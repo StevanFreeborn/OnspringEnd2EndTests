@@ -1,6 +1,7 @@
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
 import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
@@ -10,6 +11,7 @@ import { AnnotationType } from '../annotations';
 
 type ContentRecordTestFixtures = {
   targetApp: App;
+  appAdminPage: AppAdminPage;
   contentHomePage: ContentHomePage;
   appContentPage: AppContentPage;
   addContentPage: AddContentPage;
@@ -19,6 +21,10 @@ type ContentRecordTestFixtures = {
 
 const test = base.extend<ContentRecordTestFixtures>({
   targetApp: app,
+  appAdminPage: async ({ sysAdminPage }, use) => {
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    await use(appAdminPage);
+  },
   contentHomePage: async ({ sysAdminPage }, use) => {
     const contentHomePage = new ContentHomePage(sysAdminPage);
     await use(contentHomePage);
@@ -126,13 +132,67 @@ test.describe('content record', () => {
     });
   });
 
-  test('Create a content record from the quick add layout on the content home page of an app/survey', async () => {
+  test('Create a content record from the quick add layout on the content home page of an app/survey', async ({
+    targetApp,
+    appAdminPage,
+    appContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-302',
     });
 
-    expect(true).toBe(true);
+    let createdRecordId: number;
+
+    await test.step('Navigate to apps admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Enable the  quick add layout for the app', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout('Quick Content Add');
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
+    });
+
+    await test.step('Add the record id field to the layout', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: 'Record Id',
+        tabName: undefined,
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the app home page', async () => {
+      await appContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await appContentPage.quickContentAddForm.openAfterSaveCheckbox.check();
+      await appContentPage.quickContentAddForm.saveButton.click();
+      await appContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was created', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
   });
 
   test('Create a copy of a content record', async () => {

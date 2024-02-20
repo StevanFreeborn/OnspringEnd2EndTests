@@ -3,9 +3,10 @@ import { BASE_URL } from '../../playwright.config';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { CanvasSection } from '../sections/canvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
+import { EditLayoutPropertiesModal } from './editLayoutPropertiesModal';
 
 type DragItemsParams = {
-  tabName: string;
+  tabName: string | undefined;
   sectionName: string;
   sectionColumn: number;
   sectionRow: number;
@@ -23,6 +24,8 @@ export class LayoutDesignerModal extends LayoutItemCreator {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
   private readonly saveLayoutPathRegex: RegExp;
+  readonly editLayoutPropertiesLink: Locator;
+  readonly editLayoutPropertiesModal: EditLayoutPropertiesModal;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: CanvasSection;
   readonly saveButton: Locator;
@@ -33,6 +36,8 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     super(page);
     this.designer = page.getByRole('dialog');
     this.frame = this.designer.frameLocator('iframe').first();
+    this.editLayoutPropertiesModal = new EditLayoutPropertiesModal(this.frame);
+    this.editLayoutPropertiesLink = this.frame.getByRole('link', { name: 'Edit Layout Properties' });
     this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new CanvasSection(this.frame);
