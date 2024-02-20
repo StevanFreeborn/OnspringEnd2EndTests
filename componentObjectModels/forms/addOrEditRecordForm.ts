@@ -5,16 +5,7 @@ import { DateFieldControl } from '../controls/dateFieldControl';
 import { ImageFieldControl } from '../controls/imageFieldControl';
 import { ReferenceFieldGrid } from '../controls/referenceFieldGrid';
 import { TimeSpanFieldControl } from '../controls/timeSpanFieldControl';
-import { FieldType } from '../menus/addFieldTypeMenu';
-import { BaseForm, BaseGetParams } from './baseForm';
-
-export type BaseGetFieldParams = BaseGetParams & {
-  fieldName: string;
-};
-
-export type GetFieldParams = BaseGetFieldParams & {
-  fieldType: FieldType;
-};
+import { BaseForm, BaseGetFieldParams, GetFieldParams } from './baseForm';
 
 export type GetDateFieldParams = BaseGetFieldParams & {
   fieldType: 'Date/Time';
@@ -46,6 +37,10 @@ export class AddOrEditRecordForm extends BaseForm {
   constructor(container: Locator) {
     super(container);
     this.contentContainer = container;
+  }
+
+  async getUnEditableField({ tabName, sectionName, fieldName, fieldType }: GetFieldParams) {
+    return await this.getReadOnlyField({ tabName, sectionName, fieldName, fieldType });
   }
 
   async getField(params: GetReferenceFieldParams): Promise<ReferenceFieldGrid>;

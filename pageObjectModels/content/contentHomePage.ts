@@ -3,7 +3,7 @@ import { ContentLandingToolbar } from '../../componentObjectModels/toolbars/cont
 import { BasePage } from '../basePage';
 
 export class ContentHomePage extends BasePage {
-  private readonly path: string;
+  readonly path: string;
   readonly toolbar: ContentLandingToolbar;
 
   constructor(page: Page) {

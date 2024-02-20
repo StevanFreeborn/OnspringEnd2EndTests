@@ -10,6 +10,7 @@ import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage'
 import { CopyContentPage } from '../../pageObjectModels/content/copyContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { AnnotationType } from '../annotations';
 
 type ContentRecordTestFixtures = {
@@ -21,6 +22,7 @@ type ContentRecordTestFixtures = {
   editContentPage: EditContentPage;
   viewContentPage: ViewContentPage;
   copyContentPage: CopyContentPage;
+  dashboardPage: DashboardPage;
 };
 
 const test = base.extend<ContentRecordTestFixtures>({
@@ -52,6 +54,10 @@ const test = base.extend<ContentRecordTestFixtures>({
   copyContentPage: async ({ sysAdminPage }, use) => {
     const copyContentPage = new CopyContentPage(sysAdminPage);
     await use(copyContentPage);
+  },
+  dashboardPage: async ({ sysAdminPage }, use) => {
+    const dashboardPage = new DashboardPage(sysAdminPage);
+    await use(dashboardPage);
   },
 });
 
@@ -367,22 +373,72 @@ test.describe('content record', () => {
     });
   });
 
-  test('Save a content record', async () => {
+  test('Save a content record', async ({ targetApp, addContentPage, editContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-306',
     });
 
-    expect(true).toBe(true);
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Verify that the content record was saved', async () => {
+      const createdBy = await editContentPage.form.getUnEditableField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      expect(editContentPage.page.url()).toMatch(editContentPage.pathRegex);
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
   });
 
-  test('Save and close a content record', async () => {
+  test('Save and close a content record', async ({
+    sysAdminPage,
+    targetApp,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-307',
     });
 
-    expect(true).toBe(true);
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveAndCloseButton.click();
+      await addContentPage.page.waitForURL(dashboardPage.path);
+    });
+
+    await test.step('Verify the record was closed and saved', async () => {
+      expect(sysAdminPage.url()).not.toMatch(editContentPage.pathRegex);
+
+      await viewContentPage.goto(targetApp.id, 1);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
   });
 
   test('Cancel editing a content record', async () => {
