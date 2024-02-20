@@ -31,4 +31,13 @@ export class EditContentPage extends EditableContentPage {
     const recordId = urlParts[urlParts.length - 2];
     return parseInt(recordId);
   }
+
+  async save() {
+    const saveResponse = this.page.waitForResponse(
+      response => response.url().match(this.pathRegex) !== null && response.request().method() === 'POST'
+    );
+
+    await this.saveRecordButton.click();
+    await saveResponse;
+  }
 }

@@ -1,6 +1,8 @@
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
@@ -280,13 +282,89 @@ test.describe('content record', () => {
     });
   });
 
-  test('Edit a content record', async () => {
+  test('Edit a content record', async ({
+    targetApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-305',
     });
 
-    expect(true).toBe(true);
+    const textField = new TextField({ name: 'Text Field' });
+    const textFieldValue = 'Test';
+    const updatedTextFieldValue = 'Updated Test';
+    const getFieldParams = {
+      tabName: 'Tab 2',
+      sectionName: 'Section 1',
+      fieldName: textField.name,
+      fieldType: textField.type as FieldType,
+    };
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Add an editable field to the default layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: textField.name,
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      const editableTextField = await addContentPage.form.getField(getFieldParams);
+
+      await editableTextField.fill(textFieldValue);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to the view content page', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(textFieldValue);
+    });
+
+    await test.step('Edit the content record', async () => {
+      await viewContentPage.editRecordButton.click();
+      await editContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      const editableTextField = await editContentPage.form.getField(getFieldParams);
+
+      await editableTextField.clear();
+      await editableTextField.pressSequentially(updatedTextFieldValue);
+      await editContentPage.save();
+    });
+
+    await test.step('Verify the content record was edited', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(updatedTextFieldValue);
+    });
   });
 
   test('Save a content record', async () => {
