@@ -249,13 +249,35 @@ test.describe('content record', () => {
     });
   });
 
-  test('View a content record', async () => {
+  test('View a content record', async ({ targetApp, addContentPage, editContentPage, viewContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-304',
     });
 
-    expect(true).toBe(true);
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('View the content record', async () => {
+      await editContentPage.viewRecordButton.click();
+      await editContentPage.page.waitForURL(viewContentPage.pathRegex);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      expect(viewContentPage.page.url()).toMatch(viewContentPage.pathRegex);
+      await expect(createdBy).toBeVisible();
+    });
   });
 
   test('Edit a content record', async () => {

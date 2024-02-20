@@ -7,12 +7,14 @@ export class EditContentPage extends EditableContentPage {
   readonly pathRegex: RegExp;
   readonly actionMenuButton: Locator;
   readonly actionMenu: ContentRecordActionMenu;
+  readonly viewRecordButton: Locator;
 
   constructor(page: Page) {
     super(page);
     this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/Edit`);
     this.actionMenuButton = this.page.locator('#action-menu-button');
     this.actionMenu = new ContentRecordActionMenu(this.page.locator('#action-menu'));
+    this.viewRecordButton = this.page.getByRole('link', { name: 'View Record' });
   }
 
   async goto(appId: number, recordId: number) {
