@@ -10,7 +10,6 @@ import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage'
 import { CopyContentPage } from '../../pageObjectModels/content/copyContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { AnnotationType } from '../annotations';
 
 type ContentRecordTestFixtures = {
@@ -22,7 +21,6 @@ type ContentRecordTestFixtures = {
   editContentPage: EditContentPage;
   viewContentPage: ViewContentPage;
   copyContentPage: CopyContentPage;
-  dashboardPage: DashboardPage;
 };
 
 const test = base.extend<ContentRecordTestFixtures>({
@@ -54,10 +52,6 @@ const test = base.extend<ContentRecordTestFixtures>({
   copyContentPage: async ({ sysAdminPage }, use) => {
     const copyContentPage = new CopyContentPage(sysAdminPage);
     await use(copyContentPage);
-  },
-  dashboardPage: async ({ sysAdminPage }, use) => {
-    const dashboardPage = new DashboardPage(sysAdminPage);
-    await use(dashboardPage);
   },
 });
 
@@ -408,7 +402,6 @@ test.describe('content record', () => {
     addContentPage,
     editContentPage,
     viewContentPage,
-    dashboardPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -421,7 +414,7 @@ test.describe('content record', () => {
 
     await test.step('Create the content record', async () => {
       await addContentPage.saveAndCloseButton.click();
-      await addContentPage.page.waitForURL(dashboardPage.path);
+      await addContentPage.page.waitForResponse(/BackToOrigin/);
     });
 
     await test.step('Verify the record was closed and saved', async () => {
