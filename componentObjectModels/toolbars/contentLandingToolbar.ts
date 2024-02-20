@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { LandingToolbar } from './landingToolbar';
 
-export class ContentToolbar extends LandingToolbar {
+export class ContentLandingToolbar extends LandingToolbar {
   private readonly createContentButton: Locator;
 
   constructor(page: Page) {
