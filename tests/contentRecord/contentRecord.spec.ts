@@ -5,6 +5,7 @@ import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
 import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
+import { CopyContentPage } from '../../pageObjectModels/content/copyContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { AnnotationType } from '../annotations';
@@ -17,6 +18,7 @@ type ContentRecordTestFixtures = {
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
   viewContentPage: ViewContentPage;
+  copyContentPage: CopyContentPage;
 };
 
 const test = base.extend<ContentRecordTestFixtures>({
@@ -44,6 +46,10 @@ const test = base.extend<ContentRecordTestFixtures>({
   viewContentPage: async ({ sysAdminPage }, use) => {
     const viewContentPage = new ViewContentPage(sysAdminPage);
     await use(viewContentPage);
+  },
+  copyContentPage: async ({ sysAdminPage }, use) => {
+    const copyContentPage = new CopyContentPage(sysAdminPage);
+    await use(copyContentPage);
   },
 });
 
@@ -195,13 +201,52 @@ test.describe('content record', () => {
     });
   });
 
-  test('Create a copy of a content record', async () => {
+  test('Create a copy of a content record', async ({
+    targetApp,
+    addContentPage,
+    copyContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-303',
     });
 
-    expect(true).toBe(true);
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Copy the content record', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.copyRecordLink.click();
+      await editContentPage.page.waitForURL(copyContentPage.pathRegex);
+
+      await copyContentPage.saveRecordButton.click();
+      await copyContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was copied', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
   });
 
   test('View a content record', async () => {

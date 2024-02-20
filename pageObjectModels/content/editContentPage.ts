@@ -1,13 +1,18 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
+import { ContentRecordActionMenu } from '../../componentObjectModels/menus/contentRecordActionMenu';
 import { BASE_URL } from '../../playwright.config';
 import { EditableContentPage } from './editableContentPage';
 
 export class EditContentPage extends EditableContentPage {
   readonly pathRegex: RegExp;
+  readonly actionMenuButton: Locator;
+  readonly actionMenu: ContentRecordActionMenu;
 
   constructor(page: Page) {
     super(page);
     this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/Edit`);
+    this.actionMenuButton = this.page.locator('#action-menu-button');
+    this.actionMenu = new ContentRecordActionMenu(this.page.locator('#action-menu'));
   }
 
   async goto(appId: number, recordId: number) {
