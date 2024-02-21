@@ -588,8 +588,8 @@ test.describe('content record', () => {
     });
 
     await test.step('Verify the printed content record contains expected text', async () => {
-      const found = await pdfParser.findTextInPDF(pdfFilePath, ['Created By', 'John Wick']);
-      expect(found).toBe(true);
+      const foundCreatedByText = await pdfParser.findTextInPDF(pdfFilePath, ['Created By', 'John Wick']);
+      expect(foundCreatedByText).toBe(true);
     });
   });
 
