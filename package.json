@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A suite of automated web app tests for the Onspring platform.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "npx playwright test",
     "test:pwservice": "npx playwright test --config=playwright.service.config.ts",
@@ -15,7 +16,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
-    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanUpTestResultsDir/"
+    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanUpTestResultsDir/ ./downloads/"
   },
   "keywords": [
     "onspring",
@@ -43,6 +44,7 @@
   "dependencies": {
     "imap": "^0.8.17",
     "mailparser": "^3.6.7",
+    "pdfjs-dist": "^4.0.379",
     "ts-results-es": "^4.1.0-alpha.1"
   }
 }

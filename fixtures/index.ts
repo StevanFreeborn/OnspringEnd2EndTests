@@ -1,22 +1,26 @@
 import { Page, test as base } from '@playwright/test';
-import { env } from '../env';
 import { App } from '../models/app';
 import { Role } from '../models/role';
 import { Survey } from '../models/survey';
 import { User } from '../models/user';
 import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
 import { SurveyAdminPage } from '../pageObjectModels/surveys/surveyAdminPage';
+import { DownloadService } from '../services/downloadService';
 import { EmailService } from '../services/emailService';
+import { PdfParser } from '../services/pdfParser';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
 import { TestFile, jpgFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
+import { downloadService, pdfParser, sysAdminEmailService } from './services.fixtures';
 import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
 
 type Fixtures = {
   sysAdminPage: Page;
   sysAdminEmail: EmailService;
+  pdfParser: PdfParser;
+  downloadService: DownloadService;
   jpgFile: TestFile;
   txtFile: TestFile;
 };
@@ -37,18 +41,9 @@ type QuestionTestFixtures = {
 
 export const test = base.extend<Fixtures>({
   sysAdminPage: sysAdminPage,
-  sysAdminEmail: async ({}, use) => {
-    const imapConfig = {
-      user: env.SYS_ADMIN_EMAIL,
-      password: env.SYS_ADMIN_EMAIL_PASSWORD,
-      host: env.SYS_ADMIN_EMAIL_HOST,
-      port: env.SYS_ADMIN_EMAIL_PORT,
-      tls: true,
-      tlsOptions: { servername: env.SYS_ADMIN_EMAIL_HOST },
-    };
-    const emailService = new EmailService(imapConfig);
-    await use(emailService);
-  },
+  sysAdminEmail: sysAdminEmailService,
+  pdfParser: pdfParser,
+  downloadService: downloadService,
   jpgFile: jpgFile,
   txtFile: txtFile,
 });

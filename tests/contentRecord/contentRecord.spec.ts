@@ -558,13 +558,39 @@ test.describe('content record', () => {
     });
   });
 
-  test('Print content record', async () => {
+  test('Print content record', async ({ targetApp, addContentPage, editContentPage, pdfParser, downloadService }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-310',
     });
 
-    expect(true).toBe(true);
+    let pdfFilePath: string;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Print the content record to PDF', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.printRecordLink.click();
+
+      await editContentPage.printRecordModal.selectPrintAction('Print to a PDF and download');
+
+      const pdfDownload = editContentPage.page.waitForEvent('download');
+      await editContentPage.printRecordModal.okButton.click();
+      const pdf = await pdfDownload;
+      pdfFilePath = await downloadService.saveDownload(pdf);
+    });
+
+    await test.step('Verify the printed content record contains expected text', async () => {
+      const found = await pdfParser.findTextInPDF(pdfFilePath, ['Created By', 'John Wick']);
+      expect(found).toBe(true);
+    });
   });
 
   test('Pin a content record', async () => {

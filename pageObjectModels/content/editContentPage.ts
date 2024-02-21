@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { DeleteRecordDialog } from '../../componentObjectModels/dialogs/deleteRecordDialog';
 import { ContentRecordActionMenu } from '../../componentObjectModels/menus/contentRecordActionMenu';
+import { PrintContentRecordModal } from '../../componentObjectModels/modals/printContentRecordModal';
 import { BASE_URL } from '../../playwright.config';
 import { EditableContentPage } from './editableContentPage';
 
@@ -10,6 +11,7 @@ export class EditContentPage extends EditableContentPage {
   readonly actionMenu: ContentRecordActionMenu;
   readonly viewRecordButton: Locator;
   readonly deleteRecordDialog: DeleteRecordDialog;
+  readonly printRecordModal: PrintContentRecordModal;
 
   constructor(page: Page) {
     super(page);
@@ -18,6 +20,7 @@ export class EditContentPage extends EditableContentPage {
     this.actionMenu = new ContentRecordActionMenu(this.page.locator('#action-menu'));
     this.viewRecordButton = this.page.getByRole('link', { name: 'View Record' });
     this.deleteRecordDialog = new DeleteRecordDialog(page);
+    this.printRecordModal = new PrintContentRecordModal(page);
   }
 
   async goto(appId: number, recordId: number) {

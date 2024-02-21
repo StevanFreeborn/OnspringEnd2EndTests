@@ -12,3 +12,4 @@ blob-report/
 .vercel
 cleanUpTestResultsDir/
 **/dataImportFiles/
+downloads/
