@@ -1,7 +1,7 @@
 import { FrameLocator, Locator } from '@playwright/test';
 
 type FieldDropzoneParams = {
-  tabName: string;
+  tabName: string | undefined;
   sectionName: string;
   column: number;
   row: number;
@@ -32,7 +32,12 @@ export class CanvasSection {
     return this.section.locator('.k-tabstrip-items').locator('div.k-item').filter({ hasText: tabName }).first();
   }
 
-  async getTab(tabName: string) {
+  async getTab(tabName: string | undefined) {
+    if (tabName === undefined) {
+      const tab = this.section.locator('[data-tab-body]').first();
+      return new LayoutTab(tab);
+    }
+
     const tabButton = this.getTabButton(tabName);
     const tabId = await tabButton.getAttribute('data-canvas-tab');
     const tab = this.section.locator(`[data-tab-body="${tabId}"]`).first();

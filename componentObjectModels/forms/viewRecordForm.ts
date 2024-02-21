@@ -1,6 +1,5 @@
 import { Locator } from '@playwright/test';
-import { GetFieldParams } from './addOrEditRecordForm';
-import { BaseForm } from './baseForm';
+import { BaseForm, GetFieldParams } from './baseForm';
 
 export class ViewRecordForm extends BaseForm {
   constructor(container: Locator) {
@@ -8,26 +7,7 @@ export class ViewRecordForm extends BaseForm {
   }
 
   async getField({ tabName, sectionName, fieldName, fieldType }: GetFieldParams) {
-    const section = await this.getSection(tabName, sectionName);
-
-    let locator: string;
-
-    switch (fieldType) {
-      case 'Reference':
-        locator = this.createFormControlSelector(fieldName, 'div.type-reference');
-        break;
-      case 'Attachment':
-        locator = this.createFormControlSelector(fieldName, 'div.type-attachment');
-        break;
-      case 'Image':
-        locator = this.createFormControlSelector(fieldName, 'div.type-image');
-        break;
-      default:
-        locator = this.createFormControlSelector(fieldName, 'div.data-text-only');
-        break;
-    }
-
-    return section.locator(locator).first();
+    return await this.getReadOnlyField({ tabName, sectionName, fieldName, fieldType });
   }
 
   async getImageByFileIdFromField(imageField: Locator, fileId: number) {

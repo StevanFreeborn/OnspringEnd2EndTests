@@ -1,13 +1,22 @@
 import { Locator, Page } from '@playwright/test';
 import { toPascalCase } from '../../utils';
+import { FieldType } from '../menus/addFieldTypeMenu';
 
 export type BaseGetParams = {
-  tabName: string;
+  tabName: string | undefined;
   sectionName: string;
 };
 
 export type GetObjectParams = BaseGetParams & {
   objectName: string;
+};
+
+export type BaseGetFieldParams = BaseGetParams & {
+  fieldName: string;
+};
+
+export type GetFieldParams = BaseGetFieldParams & {
+  fieldType: FieldType;
 };
 
 export class BaseForm {
@@ -21,6 +30,29 @@ export class BaseForm {
   protected constructor(contentContainer: Locator) {
     this.page = contentContainer.page();
     this.contentContainer = contentContainer;
+  }
+
+  protected async getReadOnlyField({ tabName, sectionName, fieldName, fieldType }: GetFieldParams) {
+    const section = await this.getSection(tabName, sectionName);
+
+    let locator: string;
+
+    switch (fieldType) {
+      case 'Reference':
+        locator = this.createFormControlSelector(fieldName, 'div.type-reference');
+        break;
+      case 'Attachment':
+        locator = this.createFormControlSelector(fieldName, 'div.type-attachment');
+        break;
+      case 'Image':
+        locator = this.createFormControlSelector(fieldName, 'div.type-image');
+        break;
+      default:
+        locator = this.createFormControlSelector(fieldName, 'div.data-text-only');
+        break;
+    }
+
+    return section.locator(locator).first();
   }
 
   async getTabOrientation() {
@@ -55,7 +87,11 @@ export class BaseForm {
     return this.contentContainer.locator(`section[data-tab-id="${tabId}"]`).first();
   }
 
-  async getSection(tabName: string, sectionName: string) {
+  async getSection(tabName: string | undefined, sectionName: string) {
+    if (tabName === undefined) {
+      return this.contentContainer.locator('section.section').filter({ hasText: sectionName }).first();
+    }
+
     const tab = await this.getTab(tabName);
 
     return tab

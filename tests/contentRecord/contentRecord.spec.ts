@@ -1,0 +1,626 @@
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
+import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import { TextField } from '../../models/textField';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
+import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
+import { CopyContentPage } from '../../pageObjectModels/content/copyContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
+import { AnnotationType } from '../annotations';
+
+type ContentRecordTestFixtures = {
+  targetApp: App;
+  appAdminPage: AppAdminPage;
+  contentHomePage: ContentHomePage;
+  appContentPage: AppContentPage;
+  addContentPage: AddContentPage;
+  editContentPage: EditContentPage;
+  viewContentPage: ViewContentPage;
+  copyContentPage: CopyContentPage;
+};
+
+const test = base.extend<ContentRecordTestFixtures>({
+  targetApp: app,
+  appAdminPage: async ({ sysAdminPage }, use) => {
+    const appAdminPage = new AppAdminPage(sysAdminPage);
+    await use(appAdminPage);
+  },
+  contentHomePage: async ({ sysAdminPage }, use) => {
+    const contentHomePage = new ContentHomePage(sysAdminPage);
+    await use(contentHomePage);
+  },
+  appContentPage: async ({ sysAdminPage }, use) => {
+    const appContentPage = new AppContentPage(sysAdminPage);
+    await use(appContentPage);
+  },
+  addContentPage: async ({ sysAdminPage }, use) => {
+    const addContentPage = new AddContentPage(sysAdminPage);
+    await use(addContentPage);
+  },
+  editContentPage: async ({ sysAdminPage }, use) => {
+    const editContentPage = new EditContentPage(sysAdminPage);
+    await use(editContentPage);
+  },
+  viewContentPage: async ({ sysAdminPage }, use) => {
+    const viewContentPage = new ViewContentPage(sysAdminPage);
+    await use(viewContentPage);
+  },
+  copyContentPage: async ({ sysAdminPage }, use) => {
+    const copyContentPage = new CopyContentPage(sysAdminPage);
+    await use(copyContentPage);
+  },
+});
+
+test.describe('content record', () => {
+  test('Create a content record from the "Create Content" button on the content home page', async ({
+    targetApp,
+    contentHomePage,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-300',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the content home page', async () => {
+      await contentHomePage.goto();
+    });
+
+    await test.step('Create the content record', async () => {
+      await contentHomePage.toolbar.createRecord(targetApp.name);
+      await contentHomePage.page.waitForURL(addContentPage.pathRegex);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was created', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('Create a content record from the "Create Content" button the content home page of an app/survey', async ({
+    targetApp,
+    appContentPage,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-301',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the app content page', async () => {
+      await appContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await appContentPage.toolbar.createContentButton.click();
+      await appContentPage.page.waitForURL(addContentPage.pathRegex);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was created', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('Create a content record from the quick add layout on the content home page of an app/survey', async ({
+    targetApp,
+    appAdminPage,
+    appContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-302',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to apps admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Enable the  quick add layout for the app', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout('Quick Content Add');
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
+    });
+
+    await test.step('Add the record id field to the layout', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: 'Record Id',
+        tabName: undefined,
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the app home page', async () => {
+      await appContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await appContentPage.quickContentAddForm.openAfterSaveCheckbox.check();
+      await appContentPage.quickContentAddForm.saveButton.click();
+      await appContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was created', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('Create a copy of a content record', async ({
+    targetApp,
+    addContentPage,
+    copyContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-303',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Copy the content record', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.copyRecordLink.click();
+      await editContentPage.page.waitForURL(copyContentPage.pathRegex);
+
+      await copyContentPage.saveRecordButton.click();
+      await copyContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the content record was copied', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('View a content record', async ({ targetApp, addContentPage, editContentPage, viewContentPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-304',
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('View the content record', async () => {
+      await editContentPage.viewRecordButton.click();
+      await editContentPage.page.waitForURL(viewContentPage.pathRegex);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      expect(viewContentPage.page.url()).toMatch(viewContentPage.pathRegex);
+      await expect(createdBy).toBeVisible();
+    });
+  });
+
+  test('Edit a content record', async ({
+    targetApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-305',
+    });
+
+    const textField = new TextField({ name: 'Text Field' });
+    const textFieldValue = 'Test';
+    const updatedTextFieldValue = 'Updated Test';
+    const getFieldParams = {
+      tabName: 'Tab 2',
+      sectionName: 'Section 1',
+      fieldName: textField.name,
+      fieldType: textField.type as FieldType,
+    };
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Add an editable field to the default layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: textField.name,
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      const editableTextField = await addContentPage.form.getField(getFieldParams);
+
+      await editableTextField.fill(textFieldValue);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to the view content page', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(textFieldValue);
+    });
+
+    await test.step('Edit the content record', async () => {
+      await viewContentPage.editRecordButton.click();
+      await editContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      const editableTextField = await editContentPage.form.getField(getFieldParams);
+
+      await editableTextField.clear();
+      await editableTextField.pressSequentially(updatedTextFieldValue);
+      await editContentPage.save();
+    });
+
+    await test.step('Verify the content record was edited', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(updatedTextFieldValue);
+    });
+  });
+
+  test('Save a content record', async ({ targetApp, addContentPage, editContentPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-306',
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Verify that the content record was saved', async () => {
+      const createdBy = await editContentPage.form.getUnEditableField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      expect(editContentPage.page.url()).toMatch(editContentPage.pathRegex);
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('Save and close a content record', async ({
+    sysAdminPage,
+    targetApp,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-307',
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      const backToOriginResponse = addContentPage.page.waitForResponse(/BackToOrigin/);
+      await addContentPage.saveAndCloseButton.click();
+      await backToOriginResponse;
+    });
+
+    await test.step('Verify the record was closed and saved', async () => {
+      expect(sysAdminPage.url()).not.toMatch(editContentPage.pathRegex);
+
+      await viewContentPage.goto(targetApp.id, 1);
+
+      const createdBy = await viewContentPage.form.getField({
+        tabName: undefined,
+        sectionName: 'Record Information',
+        fieldName: 'Created By',
+        fieldType: 'Reference',
+      });
+
+      await expect(createdBy).toBeVisible();
+      await expect(createdBy).toHaveText(/John/);
+    });
+  });
+
+  test('Cancel editing a content record', async ({
+    targetApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    viewContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-308',
+    });
+
+    const textField = new TextField({ name: 'Text Field' });
+    const textFieldValue = 'Test';
+    const updatedTextFieldValue = 'Updated Test';
+    const getFieldParams = {
+      tabName: 'Tab 2',
+      sectionName: 'Section 1',
+      fieldName: textField.name,
+      fieldType: textField.type as FieldType,
+    };
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Add an editable field to the default layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: textField.name,
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      const editableTextField = await addContentPage.form.getField(getFieldParams);
+
+      await editableTextField.fill(textFieldValue);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to the view content page', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(textFieldValue);
+    });
+
+    await test.step('Edit the content record and cancel it', async () => {
+      await viewContentPage.editRecordButton.click();
+      await editContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      const editableTextField = await editContentPage.form.getField(getFieldParams);
+
+      await editableTextField.clear();
+      await editableTextField.pressSequentially(updatedTextFieldValue);
+
+      const backToOriginResponse = editContentPage.page.waitForResponse(/BackToOrigin/);
+      await editContentPage.cancelButton.click();
+      await backToOriginResponse;
+    });
+
+    await test.step('Verify the content record was not edited', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const readOnlyTextField = await viewContentPage.form.getField(getFieldParams);
+
+      await expect(readOnlyTextField).toHaveText(textFieldValue);
+    });
+  });
+
+  test('Delete a content record', async ({ targetApp, addContentPage, editContentPage, viewContentPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-309',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Delete the content record', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.deleteRecordLink.click();
+
+      const backToOriginResponse = editContentPage.page.waitForResponse(/BackToOrigin/);
+      await editContentPage.deleteRecordDialog.deleteButton.click();
+      await backToOriginResponse;
+    });
+
+    await test.step('Verify the content record was deleted', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const notFoundMessage = viewContentPage.page.getByText("Oops! The page you're trying to view doesn't exist");
+      await expect(notFoundMessage).toBeVisible();
+    });
+  });
+
+  test('Print content record', async ({ targetApp, addContentPage, editContentPage, pdfParser, downloadService }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-310',
+    });
+
+    let pdfFilePath: string;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Print the content record to PDF', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.printRecordLink.click();
+
+      await editContentPage.printRecordModal.selectPrintAction('Print to a PDF and download');
+
+      const pdfDownload = editContentPage.page.waitForEvent('download');
+      await editContentPage.printRecordModal.okButton.click();
+      const pdf = await pdfDownload;
+      pdfFilePath = await downloadService.saveDownload(pdf);
+    });
+
+    await test.step('Verify the printed content record contains expected text', async () => {
+      const foundCreatedByText = await pdfParser.findTextInPDF(pdfFilePath, ['Created By', 'John Wick']);
+      expect(foundCreatedByText).toBe(true);
+    });
+  });
+
+  test('Pin a content record', async ({ targetApp, addContentPage, editContentPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-311',
+    });
+
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Pin the content record', async () => {
+      await editContentPage.pinRecordButton.click();
+    });
+
+    await test.step('Verify the content record was pinned', async () => {
+      const pinnedRecordLink = editContentPage.sidebar.pinnedContent.locator(
+        `a[href="/Content/${targetApp.id}/${createdRecordId}"]`
+      );
+
+      await expect(pinnedRecordLink).toBeVisible();
+    });
+  });
+});
