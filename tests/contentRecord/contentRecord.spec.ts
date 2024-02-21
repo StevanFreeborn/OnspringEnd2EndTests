@@ -523,13 +523,39 @@ test.describe('content record', () => {
     });
   });
 
-  test('Delete a content record', async () => {
+  test('Delete a content record', async ({ targetApp, addContentPage, editContentPage, viewContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-309',
     });
 
-    expect(true).toBe(true);
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Delete the content record', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.deleteRecordLink.click();
+
+      const backToOriginResponse = editContentPage.page.waitForResponse(/BackToOrigin/);
+      await editContentPage.deleteRecordDialog.deleteButton.click();
+      await backToOriginResponse;
+    });
+
+    await test.step('Verify the content record was deleted', async () => {
+      await viewContentPage.goto(targetApp.id, createdRecordId);
+
+      const notFoundMessage = viewContentPage.page.getByText("Oops! The page you're trying to view doesn't exist");
+      await expect(notFoundMessage).toBeVisible();
+    });
   });
 
   test('Print content record', async () => {
