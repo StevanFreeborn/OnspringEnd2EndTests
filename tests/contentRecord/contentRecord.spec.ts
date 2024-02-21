@@ -593,12 +593,34 @@ test.describe('content record', () => {
     });
   });
 
-  test('Pin a content record', async () => {
+  test('Pin a content record', async ({ targetApp, addContentPage, editContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-311',
     });
 
-    expect(true).toBe(true);
+    let createdRecordId: number;
+
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Pin the content record', async () => {
+      await editContentPage.pinRecordButton.click();
+    });
+
+    await test.step('Verify the content record was pinned', async () => {
+      const pinnedRecordLink = editContentPage.sidebar.pinnedContent.locator(
+        `a[href="/Content/${targetApp.id}/${createdRecordId}"]`
+      );
+
+      await expect(pinnedRecordLink).toBeVisible();
+    });
   });
 });

@@ -7,6 +7,7 @@ import { EditableContentPage } from './editableContentPage';
 
 export class EditContentPage extends EditableContentPage {
   readonly pathRegex: RegExp;
+  readonly pinRecordButton: Locator;
   readonly actionMenuButton: Locator;
   readonly actionMenu: ContentRecordActionMenu;
   readonly viewRecordButton: Locator;
@@ -16,9 +17,10 @@ export class EditContentPage extends EditableContentPage {
   constructor(page: Page) {
     super(page);
     this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/Edit`);
-    this.actionMenuButton = this.page.locator('#action-menu-button');
-    this.actionMenu = new ContentRecordActionMenu(this.page.locator('#action-menu'));
-    this.viewRecordButton = this.page.getByRole('link', { name: 'View Record' });
+    this.pinRecordButton = page.getByTitle('Pin Record', { exact: true });
+    this.actionMenuButton = page.locator('#action-menu-button');
+    this.actionMenu = new ContentRecordActionMenu(page.locator('#action-menu'));
+    this.viewRecordButton = page.getByRole('link', { name: 'View Record' });
     this.deleteRecordDialog = new DeleteRecordDialog(page);
     this.printRecordModal = new PrintContentRecordModal(page);
   }
