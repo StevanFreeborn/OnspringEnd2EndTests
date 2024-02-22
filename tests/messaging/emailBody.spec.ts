@@ -2,18 +2,21 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
 import { AnnotationType } from '../annotations';
 
 type EmailBodyTestFixtures = {
   targetApp: App;
+  adminHomePage: AdminHomePage;
   appAdminPage: AppAdminPage;
   editEmailBodyPage: EditEmailBodyPage;
 };
 
 const test = base.extend<EmailBodyTestFixtures>({
   targetApp: app,
+  adminHomePage: async ({ sysAdminPage }, use) => use(new AdminHomePage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
 });
@@ -95,13 +98,30 @@ test.describe('email body', () => {
     });
   });
 
-  test('Add Email Body to an app from the Create button in the admin header', async () => {
+  test('Add Email Body to an app from the Create button in the admin header', async ({
+    targetApp,
+    adminHomePage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-211',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email body', async () => {
+      await adminHomePage.createEmailBodyUsingHeaderCreateButton(targetApp.name, emailBodyName);
+      await adminHomePage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Verify the email body was created', async () => {
+      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyName);
+    });
   });
 
   test('Create a copy of an Email Body on an app from the Create button in the admin header', async () => {
