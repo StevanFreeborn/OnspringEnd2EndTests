@@ -18,6 +18,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
 
   readonly generalTabButton: Locator;
   readonly layoutTabButton: Locator;
+  readonly messagingTabButton: Locator;
 
   abstract readonly generalTab: BaseAppOrSurveyGeneralTab;
   abstract readonly layoutTab: BaseLayoutTab;
@@ -26,8 +27,9 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
     super(page);
     this.closeButton = page.locator('a:has-text("Close")');
 
-    this.generalTabButton = page.locator('#tab-strip').getByText('General');
-    this.layoutTabButton = page.locator('#tab-strip').getByText('Layout');
+    this.generalTabButton = page.getByRole('tab', { name: 'General' });
+    this.layoutTabButton = page.getByRole('tab', { name: 'Layout' });
+    this.messagingTabButton = page.getByRole('tab', { name: 'Messaging' });
   }
 
   abstract getIdFromUrl(): number;

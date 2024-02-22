@@ -26,5 +26,18 @@
     "prefix": "pwstep",
     "body": ["await test.step('$1', async () => {", "\t$2", "});"],
     "description": "Create a new step"
+  },
+  "Create new playwright page object model": {
+    "scope": "typescript",
+    "prefix": "pwpom",
+    "body": [
+      "import { Page } from '@playwright/test'"
+      "",
+      "export class $1 {",
+      "\tconstructor(page: Page) {",
+      "\t}",
+      "}",
+    ],
+    "description": "Create a new page object model"
   }
 }
