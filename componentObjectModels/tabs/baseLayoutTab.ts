@@ -12,7 +12,7 @@ import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
-  private readonly addUsingSettingsPathRegex: RegExp;
+  private readonly addItemPathRegex: RegExp;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -23,7 +23,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
 
   constructor(page: Page) {
     super(page);
-    this.addUsingSettingsPathRegex = /\/Admin\/App\/\d+\/Field\/AddUsingSettings/;
+    this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
     this.layoutsGrid = page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(page);
     this.addFieldButton = page.getByText('Add Field');
@@ -109,7 +109,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
     await this.addFieldButton.click();
     await this.addLayoutItemMenu.selectItem(item.type);
-    const addItemResponse = this.page.waitForResponse(this.addUsingSettingsPathRegex);
+    const addItemResponse = this.page.waitForResponse(this.addItemPathRegex);
     await this.addLayoutItemDialog.continueButton.click();
     await addItemResponse;
     await this.addLayoutItem(item);
@@ -145,7 +145,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
       }
     }
 
-    const addItemResponse = this.page.waitForResponse(this.addUsingSettingsPathRegex);
+    const addItemResponse = this.page.waitForResponse(this.addItemPathRegex);
     await this.addLayoutItemDialog.continueButton.click();
     await addItemResponse;
     await this.addLayoutItem(item, 1);
