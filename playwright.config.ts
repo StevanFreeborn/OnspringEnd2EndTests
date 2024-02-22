@@ -125,7 +125,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       testDir: 'cleanup',
       testMatch: '**/*.cleanup.ts',
       dependencies: ['setup'],
-      outputDir: 'cleanUpTestResultsDir',
+      outputDir: 'cleanup-results',
       use: {
         ...devices['Desktop Edge'],
         video: 'off',

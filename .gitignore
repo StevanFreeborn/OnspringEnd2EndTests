@@ -10,6 +10,6 @@ config/.env
 .auth
 blob-report/
 .vercel
-cleanUpTestResultsDir/
-**/dataImportFiles/
+cleanup-results/
+data-import-files/
 downloads/

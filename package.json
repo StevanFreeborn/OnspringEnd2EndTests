@@ -16,7 +16,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
-    "cleanup:results": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanUpTestResultsDir/ ./downloads/"
+    "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/"
   },
   "keywords": [
     "onspring",

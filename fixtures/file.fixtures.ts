@@ -3,13 +3,14 @@ import path from 'path';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
 
 type FileExtension = '.jpg' | '.txt';
+
 export type TestFile = {
   name: string;
   path: string;
 };
 
 async function getTestFileWithExtension(extension: FileExtension) {
-  const testFilesDir = path.join(process.cwd(), 'testFiles');
+  const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');
   const testFiles = fs.readdirSync(testFilesDir);
   const testFile = testFiles.find(file => file.endsWith(extension));
   if (!testFile) {
@@ -43,7 +44,7 @@ export async function txtFile({}, use: (r: TestFile) => Promise<void>) {
 export function writeCsvFile<T extends object>(data: T[]) {
   const uniqueId = FakeDataFactory.createUniqueIdentifier();
   const fileName = `${uniqueId}_testData.csv`;
-  const csvDir = path.join(process.cwd(), 'dataImportFiles');
+  const csvDir = path.join(process.cwd(), 'data-import-files');
 
   if (fs.existsSync(csvDir) === false) {
     fs.mkdirSync(csvDir);
