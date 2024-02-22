@@ -40,9 +40,7 @@ test.describe('email body', () => {
     });
 
     await test.step('Create the email body', async () => {
-      await appAdminPage.messagingTab.addEmailBodyLink.click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.nameInput.fill(emailBodyName);
-      await appAdminPage.messagingTab.createEmailBodyDialog.saveButton.click();
+      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
       await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
     });
 
@@ -51,13 +49,50 @@ test.describe('email body', () => {
     });
   });
 
-  test("Create a copy of an Email Body on an app from an app's Messaging tab", async () => {
+  test("Create a copy of an Email Body on an app from an app's Messaging tab", async ({
+    targetApp,
+    appAdminPage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-210',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step("Navigate to the app's admin page", async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step("Navigate to the app's Messaging tab", async () => {
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create the email body to be copied', async () => {
+      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step("Navigate back to the app's messaging tab", async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create a copy of the email body', async () => {
+      await appAdminPage.messagingTab.addEmailBodyLink.click();
+      await appAdminPage.messagingTab.createEmailBodyDialog.copyFromRadioButton.click();
+      await appAdminPage.messagingTab.createEmailBodyDialog.selectDropdown.click();
+      await appAdminPage.messagingTab.createEmailBodyDialog.getEmailBodyToCopy(emailBodyName).click();
+      await appAdminPage.messagingTab.createEmailBodyDialog.nameInput.fill(emailBodyCopyName);
+      await appAdminPage.messagingTab.createEmailBodyDialog.saveButton.click();
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Verify the Email Body was created', async () => {
+      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+    });
   });
 
   test('Add Email Body to an app from the Create button in the admin header', async () => {
