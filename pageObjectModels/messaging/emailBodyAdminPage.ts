@@ -26,4 +26,16 @@ export class EmailBodyAdminPage extends BaseAdminPage {
     await this.createEmailBodyDialog.selectApp(appName);
     await this.createEmailBodyDialog.saveButton.click();
   }
+
+  async createEmailBodyCopy(appName: string, emailBodyToCopy: string, emailBodyCopyName: string) {
+    await this.createEmailBodyButton.click();
+
+    await this.createEmailBodyDialog.copyFromRadioButton.waitFor();
+    await this.createEmailBodyDialog.selectApp(appName);
+    await this.createEmailBodyDialog.copyFromRadioButton.click();
+    await this.createEmailBodyDialog.copyFromDropdown.click();
+    await this.createEmailBodyDialog.getEmailBodyToCopy(emailBodyToCopy).click();
+    await this.createEmailBodyDialog.nameInput.fill(emailBodyCopyName);
+    await this.createEmailBodyDialog.saveButton.click();
+  }
 }

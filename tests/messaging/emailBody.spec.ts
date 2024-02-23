@@ -188,13 +188,39 @@ test.describe('email body', () => {
     });
   });
 
-  test('Create a copy of an Email Body on an app from the Create Email Body button on the email body page', async () => {
+  test('Create a copy of an Email Body on an app from the Create Email Body button on the email body page', async ({
+    targetApp,
+    emailBodyAdminPage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-214',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step('Navigate to the email body admin page', async () => {
+      await emailBodyAdminPage.goto();
+    });
+
+    await test.step('Create the email body to be copied', async () => {
+      await emailBodyAdminPage.createEmailBody(targetApp.name, emailBodyName);
+      await emailBodyAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the email body admin page', async () => {
+      await emailBodyAdminPage.goto();
+    });
+
+    await test.step('Copy the email body', async () => {
+      await emailBodyAdminPage.createEmailBodyCopy(targetApp.name, emailBodyName, emailBodyCopyName);
+    });
+
+    await test.step('Verify the email body was copied', async () => {
+      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+    });
   });
 
   test("Update an Email Body's configurations on an app from an app's Messaging tab", async () => {
