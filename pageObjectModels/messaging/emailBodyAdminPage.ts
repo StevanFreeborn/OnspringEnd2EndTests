@@ -1,0 +1,29 @@
+import { Locator, Page } from '@playwright/test';
+import { CreateEmailBodyDialogForApp } from '../../componentObjectModels/dialogs/createEmailBodyDialog';
+import { BaseAdminPage } from '../baseAdminPage';
+
+export class EmailBodyAdminPage extends BaseAdminPage {
+  readonly path: string;
+  readonly createEmailBodyButton: Locator;
+  readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
+
+  constructor(page: Page) {
+    super(page);
+    this.path = '/Admin/Messaging/EmailBody';
+    this.createEmailBodyButton = page.getByRole('button', { name: 'Create Email Body' });
+    this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
+  }
+
+  async goto() {
+    await this.page.goto(this.path);
+  }
+
+  async createEmailBody(appName: string, emailBodyName: string) {
+    await this.createEmailBodyButton.click();
+
+    await this.createEmailBodyDialog.nameInput.waitFor();
+    await this.createEmailBodyDialog.nameInput.fill(emailBodyName);
+    await this.createEmailBodyDialog.selectApp(appName);
+    await this.createEmailBodyDialog.saveButton.click();
+  }
+}

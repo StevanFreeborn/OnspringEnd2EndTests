@@ -5,6 +5,7 @@ import { App } from '../../models/app';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
+import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
 import { AnnotationType } from '../annotations';
 
 type EmailBodyTestFixtures = {
@@ -12,6 +13,7 @@ type EmailBodyTestFixtures = {
   adminHomePage: AdminHomePage;
   appAdminPage: AppAdminPage;
   editEmailBodyPage: EditEmailBodyPage;
+  emailBodyAdminPage: EmailBodyAdminPage;
 };
 
 const test = base.extend<EmailBodyTestFixtures>({
@@ -19,6 +21,7 @@ const test = base.extend<EmailBodyTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => use(new AdminHomePage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
+  emailBodyAdminPage: async ({ sysAdminPage }, use) => use(new EmailBodyAdminPage(sysAdminPage)),
 });
 
 test.describe('email body', () => {
@@ -159,13 +162,30 @@ test.describe('email body', () => {
     });
   });
 
-  test('Add Email Body to an app from the Create Email Body button on the email body page', async () => {
+  test('Add Email Body to an app from the Create Email Body button on the email body page', async ({
+    targetApp,
+    emailBodyAdminPage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-213',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step('Navigate to email body admin page', async () => {
+      await emailBodyAdminPage.goto();
+    });
+
+    await test.step('Create the email body', async () => {
+      await emailBodyAdminPage.createEmailBody(targetApp.name, emailBodyName);
+      await emailBodyAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Verify the email body was created', async () => {
+      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyName);
+    });
   });
 
   test('Create a copy of an Email Body on an app from the Create Email Body button on the email body page', async () => {
