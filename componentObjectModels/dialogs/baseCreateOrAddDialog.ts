@@ -3,12 +3,12 @@ import { Locator, Page } from '@playwright/test';
 abstract class BaseCreateOrAddDialog {
   protected readonly page: Page;
   readonly copyFromRadioButton: Locator;
-  readonly selectDropdown: Locator;
+  readonly copyFromDropdown: Locator;
 
   protected constructor(page: Page) {
     this.page = page;
     this.copyFromRadioButton = page.getByText('Copy from');
-    this.selectDropdown = page.getByRole('listbox').first();
+    this.copyFromDropdown = page.locator('.copy-from-dropdown');
   }
 
   protected getItemToCopy(itemName: string) {

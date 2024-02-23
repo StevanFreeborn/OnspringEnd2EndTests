@@ -162,7 +162,7 @@ test.describe('API Key', () => {
       await expect(adminHomePage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
-      await adminHomePage.createApiKeyDialog.selectDropdown.click();
+      await adminHomePage.createApiKeyDialog.copyFromDropdown.click();
       await adminHomePage.createApiKeyDialog.getApiKeyToCopy(appName).click();
       await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
       await adminHomePage.createApiKeyDialog.saveButton.click();
@@ -207,7 +207,7 @@ test.describe('API Key', () => {
 
       await adminHomePage.securityCreateMenu.getByText('API Key').click();
       await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
-      await adminHomePage.createApiKeyDialog.selectDropdown.click();
+      await adminHomePage.createApiKeyDialog.copyFromDropdown.click();
       await adminHomePage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
       await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
       await adminHomePage.createApiKeyDialog.saveButton.click();
@@ -251,7 +251,7 @@ test.describe('API Key', () => {
       await expect(apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
 
       await apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton.click();
-      await apiKeysAdminPage.createApiKeyDialog.selectDropdown.click();
+      await apiKeysAdminPage.createApiKeyDialog.copyFromDropdown.click();
       await apiKeysAdminPage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
       await apiKeysAdminPage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
       await apiKeysAdminPage.createApiKeyDialog.saveButton.click();

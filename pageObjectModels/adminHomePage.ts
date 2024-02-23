@@ -98,7 +98,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createImportConfigDialog.copyFromRadioButton.waitFor();
     await this.createImportConfigDialog.copyFromRadioButton.click();
-    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.copyFromDropdown.click();
     await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
     await this.createImportConfigDialog.nameInput.fill(importName);
     await this.createImportConfigDialog.saveButton.click();
@@ -124,7 +124,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createImportConfigDialog.copyFromRadioButton.waitFor();
     await this.createImportConfigDialog.copyFromRadioButton.click();
-    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.copyFromDropdown.click();
     await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
     await this.createImportConfigDialog.nameInput.fill(importName);
     await this.createImportConfigDialog.saveButton.click();
@@ -164,6 +164,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createApiKeyDialog.nameInput.waitFor();
     await this.createApiKeyDialog.nameInput.fill(apiKeyName);
     await this.createApiKeyDialog.saveButton.click();
+  }
+
+  async createEmailBodyCopyUsingHeaderCreateButton(appName: string, emailBodyToCopy: string, copyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailBodyCreateMenuOption.click();
+
+    await this.createEmailBodyDialog.selectApp(appName);
+    await this.createEmailBodyDialog.copyFromRadioButton.click();
+    await this.createEmailBodyDialog.copyFromDropdown.click();
+    await this.createEmailBodyDialog.getEmailBodyToCopy(emailBodyToCopy).click();
+    await this.createEmailBodyDialog.nameInput.fill(copyName);
+    await this.createEmailBodyDialog.saveButton.click();
   }
 
   async createEmailBodyUsingHeaderCreateButton(appName: string, emailBodyName: string) {

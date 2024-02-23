@@ -96,7 +96,7 @@ test.describe('text formula field', () => {
       await appAdminPage.layoutTab.addFieldButton.click();
       await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
       await appAdminPage.page.waitForLoadState('networkidle');
@@ -176,7 +176,7 @@ test.describe('text formula field', () => {
       await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem('Formula');
 
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.selectDropdown.click();
+      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
       await appAdminPage.page.waitForLoadState('networkidle');
