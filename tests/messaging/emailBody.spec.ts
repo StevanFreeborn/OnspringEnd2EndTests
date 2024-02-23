@@ -86,7 +86,7 @@ test.describe('email body', () => {
     await test.step('Create a copy of the email body', async () => {
       await appAdminPage.messagingTab.addEmailBodyLink.click();
       await appAdminPage.messagingTab.createEmailBodyDialog.copyFromRadioButton.click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.selectDropdown.click();
+      await appAdminPage.messagingTab.createEmailBodyDialog.copyFromDropdown.click();
       await appAdminPage.messagingTab.createEmailBodyDialog.getEmailBodyToCopy(emailBodyName).click();
       await appAdminPage.messagingTab.createEmailBodyDialog.nameInput.fill(emailBodyCopyName);
       await appAdminPage.messagingTab.createEmailBodyDialog.saveButton.click();
@@ -124,13 +124,39 @@ test.describe('email body', () => {
     });
   });
 
-  test('Create a copy of an Email Body on an app from the Create button in the admin header', async () => {
+  test('Create a copy of an Email Body on an app from the Create button in the admin header', async ({
+    targetApp,
+    adminHomePage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-212',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email body to be copied', async () => {
+      await adminHomePage.createEmailBodyUsingHeaderCreateButton(targetApp.name, emailBodyName);
+      await adminHomePage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Copy the email body', async () => {
+      await adminHomePage.createEmailBodyCopyUsingHeaderCreateButton(targetApp.name, emailBodyName, emailBodyCopyName);
+    });
+
+    await test.step('Verify the email body was copied', async () => {
+      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+    });
   });
 
   test('Add Email Body to an app from the Create Email Body button on the email body page', async () => {
