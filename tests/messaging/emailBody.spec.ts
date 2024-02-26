@@ -223,11 +223,45 @@ test.describe('email body', () => {
     });
   });
 
-  test("Update an Email Body's configurations on an app from an app's Messaging tab", async () => {
+  test("Update an Email Body's configurations on an app from an app's Messaging tab", async ({
+    targetApp,
+    appAdminPage,
+    editEmailBodyPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-215',
     });
+
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+
+    await test.step("Navigate to the app's home page", async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step("Navigate to the app's messaging tab", async () => {
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create the email body to update', async () => {
+      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step("Navigate back to the app's messaging tab", async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Update the email body', async () => {
+      const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBodyName });
+
+      await emailBodyRow.hover();
+      await emailBodyRow.getByTitle('Edit Email Body').click();
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Verify the email body was updated', async () => {});
 
     expect(true).toBe(true);
   });

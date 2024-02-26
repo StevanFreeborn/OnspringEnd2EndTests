@@ -4,10 +4,12 @@ import { CreateEmailBodyDialog } from '../dialogs/createEmailBodyDialog';
 export class AppMessagingTab {
   readonly addEmailBodyLink: Locator;
   readonly createEmailBodyDialog: CreateEmailBodyDialog;
+  readonly emailBodyGrid: Locator;
 
   constructor(page: Page) {
     this.addEmailBodyLink = page.getByRole('link', { name: 'Add Email Body' });
     this.createEmailBodyDialog = new CreateEmailBodyDialog(page);
+    this.emailBodyGrid = page.locator('#grid-emails');
   }
 
   async createEmailBody(emailBodyName: string) {
