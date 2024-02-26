@@ -16,9 +16,11 @@ export class EditEmailBodyPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Admin\/Messaging\/EmailBody\/\d+\/Edit/;
+
     this.generalTabButton = page.getByRole('tab', { name: 'General' });
-    this.generalTab = new EmailGeneralTab(page);
     this.contentsTabButton = page.getByRole('tab', { name: 'Contents' });
+
+    this.generalTab = new EmailGeneralTab(page);
     this.contentsTab = new EmailContentsTab(page);
   }
 
