@@ -59,6 +59,8 @@ export class EmailService {
         });
       });
 
+      client.once('error', (err: Error) => resolve(Err(err)));
+
       client.connect();
     });
   }

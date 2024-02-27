@@ -42,6 +42,7 @@
     "zod": "^3.22.4"
   },
   "dependencies": {
+    "css.escape": "^1.5.1",
     "imap": "^0.8.17",
     "mailparser": "^3.6.7",
     "pdfjs-dist": "^4.0.379",

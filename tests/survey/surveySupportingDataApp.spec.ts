@@ -159,7 +159,7 @@ test.describe('survey supporting data app', () => {
       await expect(adminHomePage.createSurveyDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
-      await adminHomePage.createSurveyDialog.selectDropdown.click();
+      await adminHomePage.createSurveyDialog.copyFromDropdown.click();
       await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
       await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await adminHomePage.createSurveyDialog.continueButton.click();
@@ -212,7 +212,7 @@ test.describe('survey supporting data app', () => {
       await expect(surveysAdminPage.createSurveyDialog.copyFromRadioButton).toBeVisible();
 
       await surveysAdminPage.createSurveyDialog.copyFromRadioButton.click();
-      await surveysAdminPage.createSurveyDialog.selectDropdown.click();
+      await surveysAdminPage.createSurveyDialog.copyFromDropdown.click();
       await surveysAdminPage.createSurveyDialog.getSurveyToCopy(surveyName).click();
       await surveysAdminPage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await surveysAdminPage.createSurveyDialog.continueButton.click();
@@ -261,7 +261,7 @@ test.describe('survey supporting data app', () => {
       await expect(adminHomePage.createSurveyDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
-      await adminHomePage.createSurveyDialog.selectDropdown.click();
+      await adminHomePage.createSurveyDialog.copyFromDropdown.click();
       await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
       await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
       await adminHomePage.createSurveyDialog.continueButton.click();

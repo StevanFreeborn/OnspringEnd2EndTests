@@ -1,4 +1,7 @@
 {
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
   "cSpell.words": [
     "colorpicker",
     "colspan",
@@ -15,13 +18,17 @@
     "mailparser",
     "navs",
     "networkidle",
+    "numerictextbox",
     "onspringend",
+    "optionlabel",
     "pwservice",
     "signin",
     "tabstrip",
     "teardowns",
     "textbox",
     "timespan",
+    "treeitem",
+    "Treeview",
     "VNEXT",
     "VPRIOR"
   ],

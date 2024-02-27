@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { toPascalCase } from '../../utils';
 import { FieldType } from '../menus/addFieldTypeMenu';
+import 'css.escape';
 
 export type BaseGetParams = {
   tabName: string | undefined;
@@ -23,7 +24,7 @@ export class BaseForm {
   protected page: Page;
   readonly contentContainer: Locator;
   createFormControlSelector(field: string, controlSelector = 'input') {
-    const pascalCaseFieldName = toPascalCase(field);
+    const pascalCaseFieldName = CSS.escape(toPascalCase(field));
     return `.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 

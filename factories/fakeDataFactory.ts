@@ -8,6 +8,7 @@ export const TEST_GROUP_NAME = 'group-test';
 export const TEST_API_KEY_NAME = 'api-key-test';
 export const TEST_CONTAINER_NAME = 'container-test';
 export const TEST_DATA_IMPORT_NAME = 'data-import-test';
+export const TEST_EMAIL_BODY_NAME = 'email-body-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -90,5 +91,10 @@ export class FakeDataFactory {
   static createFakeDataImportName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_DATA_IMPORT_NAME}`;
+  }
+
+  static createFakeEmailBodyName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_EMAIL_BODY_NAME}`;
   }
 }

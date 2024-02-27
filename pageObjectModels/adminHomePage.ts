@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
@@ -34,6 +35,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly integrationTileCreateButton: Locator;
   readonly integrationCreateMenu: Locator;
   readonly createImportConfigDialog: CreateImportConfigDialog;
+
+  readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -77,6 +80,8 @@ export class AdminHomePage extends BaseAdminPage {
     this.integrationTileCreateButton = this.getTileCreateButton('Integration');
     this.integrationCreateMenu = this.getTileCreateMenu('Integration');
     this.createImportConfigDialog = new CreateImportConfigDialog(page);
+
+    this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
   }
 
   async goto() {
@@ -93,7 +98,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createImportConfigDialog.copyFromRadioButton.waitFor();
     await this.createImportConfigDialog.copyFromRadioButton.click();
-    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.copyFromDropdown.click();
     await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
     await this.createImportConfigDialog.nameInput.fill(importName);
     await this.createImportConfigDialog.saveButton.click();
@@ -119,7 +124,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createImportConfigDialog.copyFromRadioButton.waitFor();
     await this.createImportConfigDialog.copyFromRadioButton.click();
-    await this.createImportConfigDialog.selectDropdown.click();
+    await this.createImportConfigDialog.copyFromDropdown.click();
     await this.createImportConfigDialog.getImportToCopy(importToCopy).click();
     await this.createImportConfigDialog.nameInput.fill(importName);
     await this.createImportConfigDialog.saveButton.click();
@@ -159,6 +164,29 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createApiKeyDialog.nameInput.waitFor();
     await this.createApiKeyDialog.nameInput.fill(apiKeyName);
     await this.createApiKeyDialog.saveButton.click();
+  }
+
+  async createEmailBodyCopyUsingHeaderCreateButton(appName: string, emailBodyToCopy: string, copyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailBodyCreateMenuOption.click();
+
+    await this.createEmailBodyDialog.selectApp(appName);
+    await this.createEmailBodyDialog.copyFromRadioButton.click();
+    await this.createEmailBodyDialog.copyFromDropdown.click();
+    await this.createEmailBodyDialog.getEmailBodyToCopy(emailBodyToCopy).click();
+    await this.createEmailBodyDialog.nameInput.fill(copyName);
+    await this.createEmailBodyDialog.saveButton.click();
+  }
+
+  async createEmailBodyUsingHeaderCreateButton(appName: string, emailBodyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailBodyCreateMenuOption.click();
+
+    await this.createEmailBodyDialog.selectApp(appName);
+    await this.createEmailBodyDialog.nameInput.fill(emailBodyName);
+    await this.createEmailBodyDialog.saveButton.click();
   }
 
   async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {

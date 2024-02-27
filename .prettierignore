@@ -1,1 +1,8 @@
 tsconfig.json
+.github/
+.vscode/
+blob-report/
+cleanup-results/
+node_modules/
+palywright-report/
+test-results/

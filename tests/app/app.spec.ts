@@ -155,7 +155,7 @@ test.describe('app', () => {
       await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createAppDialog.copyFromRadioButton.click();
-      await adminHomePage.createAppDialog.selectDropdown.click();
+      await adminHomePage.createAppDialog.copyFromDropdown.click();
       await adminHomePage.createAppDialog.getAppToCopy(appName).click();
       await adminHomePage.createAppDialog.continueButton.click();
 
@@ -204,7 +204,7 @@ test.describe('app', () => {
       await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await adminHomePage.createAppDialog.copyFromRadioButton.click();
-      await adminHomePage.createAppDialog.selectDropdown.click();
+      await adminHomePage.createAppDialog.copyFromDropdown.click();
       await adminHomePage.createAppDialog.getAppToCopy(appName).click();
       await adminHomePage.createAppDialog.continueButton.click();
 
@@ -258,7 +258,7 @@ test.describe('app', () => {
       await expect(appsAdminPage.createAppDialog.copyFromRadioButton).toBeVisible();
 
       await appsAdminPage.createAppDialog.copyFromRadioButton.click();
-      await appsAdminPage.createAppDialog.selectDropdown.click();
+      await appsAdminPage.createAppDialog.copyFromDropdown.click();
       await appsAdminPage.createAppDialog.getAppToCopy(appName).click();
       await appsAdminPage.createAppDialog.continueButton.click();
 
