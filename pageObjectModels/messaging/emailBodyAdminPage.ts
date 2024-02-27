@@ -6,12 +6,14 @@ export class EmailBodyAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly createEmailBodyButton: Locator;
   readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
+  readonly emailBodyGrid: Locator;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Messaging/EmailBody';
     this.createEmailBodyButton = page.getByRole('button', { name: 'Create Email Body' });
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
+    this.emailBodyGrid = page.locator('#grid');
   }
 
   async goto() {
