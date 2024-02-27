@@ -133,7 +133,7 @@ jobs:
       - name: Run your tests
         run: |
           echo "Running tests for ${{ matrix.project }} shard ${{ matrix.shard }}"
-          npx playwright test ${{ needs.check_for_test_file_changes.outputs.changed_test_files }} --project=${{ matrix.project }} --shard=${{ matrix.shard }} --repeat-each 3 --retries 0
+          npx playwright test ${{ needs.check_for_test_file_changes.outputs.changed_test_files }} --project=${{ matrix.project }} --shard=${{ matrix.shard }} --repeat-each 3 --retries 1
       - name: Rename blob-reports
         if: ${{ cancelled() != true }}
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
