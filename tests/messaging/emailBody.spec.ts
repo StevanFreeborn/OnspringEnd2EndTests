@@ -420,7 +420,7 @@ test.describe('email body', () => {
       await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
     });
 
-    await test.step('Navigate to the email body home page', async () => {
+    await test.step('Navigate to the email bodies admin page', async () => {
       await emailBodyAdminPage.goto();
     });
 
@@ -472,21 +472,83 @@ test.describe('email body', () => {
     expect(true).toBe(true);
   });
 
-  test("Delete an Email Body from an app's Messaging tab", async () => {
+  test("Delete an Email Body from an app's Messaging tab", async ({ targetApp, appAdminPage, editEmailBodyPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-217',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBodyName });
+
+    await test.step("Navigate to the app's admin page", async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step("Navigate to the app's messaging tab", async () => {
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create the email body to delete', async () => {
+      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the app messaging tab', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Delete the email body', async () => {
+      await emailBodyRow.hover();
+      await emailBodyRow.getByTitle('Delete Email Body').click();
+      await appAdminPage.messagingTab.deleteEmailBodyDialog.deleteButton.click();
+    });
+
+    await test.step('Verify the email body was deleted', async () => {
+      await expect(emailBodyRow).not.toBeAttached();
+    });
   });
 
-  test('Delete an Email Body from the Email Body page', async () => {
+  test('Delete an Email Body from the Email Body page', async ({
+    targetApp,
+    appAdminPage,
+    editEmailBodyPage,
+    emailBodyAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-218',
     });
 
-    expect(true).toBe(true);
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const emailBodyRow = emailBodyAdminPage.emailBodyGrid.getByRole('row', { name: emailBodyName });
+
+    await test.step("Navigate to the app's admin page", async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step("Navigate to the app's messaging tab", async () => {
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create the email body to delete', async () => {
+      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
+      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+    });
+
+    await test.step('Navigate to the email bodies admin page', async () => {
+      await emailBodyAdminPage.goto();
+    });
+
+    await test.step('Delete the email body', async () => {
+      await emailBodyRow.hover();
+      await emailBodyRow.getByTitle('Delete Email Body').click();
+      await emailBodyAdminPage.deleteEmailBodyDialog.deleteButton.click();
+    });
+
+    await test.step('Verify the email body was deleted', async () => {
+      await expect(emailBodyRow).not.toBeAttached();
+    });
   });
 });

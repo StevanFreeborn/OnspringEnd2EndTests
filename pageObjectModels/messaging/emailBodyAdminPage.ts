@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateEmailBodyDialogForApp } from '../../componentObjectModels/dialogs/createEmailBodyDialog';
+import { DeleteEmailBodyDialog } from '../../componentObjectModels/dialogs/deleteEmailBodyDialog';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class EmailBodyAdminPage extends BaseAdminPage {
@@ -7,6 +8,7 @@ export class EmailBodyAdminPage extends BaseAdminPage {
   readonly createEmailBodyButton: Locator;
   readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
   readonly emailBodyGrid: Locator;
+  readonly deleteEmailBodyDialog: DeleteEmailBodyDialog;
 
   constructor(page: Page) {
     super(page);
@@ -14,6 +16,7 @@ export class EmailBodyAdminPage extends BaseAdminPage {
     this.createEmailBodyButton = page.getByRole('button', { name: 'Create Email Body' });
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
     this.emailBodyGrid = page.locator('#grid');
+    this.deleteEmailBodyDialog = new DeleteEmailBodyDialog(page);
   }
 
   async goto() {

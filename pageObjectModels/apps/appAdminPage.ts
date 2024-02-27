@@ -32,7 +32,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   }
 
   async goto(appId: number) {
-    const path = `${this.path}/${appId}`;
+    const path = `${this.path}${appId}`;
     await this.page.goto(path);
   }
 
