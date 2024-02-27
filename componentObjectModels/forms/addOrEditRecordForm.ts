@@ -1,4 +1,5 @@
 import { Locator } from '@playwright/test';
+import 'css.escape';
 import { toPascalCase } from '../../utils';
 import { AttachmentFieldControl } from '../controls/attachmentFieldControl';
 import { DateFieldControl } from '../controls/dateFieldControl';
@@ -30,7 +31,7 @@ export type GetReferenceFieldParams = BaseGetFieldParams & {
 export class AddOrEditRecordForm extends BaseForm {
   readonly contentContainer: Locator;
   createFormControlSelector(field: string, controlSelector = 'input') {
-    const pascalCaseFieldName = toPascalCase(field);
+    const pascalCaseFieldName = CSS.escape(toPascalCase(field));
     return `.data-${pascalCaseFieldName} ${controlSelector}`;
   }
 

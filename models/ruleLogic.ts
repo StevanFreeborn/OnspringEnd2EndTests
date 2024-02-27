@@ -3,33 +3,59 @@ import { Rule } from './rule';
 export abstract class RuleLogic {
   readonly mode: string;
   readonly rules: Rule[];
+  readonly addRecordIsNew: boolean;
 
-  protected constructor({ mode, rules }: { mode: string; rules: Rule[] }) {
+  protected constructor({
+    mode,
+    rules,
+    addRecordIsNew = false,
+  }: {
+    mode: string;
+    rules: Rule[];
+    addRecordIsNew: boolean;
+  }) {
     this.rules = rules;
     this.mode = mode;
+    this.addRecordIsNew = addRecordIsNew;
   }
 }
 
 abstract class BaseAdvancedRuleLogic extends RuleLogic {
   readonly useFilterLogic: boolean;
 
-  protected constructor({ useFilterLogic, rules }: { useFilterLogic: boolean; rules: Rule[] }) {
-    super({ mode: 'Advanced Mode', rules });
+  protected constructor({
+    useFilterLogic,
+    rules,
+    addRecordIsNew,
+  }: {
+    useFilterLogic: boolean;
+    rules: Rule[];
+    addRecordIsNew: boolean;
+  }) {
+    super({ mode: 'Advanced Mode', rules, addRecordIsNew });
     this.useFilterLogic = useFilterLogic;
   }
 }
 
 export class SimpleRuleLogic extends RuleLogic {
-  constructor({ rules }: { rules: Rule[] }) {
-    super({ mode: 'Simple Mode', rules });
+  constructor({ rules, addRecordIsNew = false }: { rules: Rule[]; addRecordIsNew?: boolean }) {
+    super({ mode: 'Simple Mode', rules, addRecordIsNew });
   }
 }
 
-export class AdvancedFilterRuleLogic extends BaseAdvancedRuleLogic {
+export class AdvancedRuleLogic extends BaseAdvancedRuleLogic {
   readonly operator: 'AND' | 'OR';
 
-  constructor({ operator, rules }: { operator: 'AND' | 'OR'; rules: Rule[] }) {
-    super({ rules, useFilterLogic: false });
+  constructor({
+    operator,
+    rules,
+    addRecordIsNew = false,
+  }: {
+    operator: 'AND' | 'OR';
+    rules: Rule[];
+    addRecordIsNew?: boolean;
+  }) {
+    super({ rules, useFilterLogic: false, addRecordIsNew });
     this.operator = operator;
   }
 }
@@ -37,8 +63,16 @@ export class AdvancedFilterRuleLogic extends BaseAdvancedRuleLogic {
 export class FilterRuleLogic extends BaseAdvancedRuleLogic {
   readonly filterLogic: string;
 
-  constructor({ filterLogic, rules }: { filterLogic: string; rules: Rule[] }) {
-    super({ rules, useFilterLogic: true });
+  constructor({
+    filterLogic,
+    rules,
+    addRecordIsNew = false,
+  }: {
+    filterLogic: string;
+    rules: Rule[];
+    addRecordIsNew?: boolean;
+  }) {
+    super({ rules, useFilterLogic: true, addRecordIsNew });
     this.filterLogic = filterLogic;
   }
 }

@@ -2,9 +2,9 @@ import { EmailReminder } from './emailReminder';
 import { RuleLogic } from './ruleLogic';
 
 type Status = 'Active' | 'Inactive';
-type Subscription = 'Required' | 'Optional';
-type Priority = 'Normal' | 'High' | 'Low';
-type SendOnSaveOption = 'Always' | 'Only When Record Added' | 'Never (Reminders Only)';
+export type Subscription = 'Required' | 'Optional';
+export type Priority = 'Normal' | 'High' | 'Low';
+export type SendOnSaveOption = 'Always' | 'Only When Record Added' | 'Never (Reminders Only)';
 
 type EmailBodyObject = {
   id?: number;
@@ -18,16 +18,18 @@ type EmailBodyObject = {
   description?: string;
   template?: string;
   allowDownloads?: boolean;
+  recordLinkText?: string;
   recipientsBasedOnFields?: string[];
   specificGroups?: string[];
   specificUsers?: string[];
   emailAddressesInTextField?: string;
   specificExternalUsers?: string[];
+  optInCertification?: boolean;
   subscription?: Subscription;
   priority?: Priority;
   sendOnSave?: SendOnSaveOption;
   enableReminders?: boolean;
-  reminderDateField: string;
+  reminderDateField?: string;
   reminders?: EmailReminder[];
   sendLogic?: RuleLogic;
 };
@@ -43,12 +45,14 @@ export class EmailBody {
   readonly fromAddress: string;
   readonly description: string;
   readonly template: string;
+  readonly recordLinkText: string;
   readonly allowDownloads: boolean;
   readonly recipientsBasedOnFields: string[];
   readonly specificGroups: string[];
   readonly specificUsers: string[];
   readonly emailAddressesInTextField: string;
   readonly specificExternalUsers: string[];
+  readonly optInCertification: boolean;
   readonly subscription: Subscription;
   readonly priority: Priority;
   readonly sendOnSave: SendOnSaveOption;
@@ -68,12 +72,14 @@ export class EmailBody {
     status = 'Active',
     description = '',
     template = 'None',
+    recordLinkText = '',
     allowDownloads = false,
     recipientsBasedOnFields = [],
     specificGroups = [],
     specificUsers = [],
     emailAddressesInTextField = '',
     specificExternalUsers = [],
+    optInCertification = false,
     subscription = 'Required',
     priority = 'Normal',
     sendOnSave = 'Always',
@@ -93,11 +99,13 @@ export class EmailBody {
     this.description = description;
     this.template = template;
     this.allowDownloads = allowDownloads;
+    this.recordLinkText = recordLinkText;
     this.recipientsBasedOnFields = recipientsBasedOnFields;
     this.specificGroups = specificGroups;
     this.specificUsers = specificUsers;
     this.emailAddressesInTextField = emailAddressesInTextField;
     this.specificExternalUsers = specificExternalUsers;
+    this.optInCertification = optInCertification;
     this.subscription = subscription;
     this.priority = priority;
     this.sendOnSave = sendOnSave;

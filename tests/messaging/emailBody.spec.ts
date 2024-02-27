@@ -1,9 +1,16 @@
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { EmailBody } from '../../models/emailBody';
+import { TextRuleWithValue } from '../../models/rule';
+import { SimpleRuleLogic } from '../../models/ruleLogic';
+import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
 import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
 import { AnnotationType } from '../annotations';
@@ -14,6 +21,8 @@ type EmailBodyTestFixtures = {
   appAdminPage: AppAdminPage;
   editEmailBodyPage: EditEmailBodyPage;
   emailBodyAdminPage: EmailBodyAdminPage;
+  addContentPage: AddContentPage;
+  editContentPage: EditContentPage;
 };
 
 const test = base.extend<EmailBodyTestFixtures>({
@@ -22,6 +31,8 @@ const test = base.extend<EmailBodyTestFixtures>({
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
   emailBodyAdminPage: async ({ sysAdminPage }, use) => use(new EmailBodyAdminPage(sysAdminPage)),
+  addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),
+  editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
 });
 
 test.describe('email body', () => {
@@ -227,16 +238,58 @@ test.describe('email body', () => {
     targetApp,
     appAdminPage,
     editEmailBodyPage,
+    addContentPage,
+    editContentPage,
+    sysAdminEmail,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-215',
     });
 
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textField = new TextField({ name: 'Send Email?' });
+
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+
+    const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
+
+    const bodyTemplate = 'This email is from record id';
+
+    const emailBody = new EmailBody({
+      name: emailBodyName,
+      appName: targetApp.name,
+      status: 'Active',
+      subject: `Test Subject - ${emailBodyName}`,
+      body: bodyTemplate + ' {:Record Id}',
+      fromName: 'Automation Test',
+      fromAddress: 'automation@onspring.tech',
+      recipientsBasedOnFields: ['Created By'],
+      sendLogic: new SimpleRuleLogic({
+        rules: [rule],
+      }),
+    });
 
     await test.step("Navigate to the app's home page", async () => {
       await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step("Navigate to the app's layout tab", async () => {
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field and add to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: textField.name,
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionRow: 0,
+        sectionColumn: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
@@ -244,7 +297,7 @@ test.describe('email body', () => {
     });
 
     await test.step('Create the email body to update', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
+      await appAdminPage.messagingTab.createEmailBody(emailBody.name);
       await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
     });
 
@@ -253,17 +306,50 @@ test.describe('email body', () => {
       await appAdminPage.messagingTabButton.click();
     });
 
-    await test.step('Update the email body', async () => {
-      const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBodyName });
+    await test.step('Open email body to update', async () => {
+      const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBody.name });
 
       await emailBodyRow.hover();
       await emailBodyRow.getByTitle('Edit Email Body').click();
       await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
     });
 
-    await test.step('Verify the email body was updated', async () => {});
+    await test.step('Update the email body', async () => {
+      await editEmailBodyPage.updateEmailBody(emailBody);
+      await editEmailBodyPage.save();
+    });
 
-    expect(true).toBe(true);
+    await test.step('Add a content record that satisfies send logic', async () => {
+      await addContentPage.goto(targetApp.id);
+      const editableTextField = await addContentPage.form.getField({
+        fieldName: textField.name,
+        fieldType: textField.type as FieldType,
+        tabName: tabName,
+        sectionName: sectionName,
+      });
+
+      await editableTextField.fill(rule.value);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Verify the email body was updated', async () => {
+      await expect(async () => {
+        const searchCriteria = [['TEXT', emailBodyName]];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        expect(email.subject).toBe(emailBody.subject);
+        expect(email.text).toContain(bodyTemplate + ' 1');
+      }).toPass({
+        intervals: [5000],
+        timeout: 60_000,
+      });
+    });
   });
 
   test("Update an Email Body's configurations on an app from the Email Body page", async () => {

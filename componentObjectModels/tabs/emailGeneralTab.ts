@@ -9,7 +9,7 @@ export class EmailGeneralTab {
 
   constructor(page: Page) {
     this.nameInput = page.getByLabel('Name', { exact: true });
-    this.descriptionEditor = page.locator('.content-area.mce-content-body');
+    this.descriptionEditor = page.locator('.content-area.mce-content-body:visible');
     this.templateSelect = page.getByRole('listbox', { name: 'Template' });
     this.statusSwitch = page.getByRole('switch', { name: 'Status' });
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
@@ -17,7 +17,7 @@ export class EmailGeneralTab {
 
   async selectTemplate(template: string) {
     await this.templateSelect.click();
-    await this.templateSelect.page().getByRole('option', { name: template }).click();
+    await this.templateSelect.page().locator('.k-list-optionlabel', { hasText: template }).click();
   }
 
   async enableStatus() {
