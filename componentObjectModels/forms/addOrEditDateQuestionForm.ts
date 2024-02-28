@@ -8,10 +8,10 @@ export class AddOrEditDateQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async fillOutForm(question: DateQuestion) {
-    await this.baseFillOutForm(question);
+    await super.fillOutForm(question);
   }
 
   async clearForm() {
-    await this.baseClearForm();
+    await super.clearForm();
   }
 }

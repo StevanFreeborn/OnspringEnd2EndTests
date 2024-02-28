@@ -14,7 +14,7 @@ export class AddOrEditMatrixQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async fillOutForm(question: MatrixQuestion) {
-    await this.baseFillOutForm(question);
+    await super.fillOutForm(question);
 
     for (const value of question.rowValues) {
       await this.rowValuesGrid.addValue(value);
@@ -26,7 +26,7 @@ export class AddOrEditMatrixQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async clearForm() {
-    await this.baseClearForm();
+    await super.clearForm();
     await this.rowValuesGrid.clearGrid();
     await this.columnValuesGrid.clearGrid();
   }

@@ -13,35 +13,35 @@ const THIRTY_MINUTES = 30 * 60 * 1000;
 teardown.setTimeout(THIRTY_MINUTES);
 
 teardown.describe('cleanup', () => {
-  teardown('delete all apps created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:apps delete all apps created as part of tests', async ({ sysAdminPage }) => {
     await new AppsAdminPage(sysAdminPage).deleteAllTestApps();
   });
 
-  teardown('delete all surveys created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:surveys delete all surveys created as part of tests', async ({ sysAdminPage }) => {
     await new SurveysAdminPage(sysAdminPage).deleteAllTestSurveys();
   });
 
-  teardown('delete all groups created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:groups delete all groups created as part of tests', async ({ sysAdminPage }) => {
     await new GroupsSecurityAdminPage(sysAdminPage).deleteAllTestGroups();
   });
 
-  teardown('delete all roles created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:roles delete all roles created as part of tests', async ({ sysAdminPage }) => {
     await new RolesSecurityAdminPage(sysAdminPage).deleteAllTestRoles();
   });
 
-  teardown('delete all users created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:users delete all users created as part of tests', async ({ sysAdminPage }) => {
     await new UsersSecurityAdminPage(sysAdminPage).deleteAllTestUsers();
   });
 
-  teardown('delete all api keys created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:api-keys delete all api keys created as part of tests', async ({ sysAdminPage }) => {
     await new ApiKeysAdminPage(sysAdminPage).deleteAllTestApiKeys();
   });
 
-  teardown('delete all containers created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:containers delete all containers created as part of tests', async ({ sysAdminPage }) => {
     await new ContainersAdminPage(sysAdminPage).deleteAllTestContainers();
   });
 
-  teardown('delete all data imports created as part of tests', async ({ sysAdminPage }) => {
+  teardown('cleanup:data-imports delete all data imports created as part of tests', async ({ sysAdminPage }) => {
     await new DataImportsAdminPage(sysAdminPage).deleteAllTestImports();
   });
 });

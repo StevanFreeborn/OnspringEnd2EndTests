@@ -42,7 +42,7 @@ test.describe('survey design', () => {
     await test.step('Add a thank you message to the thank you page', async () => {
       await surveyAdminPage.designTab.surveyDesignerModal.goToPage('Thank You');
       formattedTextItemId = await surveyAdminPage.designTab.surveyDesignerModal.getNthSurveyItemId(0);
-      await surveyAdminPage.designTab.surveyDesignerModal.updatedFormattedText(formattedTextItemId, formattedText);
+      await surveyAdminPage.designTab.surveyDesignerModal.updateFormattedText(formattedTextItemId, formattedText);
     });
 
     await test.step('Preview the survey and complete and submit it', async () => {

@@ -8,10 +8,10 @@ export class AddOrEditAttachmentQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async fillOutForm(question: AttachmentQuestion) {
-    await this.baseFillOutForm(question);
+    await super.fillOutForm(question);
   }
 
   async clearForm() {
-    await this.baseClearForm();
+    await super.clearForm();
   }
 }
