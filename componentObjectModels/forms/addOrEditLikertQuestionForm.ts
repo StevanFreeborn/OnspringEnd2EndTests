@@ -12,7 +12,7 @@ export class AddOrEditLikertQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async fillOutForm(question: LikertQuestion) {
-    await this.baseFillOutForm(question);
+    await super.fillOutForm(question);
 
     for (const value of question.answerValues) {
       await this.answerValuesGrid.addValue(value);
@@ -20,7 +20,7 @@ export class AddOrEditLikertQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async clearForm() {
-    await this.baseClearForm();
+    await super.clearForm();
     await this.answerValuesGrid.clearGrid();
   }
 }

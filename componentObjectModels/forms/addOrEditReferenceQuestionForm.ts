@@ -21,7 +21,7 @@ export class AddOrEditReferenceQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async fillOutForm(question: ReferenceQuestion) {
-    await this.baseFillOutForm(question);
+    await super.fillOutForm(question);
 
     const isAppReferenceSelectVisible = await this.appReferenceSelect.isVisible();
 
@@ -40,7 +40,7 @@ export class AddOrEditReferenceQuestionForm extends BaseAddOrEditQuestionForm {
   }
 
   async clearForm() {
-    await this.baseClearForm();
+    await super.clearForm();
     await this.answerValuesGrid.clearGrid();
   }
 }

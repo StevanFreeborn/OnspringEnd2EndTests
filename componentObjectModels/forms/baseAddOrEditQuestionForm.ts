@@ -20,7 +20,7 @@ export class BaseAddOrEditQuestionForm {
     this.dragBar = frame.locator('.survey-item.edit-mode .drag-bar');
   }
 
-  protected async baseFillOutForm(question: Question) {
+  protected async fillOutForm(question: Question) {
     const helpTextEditorElement = await this.helpTextEditor.elementHandle();
     await helpTextEditorElement?.waitForElementState('stable');
 
@@ -41,20 +41,12 @@ export class BaseAddOrEditQuestionForm {
     }
   }
 
-  protected async baseClearForm() {
+  protected async clearForm() {
     await this.questionIdInput.clear();
     await this.questionTextEditor.clear();
     await this.helpTextEditor.clear();
     await this.requiredCheckbox.uncheck();
     await this.correctnessCheckbox.uncheck();
     await this.relateToContentCheckbox.uncheck();
-  }
-
-  async fillOutForm(question: Question) {
-    await this.baseFillOutForm(question);
-  }
-
-  async clearForm() {
-    await this.baseClearForm();
   }
 }
