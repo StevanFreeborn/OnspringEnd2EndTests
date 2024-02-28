@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { env } from '../env';
 
 export const TEST_APP_NAME = 'app-test';
 export const TEST_SURVEY_NAME = 'survey-test';
@@ -9,6 +10,7 @@ export const TEST_API_KEY_NAME = 'api-key-test';
 export const TEST_CONTAINER_NAME = 'container-test';
 export const TEST_DATA_IMPORT_NAME = 'data-import-test';
 export const TEST_EMAIL_BODY_NAME = 'email-body-test';
+export const DEFAULT_EMAIL_SENDING_DOMAIN = env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -96,5 +98,9 @@ export class FakeDataFactory {
   static createFakeEmailBodyName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_EMAIL_BODY_NAME}`;
+  }
+
+  static createFakeEmailFromAddress(username: string = 'automation') {
+    return `${username}@${DEFAULT_EMAIL_SENDING_DOMAIN}`;
   }
 }

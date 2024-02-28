@@ -264,7 +264,7 @@ test.describe('email body', () => {
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
-      fromAddress: 'automation@onspring.tech',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
       recipientsBasedOnFields: ['Created By'],
       sendLogic: new SimpleRuleLogic({
         rules: [rule],
@@ -383,7 +383,7 @@ test.describe('email body', () => {
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
-      fromAddress: 'automation@onspring.tech',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
       recipientsBasedOnFields: ['Created By'],
       sendLogic: new SimpleRuleLogic({
         rules: [rule],
