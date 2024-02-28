@@ -75,6 +75,14 @@ npm run test -- app.spec.ts
 npm run test -- -g "Delete a user"
 ```
 
+### Run tests against specific target environment
+
+A helpful script to run tests against a specific target environment without having to alter the `.env` file. Note you can pass all the same arguments as you would to `npm run test` to this script. But not the `--target` argument should come first followed by `--` and then the rest of the arguments.
+
+```sh
+npm run test:env --target=<target> -- emailBody.spec.ts --project chrome
+```
+
 ### Learn more about Playwright's Test CLI
 
 [Playwright CLI](https://playwright.dev/docs/test-cli)
