@@ -74,16 +74,17 @@ export async function createBaseAuthPage(
 export function errorResponseHandler(response: Response) {
   const url = response.url();
   const isBaseUrl = url.includes(BASE_URL);
+  const timestamp = new Date().toISOString();
 
   if (isBaseUrl && response.status() === 524) {
-    throw new Error(`Request to ${url} timed out.`);
+    throw new Error(`Request to ${url} timed out at ${timestamp}.`);
   }
 
   if (isBaseUrl && response.status() === 520) {
-    throw new Error(`Request to ${url} returned an unexpected response.`);
+    throw new Error(`Request to ${url} returned an unexpected response at ${timestamp}.`);
   }
 
   if (isBaseUrl && response.status() === 502) {
-    throw new Error(`Request to ${url} encountered a bad gateway.`);
+    throw new Error(`Request to ${url} encountered a bad gateway at ${timestamp}.`);
   }
 }
