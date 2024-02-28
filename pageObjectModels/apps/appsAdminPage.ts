@@ -45,6 +45,20 @@ export class AppsAdminPage extends BaseAdminPage {
   async deleteAllTestApps() {
     await this.goto();
 
+    const scrollableElement = this.appGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.appGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfApps = parseInt(pagerText.trim().split(' ')[0]);
+    const appRows = this.appGrid.getByRole('row');
+    let appRowsCount = await appRows.count();
+
+    while (appRowsCount < totalNumOfApps) {
+      await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+      await this.page.waitForLoadState('networkidle');
+      appRowsCount = await appRows.count();
+    }
+
     const appRow = this.appGrid.getByRole('row', { name: new RegExp(TEST_APP_NAME, 'i') }).last();
     let isVisible = await appRow.isVisible();
 

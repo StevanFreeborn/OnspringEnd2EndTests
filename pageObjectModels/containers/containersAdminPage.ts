@@ -17,7 +17,7 @@ export class ContainersAdminPage extends BaseAdminPage {
     this.getListPagePath = '/Admin/Dashboard/Container/GetListPage';
     this.deleteContainerPathRegex = /\/Admin\/Dashboard\/Container\/\d+\/Delete/;
     this.createContainerButton = page.getByRole('button', { name: 'Create Container' });
-    this.containerGrid = page.getByRole('grid');
+    this.containerGrid = page.locator('#grid');
     this.deleteContainerDialog = new DeleteContainerDialog(page);
   }
 
@@ -30,6 +30,23 @@ export class ContainersAdminPage extends BaseAdminPage {
 
   async deleteAllTestContainers() {
     await this.goto();
+
+    const scrollableElement = this.containerGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.containerGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfContainers = parseInt(pagerText.trim().split(' ')[0]);
+
+    if (Number.isNaN(totalNumOfContainers) === false) {
+      const containerRows = this.containerGrid.getByRole('row');
+      let containerRowsCount = await containerRows.count();
+
+      while (containerRowsCount < totalNumOfContainers) {
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        await this.page.waitForLoadState('networkidle');
+        containerRowsCount = await containerRows.count();
+      }
+    }
 
     const containerRow = this.containerGrid.getByRole('row', { name: new RegExp(TEST_CONTAINER_NAME, 'i') }).last();
 

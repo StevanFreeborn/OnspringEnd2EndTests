@@ -29,6 +29,23 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   async deleteAllTestUsers() {
     await this.goto();
 
+    const scrollableElement = this.userGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.userGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfUsers = parseInt(pagerText.trim().split(' ')[0]);
+
+    if (Number.isNaN(totalNumOfUsers) === false) {
+      const userRows = this.userGrid.getByRole('row');
+      let userRowsCount = await userRows.count();
+
+      while (userRowsCount < totalNumOfUsers) {
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        await this.page.waitForLoadState('networkidle');
+        userRowsCount = await userRows.count();
+      }
+    }
+
     const userRow = this.userGrid.getByRole('row', { name: new RegExp(TEST_USER_NAME, 'i') }).last();
     let isVisible = await userRow.isVisible();
 
