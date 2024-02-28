@@ -226,6 +226,20 @@ export class SurveyDesignerModal {
     await this.saveIndicator.page().waitForTimeout(1000);
   }
 
+  private async waitForQuestionTextToBeFocused() {
+    const page = this.designer.page();
+
+    await page.waitForFunction(
+      () => {
+        const frame = document.querySelector('iframe');
+        const activeElement = frame?.contentWindow?.document.activeElement;
+        return activeElement?.id === 'QuestionText';
+      },
+      undefined,
+      { timeout: 5000 }
+    );
+  }
+
   /**
    * Adds a question to the survey via the survey designer modal.
    * @param question The question to add to the survey.
@@ -234,50 +248,63 @@ export class SurveyDesignerModal {
   async addQuestion(question: Question) {
     let addQuestionForm;
 
+    // waiting for question text to be focused
+    // is important to avoid focus going to
+    // the element while playwright has already
+    // started interacting with form.
     switch (question.type) {
       case 'Attachment':
         await this.attachmentButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as AttachmentQuestion);
         break;
       case 'Date/Time':
         await this.dateButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as DateQuestion);
         break;
       case 'Number':
         await this.numberButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as NumberQuestion);
         break;
       case 'Text':
         await this.textButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as TextQuestion);
         break;
       case 'Single Select':
         await this.singleSelectButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as SingleSelectQuestion);
         break;
       case 'Multi Select':
         await this.multiSelectButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as MultiSelectQuestion);
         break;
       case 'Likert Scale':
         await this.likertScaleButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as LikertQuestion);
         break;
       case 'Matrix':
         await this.matrixButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as MatrixQuestion);
         break;
       case 'Reference':
         await this.referenceButton.click();
         addQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await addQuestionForm.fillOutForm(question as ReferenceQuestion);
         break;
       default:
@@ -302,49 +329,62 @@ export class SurveyDesignerModal {
 
     let editQuestionForm;
 
+    // waiting for question text to be focused
+    // is important to avoid focus going to
+    // the element while playwright has already
+    // started interacting with form.
     switch (question.type) {
       case 'Attachment':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as AttachmentQuestion);
         break;
       case 'Date/Time':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as DateQuestion);
         break;
       case 'Number':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as NumberQuestion);
         break;
       case 'Text':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as TextQuestion);
         break;
       case 'Single Select':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as SingleSelectQuestion);
         break;
       case 'Multi Select':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as MultiSelectQuestion);
         break;
       case 'Likert Scale':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as LikertQuestion);
         break;
       case 'Matrix':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as MatrixQuestion);
         break;
       case 'Reference':
         editQuestionForm = this.getQuestionEditForm(question.type);
+        await this.waitForQuestionTextToBeFocused();
         await editQuestionForm.clearForm();
         await editQuestionForm.fillOutForm(question as ReferenceQuestion);
         break;
@@ -505,7 +545,7 @@ export class SurveyDesignerModal {
     );
   }
 
-  async updatedFormattedText(surveyItemId: string, formattedText: FormattedText) {
+  async updateFormattedText(surveyItemId: string, formattedText: FormattedText) {
     const existingFormattedText = this.frame.locator(`[data-item-id="${surveyItemId}"]`);
     await existingFormattedText.locator('.display-item').click();
     const editFormattedTextForm = new AddOrEditFormattedTextForm(this.frame);
