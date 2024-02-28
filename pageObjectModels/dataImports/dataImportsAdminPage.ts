@@ -29,9 +29,27 @@ export class DataImportsAdminPage extends BaseAdminPage {
   async deleteAllTestImports() {
     await this.goto();
 
+    const scrollableElement = this.dataImportGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.dataImportGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfImports = parseInt(pagerText.trim().split(' ')[0]);
+
+    if (Number.isNaN(totalNumOfImports) === false) {
+      const importRows = this.dataImportGrid.getByRole('row');
+      let importRowsCount = await importRows.count();
+
+      while (importRowsCount < totalNumOfImports) {
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        await this.page.waitForLoadState('networkidle');
+        importRowsCount = await importRows.count();
+      }
+    }
+
     const deleteImportRow = this.dataImportGrid
       .getByRole('row', { name: new RegExp(TEST_DATA_IMPORT_NAME, 'i') })
       .last();
+
     let isVisible = await deleteImportRow.isVisible();
 
     while (isVisible) {

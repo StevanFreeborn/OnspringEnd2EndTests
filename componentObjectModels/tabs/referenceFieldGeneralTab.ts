@@ -17,9 +17,25 @@ export class ReferenceFieldGeneralTab extends FieldGeneralTab {
   }
 
   async selectReference(reference: string) {
-    const displayFieldResponse = this.referenceSelect.page().waitForResponse(this.referenceDisplayFieldsPathRegex);
-
+    // This is convoluted because every time the
+    // the reference is changed, the display fields are fetched
+    // however the first time the reference is clicked it
+    // automatically selects the first option and fetches the display fields
+    // its possible then that the reference we want to select
+    // is already selected and we don't need to wait for the display fields
+    // a second time hence the early return.
+    const initialDisplayFieldResponse = this.referenceSelect
+      .page()
+      .waitForResponse(this.referenceDisplayFieldsPathRegex);
     await this.referenceSelect.click();
+    await initialDisplayFieldResponse;
+
+    const referenceSelectText = await this.referenceSelect.innerText();
+
+    if (referenceSelectText.includes(reference)) {
+      return await this.frame.getByRole('option', { name: reference }).click();
+    }
+    const displayFieldResponse = this.referenceSelect.page().waitForResponse(this.referenceDisplayFieldsPathRegex);
     await this.frame.getByRole('option', { name: reference }).click();
     await displayFieldResponse;
   }

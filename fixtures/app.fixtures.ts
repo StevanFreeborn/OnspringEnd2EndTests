@@ -11,13 +11,11 @@ export async function appAdminPage({ sysAdminPage }: { sysAdminPage: Page }, use
 }
 
 export async function app({ sysAdminPage }: { sysAdminPage: Page }, use: (r: App) => Promise<void>) {
-  const appsAdminPage = new AppsAdminPage(sysAdminPage);
-
   const app = await createApp(sysAdminPage);
 
   await use(app);
 
-  await appsAdminPage.deleteApps([app.name]);
+  await new AppsAdminPage(sysAdminPage).deleteApps([app.name]);
 }
 
 export async function createApp(sysAdminPage: Page) {
