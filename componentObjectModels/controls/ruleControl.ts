@@ -40,46 +40,42 @@ export class RuleControl {
   }
 
   private async addRule(rule: Rule) {
-    switch (true) {
-      case rule instanceof TextRuleWithValue: {
-        await this.fieldSelector.selectOption(rule.fieldName);
-        await this.selectRuleOperator(rule.operator);
-        await this.betweenOperatorContainer.locator('input:visible').fill(rule.value);
-        break;
-      }
-      default: {
-        throw new Error('Rule type not supported');
-      }
+    if (rule instanceof TextRuleWithValue) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.betweenOperatorContainer.locator('input:visible').fill(rule.value);
+      return await this.addRuleButton.click();
     }
 
-    await this.addRuleButton.click();
+    throw new Error('Unsupported Rule Type');
+  }
+
+  private async addRules(rules: Rule[]) {
+    for (const rule of rules) {
+      await this.addRule(rule);
+    }
   }
 
   async addLogic(logic: RuleLogic) {
-    switch (true) {
-      case logic instanceof SimpleRuleLogic: {
-        await this.simpleModeRadioButton.click();
-        break;
-      }
-      case logic instanceof AdvancedRuleLogic: {
-        await this.advancedModeRadioButton.click();
-        await this.selectConjunctionOperator(logic.operator);
-        break;
-      }
-      case logic instanceof FilterRuleLogic: {
-        await this.advancedModeRadioButton.click();
-        await this.useFilterLogicCheckbox.check();
-        await this.filterLogicInput.fill(logic.filterLogic);
-        break;
-      }
-      default: {
-        throw new Error('Logic type not supported');
-      }
+    if (logic instanceof SimpleRuleLogic) {
+      await this.simpleModeRadioButton.click();
+      return await this.addRules(logic.rules);
     }
 
-    for (const rule of logic.rules) {
-      await this.addRule(rule);
+    if (logic instanceof AdvancedRuleLogic) {
+      await this.advancedModeRadioButton.click();
+      await this.selectConjunctionOperator(logic.operator);
+      return await this.addRules(logic.rules);
     }
+
+    if (logic instanceof FilterRuleLogic) {
+      await this.advancedModeRadioButton.click();
+      await this.useFilterLogicCheckbox.check();
+      await this.filterLogicInput.fill(logic.filterLogic);
+      return await this.addRules(logic.rules);
+    }
+
+    throw new Error('Invalid Rule Logic');
   }
 }
 

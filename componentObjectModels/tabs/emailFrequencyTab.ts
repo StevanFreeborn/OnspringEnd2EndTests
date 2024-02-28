@@ -57,26 +57,25 @@ export class EmailFrequencyTab {
       await this.addReminderLink.click();
     }
 
-    switch (true) {
-      case reminder instanceof OnceOnDateReminder: {
-        return await this.selectReminderRepetition(reminderLocator, reminder.repetition);
-      }
-      case reminder instanceof OnceReminder: {
-        await this.selectReminderRepetition(reminderLocator, reminder.repetition);
-        await this.fillReminderQuantity(reminderDetails, reminder.quantity);
-        await this.selectReminderIncrement(reminderDetails, reminder.increment);
-        await reminderDetails.getByRole('listbox').last().click();
-        return await reminderDetails.page().getByRole('option', { name: reminder.timing }).click();
-      }
-      case reminder instanceof EveryReminder: {
-        await this.selectReminderRepetition(reminderLocator, reminder.repetition);
-        await this.fillReminderQuantity(reminderDetails, reminder.quantity);
-        return await this.selectReminderIncrement(reminderDetails, reminder.increment);
-      }
-      default: {
-        throw new Error('Unknown email reminder type');
-      }
+    if (reminder instanceof OnceOnDateReminder) {
+      return await this.selectReminderRepetition(reminderLocator, reminder.repetition);
     }
+
+    if (reminder instanceof OnceReminder) {
+      await this.selectReminderRepetition(reminderLocator, reminder.repetition);
+      await this.fillReminderQuantity(reminderDetails, reminder.quantity);
+      await this.selectReminderIncrement(reminderDetails, reminder.increment);
+      await reminderDetails.getByRole('listbox').last().click();
+      return await reminderDetails.page().getByRole('option', { name: reminder.timing }).click();
+    }
+
+    if (reminder instanceof EveryReminder) {
+      await this.selectReminderRepetition(reminderLocator, reminder.repetition);
+      await this.fillReminderQuantity(reminderDetails, reminder.quantity);
+      return await this.selectReminderIncrement(reminderDetails, reminder.increment);
+    }
+
+    throw new Error('Invalid reminder type');
   }
 
   async addReminders(reminders: EmailReminder[]) {
