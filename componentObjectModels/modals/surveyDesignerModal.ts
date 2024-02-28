@@ -491,16 +491,34 @@ export class SurveyDesignerModal {
     return itemId;
   }
 
+  private async waitForEditorToBeFocused() {
+    const page = this.designer.page();
+    await page.waitForFunction(
+      () => {
+        const frame = document.querySelector('iframe');
+        const focusedElement = frame?.contentWindow?.document.activeElement;
+        const isEditorFocused = focusedElement?.classList.contains('mce-content-body');
+        return isEditorFocused;
+      },
+      undefined,
+      { timeout: 5000 }
+    );
+  }
+
   async updatedFormattedText(surveyItemId: string, formattedText: FormattedText) {
     const existingFormattedText = this.frame.locator(`[data-item-id="${surveyItemId}"]`);
     await existingFormattedText.locator('.display-item').click();
-
     const editFormattedTextForm = new AddOrEditFormattedTextForm(this.frame);
 
+    // we need to wait for editor to be focused before
+    // we can interact because focus is trigger
+    // programmatically on the page and can occur
+    // after playwright begins interacting with
+    // the editor
+    await this.waitForEditorToBeFocused();
     await editFormattedTextForm.clearForm();
     await editFormattedTextForm.fillOutForm(formattedText);
 
-    await editFormattedTextForm.formattedTextEditor.blur();
     await editFormattedTextForm.dragBar.click();
     await this.saveIndicator.waitFor({ state: 'hidden' });
   }
