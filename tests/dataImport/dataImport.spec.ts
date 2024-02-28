@@ -439,6 +439,7 @@ test.describe('data import', () => {
         expect(email.subject).toBe('Onspring Data Import Complete');
 
         if (email.html !== false) {
+          // eslint-disable-next-line playwright/no-conditional-expect
           expect(email.html).toContain('New Content Created: 1');
         }
       }).toPass({
