@@ -11,7 +11,8 @@
     "blob-report",
     "cleanup-results",
     "playwright-report",
-    "test-results"
+    "test-results",
+    "scripts"
   ],
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:playwright/recommended"],
   "parser": "@typescript-eslint/parser",
