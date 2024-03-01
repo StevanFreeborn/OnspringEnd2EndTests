@@ -174,12 +174,12 @@ export class DateFieldControl {
         // Check for leap year
         // leap year if evenly divisible by 4 and not evenly divisible by 100
         // leap year if evenly divisible by 400
-        const isLeapYear = (0 == year % 4 && 0 != year % 100) || 0 == year % 400;
+        const isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
         if (isLeapYear && day > 29) {
           throw new Error('Day must be less than or equal to 29.');
         }
 
-        if (day > 28) {
+        if (isLeapYear === false && day > 28) {
           throw new Error('Day must be less than or equal to 28.');
         }
         break;
