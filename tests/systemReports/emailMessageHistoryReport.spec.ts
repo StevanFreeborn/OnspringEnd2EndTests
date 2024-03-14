@@ -1,9 +1,9 @@
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { EmailBody } from '../../models/emailBody';
+import { LayoutItem } from '../../models/layoutItem';
 import { TextRuleWithValue } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { TextField } from '../../models/textField';
@@ -13,6 +13,7 @@ import { EditContentPage } from '../../pageObjectModels/content/editContentPage'
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
 import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
 import { EmailHistoryPage } from '../../pageObjectModels/systemReports/emailHistoryPage';
+import { EmailService } from '../../services/emailService';
 import { AnnotationType } from '../annotations';
 
 type EmailHistoryReportTestFixtures = {
@@ -52,29 +53,32 @@ test.describe('email message history report', () => {
     });
 
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textField = new TextField({ name: 'Send Email?' });
+    const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
+    const emailBody = new EmailBody({
+      name: emailBodyName,
+      appName: app.name,
+      status: 'Active',
+      subject: `${emailBodyName} - Test Subject`,
+      body: 'This is a test email body',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+      sendLogic: new SimpleRuleLogic({
+        rules: [rule],
+      }),
+    });
 
     await test.step('Send email from specific app', async () => {
-      await sendEmailFromApp({
-        emailBodyName,
-        app,
-        appAdminPage,
-        addContentPage,
-        editContentPage,
-        emailBodyAdminPage,
-        editEmailBodyPage,
-      });
+      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
+      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
-      await expect(async () => {
-        const searchCriteria = [['TEXT', emailBodyName]];
-        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
-
-        expect(result.isOk()).toBe(true);
-      }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
-      });
+      await verifyEmailReceived({ emailBodyName, sysAdminEmail });
     });
 
     await test.step('Navigate to the email message history report', async () => {
@@ -87,18 +91,90 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Verify the email message history report is filtered', async () => {
-      const emailCount = await emailHistoryPage.emailsGrid.locator('tr').count();
+      const emailCount = await emailHistoryPage.emailsGridBody.locator('tr').count();
       expect(emailCount).toBe(1);
     });
   });
 
-  test('Sort the email message history report', async () => {
+  test('Sort the email message history report', async ({
+    emailHistoryPage,
+    app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    emailBodyAdminPage,
+    editEmailBodyPage,
+    sysAdminEmail,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-352',
     });
 
-    expect(true).toBeTruthy();
+    const emailBodyNames = [FakeDataFactory.createFakeEmailBodyName(), FakeDataFactory.createFakeEmailBodyName()];
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textField = new TextField({ name: 'Send Email?' });
+    const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
+    const emailBodies = emailBodyNames.map(
+      (emailBodyName, i) =>
+        new EmailBody({
+          name: emailBodyName,
+          appName: app.name,
+          status: 'Active',
+          subject: `${i} ${emailBodyName} - Test Subject`,
+          body: 'This is a test email body',
+          fromName: 'Automation Test',
+          fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+          recipientsBasedOnFields: ['Created By'],
+          sendLogic: new SimpleRuleLogic({
+            rules: [rule],
+          }),
+        })
+    );
+
+    await test.step('Add field for email send logic', async () => {
+      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
+    });
+
+    for (const [index, emailBody] of emailBodies.entries()) {
+      await test.step(`Send email number ${index + 1} from specific app`, async () => {
+        await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
+        await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      });
+    }
+
+    for (const [index, emailBody] of emailBodies.entries()) {
+      await test.step(`Wait for email number ${index + 1} to be received`, async () => {
+        await verifyEmailReceived({ emailBodyName: emailBody.name, sysAdminEmail });
+      });
+    }
+
+    await test.step('Navigate to the email message history report', async () => {
+      await emailHistoryPage.goto();
+    });
+
+    await test.step('Filter the email message history report', async () => {
+      await emailHistoryPage.selectTypeFilter('Messaging');
+      await emailHistoryPage.selectAppFilter(app.name);
+    });
+
+    await test.step('Sort the email message history report', async () => {
+      await emailHistoryPage.clearGridSorting();
+      await emailHistoryPage.sortGridBy('Subject');
+    });
+
+    await test.step('Verify the email message history report is sorted', async () => {
+      const firstEmail = emailHistoryPage.emailsGridBody.locator('tr').first();
+      const lastEmail = emailHistoryPage.emailsGridBody.locator('tr').last();
+
+      const firstEmailSubject = await firstEmail.locator('td').nth(4).innerText();
+      const lastEmailSubject = await lastEmail.locator('td').nth(4).innerText();
+
+      expect(firstEmailSubject).toContain(emailBodies[0].subject);
+      expect(lastEmailSubject).toContain(emailBodies[1].subject);
+    });
   });
 
   test('Export the email message history report', async () => {
@@ -147,57 +223,59 @@ test.describe('email message history report', () => {
   });
 });
 
-async function sendEmailFromApp({
-  emailBodyName,
-  app,
+async function addItemToAppLayout({
   appAdminPage,
-  addContentPage,
-  editContentPage,
-  emailBodyAdminPage,
-  editEmailBodyPage,
+  app,
+  item,
+  tabName,
+  sectionName,
 }: {
-  emailBodyName: string;
-  app: App;
   appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  emailBodyAdminPage: EmailBodyAdminPage;
-  editEmailBodyPage: EditEmailBodyPage;
+  app: App;
+  item: LayoutItem;
+  tabName: string;
+  sectionName: string;
 }) {
-  const tabName = 'Tab 2';
-  const sectionName = 'Section 1';
-  const textField = new TextField({ name: 'Send Email?' });
-  const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
-  const bodyTemplate = 'This email is from record id';
-  const emailBody = new EmailBody({
-    name: emailBodyName,
-    appName: app.name,
-    status: 'Active',
-    subject: `Test Subject - ${emailBodyName}`,
-    body: bodyTemplate + ' {:Record Id}',
-    fromName: 'Automation Test',
-    fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
-    recipientsBasedOnFields: ['Created By'],
-    sendLogic: new SimpleRuleLogic({
-      rules: [rule],
-    }),
-  });
-
-  // create field needed for email send logic
   await appAdminPage.goto(app.id);
   await appAdminPage.layoutTabButton.click();
   await appAdminPage.layoutTab.openLayout();
-  await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-  await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-    fieldName: textField.name,
-    tabName: tabName,
-    sectionName: sectionName,
-    sectionRow: 0,
-    sectionColumn: 0,
-  });
-  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+  await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(item);
 
-  // create and configure email body
+  if (item.type === 'Formatted Text Block') {
+    await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+      objectName: item.name,
+      tabName: tabName,
+      sectionName: sectionName,
+      sectionRow: 0,
+      sectionColumn: 0,
+    });
+  } else {
+    await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+      fieldName: item.name,
+      tabName: tabName,
+      sectionName: sectionName,
+      sectionRow: 0,
+      sectionColumn: 0,
+    });
+  }
+
+  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+}
+
+async function createAndConfigureEmailBody({
+  app,
+  appAdminPage,
+  emailBody,
+  emailBodyAdminPage,
+  editEmailBodyPage,
+}: {
+  app: App;
+  appAdminPage: AppAdminPage;
+  emailBody: EmailBody;
+  emailBodyAdminPage: EmailBodyAdminPage;
+  editEmailBodyPage: EditEmailBodyPage;
+}) {
+  await appAdminPage.goto(app.id);
   await appAdminPage.messagingTabButton.click();
   await appAdminPage.messagingTab.createEmailBody(emailBody.name);
   await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
@@ -208,16 +286,49 @@ async function sendEmailFromApp({
   await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
   await editEmailBodyPage.updateEmailBody(emailBody);
   await editEmailBodyPage.save();
+}
 
-  // add record to trigger email
+async function addRecordToTriggerEmail({
+  addContentPage,
+  app,
+  editContentPage,
+  rule,
+  tabName,
+  sectionName,
+}: {
+  addContentPage: AddContentPage;
+  app: App;
+  editContentPage: EditContentPage;
+  rule: TextRuleWithValue;
+  tabName: string;
+  sectionName: string;
+}) {
   await addContentPage.goto(app.id);
   const editableTextField = await addContentPage.form.getField({
-    fieldName: textField.name,
-    fieldType: textField.type as FieldType,
+    fieldName: rule.fieldName,
+    fieldType: rule.fieldType,
     tabName: tabName,
     sectionName: sectionName,
   });
   await editableTextField.fill(rule.value);
   await addContentPage.saveRecordButton.click();
   await addContentPage.page.waitForURL(editContentPage.pathRegex);
+}
+
+async function verifyEmailReceived({
+  emailBodyName,
+  sysAdminEmail,
+}: {
+  emailBodyName: string;
+  sysAdminEmail: EmailService;
+}) {
+  await expect(async () => {
+    const searchCriteria = [['TEXT', emailBodyName]];
+    const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+    expect(result.isOk()).toBe(true);
+  }).toPass({
+    intervals: [5000],
+    timeout: 60_000,
+  });
 }

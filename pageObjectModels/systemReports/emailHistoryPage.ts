@@ -32,12 +32,28 @@ type EmailType =
   | 'Workflow'
   | 'Workflow Finish';
 
+const GRID_COLUMNS = [
+  'Email Type',
+  'To Name',
+  'To Address',
+  'From Address',
+  'Subject',
+  'Time Created',
+  'Time Sent',
+  'Resend',
+] as const;
+
+type GridColumn = (typeof GRID_COLUMNS)[number];
+type SortableGridColumn = Exclude<GridColumn, 'Resend'>;
+type SortDirection = 'ascending' | 'descending';
+
 export class EmailHistoryPage extends BaseAdminPage {
   private readonly path: string;
   private readonly getHistoryPath: string;
   private readonly emailTypeSelector: Locator;
   private readonly appSelector: Locator;
-  readonly emailsGrid: Locator;
+  private readonly emailsGridHeader: Locator;
+  readonly emailsGridBody: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -45,7 +61,8 @@ export class EmailHistoryPage extends BaseAdminPage {
     this.getHistoryPath = '/Admin/Reporting/Messaging/GetHistoryPage';
     this.emailTypeSelector = page.getByRole('listbox', { name: 'Email Type' });
     this.appSelector = page.getByRole('listbox', { name: 'App/Survey' });
-    this.emailsGrid = page.locator('#grid .k-grid-content');
+    this.emailsGridHeader = page.locator('#grid .k-grid-header');
+    this.emailsGridBody = page.locator('#grid .k-grid-content');
   }
 
   async goto() {
@@ -66,5 +83,35 @@ export class EmailHistoryPage extends BaseAdminPage {
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
     await this.page.getByRole('option', { name: appName }).click();
     await getHistoryResponse;
+  }
+
+  async clearGridSorting() {
+    const numOfSortableHeaders = await this.emailsGridHeader.locator('[data-role="columnsorter"]').count();
+
+    for (let i = 0; i < numOfSortableHeaders; i++) {
+      const currentHeader = this.emailsGridHeader.locator('[data-role="columnsorter"]').nth(i);
+      let isSorted = await currentHeader.getAttribute('aria-sort');
+
+      while (isSorted) {
+        const sortResponse = this.page.waitForResponse(this.getHistoryPath);
+        await currentHeader.getByRole('link').click();
+        await sortResponse;
+
+        isSorted = await currentHeader.getAttribute('aria-sort');
+      }
+    }
+  }
+
+  async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
+    const columnHeader = this.emailsGridHeader.getByRole('columnheader', { name: column });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getHistoryPath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
+    }
   }
 }
