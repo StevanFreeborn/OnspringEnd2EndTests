@@ -468,8 +468,6 @@ test.describe('email body', () => {
         timeout: 60_000,
       });
     });
-
-    expect(true).toBe(true);
   });
 
   test("Delete an Email Body from an app's Messaging tab", async ({ targetApp, appAdminPage, editEmailBodyPage }) => {
