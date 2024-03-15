@@ -1,3 +1,4 @@
+import { env } from '../../env';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
@@ -177,13 +178,114 @@ test.describe('email message history report', () => {
     });
   });
 
-  test('Export the email message history report', async () => {
+  test('Export the email message history report', async ({
+    emailHistoryPage,
+    app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    emailBodyAdminPage,
+    editEmailBodyPage,
+    sysAdminEmail,
+    sysAdminPage,
+    downloadService,
+    sheetParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-353',
     });
 
-    expect(true).toBeTruthy();
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const testEmailSubject = `${emailBodyName} - Test Subject`;
+    const testFromAddress = FakeDataFactory.createFakeEmailFromAddress();
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textField = new TextField({ name: 'Send Email?' });
+    const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
+    const emailBody = new EmailBody({
+      name: emailBodyName,
+      appName: app.name,
+      status: 'Active',
+      subject: testEmailSubject,
+      body: 'This is a test email body',
+      fromName: 'Automation Test',
+      fromAddress: testFromAddress,
+      recipientsBasedOnFields: ['Created By'],
+      sendLogic: new SimpleRuleLogic({
+        rules: [rule],
+      }),
+    });
+
+    await test.step('Send email from specific app', async () => {
+      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
+      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+    });
+
+    await test.step('Wait for email to be received', async () => {
+      await verifyEmailReceived({ emailBodyName, sysAdminEmail });
+    });
+
+    await test.step('Navigate to the email message history report', async () => {
+      await emailHistoryPage.goto();
+    });
+
+    await test.step('Filter the email message history report', async () => {
+      await emailHistoryPage.selectTypeFilter('Messaging');
+      await emailHistoryPage.selectAppFilter(app.name);
+    });
+
+    await test.step('Export the email message history report', async () => {
+      await emailHistoryPage.exportReport();
+    });
+
+    let exportEmailContent: string;
+
+    await test.step('Verify the email message history report is exported', async () => {
+      await expect(async () => {
+        const searchCriteria = [['TEXT', 'Email Message History'], ['UNSEEN']];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        exportEmailContent = email.html as string;
+      }).toPass({
+        intervals: [5000],
+        timeout: 60_000,
+      });
+    });
+
+    let reportPath: string;
+
+    await test.step('Download the exported email message history report', async () => {
+      await sysAdminPage.setContent(exportEmailContent);
+
+      const reportDownload = sysAdminPage.waitForEvent('download');
+      await sysAdminPage.getByRole('link').click();
+      const report = await reportDownload;
+      reportPath = await downloadService.saveDownload(report);
+    });
+
+    await test.step('Verify report contains expected data', async () => {
+      const reportData = sheetParser.parseFile(reportPath);
+      expect(reportData).toHaveLength(1);
+
+      const sheet = reportData[0];
+      expect(sheet.name).toEqual('Report Data');
+      expect(sheet.data).toHaveLength(1);
+      expect(sheet.data[0]).toEqual({
+        'Email Type': 'Messaging',
+        'To Name': `${env.SYS_ADMIN_FIRST_NAME} ${env.SYS_ADMIN_LAST_NAME}`,
+        'To Address': env.SYS_ADMIN_EMAIL,
+        'From Address': testFromAddress,
+        Subject: testEmailSubject,
+        'Time Created': expect.any(Date),
+        'Time Sent': expect.any(Date),
+      });
+    });
   });
 
   test('View the details of an email message history report item', async () => {
