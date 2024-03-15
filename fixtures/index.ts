@@ -8,11 +8,12 @@ import { SurveyAdminPage } from '../pageObjectModels/surveys/surveyAdminPage';
 import { DownloadService } from '../services/downloadService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { SheetParser } from '../services/sheetParser';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
 import { TestFile, jpgFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
-import { downloadService, pdfParser, sysAdminEmailService } from './services.fixtures';
+import { downloadService, pdfParser, sheetParser, sysAdminEmailService } from './services.fixtures';
 import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
 
@@ -20,6 +21,7 @@ type Fixtures = {
   sysAdminPage: Page;
   sysAdminEmail: EmailService;
   pdfParser: PdfParser;
+  sheetParser: SheetParser;
   downloadService: DownloadService;
   jpgFile: TestFile;
   txtFile: TestFile;
@@ -43,6 +45,7 @@ export const test = base.extend<Fixtures>({
   sysAdminPage: sysAdminPage,
   sysAdminEmail: sysAdminEmailService,
   pdfParser: pdfParser,
+  sheetParser: sheetParser,
   downloadService: downloadService,
   jpgFile: jpgFile,
   txtFile: txtFile,
