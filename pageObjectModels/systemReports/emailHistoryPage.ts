@@ -53,6 +53,8 @@ export class EmailHistoryPage extends BaseAdminPage {
   private readonly emailTypeSelector: Locator;
   private readonly appSelector: Locator;
   private readonly emailsGridHeader: Locator;
+  private readonly exportReportButton: Locator;
+  private readonly exportReportDialog: Locator;
   readonly emailsGridBody: Locator;
 
   constructor(page: Page) {
@@ -62,6 +64,8 @@ export class EmailHistoryPage extends BaseAdminPage {
     this.emailTypeSelector = page.getByRole('listbox', { name: 'Email Type' });
     this.appSelector = page.getByRole('listbox', { name: 'App/Survey' });
     this.emailsGridHeader = page.locator('#grid .k-grid-header');
+    this.exportReportButton = page.getByRole('link', { name: 'Export Report' });
+    this.exportReportDialog = page.getByRole('dialog', { name: 'Export Report' });
     this.emailsGridBody = page.locator('#grid .k-grid-content');
   }
 
@@ -113,5 +117,11 @@ export class EmailHistoryPage extends BaseAdminPage {
 
       currentSortDirection = await columnHeader.getAttribute('aria-sort');
     }
+  }
+
+  async exportReport() {
+    await this.exportReportButton.click();
+    await this.exportReportDialog.waitFor();
+    await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
   }
 }
