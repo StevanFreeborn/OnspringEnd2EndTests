@@ -44,6 +44,7 @@
     "eslint-plugin-playwright": "^1.5.1",
     "imap": "^0.8.17",
     "mailparser": "^3.6.7",
+    "node-xlsx": "^0.23.0",
     "pdfjs-dist": "^4.0.379",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
