@@ -79,11 +79,41 @@ export class EmailHistoryPage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async resetTypeFilter() {
+    const currentTypeFilter = await this.emailTypeSelector.innerText();
+    const allFilterText = 'All Email Types';
+
+    if (currentTypeFilter.includes(allFilterText)) {
+      return;
+    }
+
+    await this.emailTypeSelector.click();
+
+    const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
+    await this.page.locator('#typeFilter-list').getByText(allFilterText).click();
+    await getHistoryResponse;
+  }
+
   async selectTypeFilter(emailType: EmailType) {
     await this.emailTypeSelector.click();
 
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
     await this.page.getByRole('option', { name: emailType }).click();
+    await getHistoryResponse;
+  }
+
+  async resetAppFilter() {
+    const currentAppFilter = await this.appSelector.innerText();
+    const allFilterText = 'All Apps & Surveys';
+
+    if (currentAppFilter.includes(allFilterText)) {
+      return;
+    }
+
+    await this.appSelector.click();
+
+    const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
+    await this.page.locator('#appFilter-list').getByText(allFilterText).click();
     await getHistoryResponse;
   }
 

@@ -26,6 +26,7 @@ type EmailHistoryReportTestFixtures = {
   editContentPage: EditContentPage;
   emailBodyAdminPage: EmailBodyAdminPage;
   editEmailBodyPage: EditEmailBodyPage;
+  userAdminPage: UserAdminPage;
 };
 
 const test = base.extend<EmailHistoryReportTestFixtures>({
@@ -36,6 +37,7 @@ const test = base.extend<EmailHistoryReportTestFixtures>({
   editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
   emailBodyAdminPage: async ({ sysAdminPage }, use) => use(new EmailBodyAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
+  userAdminPage: async ({ sysAdminPage }, use) => use(new UserAdminPage(sysAdminPage)),
 });
 
 test.describe('email message history report', () => {
@@ -423,7 +425,7 @@ test.describe('email message history report', () => {
     });
   });
 
-  test('Use the links in the email message history report', async ({
+  test('Use the To Name link in the email message history report', async ({
     emailHistoryPage,
     app,
     appAdminPage,
@@ -432,6 +434,7 @@ test.describe('email message history report', () => {
     emailBodyAdminPage,
     editEmailBodyPage,
     sysAdminEmail,
+    userAdminPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -482,18 +485,103 @@ test.describe('email message history report', () => {
     });
 
     await test.step("Verify the To Name link opens the user's security record", async () => {
-      const userSecurityPage = new UserAdminPage(emailHistoryPage.page);
-      await expect(emailHistoryPage.page).toHaveURL(userSecurityPage.pathRegex);
+      await expect(emailHistoryPage.page).toHaveURL(userAdminPage.pathRegex);
     });
   });
 
-  test('Use the links in the email message history report detail view', async () => {
+  test('Use the links in the email message history report detail view', async ({
+    emailHistoryPage,
+    app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    emailBodyAdminPage,
+    editEmailBodyPage,
+    sysAdminEmail,
+    userAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-357',
     });
 
-    expect(true).toBeTruthy();
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textField = new TextField({ name: 'Send Email?' });
+    const rule = new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' });
+    const emailBody = new EmailBody({
+      name: emailBodyName,
+      appName: app.name,
+      status: 'Active',
+      subject: `${emailBodyName} - Test Subject`,
+      body: 'This is a test email body',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+      sendLogic: new SimpleRuleLogic({
+        rules: [rule],
+      }),
+    });
+    let recordId: number;
+
+    await test.step('Send email from specific app', async () => {
+      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
+      recordId = await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+    });
+
+    await test.step('Wait for email to be received', async () => {
+      await verifyEmailReceived({ emailBodyName, sysAdminEmail });
+    });
+
+    const links = [
+      {
+        linkName: 'To',
+        locator: emailHistoryPage.messageDetailModal.toLink,
+        expectedPathRegex: userAdminPage.pathRegex,
+      },
+      {
+        linkName: 'Email Body',
+        locator: emailHistoryPage.messageDetailModal.emailBodyLink,
+        expectedPathRegex: editEmailBodyPage.pathRegex,
+      },
+      {
+        linkName: 'Record',
+        locator: emailHistoryPage.messageDetailModal.recordLink,
+        expectedPathRegex: new RegExp(`/Content/${app.id}/${recordId!}`),
+      },
+    ];
+
+    for (const link of links) {
+      await test.step('Navigate to the email message history report', async () => {
+        await emailHistoryPage.goto();
+      });
+
+      await test.step('Filter the email message history report', async () => {
+        await emailHistoryPage.resetTypeFilter();
+        await emailHistoryPage.resetAppFilter();
+
+        await emailHistoryPage.selectTypeFilter('Messaging');
+        await emailHistoryPage.selectAppFilter(app.name);
+      });
+
+      await test.step('Open the details of the email message history report item', async () => {
+        await emailHistoryPage.emailsGridBody.getByRole('row', { name: emailBody.subject }).click();
+      });
+
+      await test.step(`Click on the ${link.linkName} link`, async () => {
+        await link.locator.click();
+      });
+
+      await test.step("Verify the To Name link opens the user's security record", async () => {
+        await expect(emailHistoryPage.page).toHaveURL(link.expectedPathRegex);
+      });
+
+      await test.step('Navigate back to the email message history report', async () => {
+        await emailHistoryPage.goto();
+      });
+    }
   });
 });
 
@@ -587,6 +675,7 @@ async function addRecordToTriggerEmail({
   await editableTextField.fill(rule.value);
   await addContentPage.saveRecordButton.click();
   await addContentPage.page.waitForURL(editContentPage.pathRegex);
+  return editContentPage.getRecordIdFromUrl();
 }
 
 async function verifyEmailReceived({
