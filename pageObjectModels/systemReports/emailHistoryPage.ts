@@ -1,4 +1,6 @@
 import { Locator, Page } from '@playwright/test';
+import { ResendEmailDialog } from '../../componentObjectModels/dialogs/resendEmailDialog';
+import { EmailMessageDetailModal } from '../../componentObjectModels/modals/emailMessageDetailModal';
 import { BaseAdminPage } from '../baseAdminPage';
 
 type EmailType =
@@ -56,6 +58,8 @@ export class EmailHistoryPage extends BaseAdminPage {
   private readonly exportReportButton: Locator;
   private readonly exportReportDialog: Locator;
   readonly emailsGridBody: Locator;
+  readonly messageDetailModal: EmailMessageDetailModal;
+  readonly resendEmailDialog: ResendEmailDialog;
 
   constructor(page: Page) {
     super(page);
@@ -67,6 +71,8 @@ export class EmailHistoryPage extends BaseAdminPage {
     this.exportReportButton = page.getByRole('link', { name: 'Export Report' });
     this.exportReportDialog = page.getByRole('dialog', { name: 'Export Report' });
     this.emailsGridBody = page.locator('#grid .k-grid-content');
+    this.messageDetailModal = new EmailMessageDetailModal(page);
+    this.resendEmailDialog = new ResendEmailDialog(page);
   }
 
   async goto() {
