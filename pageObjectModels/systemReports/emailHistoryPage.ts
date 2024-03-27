@@ -1,7 +1,13 @@
 import { Locator, Page } from '@playwright/test';
 import { ResendEmailDialog } from '../../componentObjectModels/dialogs/resendEmailDialog';
 import { EmailMessageDetailModal } from '../../componentObjectModels/modals/emailMessageDetailModal';
+import { App } from '../../models/app';
 import { BaseAdminPage } from '../baseAdminPage';
+
+type HistoryGridParams = {
+  appId: number | undefined;
+  emailType: string | undefined;
+};
 
 type EmailType =
   | 'Admin Report Export'
@@ -50,6 +56,7 @@ type SortableGridColumn = Exclude<GridColumn, 'Resend'>;
 type SortDirection = 'ascending' | 'descending';
 
 export class EmailHistoryPage extends BaseAdminPage {
+  private readonly historyGridSessionKey: string;
   private readonly path: string;
   private readonly getHistoryPath: string;
   private readonly emailTypeSelector: Locator;
@@ -63,6 +70,7 @@ export class EmailHistoryPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.historyGridSessionKey = 'onx.grid/Admin/Reporting/Messaging/History.grid';
     this.path = '/Admin/Reporting/Messaging/History';
     this.getHistoryPath = '/Admin/Reporting/Messaging/GetHistoryPage';
     this.emailTypeSelector = page.getByRole('listbox', { name: 'Email Type' });
@@ -75,26 +83,49 @@ export class EmailHistoryPage extends BaseAdminPage {
     this.resendEmailDialog = new ResendEmailDialog(page);
   }
 
+  /**
+   * Retrieves the history grid parameters from the session storage.
+   */
+  private async getGridParams() {
+    return await this.page.evaluate(key => {
+      const storedGridState = sessionStorage.getItem(key);
+
+      if (storedGridState === null) {
+        return null;
+      }
+
+      const gridState = JSON.parse(storedGridState);
+      const paramMap = gridState?.paramMap ?? null;
+      return paramMap as HistoryGridParams;
+    }, this.historyGridSessionKey);
+  }
+
   async goto() {
     await this.page.goto(this.path);
   }
 
   async resetTypeFilter() {
-    const currentTypeFilter = await this.emailTypeSelector.innerText();
-    const allFilterText = 'All Email Types';
+    const gridParams = await this.getGridParams();
 
-    if (currentTypeFilter.includes(allFilterText)) {
+    if (gridParams?.emailType === undefined) {
       return;
     }
 
     await this.emailTypeSelector.click();
 
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
-    await this.page.locator('#typeFilter-list').getByText(allFilterText).click();
+    await this.page.locator('#typeFilter-list').getByText('All Email Types').click();
     await getHistoryResponse;
   }
 
   async selectTypeFilter(emailType: EmailType) {
+    const gridParams = await this.getGridParams();
+    const emailTypeWithoutSpaces = emailType.replace(/\s+/g, '');
+
+    if (gridParams?.emailType?.includes(emailTypeWithoutSpaces)) {
+      return;
+    }
+
     await this.emailTypeSelector.click();
 
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
@@ -103,25 +134,30 @@ export class EmailHistoryPage extends BaseAdminPage {
   }
 
   async resetAppFilter() {
-    const currentAppFilter = await this.appSelector.innerText();
-    const allFilterText = 'All Apps & Surveys';
+    const gridParams = await this.getGridParams();
 
-    if (currentAppFilter.includes(allFilterText)) {
+    if (gridParams?.appId === undefined) {
       return;
     }
 
     await this.appSelector.click();
 
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
-    await this.page.locator('#appFilter-list').getByText(allFilterText).click();
+    await this.page.locator('#appFilter-list').getByText('All Apps & Surveys').click();
     await getHistoryResponse;
   }
 
-  async selectAppFilter(appName: string) {
+  async selectAppFilter(app: App) {
+    const gridParams = await this.getGridParams();
+
+    if (gridParams?.appId === app.id) {
+      return;
+    }
+
     await this.appSelector.click();
 
     const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
-    await this.page.getByRole('option', { name: appName }).click();
+    await this.page.getByRole('option', { name: app.name }).click();
     await getHistoryResponse;
   }
 
