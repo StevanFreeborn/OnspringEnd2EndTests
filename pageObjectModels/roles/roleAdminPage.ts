@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { RoleAdminPermTab } from '../../componentObjectModels/tabs/RoleAdminPermTab';
+import { RoleAdminPermTab } from '../../componentObjectModels/tabs/roleAdminPermTab';
 import { RoleAppPermTab } from '../../componentObjectModels/tabs/roleAppPermTab';
 import { RoleGeneralTab } from '../../componentObjectModels/tabs/roleGeneralTab';
 import { BaseAdminFormPage } from '../baseAdminFormPage';
