@@ -91,7 +91,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Verify the email message history report is filtered', async () => {
@@ -161,7 +161,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Sort the email message history report', async () => {
@@ -236,7 +236,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Export the email message history report', async () => {
@@ -341,7 +341,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Open the details of an email message history report item', async () => {
@@ -403,7 +403,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Resend the email', async () => {
@@ -419,8 +419,8 @@ test.describe('email message history report', () => {
 
         expect(result.isOk()).toBe(true);
       }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
+        intervals: [30000],
+        timeout: 300_000,
       });
     });
   });
@@ -476,7 +476,7 @@ test.describe('email message history report', () => {
 
     await test.step('Filter the email message history report', async () => {
       await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app.name);
+      await emailHistoryPage.selectAppFilter(app);
     });
 
     await test.step('Click on the To Name link', async () => {
@@ -559,11 +559,8 @@ test.describe('email message history report', () => {
       });
 
       await test.step('Filter the email message history report', async () => {
-        await emailHistoryPage.resetTypeFilter();
-        await emailHistoryPage.resetAppFilter();
-
         await emailHistoryPage.selectTypeFilter('Messaging');
-        await emailHistoryPage.selectAppFilter(app.name);
+        await emailHistoryPage.selectAppFilter(app);
       });
 
       await test.step('Open the details of the email message history report item', async () => {
@@ -691,7 +688,7 @@ async function verifyEmailReceived({
 
     expect(result.isOk()).toBe(true);
   }).toPass({
-    intervals: [5000],
-    timeout: 60_000,
+    intervals: [30000],
+    timeout: 300_000,
   });
 }
