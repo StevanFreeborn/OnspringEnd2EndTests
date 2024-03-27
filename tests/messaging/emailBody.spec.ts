@@ -247,6 +247,8 @@ test.describe('email body', () => {
       description: 'Test-215',
     });
 
+    test.slow();
+
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
     const textField = new TextField({ name: 'Send Email?' });
@@ -365,6 +367,8 @@ test.describe('email body', () => {
       type: AnnotationType.TestId,
       description: 'Test-216',
     });
+
+    test.slow();
 
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';

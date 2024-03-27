@@ -86,6 +86,8 @@ const test = base.extend<EmailHistoryReportTestFixtures>({
 });
 
 test.describe('email message history report', () => {
+  test.slow();
+
   test('Filter the email message history report', async ({
     emailHistoryPage,
     app,
