@@ -101,7 +101,9 @@ export class EmailHistoryPage extends BaseAdminPage {
   }
 
   async goto() {
+    const getHistoryResponse = this.page.waitForResponse(this.getHistoryPath);
     await this.page.goto(this.path);
+    await getHistoryResponse;
   }
 
   async resetTypeFilter() {
