@@ -1,7 +1,8 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseAdminFormPage } from '../baseAdminFormPage';
-import { RoleGeneralTab } from '../../componentObjectModels/tabs/roleGeneralTab';
+import { RoleAdminPermTab } from '../../componentObjectModels/tabs/RoleAdminPermTab';
 import { RoleAppPermTab } from '../../componentObjectModels/tabs/roleAppPermTab';
+import { RoleGeneralTab } from '../../componentObjectModels/tabs/roleGeneralTab';
+import { BaseAdminFormPage } from '../baseAdminFormPage';
 
 export class RoleAdminPage extends BaseAdminFormPage {
   readonly generalTabButton: Locator;
@@ -11,6 +12,7 @@ export class RoleAdminPage extends BaseAdminFormPage {
   readonly securityPermissionsTabButton: Locator;
   readonly generalTab: RoleGeneralTab;
   readonly appPermTab: RoleAppPermTab;
+  readonly adminPermTab: RoleAdminPermTab;
 
   constructor(page: Page) {
     super(page);
@@ -22,5 +24,6 @@ export class RoleAdminPage extends BaseAdminFormPage {
 
     this.generalTab = new RoleGeneralTab(this);
     this.appPermTab = new RoleAppPermTab(this);
+    this.adminPermTab = new RoleAdminPermTab(page);
   }
 }

@@ -24,14 +24,9 @@ export class AddRoleAdminPage extends RoleAdminPage {
 
     if (role.status === 'Active') {
       await this.generalTab.statusToggle.click();
-    } else {
-      // FIX: Remove the following when #3983 is fixed
-      // https://corp.onspring.com/Content/8/3983
-      await this.generalTab.statusToggle.click();
-      await this.generalTab.statusToggle.click();
     }
 
-    if (role.appPermissions.length) {
+    if (role.appPermissions.length > 0) {
       await this.appPermissionsTabButton.click();
 
       for (const appPermission of role.appPermissions) {
@@ -50,6 +45,20 @@ export class AddRoleAdminPage extends RoleAdminPage {
         await appPermissionSection.permissionGrid.contentAdminPermissions.set(appPermission.contentAdmin);
         await appPermissionSection.permissionGrid.reportAdminPermissions.set(appPermission.reportAdmin);
         await appPermissionSection.permissionGrid.privateReportAdminPermissions.set(appPermission.privateReportAdmin);
+      }
+    }
+
+    if (role.adminReportPermissions.length > 0) {
+      await this.adminPermissionsTabButton.click();
+
+      for (const adminReportPermission of role.adminReportPermissions) {
+        const adminReportPermissionRow = this.adminPermTab.adminReportsGrid.getByRole('row', {
+          name: adminReportPermission.reportName,
+        });
+
+        if (adminReportPermission.permission.read) {
+          await adminReportPermissionRow.getByRole('checkbox').click();
+        }
       }
     }
 
