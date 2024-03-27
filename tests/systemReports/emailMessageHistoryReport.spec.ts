@@ -1,26 +1,37 @@
+import { Page } from '@playwright/test';
 import { env } from '../../env';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
+import { testUserPage } from '../../fixtures/auth.fixtures';
+import { activeUserWithRole } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { EmailBody } from '../../models/emailBody';
 import { LayoutItem } from '../../models/layoutItem';
+import { AdminReportPermission, AppPermission, Permission, Role } from '../../models/role';
 import { TextRuleWithValue } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { TextField } from '../../models/textField';
+import { User } from '../../models/user';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
 import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
+import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
+import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
+import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
 import { EmailHistoryPage } from '../../pageObjectModels/systemReports/emailHistoryPage';
 import { UserAdminPage } from '../../pageObjectModels/users/userAdminPage';
 import { EmailService } from '../../services/emailService';
 import { AnnotationType } from '../annotations';
 
 type EmailHistoryReportTestFixtures = {
-  emailHistoryPage: EmailHistoryPage;
   app: App;
+  role: Role;
+  user: User;
+  testUserPage: Page;
+  emailHistoryPage: EmailHistoryPage;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
@@ -30,8 +41,42 @@ type EmailHistoryReportTestFixtures = {
 };
 
 const test = base.extend<EmailHistoryReportTestFixtures>({
-  emailHistoryPage: async ({ sysAdminPage }, use) => use(new EmailHistoryPage(sysAdminPage)),
   app: app,
+  role: async ({ sysAdminPage, app }, use) => {
+    const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
+    const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
+    const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+    const roleName = FakeDataFactory.createFakeRoleName();
+    const role = new Role({
+      name: roleName,
+      status: 'Active',
+      appPermissions: [
+        new AppPermission({
+          appName: app.name,
+          contentRecords: new Permission({ read: true }),
+        }),
+      ],
+      adminReportPermissions: [
+        new AdminReportPermission({
+          reportName: 'Email Message History',
+          permission: { read: true },
+        }),
+      ],
+    });
+
+    await addRoleAdminPage.addRole(role);
+    await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+    await editRoleAdminPage.page.waitForLoadState();
+
+    role.id = editRoleAdminPage.getRoleIdFromUrl();
+
+    await use(role);
+
+    await roleSecurityAdminPage.deleteRoles([roleName]);
+  },
+  user: activeUserWithRole,
+  testUserPage: testUserPage,
+  emailHistoryPage: async ({ sysAdminPage }, use) => use(new EmailHistoryPage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
@@ -182,7 +227,7 @@ test.describe('email message history report', () => {
   });
 
   test('Export the email message history report', async ({
-    emailHistoryPage,
+    user,
     app,
     appAdminPage,
     addContentPage,
@@ -190,7 +235,7 @@ test.describe('email message history report', () => {
     emailBodyAdminPage,
     editEmailBodyPage,
     sysAdminEmail,
-    sysAdminPage,
+    testUserPage,
     downloadService,
     sheetParser,
   }) => {
@@ -199,6 +244,7 @@ test.describe('email message history report', () => {
       description: 'Test-353',
     });
 
+    const emailHistoryPage = new EmailHistoryPage(testUserPage);
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
     const testEmailSubject = `${emailBodyName} - Test Subject`;
     const testFromAddress = FakeDataFactory.createFakeEmailFromAddress();
@@ -247,7 +293,7 @@ test.describe('email message history report', () => {
 
     await test.step('Verify the email message history report is exported', async () => {
       await expect(async () => {
-        const searchCriteria = [['TEXT', 'Email Message History'], ['UNSEEN']];
+        const searchCriteria = [['TO', user.email], ['TEXT', 'Email Message History'], ['UNSEEN']];
         const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
 
         expect(result.isOk()).toBe(true);
@@ -256,18 +302,18 @@ test.describe('email message history report', () => {
 
         exportEmailContent = email.html as string;
       }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
+        intervals: [30_000],
+        timeout: 300_000,
       });
     });
 
     let reportPath: string;
 
     await test.step('Download the exported email message history report', async () => {
-      await sysAdminPage.setContent(exportEmailContent);
+      await testUserPage.setContent(exportEmailContent);
 
-      const reportDownload = sysAdminPage.waitForEvent('download');
-      await sysAdminPage.getByRole('link').click();
+      const reportDownload = testUserPage.waitForEvent('download');
+      await testUserPage.getByRole('link').click();
       const report = await reportDownload;
       reportPath = await downloadService.saveDownload(report);
     });
@@ -419,7 +465,7 @@ test.describe('email message history report', () => {
 
         expect(result.isOk()).toBe(true);
       }).toPass({
-        intervals: [30000],
+        intervals: [30_000],
         timeout: 300_000,
       });
     });
@@ -688,7 +734,7 @@ async function verifyEmailReceived({
 
     expect(result.isOk()).toBe(true);
   }).toPass({
-    intervals: [30000],
+    intervals: [30_000],
     timeout: 300_000,
   });
 }
