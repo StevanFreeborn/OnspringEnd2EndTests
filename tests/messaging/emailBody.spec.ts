@@ -464,7 +464,7 @@ test.describe('email body', () => {
         expect(email.subject).toBe(emailBody.subject);
         expect(email.text).toContain(bodyTemplate + ' 1');
       }).toPass({
-        intervals: [30000],
+        intervals: [30_000],
         timeout: 300_000,
       });
     });
