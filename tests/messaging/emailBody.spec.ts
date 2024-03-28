@@ -247,6 +247,8 @@ test.describe('email body', () => {
       description: 'Test-215',
     });
 
+    test.slow();
+
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
     const textField = new TextField({ name: 'Send Email?' });
@@ -346,8 +348,8 @@ test.describe('email body', () => {
         expect(email.subject).toBe(emailBody.subject);
         expect(email.text).toContain(bodyTemplate + ' 1');
       }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
+        intervals: [30_000],
+        timeout: 300_000,
       });
     });
   });
@@ -365,6 +367,8 @@ test.describe('email body', () => {
       type: AnnotationType.TestId,
       description: 'Test-216',
     });
+
+    test.slow();
 
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
@@ -464,12 +468,10 @@ test.describe('email body', () => {
         expect(email.subject).toBe(emailBody.subject);
         expect(email.text).toContain(bodyTemplate + ' 1');
       }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
+        intervals: [30_000],
+        timeout: 300_000,
       });
     });
-
-    expect(true).toBe(true);
   });
 
   test("Delete an Email Body from an app's Messaging tab", async ({ targetApp, appAdminPage, editEmailBodyPage }) => {

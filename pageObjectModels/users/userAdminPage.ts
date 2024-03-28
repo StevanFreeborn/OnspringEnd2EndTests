@@ -4,6 +4,7 @@ import { UserSecurityTab } from '../../componentObjectModels/tabs/userSecurityTa
 import { BaseAdminFormPage } from '../baseAdminFormPage';
 
 export class UserAdminPage extends BaseAdminFormPage {
+  readonly pathRegex: RegExp;
   readonly generalTabButton: Locator;
   readonly securityTabButton: Locator;
   readonly generalTab: UserGeneralTab;
@@ -11,6 +12,7 @@ export class UserAdminPage extends BaseAdminFormPage {
 
   constructor(page: Page) {
     super(page);
+    this.pathRegex = /\/Admin\/Security\/User\/\d+\/Edit/;
     this.generalTabButton = page.locator('#tab-strip-0').getByText('General');
     this.securityTabButton = page.locator('#tab-strip-0').getByText('Security');
 

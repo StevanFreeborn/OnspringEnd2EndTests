@@ -5,12 +5,15 @@
   "cSpell.words": [
     "colorpicker",
     "colspan",
+    "columnheader",
+    "columnsorter",
     "datetimepicker",
     "domcontentloaded",
     "endtests",
     "FEDSPRING",
     "filechooser",
     "FULLNAME",
+    "gridcell",
     "iife",
     "jsxdev",
     "likert",
@@ -29,6 +32,7 @@
     "timespan",
     "treeitem",
     "Treeview",
+    "Unlaunched",
     "VNEXT",
     "VPRIOR"
   ],

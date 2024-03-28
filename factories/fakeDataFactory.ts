@@ -36,8 +36,12 @@ export class FakeDataFactory {
     return faker.internet.password({ length: 10 });
   }
 
-  static createFakeEmail() {
-    return faker.internet.email();
+  static createFakeUserEmail() {
+    const sysAdminEmail = env.SYS_ADMIN_EMAIL;
+    const sysAdminEmailParts = sysAdminEmail.split('@');
+    const username = sysAdminEmailParts[0];
+    const domain = sysAdminEmailParts[1];
+    return `${username}+${this.createUniqueIdentifier()}@${domain}`;
   }
 
   static createFakeAppName() {

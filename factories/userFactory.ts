@@ -6,7 +6,7 @@ export class UserFactory {
   static createSysAdminUser() {
     const firstName = env.SYS_ADMIN_FIRST_NAME ?? FakeDataFactory.createFakeFirstName();
     const lastName = env.SYS_ADMIN_LAST_NAME ?? FakeDataFactory.createFakeLastName();
-    const email = env.SYS_ADMIN_EMAIL ?? FakeDataFactory.createFakeEmail();
+    const email = env.SYS_ADMIN_EMAIL ?? FakeDataFactory.createFakeUserEmail();
     const username = env.SYS_ADMIN_USERNAME ?? FakeDataFactory.createFakeUsername();
     const password = env.SYS_ADMIN_PASSWORD ?? FakeDataFactory.createFakePassword();
 
@@ -16,7 +16,7 @@ export class UserFactory {
   static createNewUser(status: UserStatus) {
     const firstName = FakeDataFactory.createFakeFirstName();
     const lastName = FakeDataFactory.createFakeLastName();
-    const email = FakeDataFactory.createFakeEmail();
+    const email = FakeDataFactory.createFakeUserEmail();
     const username = FakeDataFactory.createFakeUsername();
     const password = FakeDataFactory.createFakePassword();
 
