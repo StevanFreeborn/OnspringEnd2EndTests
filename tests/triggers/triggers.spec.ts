@@ -43,31 +43,107 @@ test.describe('Triggers', () => {
     });
   });
 
-  test('Enable a trigger on an app', () => {
+  test('Enable a trigger on an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-187',
     });
 
-    expect(true).toBe(true);
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      status: true,
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a new enabled trigger', async () => {
+      await appAdminPage.triggersTab.addTrigger(trigger);
+    });
+
+    await test.step('Verify the trigger was enabled', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await expect(triggerRow).toBeVisible();
+      await expect(triggerRow).toHaveText(/enabled/i);
+    });
   });
 
-  test('Disable a trigger on an app', () => {
+  test('Disable a trigger on an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-188',
     });
 
-    expect(true).toBe(true);
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      status: true,
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a new enabled trigger', async () => {
+      await appAdminPage.triggersTab.addTrigger(trigger);
+    });
+
+    await test.step('Disable the trigger', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await triggerRow.click();
+      await appAdminPage.triggersTab.addOrEditTriggerModal.generalTab.statusToggle.click();
+      await appAdminPage.triggersTab.addOrEditTriggerModal.saveButton.click();
+    });
+
+    await test.step('Verify the trigger was disabled', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await expect(triggerRow).toBeVisible();
+      await expect(triggerRow).toHaveText(/disabled/i);
+    });
   });
 
-  test('Update the configuration of a trigger on an app', () => {
+  test('Update the configuration of a trigger on an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-189',
     });
 
-    expect(true).toBe(true);
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+    });
+
+    const updatedTriggerName = FakeDataFactory.createFakeTriggerName();
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a new trigger', async () => {
+      await appAdminPage.triggersTab.addTrigger(trigger);
+    });
+
+    await test.step('Update the trigger configuration', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await triggerRow.click();
+      await appAdminPage.triggersTab.addOrEditTriggerModal.generalTab.nameInput.fill(updatedTriggerName);
+      await appAdminPage.triggersTab.addOrEditTriggerModal.saveButton.click();
+    });
+
+    await test.step('Verify the trigger was updated', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: updatedTriggerName });
+
+      await expect(triggerRow).toBeVisible();
+    });
   });
 
   test('Delete a trigger from an app', () => {
