@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { AppMessagingTab } from '../../componentObjectModels/tabs/appMessagingTab';
+import { AppTriggerTab } from '../../componentObjectModels/tabs/appTriggersTab';
 import { TextField } from '../../models/textField';
 import { BASE_URL } from '../../playwright.config';
 import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
@@ -19,6 +20,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
 
   readonly generalTab: AppGeneralTab;
   readonly layoutTab: AppLayoutTab;
+  readonly triggersTab: AppTriggerTab;
   readonly messagingTab: AppMessagingTab;
 
   constructor(page: Page) {
@@ -28,6 +30,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
 
     this.generalTab = new AppGeneralTab(page);
     this.layoutTab = new AppLayoutTab(page);
+    this.triggersTab = new AppTriggerTab(page);
     this.messagingTab = new AppMessagingTab(page);
   }
 

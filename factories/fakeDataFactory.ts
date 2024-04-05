@@ -107,4 +107,8 @@ export class FakeDataFactory {
   static createFakeEmailFromAddress(username: string = 'automation') {
     return `${username}@${DEFAULT_EMAIL_SENDING_DOMAIN}`;
   }
+
+  static createFakeTriggerName() {
+    return `${this.createUniqueIdentifier()}-trigger-test`;
+  }
 }

@@ -5,7 +5,7 @@ type LogicOperator = 'AND' | 'OR';
 
 type TriggerObject = {
   name: string;
-  status: boolean;
+  status?: boolean;
   description?: string;
   rules?: Rule[];
   logicMode?: LogicMode;
@@ -22,7 +22,7 @@ export class Trigger {
 
   constructor({
     name,
-    status,
+    status = false,
     description = '',
     rules = [],
     logicMode = 'Simple Mode',
