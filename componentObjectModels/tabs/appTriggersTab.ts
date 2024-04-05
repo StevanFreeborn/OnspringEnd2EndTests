@@ -4,7 +4,22 @@ import { AddTriggerDialog } from '../dialogs/addTriggerDialog';
 import { DeleteTriggerDialog } from '../dialogs/deleteTriggerDialog';
 import { AddOrEditTriggerModal } from './../modals/addOrEditTriggerModal';
 
+type OutcomeType =
+  | 'All Types'
+  | 'Create Multiple Records'
+  | 'Create One Record'
+  | 'Filter List Values'
+  | 'Generate Document'
+  | 'Object Visibility'
+  | 'Print Content Record'
+  | 'Required Fields'
+  | 'Set Date'
+  | 'Set List Value'
+  | 'Set Reference'
+  | 'Stop Calculation';
+
 export class AppTriggerTab {
+  private readonly filterByOutcomeSelector: Locator;
   readonly addTriggerLink: Locator;
   readonly addTriggerDialog: AddTriggerDialog;
   readonly addOrEditTriggerModal: AddOrEditTriggerModal;
@@ -17,6 +32,7 @@ export class AppTriggerTab {
     this.addOrEditTriggerModal = new AddOrEditTriggerModal(page);
     this.triggersGrid = page.locator('#grid-triggers');
     this.deleteTriggerDialog = new DeleteTriggerDialog(page);
+    this.filterByOutcomeSelector = page.getByRole('listbox', { name: 'Filter by Outcome' });
   }
 
   async addTrigger(trigger: Trigger) {
@@ -33,5 +49,17 @@ export class AppTriggerTab {
     await triggerRow.hover();
     await triggerRow.getByTitle('Delete Trigger').click();
     await this.deleteTriggerDialog.deleteButton.click();
+  }
+
+  async filterTriggersByOutcome(outcome: OutcomeType) {
+    await this.filterByOutcomeSelector.click();
+
+    const page = this.filterByOutcomeSelector.page();
+
+    if (outcome === 'All Types') {
+      await page.getByText('All Types').click();
+    }
+
+    await page.getByRole('option', { name: outcome }).click();
   }
 }
