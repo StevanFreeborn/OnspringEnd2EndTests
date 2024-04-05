@@ -146,13 +146,38 @@ test.describe('Triggers', () => {
     });
   });
 
-  test('Delete a trigger from an app', () => {
+  test('Delete a trigger from an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-190',
     });
 
-    expect(true).toBe(true);
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a new trigger', async () => {
+      await appAdminPage.triggersTab.addTrigger(trigger);
+
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+      await expect(triggerRow).toBeVisible();
+    });
+
+    await test.step('Delete the trigger', async () => {
+      await appAdminPage.triggersTab.deleteTrigger(trigger.name);
+    });
+
+    await test.step('Verify the trigger was deleted', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await expect(triggerRow).toBeHidden();
+    });
   });
 
   test('Filter triggers by outcome type', () => {
