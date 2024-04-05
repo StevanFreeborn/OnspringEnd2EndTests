@@ -77,7 +77,7 @@ npm run test -- -g "Delete a user"
 
 ### Run tests against specific target environment
 
-A helpful script to run tests against a specific target environment without having to alter the `.env` file. Note you can pass all the same arguments as you would to `npm run test` to this script. But not the `--target` argument should come first followed by `--` and then the rest of the arguments.
+A helpful script to run tests against a specific target environment without having to alter the `.env` file. Note you can pass all the same arguments as you would to `npm run test` to this script. But note the `--target` argument should come first followed by `--` and then the rest of the arguments you want to pass to the test script.
 
 ```sh
 npm run test:env --target=<target> -- emailBody.spec.ts --project chrome
@@ -106,3 +106,5 @@ This workflow will run on any pull request that aims to merge into the `master` 
 ### Email Testing
 
 Some tests require the ability to verify that an email was sent. This is currently done using IMAP and the `imap` package. You can read more about it [here](https://www.npmjs.com/package/imap). The email account for the system administrator user running the tests can be configured in the `.env` file.
+
+When it is necessary to verify an email was sent to specific user currently an alias (e.g. `system.admin+<some unique identifier>@gmail.com`) is used to send the email to the system administrator user. The system administrator user's email account is configured in the `.env` file. The alias is then used to filter the emails in the inbox to find the email sent to the specific user.
