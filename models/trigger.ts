@@ -1,3 +1,4 @@
+import { Outcome } from './outcome';
 import { Rule } from './rule';
 
 type LogicMode = 'Simple Mode' | 'Advanced Mode';
@@ -10,6 +11,7 @@ type TriggerObject = {
   rules?: Rule[];
   logicMode?: LogicMode;
   logicOperator?: LogicOperator;
+  outcomes?: Outcome[];
 };
 
 export class Trigger {
@@ -19,6 +21,7 @@ export class Trigger {
   rules: Rule[];
   logicMode: LogicMode;
   logicOperator: LogicOperator;
+  outcomes: Outcome[];
 
   constructor({
     name,
@@ -27,6 +30,7 @@ export class Trigger {
     rules = [],
     logicMode = 'Simple Mode',
     logicOperator = 'AND',
+    outcomes = [],
   }: TriggerObject) {
     this.name = name;
     this.status = status;
@@ -34,5 +38,6 @@ export class Trigger {
     this.rules = rules;
     this.logicMode = logicMode;
     this.logicOperator = logicOperator;
+    this.outcomes = outcomes;
   }
 }

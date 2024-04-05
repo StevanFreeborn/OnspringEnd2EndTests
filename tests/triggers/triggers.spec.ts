@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { Trigger } from '../../models/trigger';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AnnotationType } from '../annotations';
@@ -180,12 +181,45 @@ test.describe('Triggers', () => {
     });
   });
 
-  test('Filter triggers by outcome type', () => {
+  test('Filter triggers by outcome type', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-191',
     });
 
-    expect(true).toBe(true);
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      outcomes: [
+        new ObjectVisibilityOutcome({
+          sections: [
+            new ObjectVisibilitySection({
+              tabName: 'About',
+              name: 'Record Information',
+              visibility: 'Read Only',
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await test.step('Navigate to the app triggers tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with an outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(trigger);
+    });
+
+    await test.step('Filter triggers by outcome type', async () => {
+      await appAdminPage.triggersTab.filterTriggersByOutcome('Create One Record');
+    });
+
+    await test.step('Verify the trigger is not displayed', async () => {
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+
+      await expect(triggerRow).toBeHidden();
+    });
   });
 });

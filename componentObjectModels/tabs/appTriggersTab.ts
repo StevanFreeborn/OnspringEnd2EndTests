@@ -1,22 +1,9 @@
 import { Locator, Page } from '@playwright/test';
+import { OutcomeType } from '../../models/outcome';
 import { Trigger } from '../../models/trigger';
 import { AddTriggerDialog } from '../dialogs/addTriggerDialog';
 import { DeleteTriggerDialog } from '../dialogs/deleteTriggerDialog';
 import { AddOrEditTriggerModal } from './../modals/addOrEditTriggerModal';
-
-type OutcomeType =
-  | 'All Types'
-  | 'Create Multiple Records'
-  | 'Create One Record'
-  | 'Filter List Values'
-  | 'Generate Document'
-  | 'Object Visibility'
-  | 'Print Content Record'
-  | 'Required Fields'
-  | 'Set Date'
-  | 'Set List Value'
-  | 'Set Reference'
-  | 'Stop Calculation';
 
 export class AppTriggerTab {
   private readonly filterByOutcomeSelector: Locator;
