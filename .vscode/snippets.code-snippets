@@ -31,7 +31,7 @@
     "scope": "typescript",
     "prefix": "pwpom",
     "body": [
-      "import { Page } from '@playwright/test'"
+      "import { Page } from '@playwright/test'",
       "",
       "export class $1 {",
       "\tconstructor(page: Page) {",
