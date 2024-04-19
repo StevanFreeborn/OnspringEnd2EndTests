@@ -90,7 +90,7 @@ jobs:
     needs: generate_shards
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.42.0-jammy
+      image: mcr.microsoft.com/playwright:v1.43.0-jammy
     strategy:
       fail-fast: false
       matrix:
@@ -178,7 +178,7 @@ jobs:
     needs: [generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.42.0-jammy
+      image: mcr.microsoft.com/playwright:v1.43.0-jammy
     strategy:
       fail-fast: false
     steps:

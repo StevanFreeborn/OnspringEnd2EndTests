@@ -1,11 +1,11 @@
-import { FrameLocator, Locator } from '@playwright/test';
+import { Locator } from '@playwright/test';
 import { ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 
 export class ObjectVisibilityOutcomeDisplayTab {
-  private readonly modal: FrameLocator;
+  private readonly modal: Locator;
   private readonly layoutSelector: Locator;
 
-  constructor(modal: FrameLocator) {
+  constructor(modal: Locator) {
     this.modal = modal;
     this.layoutSelector = modal.locator('.label:has-text("Layout") + .data').getByRole('listbox');
   }

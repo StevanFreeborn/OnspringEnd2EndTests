@@ -1,10 +1,10 @@
-import { FrameLocator, Locator, Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { LayoutItemPermission } from '../../models/layoutItem';
 import { LayoutItemSecurityTab } from './layoutItemSecurityTab';
 
 export class FormattedTextBlockSecurityTab extends LayoutItemSecurityTab {
   private readonly page: Page;
-  private readonly frame: FrameLocator;
+  private readonly frame: Locator;
   readonly viewSelect: Locator;
   readonly roleSelector: Locator;
   readonly selectorCloseButton: Locator;
