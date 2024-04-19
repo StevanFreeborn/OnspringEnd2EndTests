@@ -87,7 +87,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     navigationTimeout: expectNavAndActionTimeout,
     baseURL: BASE_URL,
     apiURL: API_URL,
-    trace: 'retain-on-failure',
+    trace: 'retain-on-first-failure',
     screenshot: 'only-on-failure',
     video: {
       mode: isCI ? 'off' : 'retain-on-failure',

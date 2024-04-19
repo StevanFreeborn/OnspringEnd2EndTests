@@ -79,12 +79,28 @@ export class AppPermission {
   }
 }
 
+type AdminReportPermissionObj = {
+  reportName?: string;
+  permission?: ReadOnlyPermission;
+};
+
+export class AdminReportPermission {
+  reportName: string;
+  permission: ReadOnlyPermission;
+
+  constructor({ reportName = '', permission = new Permission() }: AdminReportPermissionObj = {}) {
+    this.reportName = reportName;
+    this.permission = permission;
+  }
+}
+
 type RoleObj = {
   id?: number;
   name?: string;
   description?: string;
   status?: RoleStatus;
   appPermissions?: AppPermission[];
+  adminReportPermissions?: AdminReportPermission[];
 };
 
 export class Role {
@@ -93,12 +109,21 @@ export class Role {
   description: string;
   status: RoleStatus;
   appPermissions: AppPermission[];
+  adminReportPermissions: AdminReportPermission[];
 
-  constructor({ id = 0, name = '', description = '', status = 'Inactive', appPermissions = [] }: RoleObj = {}) {
+  constructor({
+    id = 0,
+    name = '',
+    description = '',
+    status = 'Inactive',
+    appPermissions = [],
+    adminReportPermissions = [],
+  }: RoleObj = {}) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.status = status;
     this.appPermissions = appPermissions;
+    this.adminReportPermissions = adminReportPermissions;
   }
 }

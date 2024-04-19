@@ -1,16 +1,21 @@
 {
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
   "cSpell.words": [
     "colorpicker",
     "colspan",
+    "columnheader",
+    "columnsorter",
+    "combobox",
     "datetimepicker",
     "domcontentloaded",
     "endtests",
     "FEDSPRING",
     "filechooser",
     "FULLNAME",
+    "gridcell",
     "iife",
     "jsxdev",
     "likert",
@@ -29,6 +34,7 @@
     "timespan",
     "treeitem",
     "Treeview",
+    "Unlaunched",
     "VNEXT",
     "VPRIOR"
   ],

@@ -19,6 +19,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
   readonly generalTabButton: Locator;
   readonly layoutTabButton: Locator;
   readonly messagingTabButton: Locator;
+  readonly triggersTabButton: Locator;
 
   abstract readonly generalTab: BaseAppOrSurveyGeneralTab;
   abstract readonly layoutTab: BaseLayoutTab;
@@ -30,6 +31,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
     this.generalTabButton = page.getByRole('tab', { name: 'General' });
     this.layoutTabButton = page.getByRole('tab', { name: 'Layout' });
     this.messagingTabButton = page.getByRole('tab', { name: 'Messaging' });
+    this.triggersTabButton = page.getByRole('tab', { name: 'Triggers' });
   }
 
   abstract getIdFromUrl(): number;

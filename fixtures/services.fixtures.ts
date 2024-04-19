@@ -2,6 +2,7 @@ import { env } from '../env';
 import { DownloadService } from '../services/downloadService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { SheetParser } from '../services/sheetParser';
 
 export async function sysAdminEmailService({}, use: (r: EmailService) => Promise<void>) {
   const imapConfig = {
@@ -24,4 +25,9 @@ export async function pdfParser({}, use: (r: PdfParser) => Promise<void>) {
 export async function downloadService({}, use: (r: DownloadService) => Promise<void>) {
   const downloadService = new DownloadService();
   await use(downloadService);
+}
+
+export async function sheetParser({}, use: (r: SheetParser) => Promise<void>) {
+  const sheetParser = new SheetParser();
+  await use(sheetParser);
 }
