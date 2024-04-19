@@ -16,6 +16,11 @@ on:
           - FEDSPRING_IST
         required: true
         default: ALPHA
+      record_har:
+        type: boolean
+        description: 'Record HAR files'
+        required: false
+        default: false
 env:
   CI: true
   SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
@@ -27,6 +32,7 @@ env:
   SYS_ADMIN_EMAIL_HOST: ${{ secrets.SYS_ADMIN_EMAIL_HOST }}
   SYS_ADMIN_EMAIL_PORT: ${{ secrets.SYS_ADMIN_EMAIL_PORT }}
   TEST_ENV: ${{ github.event.inputs.environment }}
+  RECORD_HAR: ${{ github.event.inputs.record_har }}
   ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
   BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
   QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
