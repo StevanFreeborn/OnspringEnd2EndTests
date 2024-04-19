@@ -1,6 +1,7 @@
 import { Browser, Page, Response, TestInfo } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { env } from '../env';
 import { User } from '../models/user';
 import { BASE_URL, SYS_ADMIN_AUTH_PATH, isCI } from '../playwright.config';
 
@@ -36,6 +37,7 @@ export async function createBaseAuthPage(
   authStorageLocation?: string
 ) {
   const videoDir = path.join(testInfo.outputPath(), 'videos');
+  const harPath = path.join(testInfo.outputPath(), 'logs', 'trace.har');
 
   const context = await browser.newContext({
     storageState: authStorageLocation,
@@ -46,6 +48,7 @@ export async function createBaseAuthPage(
           size: { width: 1920, height: 1080 },
         },
     viewport: { width: 1920, height: 1080 },
+    recordHar: env.RECORD_HAR ? { path: harPath } : undefined,
   });
 
   const page = await context.newPage();

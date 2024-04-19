@@ -25,6 +25,7 @@ const envSchema = z
       z.literal('PROD'),
       z.literal('FEDSPRING_IST'),
     ]),
+    RECORD_HAR: z.enum(['true', 'false', 'TRUE', 'FALSE']).transform(v => v.toLowerCase() === 'true'),
     ALPHA_INSTANCE_URL: z.string(),
     BETA_INSTANCE_URL: z.string(),
     QA_INSTANCE_URL: z.string(),
