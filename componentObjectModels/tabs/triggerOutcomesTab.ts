@@ -1,8 +1,10 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
+import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
-import { EditOutcomeModal } from '../modals/editOutcomeModal';
+import { EditOutcomeModalWithTabs } from '../modals/editOutcomeModalWithTabs';
+import { EditStopCalculationOutcomeModal } from '../modals/editStopCalculationOutcomeModal';
 
 export class TriggerOutcomesTab {
   private readonly page: Page;
@@ -13,11 +15,15 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Stop Calculation'): EditStopCalculationOutcomeModal;
   private getEditOutcomeModal(itemType: 'Object Visibility'): EditObjectVisibilityOutcomeModal;
-  private getEditOutcomeModal(outcomeType: OutcomeType): EditOutcomeModal {
+  private getEditOutcomeModal(outcomeType: OutcomeType): EditOutcomeModalWithTabs;
+  private getEditOutcomeModal(outcomeType: OutcomeType): EditOutcomeModalWithTabs {
     switch (outcomeType) {
       case 'Object Visibility':
         return new EditObjectVisibilityOutcomeModal(this.page);
+      case 'Stop Calculation':
+        return new EditStopCalculationOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -30,6 +36,11 @@ export class TriggerOutcomesTab {
       case 'Object Visibility': {
         const modal = this.getEditOutcomeModal('Object Visibility');
         await modal.fillOutForm(outcome as ObjectVisibilityOutcome);
+        break;
+      }
+      case 'Stop Calculation': {
+        const modal = this.getEditOutcomeModal('Stop Calculation');
+        await modal.fillOutForm(outcome as StopCalculationOutcome);
         break;
       }
       default:
