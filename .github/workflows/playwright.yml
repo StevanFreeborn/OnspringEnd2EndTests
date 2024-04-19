@@ -116,12 +116,19 @@ jobs:
       - name: Rename blob-reports
         if: ${{ cancelled() != true }}
         run: for file in blob-report/*; do [ -f "$file" ] && mv "$file" "blob-report/${{ matrix.project }}-$(basename "$file")"; done
-      - name: Upload blob report'
+      - name: Upload blob report
         if: ${{ cancelled() != true }}
         uses: actions/upload-artifact@v4
         with:
           name: all-blob-reports-${{ matrix.project }}-${{ strategy.job-index }}
           path: blob-report
+          retention-days: 1
+      - name: Upload test results
+        if: ${{ cancelled() != true && github.event.inputs.record_har == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.project }}-${{ strategy.job-index }}
+          path: test-results
           retention-days: 1
   merge_reports_and_publish:
     name: 'Merge Reports and Publish'
