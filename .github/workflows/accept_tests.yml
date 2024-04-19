@@ -1,5 +1,6 @@
 name: Acceptance_Test
 env:
+  RECORD_HAR: false
   TEST_ENV: IST # If changed update name property of run_tests job
   CI: true
   SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
