@@ -48,6 +48,7 @@ const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 const expectNavAndActionTimeout = 2 * MS_PER_MIN;
 
 export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
+  reportSlowTests: null,
   testDir: './tests',
   timeout: 5 * MS_PER_MIN,
   expect: {
