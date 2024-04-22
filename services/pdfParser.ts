@@ -1,4 +1,4 @@
-import { getDocument } from 'pdfjs-dist';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { TextItem } from 'pdfjs-dist/types/src/display/api';
 
 export class PdfParser {
