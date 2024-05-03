@@ -1,4 +1,4 @@
-import { Locator } from '@playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 import { ListRuleWithValue, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { DualPaneSelector } from './dualPaneSelector';
@@ -6,29 +6,31 @@ import { TreeviewSelector } from './treeviewSelector';
 
 export class RuleControl {
   protected readonly control: Locator;
+  protected readonly frame?: FrameLocator;
   protected readonly ruleInputContainer: Locator;
   protected readonly fieldSelector: TreeviewSelector;
   protected readonly ruleOperatorSelect: Locator;
-  protected readonly ruleOperatorList: Locator;
   protected readonly betweenOperatorContainer: Locator;
-  protected readonly dualPaneSelector: DualPaneSelector;
+  protected readonly listDualPaneSelector: DualPaneSelector;
   protected readonly addRuleButton: Locator;
   protected readonly simpleModeRadioButton: Locator;
   protected readonly advancedModeRadioButton: Locator;
   protected readonly useFilterLogicCheckbox: Locator;
   protected readonly filterLogicInput: Locator;
 
-  constructor(control: Locator) {
+  constructor(control: Locator, frame?: FrameLocator) {
     this.control = control;
+    this.frame = frame;
     this.ruleInputContainer = this.control.locator('.input-container');
-    this.fieldSelector = new TreeviewSelector(this.ruleInputContainer.locator('.field .onx-selector'));
+    this.fieldSelector = new TreeviewSelector(this.ruleInputContainer.locator('.field .onx-selector'), this.frame);
 
     this.ruleOperatorSelect = this.control.locator('.rule-operator[role="listbox"]');
-    const ruleSelectOwns = this.ruleOperatorSelect.getAttribute('aria-owns');
-    this.ruleOperatorList = this.control.locator(`#${ruleSelectOwns}`);
 
     this.betweenOperatorContainer = this.control.locator('.between-container');
-    this.dualPaneSelector = new DualPaneSelector(this.control.locator('.selector-container .onx-selector'));
+    this.listDualPaneSelector = new DualPaneSelector(
+      this.control.locator('.list.selector-container .onx-selector'),
+      this.frame
+    );
     this.addRuleButton = this.control.getByRole('button', { name: 'Add' });
     this.simpleModeRadioButton = this.control.getByRole('radio', { name: 'Simple Mode' });
     this.advancedModeRadioButton = this.control.getByRole('radio', { name: 'Advanced Mode' });
@@ -44,14 +46,10 @@ export class RuleControl {
 
   private async selectRuleOperator(operator: string) {
     await this.ruleOperatorSelect.click();
-    const page = this.ruleOperatorSelect.page();
 
-    const frame = page.mainFrame();
-    const childFrames = frame.childFrames();
-    const option =
-      childFrames.length > 0
-        ? childFrames[0].getByRole('option', { name: operator })
-        : page.getByRole('option', { name: operator });
+    const option = this.frame
+      ? this.frame.getByRole('option', { name: operator })
+      : this.ruleOperatorSelect.page().getByRole('option', { name: operator });
 
     await option.click();
   }
@@ -67,7 +65,7 @@ export class RuleControl {
     if (rule instanceof ListRuleWithValue) {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
-      await this.dualPaneSelector.selectOptions(rule.value);
+      await this.listDualPaneSelector.selectOptions(rule.value);
       return await this.addRuleButton.click();
     }
 
@@ -106,8 +104,8 @@ export class RuleControl {
 export class RuleControlWithAddNew extends RuleControl {
   readonly addRecordIsNewRuleCheckbox: Locator;
 
-  constructor(control: Locator) {
-    super(control);
+  constructor(control: Locator, frame?: FrameLocator) {
+    super(control, frame);
     this.addRecordIsNewRuleCheckbox = this.control.getByLabel('Add "When Record is New" option to rule set.');
   }
 

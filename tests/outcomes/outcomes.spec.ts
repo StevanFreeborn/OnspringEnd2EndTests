@@ -4,7 +4,7 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
-import { TextRuleWithValue } from '../../models/rule';
+import { ListRuleWithValue } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { TextField } from '../../models/textField';
@@ -50,7 +50,7 @@ test.describe('Outcomes', () => {
       name: FakeDataFactory.createFakeTriggerName(),
       status: true,
       ruleSet: new SimpleRuleLogic({
-        rules: [new TextRuleWithValue({ fieldName: textField.name, operator: 'Contains', value: 'Yes' })],
+        rules: [new ListRuleWithValue({ fieldName: listField.name, operator: 'Contains Any', value: ['Yes'] })],
       }),
       outcomes: [
         new StopCalculationOutcome({

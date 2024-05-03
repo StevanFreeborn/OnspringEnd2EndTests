@@ -1,22 +1,20 @@
-import { Locator } from '@playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 
 export class TreeviewSelector {
   private readonly selector: Locator;
+  private readonly frame?: FrameLocator;
 
-  constructor(selector: Locator) {
+  constructor(selector: Locator, frame?: FrameLocator) {
     this.selector = selector;
+    this.frame = frame;
   }
 
   async selectOption(option: string) {
     await this.selector.click();
-    const page = this.selector.page();
 
-    const frame = page.mainFrame();
-    const childFrames = frame.childFrames();
-    const treeItem =
-      childFrames.length > 0
-        ? childFrames[0].getByRole('treeitem', { name: option })
-        : page.getByRole('treeitem', { name: option });
+    const treeItem = this.frame
+      ? this.frame.getByRole('treeitem', { name: option })
+      : this.selector.page().getByRole('treeitem', { name: option });
 
     const text = treeItem.getByText(option);
     await text.click();
