@@ -2,8 +2,8 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
+import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
-import { EditOutcomeModalWithTabs } from '../modals/editOutcomeModalWithTabs';
 import { EditStopCalculationOutcomeModal } from '../modals/editStopCalculationOutcomeModal';
 
 export class TriggerOutcomesTab {
@@ -16,9 +16,9 @@ export class TriggerOutcomesTab {
   }
 
   private getEditOutcomeModal(outcomeType: 'Stop Calculation'): EditStopCalculationOutcomeModal;
-  private getEditOutcomeModal(itemType: 'Object Visibility'): EditObjectVisibilityOutcomeModal;
-  private getEditOutcomeModal(outcomeType: OutcomeType): EditOutcomeModalWithTabs;
-  private getEditOutcomeModal(outcomeType: OutcomeType): EditOutcomeModalWithTabs {
+  private getEditOutcomeModal(outcomeType: 'Object Visibility'): EditObjectVisibilityOutcomeModal;
+  private getEditOutcomeModal(outcomeType: OutcomeType): BaseEditOutcomeModal;
+  private getEditOutcomeModal(outcomeType: OutcomeType): BaseEditOutcomeModal {
     switch (outcomeType) {
       case 'Object Visibility':
         return new EditObjectVisibilityOutcomeModal(this.page);

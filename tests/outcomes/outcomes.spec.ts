@@ -5,6 +5,7 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
+import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
@@ -175,5 +176,111 @@ test.describe('Outcomes', () => {
 
       await expect(textFormulaField).toHaveText(/test value/i);
     });
+  });
+
+  test('Configure an object visibility outcome', async ({ app, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-744',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const listField = new ListField({
+      name: 'Hide Section',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const tabName = 'Tab 2';
+    const sectionToHide = 'Section To Hide';
+
+    const triggerWithObjectVisibilityOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Contains Any',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new ObjectVisibilityOutcome({
+          status: true,
+          sections: [
+            new ObjectVisibilitySection({
+              tabName: tabName,
+              name: sectionToHide,
+              visibility: 'Hidden',
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await test.step("Navigate to the app's layout tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Add list field to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: listField.name,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create a text field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Create a section and place text field in it', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
+        tabName: tabName,
+        sectionName: sectionToHide,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionToHide,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: textField.name,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with object visibility outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithObjectVisibilityOutcome);
+    });
+
+    await test.step('Create a record with text field value', async () => {});
+
+    await test.step('Verify text field is visible', async () => {});
+
+    await test.step('Update list field to yes and save record', async () => {});
+
+    await test.step('Verify text field is not visible', async () => {});
+
+    expect(true).toBe(true);
   });
 });

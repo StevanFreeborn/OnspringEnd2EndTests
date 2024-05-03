@@ -1,25 +1,17 @@
 import { Locator, Page } from '@playwright/test';
 import { Outcome } from '../../models/outcome';
+import { BaseEditOutcomeModal } from './baseEditOutcomeModal';
 
-export abstract class EditOutcomeModal {
-  protected readonly modal: Locator;
-
+export abstract class EditOutcomeModal extends BaseEditOutcomeModal {
   readonly descriptionEditor: Locator;
   readonly statusToggle: Locator;
   readonly statusSwitch: Locator;
 
-  readonly okButton: Locator;
-  readonly cancelButton: Locator;
-
   constructor(page: Page) {
-    this.modal = page.getByRole('dialog', { name: /outcome/i });
-
+    super(page);
     this.descriptionEditor = this.modal.locator('.content-area.mce-content-body');
     this.statusSwitch = this.modal.getByRole('switch');
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
-
-    this.okButton = this.modal.getByRole('button', { name: 'OK' });
-    this.cancelButton = this.modal.getByRole('button', { name: 'Cancel' });
   }
 
   private async needToUpdateSwitch(outcome: Outcome) {

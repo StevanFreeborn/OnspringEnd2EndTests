@@ -1,24 +1,16 @@
 import { Locator, Page } from '@playwright/test';
 import { Outcome } from '../../models/outcome';
 import { OutcomeGeneralTab } from '../tabs/outcomeGeneralTab';
+import { BaseEditOutcomeModal } from './baseEditOutcomeModal';
 
-export abstract class EditOutcomeModalWithTabs {
-  protected readonly modal: Locator;
-
+export abstract class EditOutcomeModalWithTabs extends BaseEditOutcomeModal {
   readonly generalTabButton: Locator;
   readonly generalTab: OutcomeGeneralTab;
 
-  readonly okButton: Locator;
-  readonly cancelButton: Locator;
-
   constructor(page: Page) {
-    this.modal = page.getByRole('dialog', { name: /outcome/i });
-
+    super(page);
     this.generalTabButton = this.modal.getByRole('tab', { name: 'General' });
     this.generalTab = new OutcomeGeneralTab(this.modal);
-
-    this.okButton = this.modal.getByRole('button', { name: 'OK' });
-    this.cancelButton = this.modal.getByRole('button', { name: 'Cancel' });
   }
 
   private async needToUpdateSwitch(outcome: Outcome) {

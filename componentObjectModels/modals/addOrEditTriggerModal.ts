@@ -54,15 +54,6 @@ export class AddOrEditTriggerModal {
     await this.rulesTabButton.click();
     await this.rulesTab.ruleSet.addLogic(trigger.ruleSet);
 
-    // TODO: Try just adding rules manually myself.
-    // const ruleControl = this.frame.locator('.label:has-text("Rule Set") + .data .rule-config');
-    // const ruleInputContainer = ruleControl.locator('.input-container');
-    // const fieldSelector = ruleInputContainer.locator('.field .onx-selector');
-    // await fieldSelector.click();
-    // const item = this.frame.getByRole('treeitem', { name: trigger.ruleSet.rules[0].fieldName });
-    // const itemText = item.getByText(trigger.ruleSet.rules[0].fieldName);
-    // await itemText.click();
-
     if (trigger.outcomes.length > 0) {
       await this.outcomesTabButton.click();
 

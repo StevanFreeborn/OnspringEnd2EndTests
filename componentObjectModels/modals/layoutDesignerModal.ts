@@ -20,6 +20,12 @@ type DragObjectParams = DragItemsParams & {
   objectName: string;
 };
 
+type AddSectionParams = {
+  tabName: string;
+  sectionName: string;
+  placementIndex?: number;
+};
+
 export class LayoutDesignerModal extends LayoutItemCreator {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
@@ -58,12 +64,23 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await saveResponse;
   }
 
+  private async ensureFieldsTabSelected() {
+    const fieldsTabButtonSelected = await this.layoutItemsSection.fieldsTabButton.getAttribute('aria-selected');
+    const isFieldsTabSelected = fieldsTabButtonSelected === 'true';
+
+    if (isFieldsTabSelected === false) {
+      await this.layoutItemsSection.fieldsTabButton.click();
+    }
+  }
+
   /**
    * Drag a field from the field bank and drop it onto the layout. The section column and row are zero-based indexes.
    * @param params - The parameters for dragging and dropping the field
    * @returns A promise that resolves to the field and dropzone elements
    */
   async dragFieldOnToLayout(params: DragFieldParams) {
+    await this.ensureFieldsTabSelected();
+
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
 
@@ -83,7 +100,18 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     return { field, dropzone };
   }
 
+  private async ensureObjectTabSelected() {
+    const objectTabButtonSelected = await this.layoutItemsSection.objectsTabButton.getAttribute('aria-selected');
+    const isObjectTabSelected = objectTabButtonSelected === 'true';
+
+    if (isObjectTabSelected === false) {
+      await this.layoutItemsSection.objectsTabButton.click();
+    }
+  }
+
   async dragObjectOnToLayout(params: DragObjectParams) {
+    await this.ensureObjectTabSelected();
+
     const { tabName, sectionName, sectionColumn, sectionRow, objectName } = params;
     const object = this.layoutItemsSection.objectsTab.getObjectFromBank(objectName);
 
@@ -101,5 +129,26 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await this.page.mouse.up();
 
     return { object, dropzone };
+  }
+
+  async addSection(params: AddSectionParams) {
+    await this.ensureObjectTabSelected();
+
+    const { tabName, sectionName, placementIndex } = params;
+    const object = this.layoutItemsSection.objectsTab.getObjectFromBank('New Section');
+
+    const dropzone = await this.canvasSection.getSectionDropzone({ tabName, placementIndex });
+
+    await object.hover();
+    await this.page.mouse.down();
+    await dropzone.hover();
+    await this.canvasSection.sectionDropzone.waitFor({ state: 'visible' });
+    await this.page.mouse.up();
+    const initialSectionName = await this.frame.locator('#name-editor input').inputValue();
+
+    const tab = await this.canvasSection.getTab(tabName);
+    const section = tab.getSection(initialSectionName);
+
+    await section.updateName(sectionName);
   }
 }
