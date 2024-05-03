@@ -1,5 +1,5 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { ListRuleWithValue, Rule, TextRuleWithValue } from '../../models/rule';
+import { ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
@@ -62,10 +62,10 @@ export class RuleControl {
       return await this.addRuleButton.click();
     }
 
-    if (rule instanceof ListRuleWithValue) {
+    if (rule instanceof ListRuleWithValues) {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
-      await this.listDualPaneSelector.selectOptions(rule.value);
+      await this.listDualPaneSelector.selectOptions(rule.values);
       return await this.addRuleButton.click();
     }
 

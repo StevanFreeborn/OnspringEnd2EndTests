@@ -55,9 +55,9 @@ export class ListRule extends Rule {
   }
 }
 
-export class ListRuleWithValue extends Rule {
+export class ListRuleWithValues extends Rule {
   readonly operator: ListValueOperator | ChangeOperators | EqualityOperators;
-  readonly value: string[];
+  readonly values: string[];
 
   constructor({
     fieldName,
@@ -70,7 +70,7 @@ export class ListRuleWithValue extends Rule {
   }) {
     super({ fieldName, fieldType: 'List' });
     this.operator = operator;
-    this.value = value;
+    this.values = value;
   }
 }
 
