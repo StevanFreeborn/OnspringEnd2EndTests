@@ -1,5 +1,5 @@
 import { Outcome } from './outcome';
-import { Rule } from './rule';
+import { RuleLogic, SimpleRuleLogic } from './ruleLogic';
 
 type LogicMode = 'Simple Mode' | 'Advanced Mode';
 type LogicOperator = 'AND' | 'OR';
@@ -8,7 +8,7 @@ type TriggerObject = {
   name: string;
   status?: boolean;
   description?: string;
-  rules?: Rule[];
+  ruleSet: RuleLogic;
   logicMode?: LogicMode;
   logicOperator?: LogicOperator;
   outcomes?: Outcome[];
@@ -18,7 +18,7 @@ export class Trigger {
   name: string;
   status: boolean;
   description: string;
-  rules: Rule[];
+  ruleSet: RuleLogic;
   logicMode: LogicMode;
   logicOperator: LogicOperator;
   outcomes: Outcome[];
@@ -27,7 +27,7 @@ export class Trigger {
     name,
     status = false,
     description = '',
-    rules = [],
+    ruleSet = new SimpleRuleLogic({ rules: [] }),
     logicMode = 'Simple Mode',
     logicOperator = 'AND',
     outcomes = [],
@@ -35,7 +35,7 @@ export class Trigger {
     this.name = name;
     this.status = status;
     this.description = description;
-    this.rules = rules;
+    this.ruleSet = ruleSet;
     this.logicMode = logicMode;
     this.logicOperator = logicOperator;
     this.outcomes = outcomes;

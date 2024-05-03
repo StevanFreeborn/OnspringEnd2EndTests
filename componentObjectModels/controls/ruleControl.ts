@@ -1,6 +1,7 @@
 import { Locator } from '@playwright/test';
-import { Rule, TextRuleWithValue } from '../../models/rule';
+import { ListRuleWithValue, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
+import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
 
 export class RuleControl {
@@ -8,7 +9,9 @@ export class RuleControl {
   protected readonly ruleInputContainer: Locator;
   protected readonly fieldSelector: TreeviewSelector;
   protected readonly ruleOperatorSelect: Locator;
+  protected readonly ruleOperatorList: Locator;
   protected readonly betweenOperatorContainer: Locator;
+  protected readonly dualPaneSelector: DualPaneSelector;
   protected readonly addRuleButton: Locator;
   protected readonly simpleModeRadioButton: Locator;
   protected readonly advancedModeRadioButton: Locator;
@@ -19,8 +22,13 @@ export class RuleControl {
     this.control = control;
     this.ruleInputContainer = this.control.locator('.input-container');
     this.fieldSelector = new TreeviewSelector(this.ruleInputContainer.locator('.field .onx-selector'));
+
     this.ruleOperatorSelect = this.control.locator('.rule-operator[role="listbox"]');
+    const ruleSelectOwns = this.ruleOperatorSelect.getAttribute('aria-owns');
+    this.ruleOperatorList = this.control.locator(`#${ruleSelectOwns}`);
+
     this.betweenOperatorContainer = this.control.locator('.between-container');
+    this.dualPaneSelector = new DualPaneSelector(this.control.locator('.selector-container .onx-selector'));
     this.addRuleButton = this.control.getByRole('button', { name: 'Add' });
     this.simpleModeRadioButton = this.control.getByRole('radio', { name: 'Simple Mode' });
     this.advancedModeRadioButton = this.control.getByRole('radio', { name: 'Advanced Mode' });
@@ -36,7 +44,16 @@ export class RuleControl {
 
   private async selectRuleOperator(operator: string) {
     await this.ruleOperatorSelect.click();
-    await this.ruleOperatorSelect.page().getByRole('option', { name: operator }).click();
+    const page = this.ruleOperatorSelect.page();
+
+    const frame = page.mainFrame();
+    const childFrames = frame.childFrames();
+    const option =
+      childFrames.length > 0
+        ? childFrames[0].getByRole('option', { name: operator })
+        : page.getByRole('option', { name: operator });
+
+    await option.click();
   }
 
   private async addRule(rule: Rule) {
@@ -44,6 +61,13 @@ export class RuleControl {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
       await this.betweenOperatorContainer.locator('input:visible').fill(rule.value);
+      return await this.addRuleButton.click();
+    }
+
+    if (rule instanceof ListRuleWithValue) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.dualPaneSelector.selectOptions(rule.value);
       return await this.addRuleButton.click();
     }
 

@@ -6,6 +6,8 @@ type EqualityOperators = 'Equals' | 'Does Not Equal';
 
 type TextValueOperator = 'Starts With' | 'Contains' | 'Does Not Contain';
 
+type ListValueOperator = 'Contains Any' | 'Excludes Any';
+
 export class Rule {
   readonly fieldName: string;
   readonly fieldType: FieldType;
@@ -19,7 +21,7 @@ export class Rule {
 export class TextRule extends Rule {
   readonly operator: NonValueOperator;
 
-  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator; value: string }) {
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator }) {
     super({ fieldName, fieldType: 'Text' });
     this.operator = operator;
   }
@@ -39,6 +41,34 @@ export class TextRuleWithValue extends Rule {
     value: string;
   }) {
     super({ fieldName, fieldType: 'Text' });
+    this.operator = operator;
+    this.value = value;
+  }
+}
+
+export class ListRule extends Rule {
+  readonly operator: NonValueOperator;
+
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator; value: string }) {
+    super({ fieldName, fieldType: 'List' });
+    this.operator = operator;
+  }
+}
+
+export class ListRuleWithValue extends Rule {
+  readonly operator: ListValueOperator | ChangeOperators | EqualityOperators;
+  readonly value: string[];
+
+  constructor({
+    fieldName,
+    operator,
+    value,
+  }: {
+    fieldName: string;
+    operator: ListValueOperator | ChangeOperators | EqualityOperators;
+    value: string[];
+  }) {
+    super({ fieldName, fieldType: 'List' });
     this.operator = operator;
     this.value = value;
   }
