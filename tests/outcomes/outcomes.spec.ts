@@ -11,6 +11,7 @@ import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/o
 import { ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
+import { SetListValueOutcome, SetSingleListValueRule } from '../../models/setListValueOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { TextField } from '../../models/textField';
 import { TextFormulaField } from '../../models/textFormulaField';
@@ -445,13 +446,134 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a set list value outcome', async () => {
+  test('Configure a set list value outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-748',
     });
 
-    expect(true).toBe(true);
+    const listField = new ListField({
+      name: 'Set List Value',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const expectedListValue = new ListValue({ value: 'Expected' });
+
+    const listFieldToSet = new ListField({
+      name: 'List Field To Set',
+      values: [expectedListValue],
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithSetListValueOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Changed To',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new SetListValueOutcome({
+          status: true,
+          setListValueRules: [
+            new SetSingleListValueRule({
+              fieldName: listFieldToSet.name,
+              value: expectedListValue.value,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const getListFieldSet = {
+      fieldName: listFieldToSet.name,
+      fieldType: listFieldToSet.type as FieldType,
+      tabName,
+      sectionName,
+    };
+
+    await test.step('Navigate to the app layout tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create a list to set', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listFieldToSet);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [listFieldToSet, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the app trigger tab', async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with set list value outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithSetListValueOutcome);
+    });
+
+    await test.step('Create a record', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName: tabName,
+        sectionName: sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+    });
+
+    await test.step('Verify list field value is set', async () => {
+      const listFieldSet = await editContentPage.form.getField(getListFieldSet);
+
+      await expect(listFieldSet).toHaveText(expectedListValue.value);
+    });
+
+    await test.step('Save record', async () => {
+      await editContentPage.save();
+    });
+
+    await test.step('Verify list field value is still set', async () => {
+      const listFieldSet = await editContentPage.form.getField(getListFieldSet);
+
+      await expect(listFieldSet).toHaveText(expectedListValue.value);
+    });
   });
 
   test('Configure a set reference outcome', async () => {

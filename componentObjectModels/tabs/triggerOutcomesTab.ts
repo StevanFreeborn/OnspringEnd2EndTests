@@ -2,10 +2,12 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
 import { SetDateOutcome } from '../../models/setDateOutcome';
+import { SetListValueOutcome } from '../../models/setListValueOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
 import { EditSetDateOutcomeModal } from '../modals/editSetDateOutcomeModal';
+import { EditSetListValueOutcomeModal } from '../modals/editSetListValueOutcomeModal';
 import { EditStopCalculationOutcomeModal } from '../modals/editStopCalculationOutcomeModal';
 
 export class TriggerOutcomesTab {
@@ -17,6 +19,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Set List Value'): EditSetListValueOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set Date'): EditSetDateOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Stop Calculation'): EditStopCalculationOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Object Visibility'): EditObjectVisibilityOutcomeModal;
@@ -29,6 +32,8 @@ export class TriggerOutcomesTab {
         return new EditStopCalculationOutcomeModal(this.page);
       case 'Set Date':
         return new EditSetDateOutcomeModal(this.page);
+      case 'Set List Value':
+        return new EditSetListValueOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -51,6 +56,11 @@ export class TriggerOutcomesTab {
       case 'Set Date': {
         const modal = this.getEditOutcomeModal('Set Date');
         await modal.fillOutForm(outcome as SetDateOutcome);
+        break;
+      }
+      case 'Set List Value': {
+        const modal = this.getEditOutcomeModal('Set List Value');
+        await modal.fillOutForm(outcome as SetListValueOutcome);
         break;
       }
       default:
