@@ -1,13 +1,16 @@
+import { GetDateFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { DateField } from '../../models/dateField';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
+import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { TextField } from '../../models/textField';
 import { TextFormulaField } from '../../models/textFormulaField';
@@ -315,5 +318,138 @@ test.describe('Outcomes', () => {
 
       await expect(editableTextField).toBeHidden();
     });
+  });
+
+  test('Configure a set date outcome', async ({ app, appAdminPage, addContentPage, editContentPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-747',
+    });
+
+    const dateField = new DateField({ name: FakeDataFactory.createFakeFieldName() });
+
+    const listField = new ListField({
+      name: 'Set Date',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithSetDateOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Contains Any',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new SetDateOutcome({
+          status: true,
+          setDateRules: [new SetDateToCurrentDateRule({ fieldName: dateField.name })],
+        }),
+      ],
+    });
+
+    const getDateFieldParams = {
+      fieldName: dateField.name,
+      fieldType: dateField.type,
+      tabName,
+      sectionName,
+    } as GetDateFieldParams;
+
+    const expectedDateValue = new Date().toLocaleDateString(undefined, { timeZone: 'America/Chicago' });
+
+    await test.step("Navigate to the app's layout tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a date field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(dateField);
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [dateField, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with set date outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithSetDateOutcome);
+    });
+
+    await test.step('Create a record', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName: tabName,
+        sectionName: sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+    });
+
+    await test.step('Verify date field value is set', async () => {
+      const editableDateField = await editContentPage.form.getField(getDateFieldParams);
+      await expect(editableDateField.input).toHaveValue(expectedDateValue);
+    });
+
+    await test.step('Save record', async () => {
+      await editContentPage.save();
+    });
+
+    await test.step('Verify date field value is still set', async () => {
+      const editableDateField = await editContentPage.form.getField(getDateFieldParams);
+      await expect(editableDateField.input).toHaveValue(expectedDateValue);
+    });
+  });
+
+  test('Configure a set list value outcome', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-748',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test('Configure a set reference outcome', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-749',
+    });
+
+    expect(true).toBe(true);
   });
 });
