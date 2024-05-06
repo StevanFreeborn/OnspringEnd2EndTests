@@ -21,21 +21,26 @@ import { EditContentPage } from '../../pageObjectModels/content/editContentPage'
 import { AnnotationType } from '../annotations';
 
 type OutcomesTestFixtures = {
-  app: App;
+  triggerApp: App;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
 };
 
 const test = base.extend<OutcomesTestFixtures>({
-  app: app,
+  triggerApp: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ appAdminPage }, use) => await use(new AddContentPage(appAdminPage.page)),
   editContentPage: async ({ appAdminPage }, use) => await use(new EditContentPage(appAdminPage.page)),
 });
 
 test.describe('Outcomes', () => {
-  test('Configure a stop calculation outcome', async ({ app, appAdminPage, addContentPage, editContentPage }) => {
+  test('Configure a stop calculation outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-750',
@@ -181,7 +186,12 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure an object visibility outcome', async ({ app, appAdminPage, addContentPage, editContentPage }) => {
+  test('Configure an object visibility outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-744',
@@ -320,7 +330,7 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a set date outcome', async ({ app, appAdminPage, addContentPage, editContentPage }) => {
+  test('Configure a set date outcome', async ({ triggerApp: app, appAdminPage, addContentPage, editContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-747',
