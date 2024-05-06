@@ -178,7 +178,7 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure an object visibility outcome', async ({ app, appAdminPage }) => {
+  test('Configure an object visibility outcome', async ({ app, appAdminPage, addContentPage, editContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-744',
@@ -218,6 +218,13 @@ test.describe('Outcomes', () => {
         }),
       ],
     });
+
+    const getTextFieldParams = {
+      fieldName: textField.name,
+      fieldType: textField.type as FieldType,
+      tabName,
+      sectionName: sectionToHide,
+    };
 
     await test.step("Navigate to the app's layout tab", async () => {
       await appAdminPage.goto(app.id);
@@ -273,14 +280,40 @@ test.describe('Outcomes', () => {
       await appAdminPage.triggersTab.addTrigger(triggerWithObjectVisibilityOutcome);
     });
 
-    await test.step('Create a record with text field value', async () => {});
+    await test.step('Create a record with text field value', async () => {
+      await addContentPage.goto(app.id);
+      const editableTextField = await addContentPage.form.getField(getTextFieldParams);
 
-    await test.step('Verify text field is visible', async () => {});
+      await editableTextField.fill('Test Value');
 
-    await test.step('Update list field to yes and save record', async () => {});
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
 
-    await test.step('Verify text field is not visible', async () => {});
+    await test.step('Verify text field is visible', async () => {
+      const editableTextField = await editContentPage.form.getField(getTextFieldParams);
 
-    expect(true).toBe(true);
+      await expect(editableTextField).toBeVisible();
+    });
+
+    await test.step('Update list field to yes and save record', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName: 'Section 1',
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+
+      await editContentPage.save();
+    });
+
+    await test.step('Verify text field is not visible', async () => {
+      const editableTextField = await editContentPage.form.getField(getTextFieldParams);
+
+      await expect(editableTextField).toBeHidden();
+    });
   });
 });
