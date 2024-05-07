@@ -1,13 +1,19 @@
-import { GetDateFieldParams, GetReferenceFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
+import {
+  GetAttachmentFieldParams,
+  GetDateFieldParams,
+  GetReferenceFieldParams,
+} from '../../componentObjectModels/forms/addOrEditRecordForm';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { AttachmentField } from '../../models/attachmentField';
 import { DateField } from '../../models/dateField';
 import { FilterListValueOutcome, FilterListValueRule } from '../../models/filterListValueOutcome';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
+import { PrintContentRecordOutcome } from '../../models/printContentRecordOutcome';
 import { ReferenceField } from '../../models/referenceField';
 import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
 import { ListRuleWithValues } from '../../models/rule';
@@ -983,12 +989,129 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a print content record outcome', async ({}) => {
+  test('Configure a print content record outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-745',
     });
 
-    expect(true).toBe(true);
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const attachmentField = new AttachmentField({
+      name: 'Attachment Field',
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithPrintContentRecordOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Changed To',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new PrintContentRecordOutcome({
+          status: true,
+          attachmentField: attachmentField.name,
+        }),
+      ],
+    });
+
+    let recordId: number;
+
+    await test.step('Navigate to the app layout tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create an attachment field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [attachmentField, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the app trigger tab', async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with print content record outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithPrintContentRecordOutcome);
+    });
+
+    await test.step('Create a record', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+
+      await editContentPage.save();
+    });
+
+    await test.step('Verify the content record is printed', async () => {
+      await expect(async () => {
+        await editContentPage.page.reload();
+
+        const attachmentControl = await editContentPage.form.getField({
+          fieldName: attachmentField.name,
+          fieldType: attachmentField.type as FieldType,
+          tabName,
+          sectionName,
+        } as GetAttachmentFieldParams);
+
+        const attachmentName = `${recordId}.pdf`;
+        const printedRecordRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
+
+        await expect(printedRecordRow).toBeVisible({ timeout: 5000 });
+      }).toPass({
+        intervals: [5_000],
+        timeout: 300_000,
+      });
+    });
   });
 });

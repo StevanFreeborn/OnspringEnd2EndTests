@@ -2,6 +2,7 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { FilterListValueOutcome } from '../../models/filterListValueOutcome';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
+import { PrintContentRecordOutcome } from '../../models/printContentRecordOutcome';
 import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
 import { SetDateOutcome } from '../../models/setDateOutcome';
 import { SetListValueOutcome } from '../../models/setListValueOutcome';
@@ -10,6 +11,7 @@ import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
 import { EditFilterListValueOutcomeModal } from '../modals/editFilterListValueOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
+import { EditPrintContentRecordOutcomeModal } from '../modals/editPrintContentRecordOutcomeModal';
 import { EditRequiredFieldsOutcomeModal } from '../modals/editRequiredFieldsOutcomeModal';
 import { EditSetDateOutcomeModal } from '../modals/editSetDateOutcomeModal';
 import { EditSetListValueOutcomeModal } from '../modals/editSetListValueOutcomeModal';
@@ -25,6 +27,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Print Content Record'): EditPrintContentRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Filter List Values'): EditFilterListValueOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Required Fields'): EditRequiredFieldsOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set Reference'): EditSetReferenceOutcomeModal;
@@ -49,6 +52,8 @@ export class TriggerOutcomesTab {
         return new EditRequiredFieldsOutcomeModal(this.page);
       case 'Filter List Values':
         return new EditFilterListValueOutcomeModal(this.page);
+      case 'Print Content Record':
+        return new EditPrintContentRecordOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -91,6 +96,11 @@ export class TriggerOutcomesTab {
       case 'Filter List Values': {
         const modal = this.getEditOutcomeModal('Filter List Values');
         await modal.fillOutForm(outcome as FilterListValueOutcome);
+        break;
+      }
+      case 'Print Content Record': {
+        const modal = this.getEditOutcomeModal('Print Content Record');
+        await modal.fillOutForm(outcome as PrintContentRecordOutcome);
         break;
       }
       default:
