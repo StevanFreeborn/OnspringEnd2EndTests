@@ -1,4 +1,4 @@
-import { GetDateFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
+import { GetDateFieldParams, GetReferenceFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
@@ -8,10 +8,12 @@ import { DateField } from '../../models/dateField';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
+import { ReferenceField } from '../../models/referenceField';
 import { ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
 import { SetListValueOutcome, SetSingleListValueRule } from '../../models/setListValueOutcome';
+import { SetReferenceOutcome, SetSpecificSingleReferenceConfig } from '../../models/setReferenceOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { TextField } from '../../models/textField';
 import { TextFormulaField } from '../../models/textFormulaField';
@@ -23,6 +25,7 @@ import { AnnotationType } from '../annotations';
 
 type OutcomesTestFixtures = {
   triggerApp: App;
+  sourceApp: App;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
@@ -30,6 +33,7 @@ type OutcomesTestFixtures = {
 
 const test = base.extend<OutcomesTestFixtures>({
   triggerApp: app,
+  sourceApp: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ appAdminPage }, use) => await use(new AddContentPage(appAdminPage.page)),
   editContentPage: async ({ appAdminPage }, use) => await use(new EditContentPage(appAdminPage.page)),
@@ -576,12 +580,140 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a set reference outcome', async () => {
+  test('Configure a set reference outcome', async ({
+    sourceApp,
+    triggerApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-749',
     });
 
-    expect(true).toBe(true);
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const referenceField = new ReferenceField({
+      name: 'Reference Field',
+      reference: sourceApp.name,
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const setRefConfig = new SetSpecificSingleReferenceConfig({
+      fieldName: referenceField.name,
+      value: '',
+    });
+
+    const triggerWithSetReferenceOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Changed To',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new SetReferenceOutcome({
+          status: true,
+          setReferenceConfig: setRefConfig,
+        }),
+      ],
+    });
+
+    const getReferenceFieldParams = {
+      fieldName: referenceField.name,
+      fieldType: referenceField.type as FieldType,
+      tabName,
+      sectionName,
+    } as GetReferenceFieldParams;
+
+    await test.step('Create a record in the source app', async () => {
+      await addContentPage.goto(sourceApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      setRefConfig.value = editContentPage.getRecordIdFromUrl().toString();
+    });
+
+    await test.step('Create a list field in the trigger app', async () => {
+      await appAdminPage.goto(triggerApp.id);
+      await appAdminPage.layoutTabButton.click();
+
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create a reference field in the trigger app that targets source app', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+    });
+
+    await test.step('Add fields to the trigger app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const [index, field] of [listField, referenceField].entries()) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: index,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the trigger app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with set reference outcome to trigger app', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithSetReferenceOutcome);
+    });
+
+    await test.step('Create a record in the trigger app', async () => {
+      await addContentPage.goto(triggerApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+    });
+
+    await test.step('Verify reference field value is set', async () => {
+      const referenceField = await editContentPage.form.getField(getReferenceFieldParams);
+      const recordRow = referenceField.gridTable.getByRole('row', { name: setRefConfig.value });
+
+      await expect(recordRow).toBeVisible();
+    });
+
+    await test.step('Save record', async () => {
+      await editContentPage.save();
+    });
+
+    await test.step('Verify reference field value is still set', async () => {
+      const referenceField = await editContentPage.form.getField(getReferenceFieldParams);
+      const recordRow = referenceField.gridTable.getByRole('row', { name: setRefConfig.value });
+
+      await expect(recordRow).toBeVisible();
+    });
   });
 });

@@ -107,7 +107,7 @@ class LayoutSection {
   private async getNumberOfColumns() {
     const layoutZones = await this.getLayoutZones().all();
 
-    let maxColumn = 0;
+    let maxColumn = -1;
 
     for (const zone of layoutZones) {
       const column = await zone.getAttribute('data-column');
@@ -129,20 +129,19 @@ class LayoutSection {
   private async getNumberOfRows(column: number) {
     const layoutZones = await this.getLayoutZones().all();
 
-    let count = 0;
+    let count = -1;
 
     for (const zone of layoutZones) {
       const columnAttr = await zone.getAttribute('data-column');
-      const columnSpanAttr = await zone.getAttribute('data-colspan');
+      const rowAttr = await zone.getAttribute('data-row');
 
-      if (columnAttr === null || columnSpanAttr === null) {
+      if (columnAttr === null) {
         continue;
       }
 
       const columnNumber = parseInt(columnAttr);
-      const columnSpanNumber = parseInt(columnSpanAttr);
 
-      if (columnNumber === column || columnSpanNumber >= column) {
+      if (columnNumber === column && rowAttr !== null) {
         count += 1;
       }
     }
