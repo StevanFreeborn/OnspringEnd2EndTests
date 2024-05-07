@@ -5,10 +5,10 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { DateField } from '../../models/dateField';
-import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { ReferenceField } from '../../models/referenceField';
+import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
 import { ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
@@ -22,6 +22,7 @@ import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { AnnotationType } from '../annotations';
+import { ListField } from './../../models/listField';
 
 type OutcomesTestFixtures = {
   triggerApp: App;
@@ -714,6 +715,129 @@ test.describe('Outcomes', () => {
       const recordRow = referenceField.gridTable.getByRole('row', { name: setRefConfig.value });
 
       await expect(recordRow).toBeVisible();
+    });
+  });
+
+  test('Configure a required fields outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-746',
+    });
+
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const requiredField = new TextField({
+      name: 'Required Field',
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithRequiredFieldsOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Contains Any',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new RequiredFieldsOutcome({
+          status: true,
+          requiredFields: [requiredField.name],
+        }),
+      ],
+    });
+
+    await test.step('Navigate to the app layout tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create field to be required', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(requiredField);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [requiredField, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Navigate to the app trigger tab', async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with required fields outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithRequiredFieldsOutcome);
+    });
+
+    await test.step('Create a record', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+    });
+
+    await test.step('Verify required field is required', async () => {
+      await editContentPage.save();
+
+      await expect(editContentPage.validationErrors).toBeVisible();
+      await expect(editContentPage.validationErrors).toHaveText(
+        new RegExp(`${requiredField.name} is a required field`)
+      );
+    });
+
+    await test.step('Verify record can be saved after filling required field', async () => {
+      const editableRequiredField = await editContentPage.form.getField({
+        fieldName: requiredField.name,
+        fieldType: requiredField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableRequiredField.pressSequentially('Test Value', { delay: 150 });
+
+      await editContentPage.save();
+
+      await expect(editContentPage.validationErrors).toBeHidden();
     });
   });
 });

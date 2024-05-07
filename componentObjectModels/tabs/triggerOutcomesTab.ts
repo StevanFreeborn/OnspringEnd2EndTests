@@ -1,12 +1,14 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
+import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
 import { SetDateOutcome } from '../../models/setDateOutcome';
 import { SetListValueOutcome } from '../../models/setListValueOutcome';
 import { SetReferenceOutcome } from '../../models/setReferenceOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
+import { EditRequiredFieldsOutcomeModal } from '../modals/editRequiredFieldsOutcomeModal';
 import { EditSetDateOutcomeModal } from '../modals/editSetDateOutcomeModal';
 import { EditSetListValueOutcomeModal } from '../modals/editSetListValueOutcomeModal';
 import { EditSetReferenceOutcomeModal } from '../modals/editSetReferenceOutcomeModal';
@@ -21,6 +23,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Required Fields'): EditRequiredFieldsOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set Reference'): EditSetReferenceOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set List Value'): EditSetListValueOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set Date'): EditSetDateOutcomeModal;
@@ -39,6 +42,8 @@ export class TriggerOutcomesTab {
         return new EditSetListValueOutcomeModal(this.page);
       case 'Set Reference':
         return new EditSetReferenceOutcomeModal(this.page);
+      case 'Required Fields':
+        return new EditRequiredFieldsOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -71,6 +76,11 @@ export class TriggerOutcomesTab {
       case 'Set Reference': {
         const modal = this.getEditOutcomeModal('Set Reference');
         await modal.fillOutForm(outcome as SetReferenceOutcome);
+        break;
+      }
+      case 'Required Fields': {
+        const modal = this.getEditOutcomeModal('Required Fields');
+        await modal.fillOutForm(outcome as RequiredFieldsOutcome);
         break;
       }
       default:
