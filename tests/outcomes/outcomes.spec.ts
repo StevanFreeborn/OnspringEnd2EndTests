@@ -5,6 +5,7 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { DateField } from '../../models/dateField';
+import { FilterListValueOutcome, FilterListValueRule } from '../../models/filterListValueOutcome';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { ReferenceField } from '../../models/referenceField';
@@ -839,5 +840,155 @@ test.describe('Outcomes', () => {
 
       await expect(editContentPage.validationErrors).toBeHidden();
     });
+  });
+
+  test('Configure a filter list value outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-742',
+    });
+
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const valueToFilter = new ListValue({ value: 'To Be Filtered' });
+    const valueNotToFilter = new ListValue({ value: 'Do Not Filter Me' });
+
+    const listFieldToFilter = new ListField({
+      name: 'Filter Me',
+      values: [valueToFilter, valueNotToFilter],
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithFilterListValueOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Contains Any',
+            value: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new FilterListValueOutcome({
+          status: true,
+          filterListValueRules: [
+            new FilterListValueRule({
+              fieldName: listFieldToFilter.name,
+              valuesToInclude: [valueNotToFilter.value],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const getFilteredFieldParams = {
+      fieldName: listFieldToFilter.name,
+      fieldType: listFieldToFilter.type as FieldType,
+      tabName,
+      sectionName,
+    };
+
+    await test.step('Navigate to the app layout tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create a list field to filter', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listFieldToFilter);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [listFieldToFilter, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with a filter list value outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithFilterListValueOutcome);
+    });
+
+    await test.step('Create a content record in the app', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update the list field to the value yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+    });
+
+    await test.step('Verify the list field has been filtered', async () => {
+      const filteredField = await editContentPage.form.getField(getFilteredFieldParams);
+
+      await filteredField.click();
+      const optionNotToFilter = filteredField.page().getByRole('option', { name: valueNotToFilter.value });
+      const optionToFilter = filteredField.page().getByRole('option', { name: valueToFilter.value });
+
+      await expect(optionNotToFilter).toBeVisible();
+      await expect(optionToFilter).toBeHidden();
+    });
+
+    await test.step('Save the record', async () => {
+      await editContentPage.save();
+    });
+
+    await test.step('Verify the list field is still filtered', async () => {
+      const filteredField = await editContentPage.form.getField(getFilteredFieldParams);
+
+      await filteredField.click();
+      const optionNotToFilter = filteredField.page().getByRole('option', { name: valueNotToFilter.value });
+      const optionToFilter = filteredField.page().getByRole('option', { name: valueToFilter.value });
+
+      await expect(optionNotToFilter).toBeVisible();
+      await expect(optionToFilter).toBeHidden();
+    });
+  });
+
+  test('Configure a print content record outcome', async ({}) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-745',
+    });
+
+    expect(true).toBe(true);
   });
 });

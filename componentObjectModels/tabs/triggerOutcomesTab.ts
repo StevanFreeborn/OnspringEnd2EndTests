@@ -1,4 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { FilterListValueOutcome } from '../../models/filterListValueOutcome';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
 import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
@@ -7,6 +8,7 @@ import { SetListValueOutcome } from '../../models/setListValueOutcome';
 import { SetReferenceOutcome } from '../../models/setReferenceOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
+import { EditFilterListValueOutcomeModal } from '../modals/editFilterListValueOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
 import { EditRequiredFieldsOutcomeModal } from '../modals/editRequiredFieldsOutcomeModal';
 import { EditSetDateOutcomeModal } from '../modals/editSetDateOutcomeModal';
@@ -23,6 +25,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Filter List Values'): EditFilterListValueOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Required Fields'): EditRequiredFieldsOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set Reference'): EditSetReferenceOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Set List Value'): EditSetListValueOutcomeModal;
@@ -44,6 +47,8 @@ export class TriggerOutcomesTab {
         return new EditSetReferenceOutcomeModal(this.page);
       case 'Required Fields':
         return new EditRequiredFieldsOutcomeModal(this.page);
+      case 'Filter List Values':
+        return new EditFilterListValueOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -81,6 +86,11 @@ export class TriggerOutcomesTab {
       case 'Required Fields': {
         const modal = this.getEditOutcomeModal('Required Fields');
         await modal.fillOutForm(outcome as RequiredFieldsOutcome);
+        break;
+      }
+      case 'Filter List Values': {
+        const modal = this.getEditOutcomeModal('Filter List Values');
+        await modal.fillOutForm(outcome as FilterListValueOutcome);
         break;
       }
       default:
