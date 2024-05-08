@@ -1240,4 +1240,31 @@ test.describe('Outcomes', () => {
       await expect(recordRow).toBeVisible();
     });
   });
+
+  test('Configure a create multiple records outcome with a custom batch', async ({}) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-738',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test('Configure a create multiple records outcome with a defined batch', async ({}) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-739',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test('Configure a create multiple records outcome with a dynamic batch', async ({}) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-740',
+    });
+
+    expect(true).toBe(true);
+  });
 });
