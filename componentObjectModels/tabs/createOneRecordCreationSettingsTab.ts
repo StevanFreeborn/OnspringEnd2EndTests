@@ -1,6 +1,6 @@
 import { Locator } from '@playwright/test';
 
-export class CreateRecordCreationSettingsTab {
+export class CreateOneRecordCreationSettingsTab {
   readonly appSelector: Locator;
   readonly frequencySelector: Locator;
   readonly layoutSelector: Locator;

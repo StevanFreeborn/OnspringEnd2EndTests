@@ -1,16 +1,16 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateOneRecordOnSaveOutcome, CreateOneRecordOutcome } from '../../models/createOneRecordOutcome';
-import { CreateRecordCreationSettingsTab } from '../tabs/createRecordCreationSettingsTab';
+import { CreateOneRecordCreationSettingsTab } from '../tabs/createOneRecordCreationSettingsTab';
 import { EditOutcomeModalWithTabs } from './editOutcomeModalWithTabs';
 
 export class EditCreateOneRecordOutcomeModal extends EditOutcomeModalWithTabs {
   readonly creationSettingsTabButton: Locator;
-  readonly creationSettingsTab: CreateRecordCreationSettingsTab;
+  readonly creationSettingsTab: CreateOneRecordCreationSettingsTab;
 
   constructor(page: Page) {
     super(page);
     this.creationSettingsTabButton = this.modal.getByRole('tab', { name: 'Creation Settings' });
-    this.creationSettingsTab = new CreateRecordCreationSettingsTab(this.modal);
+    this.creationSettingsTab = new CreateOneRecordCreationSettingsTab(this.modal);
   }
 
   async fillOutForm(outcome: CreateOneRecordOutcome) {
