@@ -56,6 +56,7 @@ export class AddOrEditRecordForm extends BaseForm {
     let locator: string;
 
     switch (params.fieldType) {
+      case 'Parallel Reference':
       case 'Reference':
         return new ReferenceFieldGrid(
           section.locator(this.createFormControlSelector(params.fieldName, 'div.onx-reference-grid')).first()

@@ -8,7 +8,7 @@ type TriggerObject = {
   name: string;
   status?: boolean;
   description?: string;
-  ruleSet: RuleLogic;
+  ruleSet?: RuleLogic;
   logicMode?: LogicMode;
   logicOperator?: LogicOperator;
   outcomes?: Outcome[];

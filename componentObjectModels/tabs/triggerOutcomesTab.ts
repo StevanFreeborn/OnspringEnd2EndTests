@@ -1,4 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { CreateOneRecordOutcome } from '../../models/createOneRecordOutcome';
 import { FilterListValueOutcome } from '../../models/filterListValueOutcome';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
@@ -9,6 +10,7 @@ import { SetListValueOutcome } from '../../models/setListValueOutcome';
 import { SetReferenceOutcome } from '../../models/setReferenceOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
+import { EditCreateOneRecordOutcomeModal } from '../modals/editCreateOneRecordOutcomeModal';
 import { EditFilterListValueOutcomeModal } from '../modals/editFilterListValueOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
 import { EditPrintContentRecordOutcomeModal } from '../modals/editPrintContentRecordOutcomeModal';
@@ -27,6 +29,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Create One Record'): EditCreateOneRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Print Content Record'): EditPrintContentRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Filter List Values'): EditFilterListValueOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Required Fields'): EditRequiredFieldsOutcomeModal;
@@ -54,6 +57,8 @@ export class TriggerOutcomesTab {
         return new EditFilterListValueOutcomeModal(this.page);
       case 'Print Content Record':
         return new EditPrintContentRecordOutcomeModal(this.page);
+      case 'Create One Record':
+        return new EditCreateOneRecordOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -101,6 +106,11 @@ export class TriggerOutcomesTab {
       case 'Print Content Record': {
         const modal = this.getEditOutcomeModal('Print Content Record');
         await modal.fillOutForm(outcome as PrintContentRecordOutcome);
+        break;
+      }
+      case 'Create One Record': {
+        const modal = this.getEditOutcomeModal('Create One Record');
+        await modal.fillOutForm(outcome as CreateOneRecordOutcome);
         break;
       }
       default:

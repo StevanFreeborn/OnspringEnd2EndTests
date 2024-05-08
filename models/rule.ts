@@ -62,15 +62,15 @@ export class ListRuleWithValues extends Rule {
   constructor({
     fieldName,
     operator,
-    value,
+    values,
   }: {
     fieldName: string;
     operator: ListValueOperator | ChangeOperators | EqualityOperators;
-    value: string[];
+    values: string[];
   }) {
     super({ fieldName, fieldType: 'List' });
     this.operator = operator;
-    this.values = value;
+    this.values = values;
   }
 }
 
