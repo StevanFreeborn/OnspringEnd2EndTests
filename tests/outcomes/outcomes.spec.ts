@@ -5,6 +5,10 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { AttachmentField } from '../../models/attachmentField';
+import {
+  CmroOnSaveWithCustomBatchOutcome,
+  CustomBatchContentDefinition,
+} from '../../models/createMultipleRecordsOutcome';
 import { CreateOneRecordOnSaveOutcome } from '../../models/createOneRecordOutcome';
 import { DateField } from '../../models/dateField';
 import { FilterListValueOutcome, FilterListValueRule } from '../../models/filterListValueOutcome';
@@ -1241,13 +1245,140 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a create multiple records outcome with a custom batch', async ({}) => {
+  test('Configure a create multiple records outcome with a custom batch', async ({
+    triggerApp,
+    targetApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-738',
     });
 
-    expect(true).toBe(true);
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const referenceField = new ReferenceField({
+      name: 'Reference Field',
+      reference: triggerApp.name,
+    });
+
+    const parallelReferenceField = new ParallelReferenceField({
+      name: targetApp.name,
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const triggerWithCreateMultipleRecordsOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Changed To',
+            values: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new CmroOnSaveWithCustomBatchOutcome({
+          status: true,
+          definitions: [
+            new CustomBatchContentDefinition({
+              batchRecordName: 'Batch 1',
+              targetApp: targetApp.name,
+            }),
+            new CustomBatchContentDefinition({
+              batchRecordName: 'Batch 2',
+              targetApp: targetApp.name,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await test.step("Navigate to the target app's layout tab", async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a reference field that targets the trigger app', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+    });
+
+    await test.step("Navigate to the trigger app's layout tab", async () => {
+      await appAdminPage.goto(triggerApp.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Add the list field and parallel reference field to the trigger app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [parallelReferenceField, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the trigger app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with create multiple records outcome that has a custom batch definition', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithCreateMultipleRecordsOutcome);
+    });
+
+    await test.step('Create a record in the trigger app', async () => {
+      await addContentPage.goto(triggerApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+
+      await editContentPage.save();
+    });
+
+    await test.step('Verify records are created in the target app', async () => {
+      const parallelRefFieldControl = await editContentPage.form.getField({
+        fieldName: targetApp.name,
+        fieldType: parallelReferenceField.type as FieldType,
+        tabName,
+        sectionName,
+      } as GetReferenceFieldParams);
+
+      const batchOneRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
+      const batchTwoRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '2' });
+
+      await expect(batchOneRow).toBeVisible();
+      await expect(batchTwoRow).toBeVisible();
+    });
   });
 
   test('Configure a create multiple records outcome with a defined batch', async ({}) => {

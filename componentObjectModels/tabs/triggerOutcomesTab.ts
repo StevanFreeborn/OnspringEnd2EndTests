@@ -1,4 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { CreateMultipleRecordsOutcome } from '../../models/createMultipleRecordsOutcome';
 import { CreateOneRecordOutcome } from '../../models/createOneRecordOutcome';
 import { FilterListValueOutcome } from '../../models/filterListValueOutcome';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
@@ -10,6 +11,7 @@ import { SetListValueOutcome } from '../../models/setListValueOutcome';
 import { SetReferenceOutcome } from '../../models/setReferenceOutcome';
 import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
 import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
+import { EditCreateMultipleRecordsOutcomeModal } from '../modals/editCreateMultipleRecordsOutcomeModal';
 import { EditCreateOneRecordOutcomeModal } from '../modals/editCreateOneRecordOutcomeModal';
 import { EditFilterListValueOutcomeModal } from '../modals/editFilterListValueOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
@@ -29,6 +31,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Create Multiple Records'): EditCreateMultipleRecordsOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Create One Record'): EditCreateOneRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Print Content Record'): EditPrintContentRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Filter List Values'): EditFilterListValueOutcomeModal;
@@ -59,6 +62,8 @@ export class TriggerOutcomesTab {
         return new EditPrintContentRecordOutcomeModal(this.page);
       case 'Create One Record':
         return new EditCreateOneRecordOutcomeModal(this.page);
+      case 'Create Multiple Records':
+        return new EditCreateMultipleRecordsOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -111,6 +116,11 @@ export class TriggerOutcomesTab {
       case 'Create One Record': {
         const modal = this.getEditOutcomeModal('Create One Record');
         await modal.fillOutForm(outcome as CreateOneRecordOutcome);
+        break;
+      }
+      case 'Create Multiple Records': {
+        const modal = this.getEditOutcomeModal('Create Multiple Records');
+        await modal.fillOutForm(outcome as CreateMultipleRecordsOutcome);
         break;
       }
       default:
