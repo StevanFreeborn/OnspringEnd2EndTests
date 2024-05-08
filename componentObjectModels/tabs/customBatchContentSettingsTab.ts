@@ -11,12 +11,10 @@ export class CustomBatchContentSettingsTab {
   }
 
   async fillOutForm(definition: CustomBatchContentDefinition) {
-    const page = this.appSelector.page();
-
     await this.appSelector.click();
-    await page.getByRole('option', { name: definition.targetApp }).click();
+    await this.appSelector.page().getByRole('option', { name: definition.targetApp }).click();
 
     await this.layoutSelector.click();
-    await page.getByRole('option', { name: definition.layout }).click();
+    await this.layoutSelector.page().getByRole('option', { name: definition.layout }).click();
   }
 }

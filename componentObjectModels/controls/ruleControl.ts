@@ -1,5 +1,5 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
+import { AutoNumberRuleWithValue, ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
@@ -11,6 +11,7 @@ export class RuleControl {
   protected readonly fieldSelector: TreeviewSelector;
   protected readonly ruleOperatorSelect: Locator;
   protected readonly betweenOperatorContainer: Locator;
+  protected readonly numberOperatorContainer: Locator;
   protected readonly listDualPaneSelector: DualPaneSelector;
   protected readonly addRuleButton: Locator;
   protected readonly simpleModeRadioButton: Locator;
@@ -27,6 +28,7 @@ export class RuleControl {
     this.ruleOperatorSelect = this.control.locator('.rule-operator[role="listbox"]');
 
     this.betweenOperatorContainer = this.control.locator('.between-container');
+    this.numberOperatorContainer = this.control.locator('.number-container');
     this.listDualPaneSelector = new DualPaneSelector(
       this.control.locator('.list.selector-container .onx-selector'),
       this.frame
@@ -59,14 +61,24 @@ export class RuleControl {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
       await this.betweenOperatorContainer.locator('input:visible').fill(rule.value);
-      return await this.addRuleButton.click();
+      await this.addRuleButton.click();
+      return;
     }
 
     if (rule instanceof ListRuleWithValues) {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
       await this.listDualPaneSelector.selectOptions(rule.values);
-      return await this.addRuleButton.click();
+      await this.addRuleButton.click();
+      return;
+    }
+
+    if (rule instanceof AutoNumberRuleWithValue) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.numberOperatorContainer.locator('input:visible').fill(rule.value.toString());
+      await this.addRuleButton.click();
+      return;
     }
 
     throw new Error('Unsupported Rule Type');

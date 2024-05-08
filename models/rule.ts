@@ -8,6 +8,8 @@ type TextValueOperator = 'Starts With' | 'Contains' | 'Does Not Contain';
 
 type ListValueOperator = 'Contains Any' | 'Excludes Any';
 
+type AutoNumberOperator = 'Equals' | 'Does Not Equal' | 'Is Greater Than' | 'Is Less Than';
+
 export class Rule {
   readonly fieldName: string;
   readonly fieldType: FieldType;
@@ -71,6 +73,48 @@ export class ListRuleWithValues extends Rule {
     super({ fieldName, fieldType: 'List' });
     this.operator = operator;
     this.values = values;
+  }
+}
+
+export class AutoNumberRuleWithValue extends Rule {
+  operator: Exclude<AutoNumberOperator, 'Is Between'>;
+  value: number;
+
+  constructor({
+    fieldName,
+    operator,
+    value,
+  }: {
+    fieldName: string;
+    operator: Exclude<AutoNumberOperator, 'Is Between'>;
+    value: number;
+  }) {
+    super({ fieldName, fieldType: 'Number' });
+    this.operator = operator;
+    this.value = value;
+  }
+}
+
+export class AutoNumberRuleWithRange extends Rule {
+  operator: Extract<AutoNumberOperator, 'Is Between'>;
+  start: number;
+  end: number;
+
+  constructor({
+    fieldName,
+    operator,
+    start,
+    end,
+  }: {
+    fieldName: string;
+    operator: Extract<AutoNumberOperator, 'Is Between'>;
+    start: number;
+    end: number;
+  }) {
+    super({ fieldName, fieldType: 'Number' });
+    this.operator = operator;
+    this.start = start;
+    this.end = end;
   }
 }
 

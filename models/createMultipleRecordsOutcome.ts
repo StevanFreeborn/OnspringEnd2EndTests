@@ -1,4 +1,5 @@
 import { Outcome, OutcomeObject } from './outcome';
+import { RuleLogic } from './ruleLogic';
 
 type CreateMultipleRecordsOutcomeFrequency = 'Always on save' | 'Only once per record' | 'For each new value added';
 
@@ -35,7 +36,7 @@ type CmroOnSaveWithCustomBatchOutcomeObject = Omit<
   CreateMultipleRecordsOnSaveOutcomeObject,
   'batchType' | 'frequency'
 > & {
-  definitions: CustomBatchContentDefinition[];
+  definitions?: CustomBatchContentDefinition[];
 };
 
 export class CmroOnSaveWithCustomBatchOutcome extends CreateMultipleRecordsOnSaveOutcome {
@@ -47,30 +48,78 @@ export class CmroOnSaveWithCustomBatchOutcome extends CreateMultipleRecordsOnSav
   }
 }
 
-export abstract class ContentDefinition {}
+type CmroOnSaveWithDefinedLibraryOutcomeObject = Omit<
+  CreateMultipleRecordsOnSaveOutcomeObject,
+  'batchType' | 'frequency'
+> & {
+  definitions?: DefinedLibraryContentDefinition[];
+};
 
-type CustomBatchContentDefinitionObject = {
-  batchRecordName: string;
-  description?: string;
+export class CmroOnSaveWithDefinedLibraryOutcome extends CreateMultipleRecordsOnSaveOutcome {
+  definitions: DefinedLibraryContentDefinition[];
+
+  constructor({ status, description = '', definitions = [] }: CmroOnSaveWithDefinedLibraryOutcomeObject) {
+    super({ status, description, batchType: 'Defined Library Copy' });
+    this.definitions = definitions;
+  }
+}
+
+type ContentDefinitionObject = {
   targetApp: string;
   layout?: string;
 };
 
-export class CustomBatchContentDefinition {
-  batchRecordName: string;
-  description: string;
+export abstract class ContentDefinition {
   targetApp: string;
   layout: string;
 
-  constructor({
-    batchRecordName,
-    description = '',
-    targetApp,
-    layout = 'Default Layout',
-  }: CustomBatchContentDefinitionObject) {
-    this.batchRecordName = batchRecordName;
-    this.description = description;
+  constructor({ targetApp, layout = 'Default Layout' }: ContentDefinitionObject) {
     this.targetApp = targetApp;
     this.layout = layout;
+  }
+}
+
+type CustomBatchContentDefinitionObject = ContentDefinitionObject & {
+  batchRecordName: string;
+  description?: string;
+};
+
+export class CustomBatchContentDefinition extends ContentDefinition {
+  batchRecordName: string;
+  description: string;
+
+  constructor({ batchRecordName, description = '', targetApp, layout }: CustomBatchContentDefinitionObject) {
+    super({ targetApp, layout });
+    this.batchRecordName = batchRecordName;
+    this.description = description;
+  }
+}
+
+type DefinedLibraryContentDefinitionObject = ContentDefinitionObject & {
+  sourceApp: string;
+  dataFilterLogic: RuleLogic;
+  dynamicFilter?: boolean;
+  dynamicFilterFields?: string[];
+};
+
+export class DefinedLibraryContentDefinition extends ContentDefinition {
+  sourceApp: string;
+  dataFilterLogic: RuleLogic;
+  dynamicFilter: boolean;
+  dynamicFilterFields: string[];
+
+  constructor({
+    sourceApp,
+    dataFilterLogic,
+    dynamicFilter = false,
+    dynamicFilterFields = [],
+    targetApp,
+    layout,
+  }: DefinedLibraryContentDefinitionObject) {
+    super({ targetApp, layout });
+    this.sourceApp = sourceApp;
+    this.dataFilterLogic = dataFilterLogic;
+    this.dynamicFilter = dynamicFilter;
+    this.dynamicFilterFields = dynamicFilterFields;
   }
 }
