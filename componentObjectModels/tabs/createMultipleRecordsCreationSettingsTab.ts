@@ -4,10 +4,12 @@ import {
   CreateMultipleRecordsOutcome,
   CustomBatchContentDefinition,
   DefinedLibraryContentDefinition,
+  DynamicLibraryContentDefinition,
 } from '../../models/createMultipleRecordsOutcome';
 import { AddAppDefinitionDialog } from '../dialogs/addAppDefinitionDialog';
 import { AddOrEditCustomBatchModal } from '../modals/addOrEditCustomBatchModal';
 import { AddOrEditDefinedLibraryModal } from '../modals/addOrEditDefinedLibraryModal';
+import { AddOrEditDynamicLibraryModal } from '../modals/addOrEditDynamicLibraryModal';
 
 export class CreateMultipleRecordsCreationSettingsTab {
   private readonly modal: Locator;
@@ -17,6 +19,7 @@ export class CreateMultipleRecordsCreationSettingsTab {
   readonly customBatchModal: AddOrEditCustomBatchModal;
   readonly addAppDefinitionDialog: AddAppDefinitionDialog;
   readonly definedLibraryModal: AddOrEditDefinedLibraryModal;
+  readonly dynamicLibraryModal: AddOrEditDynamicLibraryModal;
 
   constructor(modal: Locator) {
     this.modal = modal;
@@ -28,6 +31,7 @@ export class CreateMultipleRecordsCreationSettingsTab {
     this.customBatchModal = new AddOrEditCustomBatchModal(page);
     this.addAppDefinitionDialog = new AddAppDefinitionDialog(page);
     this.definedLibraryModal = new AddOrEditDefinedLibraryModal(page);
+    this.dynamicLibraryModal = new AddOrEditDynamicLibraryModal(page);
   }
 
   private async addDefinition(definition: ContentDefinition) {
@@ -43,6 +47,15 @@ export class CreateMultipleRecordsCreationSettingsTab {
 
       await this.definedLibraryModal.fillOutForm(definition);
       await this.definedLibraryModal.okButton.click();
+      return;
+    }
+
+    if (definition instanceof DynamicLibraryContentDefinition) {
+      await this.addAppDefinitionDialog.selectSourceApp(definition.sourceApp);
+      await this.addAppDefinitionDialog.okButton.click();
+
+      await this.dynamicLibraryModal.fillOutForm(definition);
+      await this.dynamicLibraryModal.okButton.click();
       return;
     }
 

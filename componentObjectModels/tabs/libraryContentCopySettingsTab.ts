@@ -1,7 +1,7 @@
 import { Locator } from '@playwright/test';
 import { DefinedLibraryContentDefinition } from '../../models/createMultipleRecordsOutcome';
 
-export class DefinedLibraryContentCopySettingsTab {
+export class LibraryContentCopySettingsTab {
   private readonly targetAppSelector: Locator;
   private readonly layoutSelector: Locator;
 

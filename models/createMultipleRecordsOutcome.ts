@@ -64,6 +64,15 @@ export class CmroOnSaveWithDefinedLibraryOutcome extends CreateMultipleRecordsOn
   }
 }
 
+export class CmroOnSaveWithDynamicLibraryOutcome extends CreateMultipleRecordsOnSaveOutcome {
+  definitions: DynamicLibraryContentDefinition[];
+
+  constructor({ status, description = '', definitions = [] }: CmroOnSaveWithDefinedLibraryOutcomeObject) {
+    super({ status, description, batchType: 'Dynamic Library Copy' });
+    this.definitions = definitions;
+  }
+}
+
 type ContentDefinitionObject = {
   targetApp: string;
   layout?: string;
@@ -95,14 +104,14 @@ export class CustomBatchContentDefinition extends ContentDefinition {
   }
 }
 
-type DefinedLibraryContentDefinitionObject = ContentDefinitionObject & {
+type LibraryContentDefinitionObject = ContentDefinitionObject & {
   sourceApp: string;
   dataFilterLogic: RuleLogic;
   dynamicFilter?: boolean;
   dynamicFilterFields?: string[];
 };
 
-export class DefinedLibraryContentDefinition extends ContentDefinition {
+export abstract class LibraryContentDefinition extends ContentDefinition {
   sourceApp: string;
   dataFilterLogic: RuleLogic;
   dynamicFilter: boolean;
@@ -115,11 +124,37 @@ export class DefinedLibraryContentDefinition extends ContentDefinition {
     dynamicFilterFields = [],
     targetApp,
     layout,
-  }: DefinedLibraryContentDefinitionObject) {
+  }: LibraryContentDefinitionObject) {
     super({ targetApp, layout });
     this.sourceApp = sourceApp;
     this.dataFilterLogic = dataFilterLogic;
     this.dynamicFilter = dynamicFilter;
     this.dynamicFilterFields = dynamicFilterFields;
+  }
+}
+
+export class DefinedLibraryContentDefinition extends LibraryContentDefinition {
+  constructor({
+    sourceApp,
+    dataFilterLogic,
+    dynamicFilter,
+    dynamicFilterFields,
+    targetApp,
+    layout,
+  }: LibraryContentDefinitionObject) {
+    super({ sourceApp, dataFilterLogic, dynamicFilter, dynamicFilterFields, targetApp, layout });
+  }
+}
+
+export class DynamicLibraryContentDefinition extends LibraryContentDefinition {
+  constructor({
+    sourceApp,
+    dataFilterLogic,
+    dynamicFilter,
+    dynamicFilterFields,
+    targetApp,
+    layout,
+  }: LibraryContentDefinitionObject) {
+    super({ sourceApp, dataFilterLogic, dynamicFilter, dynamicFilterFields, targetApp, layout });
   }
 }
