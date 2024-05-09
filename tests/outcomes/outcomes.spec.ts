@@ -194,7 +194,7 @@ test.describe('Outcomes', () => {
       const editableTextField = await editContentPage.form.getField(getTextFieldParams);
 
       await editableTextField.clear();
-      await editableTextField.pressSequentially('New Test Value', { delay: 150 });
+      await editableTextField.pressSequentially('Updated Value', { delay: 150 });
 
       await editContentPage.save();
     });
