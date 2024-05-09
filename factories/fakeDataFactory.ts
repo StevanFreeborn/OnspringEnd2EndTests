@@ -111,4 +111,8 @@ export class FakeDataFactory {
   static createFakeTriggerName() {
     return `${this.createUniqueIdentifier()}-trigger-test`;
   }
+
+  static createFakeDocumentName() {
+    return `${this.createUniqueIdentifier()}-document-test`;
+  }
 }

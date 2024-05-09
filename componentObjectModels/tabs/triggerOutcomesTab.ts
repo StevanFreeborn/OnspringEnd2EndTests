@@ -2,6 +2,7 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { CreateMultipleRecordsOutcome } from '../../models/createMultipleRecordsOutcome';
 import { CreateOneRecordOutcome } from '../../models/createOneRecordOutcome';
 import { FilterListValueOutcome } from '../../models/filterListValueOutcome';
+import { GenerateDocumentOutcome } from '../../models/generateDocumentOutcome';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { Outcome, OutcomeType } from '../../models/outcome';
 import { PrintContentRecordOutcome } from '../../models/printContentRecordOutcome';
@@ -14,6 +15,7 @@ import { BaseEditOutcomeModal } from '../modals/baseEditOutcomeModal';
 import { EditCreateMultipleRecordsOutcomeModal } from '../modals/editCreateMultipleRecordsOutcomeModal';
 import { EditCreateOneRecordOutcomeModal } from '../modals/editCreateOneRecordOutcomeModal';
 import { EditFilterListValueOutcomeModal } from '../modals/editFilterListValueOutcomeModal';
+import { EditGenerateDocumentOutcomeModal } from '../modals/editGenerateDocumentOutcomeModal';
 import { EditObjectVisibilityOutcomeModal } from '../modals/editObjectVisibilityOutcomeModal';
 import { EditPrintContentRecordOutcomeModal } from '../modals/editPrintContentRecordOutcomeModal';
 import { EditRequiredFieldsOutcomeModal } from '../modals/editRequiredFieldsOutcomeModal';
@@ -31,6 +33,7 @@ export class TriggerOutcomesTab {
     this.outcomesGrid = frame.locator('#outcome-grid');
   }
 
+  private getEditOutcomeModal(outcomeType: 'Generate Document'): EditGenerateDocumentOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Create Multiple Records'): EditCreateMultipleRecordsOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Create One Record'): EditCreateOneRecordOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Print Content Record'): EditPrintContentRecordOutcomeModal;
@@ -64,6 +67,8 @@ export class TriggerOutcomesTab {
         return new EditCreateOneRecordOutcomeModal(this.page);
       case 'Create Multiple Records':
         return new EditCreateMultipleRecordsOutcomeModal(this.page);
+      case 'Generate Document':
+        return new EditGenerateDocumentOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -121,6 +126,11 @@ export class TriggerOutcomesTab {
       case 'Create Multiple Records': {
         const modal = this.getEditOutcomeModal('Create Multiple Records');
         await modal.fillOutForm(outcome as CreateMultipleRecordsOutcome);
+        break;
+      }
+      case 'Generate Document': {
+        const modal = this.getEditOutcomeModal('Generate Document');
+        await modal.fillOutForm(outcome as GenerateDocumentOutcome);
         break;
       }
       default:

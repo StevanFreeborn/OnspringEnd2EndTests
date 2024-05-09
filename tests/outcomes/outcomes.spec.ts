@@ -1,3 +1,4 @@
+import { Document, Paragraph } from 'docx';
 import { GetAttachmentFieldParams, GetDateFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
@@ -15,7 +16,9 @@ import {
 } from '../../models/createMultipleRecordsOutcome';
 import { CreateOneRecordOnSaveOutcome } from '../../models/createOneRecordOutcome';
 import { DateField } from '../../models/dateField';
+import { DynamicDocument } from '../../models/dynamicDocument';
 import { FilterListValueOutcome, FilterListValueRule } from '../../models/filterListValueOutcome';
+import { GenerateDocumentOutcome } from '../../models/generateDocumentOutcome';
 import { ListValue } from '../../models/listValue';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { ParallelReferenceField } from '../../models/parallelReferenceField';
@@ -34,6 +37,7 @@ import { Trigger } from '../../models/trigger';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
 import { AnnotationType } from '../annotations';
 import { ListField } from './../../models/listField';
 import { GetReferenceFieldParams } from './../../pageObjectModels/content/editableContentPage';
@@ -45,6 +49,7 @@ type OutcomesTestFixtures = {
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
+  editDocumentPage: EditDocumentPage;
 };
 
 const test = base.extend<OutcomesTestFixtures>({
@@ -52,8 +57,9 @@ const test = base.extend<OutcomesTestFixtures>({
   sourceApp: app,
   targetApp: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ appAdminPage }, use) => await use(new AddContentPage(appAdminPage.page)),
-  editContentPage: async ({ appAdminPage }, use) => await use(new EditContentPage(appAdminPage.page)),
+  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
+  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
+  editDocumentPage: async ({ sysAdminPage }, use) => await use(new EditDocumentPage(sysAdminPage)),
 });
 
 test.describe('Outcomes', () => {
@@ -833,7 +839,7 @@ test.describe('Outcomes', () => {
     });
 
     await test.step('Verify required field is required', async () => {
-      await editContentPage.save();
+      await editContentPage.saveRecordButton.click();
 
       await expect(editContentPage.validationErrors).toBeVisible();
       await expect(editContentPage.validationErrors).toHaveText(
@@ -1724,6 +1730,168 @@ test.describe('Outcomes', () => {
       const recordRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
 
       await expect(recordRow).toBeVisible();
+    });
+  });
+
+  test('Configure a generate document outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    editDocumentPage,
+    dynamicDocumentService,
+    addContentPage,
+    editContentPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-743',
+    });
+
+    const listField = new ListField({
+      name: 'List Field',
+      values: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
+    });
+
+    const attachmentField = new AttachmentField({
+      name: 'Attachment Field',
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const template = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: 'This was generated for record: {:Record Id}',
+            }),
+          ],
+        },
+      ],
+    });
+
+    const document = new DynamicDocument({
+      name: FakeDataFactory.createFakeDocumentName(),
+      status: true,
+      templatePath: '',
+      saveToFieldAccess: 'Allowed',
+      attachmentField: attachmentField.name,
+    });
+
+    const triggerWithGenerateDocumentOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [
+          new ListRuleWithValues({
+            fieldName: listField.name,
+            operator: 'Changed To',
+            values: ['Yes'],
+          }),
+        ],
+      }),
+      outcomes: [
+        new GenerateDocumentOutcome({
+          status: true,
+          document: document.name,
+          fileType: 'Microsoft Word',
+          attachmentField: attachmentField.name,
+        }),
+      ],
+    });
+
+    await test.step('Navigate to the app layout tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a list field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+    });
+
+    await test.step('Create an attachment field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
+    });
+
+    await test.step('Add fields to app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      for (const field of [attachmentField, listField]) {
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          fieldName: field.name,
+        });
+      }
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Create dynamic document template', async () => {
+      document.templatePath = await dynamicDocumentService.createTemplate(template);
+    });
+
+    await test.step("Navigate to the app's document tab", async () => {
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create a dynamic document', async () => {
+      await appAdminPage.documentsTab.addDocument(document.name);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await editDocumentPage.fillOutForm(document);
+      await editDocumentPage.save();
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with generate document outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithGenerateDocumentOutcome);
+    });
+
+    await test.step('Create a record in the app', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('Update list field to yes', async () => {
+      const editableListField = await editContentPage.form.getField({
+        fieldName: listField.name,
+        fieldType: listField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await editableListField.click();
+      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+
+      await editContentPage.save();
+    });
+
+    await test.step('Verify the document is generated', async () => {
+      await expect(async () => {
+        await editContentPage.page.reload();
+
+        const attachmentControl = await editContentPage.form.getField({
+          fieldName: attachmentField.name,
+          fieldType: attachmentField.type as FieldType,
+          tabName,
+          sectionName,
+        } as GetAttachmentFieldParams);
+
+        const attachmentName = `${editContentPage.getRecordIdFromUrl()} - ${document.name}.docx`;
+        const generatedDocumentRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
+
+        await expect(generatedDocumentRow).toBeVisible({ timeout: 5_000 });
+      }).toPass({
+        intervals: [5_000],
+        timeout: 300_000,
+      });
     });
   });
 });

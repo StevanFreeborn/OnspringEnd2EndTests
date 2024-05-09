@@ -6,6 +6,7 @@ import { AppTriggerTab } from '../../componentObjectModels/tabs/appTriggersTab';
 import { TextField } from '../../models/textField';
 import { BASE_URL } from '../../playwright.config';
 import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
+import { AppDocumentsTab } from '../../componentObjectModels/tabs/appDocumentsTab';
 
 type GeocodeFields = {
   address: TextField;
@@ -22,6 +23,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   readonly layoutTab: AppLayoutTab;
   readonly triggersTab: AppTriggerTab;
   readonly messagingTab: AppMessagingTab;
+  readonly documentsTab: AppDocumentsTab;
 
   constructor(page: Page) {
     super(page);
@@ -32,6 +34,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
     this.layoutTab = new AppLayoutTab(page);
     this.triggersTab = new AppTriggerTab(page);
     this.messagingTab = new AppMessagingTab(page);
+    this.documentsTab = new AppDocumentsTab(page);
   }
 
   async goto(appId: number) {

@@ -17,7 +17,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
-    "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/",
+    "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/ ./dynamic-documents/",
     "generate-example-env": "node ./scripts/generateExampleEnv.js"
   },
   "keywords": [
@@ -50,5 +50,8 @@
     "rimraf": "^5.0.5",
     "ts-results-es": "^4.1.0",
     "zod": "^3.23.8"
+  },
+  "dependencies": {
+    "docx": "^8.5.0"
   }
 }
