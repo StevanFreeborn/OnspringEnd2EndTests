@@ -839,6 +839,15 @@ test.describe('Outcomes', () => {
     });
 
     await test.step('Verify required field is required', async () => {
+      const textField = await editContentPage.form.getField({
+        fieldName: requiredField.name,
+        fieldType: requiredField.type as FieldType,
+        tabName,
+        sectionName,
+      });
+
+      await expect(textField).toHaveAttribute('data-val', 'true');
+
       await editContentPage.saveRecordButton.click();
 
       await expect(editContentPage.validationErrors).toBeVisible();
