@@ -83,6 +83,10 @@ export function errorResponseHandler(response: Response) {
     throw new Error(`Request to ${url} timed out at ${timestamp}.`);
   }
 
+  if (isBaseUrl && response.status() === 522) {
+    throw new Error(`Request to ${url} encountered a connection timeout at ${timestamp}.`);
+  }
+
   if (isBaseUrl && response.status() === 520) {
     throw new Error(`Request to ${url} returned an unexpected response at ${timestamp}.`);
   }
