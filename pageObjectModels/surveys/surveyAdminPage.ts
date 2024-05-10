@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { SurveyDesignTab } from '../../componentObjectModels/tabs/surveyDesignTab';
 import { SurveyGeneralTab } from '../../componentObjectModels/tabs/surveyGeneralTab';
 import { SurveyLayoutTab } from '../../componentObjectModels/tabs/surveyLayoutTab';
@@ -8,6 +8,8 @@ import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
 export class SurveyAdminPage extends BaseAppOrSurveyAdminPage {
   readonly path: string;
   readonly pathRegex: RegExp;
+
+  readonly configureResponseAppLink: Locator;
 
   readonly designTabButton;
 
@@ -19,6 +21,8 @@ export class SurveyAdminPage extends BaseAppOrSurveyAdminPage {
     super(page);
     this.path = '/Admin/Survey/';
     this.pathRegex = new RegExp(`${BASE_URL}${this.path}[0-9]+`);
+
+    this.configureResponseAppLink = page.getByRole('link', { name: 'Configure Response App' });
 
     this.designTabButton = page.locator('#tab-strip').getByText('Design');
 
