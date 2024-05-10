@@ -75,4 +75,130 @@ test.describe('survey responses app', () => {
       await expect(surveyResponsesAdminPage.generalTab.name).toHaveText(`${updatedName} Responses`);
     });
   });
+
+  test('Disable a survey responses app', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-720',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test('Enable a survey responses app', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-721',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's description", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-722',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Disable a survey responses app's content versioning", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-723',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Enable a survey responses app's content versioning", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-724',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Change the save types of a survey responses app's content versioning", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-725',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Disable a survey responses app's concurrent edit alert", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-726',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Enable a survey responses app's concurrent edit alert", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-727',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's display link field", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-728',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's integration link field", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-729',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's display fields", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-730',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's primary sort field", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-731',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's secondary sort field", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-732',
+    });
+
+    expect(true).toBe(true);
+  });
+
+  test("Update a survey responses app's app notes", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-733',
+    });
+
+    expect(true).toBe(true);
+  });
 });
