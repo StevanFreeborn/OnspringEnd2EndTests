@@ -7,14 +7,21 @@ type FieldDropzoneParams = {
   row: number;
 };
 
+type SectionDropzoneParams = {
+  tabName: string;
+  placementIndex?: number;
+};
+
 export class CanvasSection {
   private readonly section: Locator;
   readonly layoutItemDropzone: Locator;
+  readonly sectionDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
     this.section = frame.locator('.canvas-section').first();
     this.layoutItemDropzone = this.section.locator('#dropLocation');
+    this.sectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
   }
 
   async getItemDropzone(params: FieldDropzoneParams) {
@@ -22,6 +29,13 @@ export class CanvasSection {
     const tab = await this.getTab(tabName);
     const section = tab.getSection(sectionName);
     return section.getDropzone(column, row);
+  }
+
+  async getSectionDropzone(params: SectionDropzoneParams) {
+    const { tabName, placementIndex } = params;
+    const tab = await this.getTab(tabName);
+    const dropzone = await tab.getSectionDropzone(placementIndex);
+    return dropzone;
   }
 
   async getActiveTabName() {
@@ -56,13 +70,28 @@ class LayoutTab {
     const section = this.tab.locator('section').filter({ hasText: sectionName }).first();
     return new LayoutSection(section);
   }
+
+  async getSectionDropzone(placementIndex?: number) {
+    if (placementIndex === undefined) {
+      return this.tab.locator('.sectionDropArea').last();
+    }
+
+    const numOfAreas = await this.tab.locator('.sectionDropArea').count();
+    const maxIndex = numOfAreas - 1;
+
+    if (placementIndex > maxIndex) {
+      placementIndex = maxIndex;
+    }
+
+    return this.tab.locator('.sectionDropArea').nth(placementIndex);
+  }
 }
 
 class LayoutSection {
   private readonly section: Locator;
-  readonly editSectionNameButton: Locator;
-  readonly editSectionButton: Locator;
-  readonly deleteSectionButton: Locator;
+  private readonly editSectionNameButton: Locator;
+  private readonly editSectionButton: Locator;
+  private readonly deleteSectionButton: Locator;
 
   constructor(section: Locator) {
     this.section = section;
@@ -78,7 +107,7 @@ class LayoutSection {
   private async getNumberOfColumns() {
     const layoutZones = await this.getLayoutZones().all();
 
-    let maxColumn = 0;
+    let maxColumn = -1;
 
     for (const zone of layoutZones) {
       const column = await zone.getAttribute('data-column');
@@ -100,20 +129,19 @@ class LayoutSection {
   private async getNumberOfRows(column: number) {
     const layoutZones = await this.getLayoutZones().all();
 
-    let count = 0;
+    let count = -1;
 
     for (const zone of layoutZones) {
       const columnAttr = await zone.getAttribute('data-column');
-      const columnSpanAttr = await zone.getAttribute('data-colspan');
+      const rowAttr = await zone.getAttribute('data-row');
 
-      if (columnAttr === null || columnSpanAttr === null) {
+      if (columnAttr === null) {
         continue;
       }
 
       const columnNumber = parseInt(columnAttr);
-      const columnSpanNumber = parseInt(columnSpanAttr);
 
-      if (columnNumber === column || columnSpanNumber >= column) {
+      if (columnNumber === column && rowAttr !== null) {
         count += 1;
       }
     }
@@ -142,5 +170,25 @@ class LayoutSection {
     }
 
     return this.section.locator(`.rendered-item[data-column="${column}"][data-row="${row}"]`).first();
+  }
+
+  async updateName(newName: string) {
+    const page = this.section.page();
+    const frame = page.frameLocator('iframe').first();
+    const nameEditor = frame.locator('#name-editor');
+    const input = nameEditor.locator('input');
+    const applyButton = nameEditor.getByTitle('Apply');
+
+    const isNameEditorVisible = await nameEditor.isVisible();
+
+    if (isNameEditorVisible) {
+      await applyButton.click();
+    }
+
+    await this.section.locator('h1').hover();
+    await this.editSectionNameButton.click();
+
+    await input.fill(newName);
+    await applyButton.click();
   }
 }

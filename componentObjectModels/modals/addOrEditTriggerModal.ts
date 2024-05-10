@@ -2,6 +2,7 @@ import { FrameLocator, Locator, Page } from '@playwright/test';
 import { Trigger } from '../../models/trigger';
 import { TriggerGeneralTab } from '../tabs/triggerGeneralTab';
 import { TriggerOutcomesTab } from '../tabs/triggerOutcomesTab';
+import { TriggerRulesTab } from '../tabs/triggerRulesTab';
 
 export class AddOrEditTriggerModal {
   private readonly modal: Locator;
@@ -11,6 +12,7 @@ export class AddOrEditTriggerModal {
   readonly generalTab: TriggerGeneralTab;
 
   readonly rulesTabButton: Locator;
+  readonly rulesTab: TriggerRulesTab;
 
   readonly outcomesTabButton: Locator;
   readonly outcomesTab: TriggerOutcomesTab;
@@ -26,6 +28,7 @@ export class AddOrEditTriggerModal {
     this.generalTab = new TriggerGeneralTab(this.frame);
 
     this.rulesTabButton = this.frame.getByRole('tab', { name: 'Rules' });
+    this.rulesTab = new TriggerRulesTab(this.frame);
 
     this.outcomesTabButton = this.frame.getByRole('tab', { name: 'Outcomes' });
     this.outcomesTab = new TriggerOutcomesTab(this.frame, page);
@@ -47,6 +50,9 @@ export class AddOrEditTriggerModal {
     if (await this.needToUpdateSwitch(trigger)) {
       await this.generalTab.statusToggle.click();
     }
+
+    await this.rulesTabButton.click();
+    await this.rulesTab.ruleSet.addLogic(trigger.ruleSet);
 
     if (trigger.outcomes.length > 0) {
       await this.outcomesTabButton.click();
