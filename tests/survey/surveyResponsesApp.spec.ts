@@ -76,13 +76,36 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test('Disable a survey responses app', async () => {
+  test('Disable a survey responses app', async ({ surveyResponsesAdminPage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-720',
     });
 
-    expect(true).toBe(true);
+    await test.step("Verify the survey responses app's status is readonly", async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await expect(surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveClass(
+        /k-state-disabled/i
+      );
+
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
+    });
+
+    await test.step("Update the survey's status to disabled", async () => {
+      await surveyResponsesAdminPage.configureSurveyLinK.click();
+      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
+
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's status is disabled", async () => {
+      await surveyAdminPage.configureResponseAppLink.click();
+      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
+
+      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Disabled');
+    });
   });
 
   test('Enable a survey responses app', async () => {
@@ -90,6 +113,12 @@ test.describe('survey responses app', () => {
       type: AnnotationType.TestId,
       description: 'Test-721',
     });
+
+    await test.step("Verify the survey responses app's status is readonly", async () => {});
+
+    await test.step("Update the survey's status to enabled", async () => {});
+
+    await test.step("Verify the survey responses app's status is enabled", async () => {});
 
     expect(true).toBe(true);
   });
