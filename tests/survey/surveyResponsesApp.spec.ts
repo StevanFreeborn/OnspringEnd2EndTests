@@ -175,13 +175,21 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Disable a survey responses app's content versioning", async () => {
+  test("Disable a survey responses app's content versioning", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-723',
     });
 
-    expect(true).toBe(true);
+    await test.step('Disable the survey responses app content versioning', async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey responses app content versioning is disabled', async () => {
+      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+    });
   });
 
   test("Enable a survey responses app's content versioning", async () => {
