@@ -108,19 +108,52 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test('Enable a survey responses app', async () => {
+  test('Enable a survey responses app', async ({ surveyResponsesAdminPage, surveyAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-721',
     });
 
-    await test.step("Verify the survey responses app's status is readonly", async () => {});
+    await test.step("Verify the survey responses app's status is readonly", async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await expect(surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveClass(
+        /k-state-disabled/i
+      );
 
-    await test.step("Update the survey's status to enabled", async () => {});
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
+    });
 
-    await test.step("Verify the survey responses app's status is enabled", async () => {});
+    await test.step("Update the survey's status to disabled", async () => {
+      await surveyResponsesAdminPage.configureSurveyLinK.click();
+      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
 
-    expect(true).toBe(true);
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's status is disabled", async () => {
+      await surveyAdminPage.configureResponseAppLink.click();
+      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
+
+      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Disabled');
+    });
+
+    await test.step("Update the survey's status to enabled", async () => {
+      await surveyResponsesAdminPage.configureSurveyLinK.click();
+      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
+
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's status is enabled", async () => {
+      await surveyAdminPage.configureResponseAppLink.click();
+      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
+
+      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Enabled');
+    });
   });
 
   test("Update a survey responses app's description", async () => {
