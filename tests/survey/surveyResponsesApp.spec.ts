@@ -156,13 +156,23 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's description", async () => {
+  test("Update a survey responses app's description", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-722',
     });
 
-    expect(true).toBe(true);
+    const description = `Test Description`;
+
+    await test.step("Update the survey responses app's description", async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor.fill(description);
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's description is updated", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.description).toHaveText(description);
+    });
   });
 
   test("Disable a survey responses app's content versioning", async () => {
