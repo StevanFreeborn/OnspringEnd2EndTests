@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
 import { ObjectVisibilityOutcome } from '../../models/objectVisibilityOutcome';
 import { ObjectVisibilityOutcomeDisplayTab } from '../tabs/objectVisibilityOutcomeDisplayTab';
-import { EditOutcomeModal } from './editOutcomeModal';
+import { EditOutcomeModalWithTabs } from './editOutcomeModalWithTabs';
 
-export class EditObjectVisibilityOutcomeModal extends EditOutcomeModal {
+export class EditObjectVisibilityOutcomeModal extends EditOutcomeModalWithTabs {
   readonly displayTabButton: Locator;
   readonly displayTab: ObjectVisibilityOutcomeDisplayTab;
 

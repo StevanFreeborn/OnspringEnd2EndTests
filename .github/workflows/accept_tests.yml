@@ -116,7 +116,7 @@ jobs:
     if: ${{ needs.check_for_test_file_changes.outputs.changed_test_files != '' }}
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.43.0-jammy
+      image: mcr.microsoft.com/playwright:v1.44.0-jammy
     strategy:
       fail-fast: false
       matrix:
@@ -244,7 +244,7 @@ jobs:
     needs: [check_for_test_file_changes, generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.43.0-jammy
+      image: mcr.microsoft.com/playwright:v1.44.0-jammy
     strategy:
       fail-fast: false
     steps:

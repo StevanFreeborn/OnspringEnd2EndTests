@@ -1,10 +1,18 @@
-import { Locator } from '@playwright/test';
+import { FrameLocator, Locator } from '@playwright/test';
 
 export class DualPaneSelector {
   private readonly selector: Locator;
+  private readonly frame?: FrameLocator;
 
-  constructor(selector: Locator) {
+  constructor(selector: Locator, frame?: FrameLocator) {
     this.selector = selector;
+    this.frame = frame;
+  }
+
+  private getSelectorControl() {
+    return this.frame
+      ? this.frame.locator('.selector-control:visible')
+      : this.selector.page().locator('.selector-control:visible');
   }
 
   async selectOption(option: string) {
@@ -16,8 +24,7 @@ export class DualPaneSelector {
 
     await this.selector.click();
 
-    const selectorControl = this.selector.page().locator('.selector-control:visible');
-
+    const selectorControl = this.getSelectorControl();
     await selectorControl.locator('.unselected-pane').getByText(option).click();
     await selectorControl.getByTitle('Close').click();
   }
@@ -37,8 +44,7 @@ export class DualPaneSelector {
 
     await this.selector.click();
 
-    const selectorControl = this.selector.page().locator('.selector-control:visible');
-
+    const selectorControl = this.getSelectorControl();
     await selectorControl.locator('.selected-pane').getByText(option).getByTitle('Remove').click();
     await selectorControl.getByTitle('Close').click();
   }

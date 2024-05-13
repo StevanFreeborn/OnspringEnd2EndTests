@@ -21,7 +21,8 @@ export type FieldType =
   | 'Image'
   | 'Reference'
   | 'Time Span'
-  | 'Formula';
+  | 'Formula'
+  | 'Parallel Reference';
 
 export class AddFieldTypeMenu {
   private readonly menu: Locator;

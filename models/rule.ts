@@ -6,6 +6,10 @@ type EqualityOperators = 'Equals' | 'Does Not Equal';
 
 type TextValueOperator = 'Starts With' | 'Contains' | 'Does Not Contain';
 
+type ListValueOperator = 'Contains Any' | 'Excludes Any';
+
+type AutoNumberOperator = 'Equals' | 'Does Not Equal' | 'Is Greater Than' | 'Is Less Than';
+
 export class Rule {
   readonly fieldName: string;
   readonly fieldType: FieldType;
@@ -19,7 +23,7 @@ export class Rule {
 export class TextRule extends Rule {
   readonly operator: NonValueOperator;
 
-  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator; value: string }) {
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator }) {
     super({ fieldName, fieldType: 'Text' });
     this.operator = operator;
   }
@@ -41,6 +45,76 @@ export class TextRuleWithValue extends Rule {
     super({ fieldName, fieldType: 'Text' });
     this.operator = operator;
     this.value = value;
+  }
+}
+
+export class ListRule extends Rule {
+  readonly operator: NonValueOperator;
+
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator; value: string }) {
+    super({ fieldName, fieldType: 'List' });
+    this.operator = operator;
+  }
+}
+
+export class ListRuleWithValues extends Rule {
+  readonly operator: ListValueOperator | ChangeOperators | EqualityOperators;
+  readonly values: string[];
+
+  constructor({
+    fieldName,
+    operator,
+    values,
+  }: {
+    fieldName: string;
+    operator: ListValueOperator | ChangeOperators | EqualityOperators;
+    values: string[];
+  }) {
+    super({ fieldName, fieldType: 'List' });
+    this.operator = operator;
+    this.values = values;
+  }
+}
+
+export class AutoNumberRuleWithValue extends Rule {
+  operator: Exclude<AutoNumberOperator, 'Is Between'>;
+  value: number;
+
+  constructor({
+    fieldName,
+    operator,
+    value,
+  }: {
+    fieldName: string;
+    operator: Exclude<AutoNumberOperator, 'Is Between'>;
+    value: number;
+  }) {
+    super({ fieldName, fieldType: 'Number' });
+    this.operator = operator;
+    this.value = value;
+  }
+}
+
+export class AutoNumberRuleWithRange extends Rule {
+  operator: Extract<AutoNumberOperator, 'Is Between'>;
+  start: number;
+  end: number;
+
+  constructor({
+    fieldName,
+    operator,
+    start,
+    end,
+  }: {
+    fieldName: string;
+    operator: Extract<AutoNumberOperator, 'Is Between'>;
+    start: number;
+    end: number;
+  }) {
+    super({ fieldName, fieldType: 'Number' });
+    this.operator = operator;
+    this.start = start;
+    this.end = end;
   }
 }
 

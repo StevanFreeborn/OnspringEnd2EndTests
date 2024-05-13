@@ -1,37 +1,29 @@
 import { Locator, Page } from '@playwright/test';
 import { Outcome } from '../../models/outcome';
-import { OutcomeGeneralTab } from '../tabs/outcomeGeneralTab';
+import { BaseEditOutcomeModal } from './baseEditOutcomeModal';
 
-export abstract class EditOutcomeModal {
-  protected readonly modal: Locator;
-
-  readonly generalTabButton: Locator;
-  readonly generalTab: OutcomeGeneralTab;
-
-  readonly okButton: Locator;
-  readonly cancelButton: Locator;
+export abstract class EditOutcomeModal extends BaseEditOutcomeModal {
+  readonly descriptionEditor: Locator;
+  readonly statusToggle: Locator;
+  readonly statusSwitch: Locator;
 
   constructor(page: Page) {
-    this.modal = page.getByRole('dialog', { name: /outcome/i });
-
-    this.generalTabButton = this.modal.getByRole('tab', { name: 'General' });
-    this.generalTab = new OutcomeGeneralTab(this.modal);
-
-    this.okButton = this.modal.getByRole('button', { name: 'OK' });
-    this.cancelButton = this.modal.getByRole('button', { name: 'Cancel' });
+    super(page);
+    this.descriptionEditor = this.modal.locator('.content-area.mce-content-body');
+    this.statusSwitch = this.modal.getByRole('switch');
+    this.statusToggle = this.statusSwitch.locator('span').nth(3);
   }
 
   private async needToUpdateSwitch(outcome: Outcome) {
-    const switchState = await this.generalTab.statusSwitch.getAttribute('aria-checked');
+    const switchState = await this.statusSwitch.getAttribute('aria-checked');
     return (outcome.status === true && switchState === 'false') || (outcome.status === false && switchState === 'true');
   }
 
   async fillOutForm(outcome: Outcome) {
-    await this.generalTabButton.click();
-    await this.generalTab.descriptionEditor.fill(outcome.description);
+    await this.descriptionEditor.fill(outcome.description);
 
     if (await this.needToUpdateSwitch(outcome)) {
-      await this.generalTab.statusSwitch.click();
+      await this.statusSwitch.click();
     }
   }
 }

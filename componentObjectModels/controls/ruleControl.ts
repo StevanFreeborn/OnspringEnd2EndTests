@@ -1,26 +1,38 @@
-import { Locator } from '@playwright/test';
-import { Rule, TextRuleWithValue } from '../../models/rule';
+import { FrameLocator, Locator } from '@playwright/test';
+import { AutoNumberRuleWithValue, ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
+import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
 
 export class RuleControl {
   protected readonly control: Locator;
+  protected readonly frame?: FrameLocator;
   protected readonly ruleInputContainer: Locator;
   protected readonly fieldSelector: TreeviewSelector;
   protected readonly ruleOperatorSelect: Locator;
   protected readonly betweenOperatorContainer: Locator;
+  protected readonly numberOperatorContainer: Locator;
+  protected readonly listDualPaneSelector: DualPaneSelector;
   protected readonly addRuleButton: Locator;
   protected readonly simpleModeRadioButton: Locator;
   protected readonly advancedModeRadioButton: Locator;
   protected readonly useFilterLogicCheckbox: Locator;
   protected readonly filterLogicInput: Locator;
 
-  constructor(control: Locator) {
+  constructor(control: Locator, frame?: FrameLocator) {
     this.control = control;
+    this.frame = frame;
     this.ruleInputContainer = this.control.locator('.input-container');
-    this.fieldSelector = new TreeviewSelector(this.ruleInputContainer.locator('.field .onx-selector'));
+    this.fieldSelector = new TreeviewSelector(this.ruleInputContainer.locator('.field .onx-selector'), this.frame);
+
     this.ruleOperatorSelect = this.control.locator('.rule-operator[role="listbox"]');
+
     this.betweenOperatorContainer = this.control.locator('.between-container');
+    this.numberOperatorContainer = this.control.locator('.number-container');
+    this.listDualPaneSelector = new DualPaneSelector(
+      this.control.locator('.list.selector-container .onx-selector'),
+      this.frame
+    );
     this.addRuleButton = this.control.getByRole('button', { name: 'Add' });
     this.simpleModeRadioButton = this.control.getByRole('radio', { name: 'Simple Mode' });
     this.advancedModeRadioButton = this.control.getByRole('radio', { name: 'Advanced Mode' });
@@ -36,7 +48,12 @@ export class RuleControl {
 
   private async selectRuleOperator(operator: string) {
     await this.ruleOperatorSelect.click();
-    await this.ruleOperatorSelect.page().getByRole('option', { name: operator }).click();
+
+    const option = this.frame
+      ? this.frame.getByRole('option', { name: operator })
+      : this.ruleOperatorSelect.page().getByRole('option', { name: operator });
+
+    await option.click();
   }
 
   private async addRule(rule: Rule) {
@@ -44,7 +61,24 @@ export class RuleControl {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);
       await this.betweenOperatorContainer.locator('input:visible').fill(rule.value);
-      return await this.addRuleButton.click();
+      await this.addRuleButton.click();
+      return;
+    }
+
+    if (rule instanceof ListRuleWithValues) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.listDualPaneSelector.selectOptions(rule.values);
+      await this.addRuleButton.click();
+      return;
+    }
+
+    if (rule instanceof AutoNumberRuleWithValue) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.numberOperatorContainer.locator('input:visible').fill(rule.value.toString());
+      await this.addRuleButton.click();
+      return;
     }
 
     throw new Error('Unsupported Rule Type');
@@ -82,8 +116,8 @@ export class RuleControl {
 export class RuleControlWithAddNew extends RuleControl {
   readonly addRecordIsNewRuleCheckbox: Locator;
 
-  constructor(control: Locator) {
-    super(control);
+  constructor(control: Locator, frame?: FrameLocator) {
+    super(control, frame);
     this.addRecordIsNewRuleCheckbox = this.control.getByLabel('Add "When Record is New" option to rule set.');
   }
 

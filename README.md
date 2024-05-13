@@ -108,3 +108,11 @@ This workflow will run on any pull request that aims to merge into the `master` 
 Some tests require the ability to verify that an email was sent. This is currently done using IMAP and the `imap` package. You can read more about it [here](https://www.npmjs.com/package/imap). The email account for the system administrator user running the tests can be configured in the `.env` file.
 
 When it is necessary to verify an email was sent to specific user currently an alias (e.g. `system.admin+<some unique identifier>@gmail.com`) is used to send the email to the system administrator user. The system administrator user's email account is configured in the `.env` file. The alias is then used to filter the emails in the inbox to find the email sent to the specific user.
+
+### PDF Testing
+
+Some tests require the ability to verify the contents of a PDF. This is currently done using the [`PDF.js`](https://mozilla.github.io/pdf.js/) package. This library is used to parse the PDF after it has been downloaded.
+
+### Excel Testing
+
+Some tests require the ability to verify the contents of an Excel file. This is currently done using the [`node-xlsx`](https://www.npmjs.com/package/node-xlsx) package. This library is used to parse the Excel file after it has been downloaded.
