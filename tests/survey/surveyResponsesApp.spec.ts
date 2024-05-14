@@ -364,13 +364,33 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's secondary sort field", async () => {
+  test("Update a survey responses app's secondary sort field", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-732',
     });
 
-    expect(true).toBe(true);
+    await test.step("Update the survey responses app's secondary sort field", async () => {
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
+
+      await expect(
+        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect
+      ).toBeVisible();
+
+      await expect(
+        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect
+      ).toHaveText('Ascending');
+
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey responses app's secondary sort field was updated correctly", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
+      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
+    });
   });
 
   test("Update a survey responses app's app notes", async () => {
