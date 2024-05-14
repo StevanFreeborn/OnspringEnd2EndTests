@@ -302,13 +302,22 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's integration link field", async () => {
+  test("Update a survey responses app's integration link field", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-729',
     });
 
-    expect(true).toBe(true);
+    await test.step("Update the survey responses app's integration link field", async () => {
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.integrationLinkSelect.click();
+      await surveyResponsesAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's integration link field is updated", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.integrationLink).toHaveText('Created Date');
+    });
   });
 
   test("Update a survey responses app's display fields", async () => {
