@@ -219,13 +219,25 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Change the save types of a survey responses app's content versioning", async () => {
+  test("Change the save types of a survey responses app's content versioning", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-725',
     });
 
-    expect(true).toBe(true);
+    await test.step("Change the survey responses app's content versioning", async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox.check();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox.check();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox.check();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify the survey responses app's content versioning is updated", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText(
+        'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
+      );
+    });
   });
 
   test("Disable a survey responses app's concurrent edit alert", async ({ surveyResponsesAdminPage }) => {
