@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateListDialog } from '../../componentObjectModels/dialogs/createListDialog';
+import { DeleteListDialog } from '../../componentObjectModels/dialogs/deleteListDialog';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class SharedListAdminPage extends BaseAdminPage {
@@ -7,6 +8,7 @@ export class SharedListAdminPage extends BaseAdminPage {
   private readonly createListButton: Locator;
   readonly listsGrid: Locator;
   private readonly createListDialog: CreateListDialog;
+  readonly deleteListDialog: DeleteListDialog;
 
   constructor(page: Page) {
     super(page);
@@ -14,6 +16,7 @@ export class SharedListAdminPage extends BaseAdminPage {
     this.createListButton = page.getByRole('button', { name: 'Create List' });
     this.listsGrid = page.locator('#grid');
     this.createListDialog = new CreateListDialog(page);
+    this.deleteListDialog = new DeleteListDialog(page);
   }
 
   async goto() {
@@ -26,5 +29,24 @@ export class SharedListAdminPage extends BaseAdminPage {
     await this.createListDialog.nameInput.waitFor();
     await this.createListDialog.nameInput.fill(listName);
     await this.createListDialog.saveButton.click();
+  }
+
+  async deleteList(listsToDelete: string[]) {
+    await this.goto();
+
+    for (const listName of listsToDelete) {
+      const listRow = this.listsGrid.getByRole('row', { name: listName }).first();
+      const rowElement = await listRow.elementHandle();
+
+      if (rowElement === null) {
+        continue;
+      }
+
+      await listRow.hover();
+      await listRow.getByTitle('Delete List').click();
+      await this.deleteListDialog.deleteButton.click();
+      await this.deleteListDialog.waitForDialogToBeDismissed();
+      await rowElement.waitForElementState('hidden');
+    }
   }
 }
