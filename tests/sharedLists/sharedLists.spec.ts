@@ -40,13 +40,29 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Create a shared list via the create button on the Lists tile on the admin home page', async () => {
+  test('Create a shared list via the create button on the Lists tile on the admin home page', async ({
+    adminHomePage,
+    editListPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-638',
     });
 
-    expect(true).toBeTruthy();
+    const listName = FakeDataFactory.createFakeListName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the shared list', async () => {
+      await adminHomePage.createListUsingListTileButton(listName);
+      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Verify the shared list was created', async () => {
+      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+    });
   });
 
   test('Create a shared list via the "Create List" button on the shared list home page', async () => {

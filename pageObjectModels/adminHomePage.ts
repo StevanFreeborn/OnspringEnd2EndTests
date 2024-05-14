@@ -39,6 +39,8 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
 
+  readonly listTileLink: Locator;
+  readonly listTileCreateButton: Locator;
   readonly createListDialog: CreateListDialog;
 
   private getTileLink(tilePosition: number) {
@@ -86,11 +88,23 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
 
+    this.listTileLink = this.getTileLink(3);
+    this.listTileCreateButton = this.getTileCreateButton('Lists');
     this.createListDialog = new CreateListDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createListUsingListTileButton(listName: string) {
+    await this.listTileLink.hover();
+    await this.listTileCreateButton.waitFor();
+    await this.listTileCreateButton.click();
+
+    await this.createListDialog.nameInput.waitFor();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
   }
 
   async createListUsingHeaderCreateButton(listName: string) {
