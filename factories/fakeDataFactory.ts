@@ -19,6 +19,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeListName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-list-test`;
+  }
+
   static createFakeFirstName() {
     return faker.person.firstName();
   }

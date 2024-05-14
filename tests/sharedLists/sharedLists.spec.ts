@@ -1,16 +1,43 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { EditSharedListPage } from '../../pageObjectModels/sharedLists/editSharedListPage';
 import { AnnotationType } from '../annotations';
 
-const test = base.extend({});
+type SharedListTestFixtures = {
+  adminHomePage: AdminHomePage;
+  editListPage: EditSharedListPage;
+};
+
+const test = base.extend<SharedListTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
+  editListPage: async ({ sysAdminPage }, use) => await use(new EditSharedListPage(sysAdminPage)),
+});
 
 test.describe('shared lists', () => {
-  test('Create a shared list via the create button in the header of the admin home page', async () => {
+  test('Create a shared list via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    editListPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-637',
     });
 
-    expect(true).toBeTruthy();
+    const listName = FakeDataFactory.createFakeListName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the shared list', async () => {
+      await adminHomePage.createListUsingHeaderCreateButton(listName);
+      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Verify the shared list was created', async () => {
+      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+    });
   });
 
   test('Create a shared list via the create button on the Lists tile on the admin home page', async () => {
