@@ -2,16 +2,19 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditSharedListPage } from '../../pageObjectModels/sharedLists/editSharedListPage';
+import { SharedListAdminPage } from '../../pageObjectModels/sharedLists/sharedListAdminPage';
 import { AnnotationType } from '../annotations';
 
 type SharedListTestFixtures = {
   adminHomePage: AdminHomePage;
   editListPage: EditSharedListPage;
+  sharedListAdminPage: SharedListAdminPage;
 };
 
 const test = base.extend<SharedListTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editListPage: async ({ sysAdminPage }, use) => await use(new EditSharedListPage(sysAdminPage)),
+  sharedListAdminPage: async ({ sysAdminPage }, use) => await use(new SharedListAdminPage(sysAdminPage)),
 });
 
 test.describe('shared lists', () => {
@@ -65,13 +68,29 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Create a shared list via the "Create List" button on the shared list home page', async () => {
+  test('Create a shared list via the "Create List" button on the shared list home page', async ({
+    sharedListAdminPage,
+    editListPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-639',
     });
 
-    expect(true).toBeTruthy();
+    const listName = FakeDataFactory.createFakeListName();
+
+    await test.step('Navigate to the shared list home page', async () => {
+      await sharedListAdminPage.goto();
+    });
+
+    await test.step('Create the shared list', async () => {
+      await sharedListAdminPage.createList(listName);
+      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Verify the shared list was created', async () => {
+      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+    });
   });
 
   test('Create a copy of a shared list via the create button in the header of the admin home page', async () => {
