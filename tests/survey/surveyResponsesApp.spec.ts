@@ -393,12 +393,22 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's app notes", async () => {
+  test("Update a survey responses app's app notes", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-733',
     });
 
-    expect(true).toBe(true);
+    const note = 'This is a note';
+
+    await test.step("Update the app's app notes", async () => {
+      await surveyResponsesAdminPage.generalTab.editNotesSettingLink.click();
+      await surveyResponsesAdminPage.generalTab.editNotesSettingsModal.notesEditor.fill(note);
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify app's app notes were updated correctly", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.notes).toHaveText(note);
+    });
   });
 });
