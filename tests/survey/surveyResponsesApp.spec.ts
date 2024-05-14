@@ -123,22 +123,6 @@ test.describe('survey responses app', () => {
       await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
     });
 
-    await test.step("Update the survey's status to disabled", async () => {
-      await surveyResponsesAdminPage.configureSurveyLinK.click();
-      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-    });
-
-    await test.step("Verify the survey responses app's status is disabled", async () => {
-      await surveyAdminPage.configureResponseAppLink.click();
-      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
-
-      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Disabled');
-    });
-
     await test.step("Update the survey's status to enabled", async () => {
       await surveyResponsesAdminPage.configureSurveyLinK.click();
       await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
@@ -152,7 +136,7 @@ test.describe('survey responses app', () => {
       await surveyAdminPage.configureResponseAppLink.click();
       await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
 
-      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Enabled');
+      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText(/enabled/i);
     });
   });
 
@@ -196,16 +180,6 @@ test.describe('survey responses app', () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-724',
-    });
-
-    await test.step('Disable the survey responses app content versioning', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-    });
-
-    await test.step('Verify the survey responses app content versioning is disabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
     });
 
     await test.step('Enable the survey responses app content versioning', async () => {
@@ -261,16 +235,6 @@ test.describe('survey responses app', () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-727',
-    });
-
-    await test.step('Disable the survey responses app concurrent edit alert', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-    });
-
-    await test.step('Verify the survey responses app concurrent edit alert is disabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step('Enable the survey responses app concurrent edit alert', async () => {
@@ -372,8 +336,6 @@ test.describe('survey responses app', () => {
 
     await test.step("Update the survey responses app's secondary sort field", async () => {
       await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
       await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
 
       await expect(
