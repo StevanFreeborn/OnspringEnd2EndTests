@@ -257,13 +257,31 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Enable a survey responses app's concurrent edit alert", async () => {
+  test("Enable a survey responses app's concurrent edit alert", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-727',
     });
 
-    expect(true).toBe(true);
+    await test.step('Disable the survey responses app concurrent edit alert', async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey responses app concurrent edit alert is disabled', async () => {
+      await expect(surveyResponsesAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+    });
+
+    await test.step('Enable the survey responses app concurrent edit alert', async () => {
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+    });
+
+    await test.step('Verify the survey responses app concurrent edit alert is enabled', async () => {
+      await expect(surveyResponsesAdminPage.generalTab.concurrentEditAlertStatus).toHaveText(/enabled/i);
+    });
   });
 
   test("Update a survey responses app's display link field", async () => {
