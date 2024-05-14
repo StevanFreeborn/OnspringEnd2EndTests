@@ -1,19 +1,11 @@
 import { Page } from '@playwright/test';
+import { AppDocumentsTab } from '../../componentObjectModels/tabs/appDocumentsTab';
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { AppMessagingTab } from '../../componentObjectModels/tabs/appMessagingTab';
 import { AppTriggerTab } from '../../componentObjectModels/tabs/appTriggersTab';
-import { TextField } from '../../models/textField';
 import { BASE_URL } from '../../playwright.config';
 import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
-import { AppDocumentsTab } from '../../componentObjectModels/tabs/appDocumentsTab';
-
-type GeocodeFields = {
-  address: TextField;
-  city: TextField;
-  state: TextField;
-  zip: TextField;
-};
 
 export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   readonly path: string;
@@ -51,22 +43,5 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
     const urlParts = url.split('/');
     const appId = urlParts[urlParts.length - 1];
     return parseInt(appId);
-  }
-
-  async enableGeocoding(geocodeFields: GeocodeFields) {
-    await this.layoutTabButton.click();
-
-    for (const field of Object.values(geocodeFields)) {
-      await this.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-    }
-
-    await this.generalTabButton.click();
-    await this.generalTab.editGeocodingSettingsLink.click();
-    await this.generalTab.editGeocodingSettingsModal.statusToggle.click();
-    await this.generalTab.editGeocodingSettingsModal.selectAddressField(geocodeFields.address.name);
-    await this.generalTab.editGeocodingSettingsModal.selectCityField(geocodeFields.city.name);
-    await this.generalTab.editGeocodingSettingsModal.selectStateField(geocodeFields.state.name);
-    await this.generalTab.editGeocodingSettingsModal.selectZipField(geocodeFields.zip.name);
-    await this.generalTab.editGeocodingSettingsModal.saveButton.click();
   }
 }
