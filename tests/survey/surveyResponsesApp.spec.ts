@@ -320,13 +320,22 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's display fields", async () => {
+  test("Update a survey responses app's display fields", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-730',
     });
 
-    expect(true).toBe(true);
+    await test.step("Update the survey responses app's display fields", async () => {
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey responses app's display fields were updated correctly", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
+      await expect(surveyResponsesAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
+    });
   });
 
   test("Update a survey responses app's primary sort field", async () => {
