@@ -338,13 +338,30 @@ test.describe('survey responses app', () => {
     });
   });
 
-  test("Update a survey responses app's primary sort field", async () => {
+  test("Update a survey responses app's primary sort field", async ({ surveyResponsesAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-731',
     });
 
-    expect(true).toBe(true);
+    await test.step("Update the survey responses app's primary sort field", async () => {
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+
+      await expect(
+        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect
+      ).toBeVisible();
+
+      await expect(surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
+        'Ascending'
+      );
+
+      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+    });
+
+    await test.step("Verify survey responses app's primary sort field was updated correctly", async () => {
+      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
+    });
   });
 
   test("Update a survey responses app's secondary sort field", async () => {
