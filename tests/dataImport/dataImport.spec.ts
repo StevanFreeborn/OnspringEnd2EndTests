@@ -423,6 +423,19 @@ test.describe('data import', () => {
     await test.step('Run the data import', async () => {
       await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
       await editDataImportPage.dataFileTab.addImportFile(importFilePath);
+
+      await editDataImportPage.dataMappingTabButton.click();
+
+      const mappedFields = importData.map(data => data.field.name);
+
+      for (const field of mappedFields) {
+        const fieldMapping = editDataImportPage.dataMappingTab.getFieldMapping(field);
+
+        const regex = new RegExp(field, 'i');
+        await expect(fieldMapping.appField).toHaveText(regex);
+        await expect(fieldMapping.mappedField).toHaveText(regex);
+      }
+
       await editDataImportPage.saveAndRun();
     });
 
