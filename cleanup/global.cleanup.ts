@@ -5,6 +5,7 @@ import { ContainersAdminPage } from '../pageObjectModels/containers/containersAd
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
 import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityAdminPage';
+import { SharedListAdminPage } from '../pageObjectModels/sharedLists/sharedListAdminPage';
 import { SurveysAdminPage } from '../pageObjectModels/surveys/surveysAdminPage';
 import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityAdminPage';
 
@@ -43,5 +44,9 @@ teardown.describe('cleanup', () => {
 
   teardown('cleanup:data-imports delete all data imports created as part of tests', async ({ sysAdminPage }) => {
     await new DataImportsAdminPage(sysAdminPage).deleteAllTestImports();
+  });
+
+  teardown('cleanup:lists delete all lists created as part of tests', async ({ sysAdminPage }) => {
+    await new SharedListAdminPage(sysAdminPage).deleteAllTestLists();
   });
 });
