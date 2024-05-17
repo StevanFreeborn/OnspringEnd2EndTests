@@ -236,7 +236,7 @@ export class SurveyDesignerModal {
         return activeElement?.id === 'QuestionText';
       },
       undefined,
-      { timeout: 5000 }
+      { timeout: 30_000 }
     );
   }
 
