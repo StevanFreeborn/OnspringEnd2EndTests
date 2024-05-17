@@ -19,6 +19,13 @@ const test = base.extend<SharedListTestFixtures>({
 });
 
 test.describe('shared lists', () => {
+  let listsToDelete: string[] = [];
+
+  test.afterEach(async ({ sharedListAdminPage }) => {
+    await sharedListAdminPage.deleteLists(listsToDelete);
+    listsToDelete = [];
+  });
+
   test('Create a shared list via the create button in the header of the admin home page', async ({
     adminHomePage,
     editListPage,
@@ -29,6 +36,7 @@ test.describe('shared lists', () => {
     });
 
     const listName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listName);
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
@@ -54,6 +62,7 @@ test.describe('shared lists', () => {
     });
 
     const listName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listName);
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
@@ -79,6 +88,7 @@ test.describe('shared lists', () => {
     });
 
     const listName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listName);
 
     await test.step('Navigate to the shared list home page', async () => {
       await sharedListAdminPage.goto();
@@ -105,6 +115,7 @@ test.describe('shared lists', () => {
 
     const listToCopyName = FakeDataFactory.createFakeListName();
     const listCopyName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
@@ -140,6 +151,7 @@ test.describe('shared lists', () => {
 
     const listToCopyName = FakeDataFactory.createFakeListName();
     const listCopyName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
@@ -175,6 +187,7 @@ test.describe('shared lists', () => {
 
     const listToCopyName = FakeDataFactory.createFakeListName();
     const listCopyName = FakeDataFactory.createFakeListName();
+    listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the shared list home page', async () => {
       await sharedListAdminPage.goto();
@@ -214,6 +227,8 @@ test.describe('shared lists', () => {
       status: expectedStatus,
     });
 
+    listsToDelete.push(list.name);
+
     await test.step('Navigate to the shared list home page', async () => {
       await sharedListAdminPage.goto();
     });
@@ -236,7 +251,7 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Delete a shared list', async ({ sharedListAdminPage }) => {
+  test('Delete a shared list', async ({ sharedListAdminPage, editListPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-644',
@@ -252,6 +267,7 @@ test.describe('shared lists', () => {
 
     await test.step('Create the list to delete', async () => {
       await sharedListAdminPage.createList(listToDeleteName);
+      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
     });
 
     await test.step('Navigate back to the shared list home page', async () => {
