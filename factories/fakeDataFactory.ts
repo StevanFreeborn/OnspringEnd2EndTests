@@ -20,6 +20,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeTextMessageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-text-message-test`;
+  }
+
   static createFakeListName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_LIST_NAME}`;

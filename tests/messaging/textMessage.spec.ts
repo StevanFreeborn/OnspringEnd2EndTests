@@ -1,16 +1,45 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { EditTextMessagePage } from '../../pageObjectModels/messaging/editTextMessagePage';
 import { AnnotationType } from '../annotations';
 
-const test = base.extend({});
+type TextMessageTestFixtures = {
+  app: App;
+  appAdminPage: AppAdminPage;
+  editTextPage: EditTextMessagePage;
+};
+
+const test = base.extend<TextMessageTestFixtures>({
+  app: app,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+  editTextPage: async ({ sysAdminPage }, use) => await use(new EditTextMessagePage(sysAdminPage)),
+});
 
 test.describe('text message', () => {
-  test("Add Text Message to an app from an app's Messaging tab", async ({}) => {
+  test("Add Text Message to an app from an app's Messaging tab", async ({ app, appAdminPage, editTextPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-219',
     });
 
-    expect(true).toBeTruthy();
+    const textMessageName = FakeDataFactory.createFakeTextMessageName();
+
+    await test.step("Navigate to the app's messaging tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Add a new text message', async () => {
+      await appAdminPage.messagingTab.createTextMessage(textMessageName);
+      await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+    });
+
+    await test.step('Verify the text message was added', async () => {
+      await expect(editTextPage.generalTab.nameInput).toHaveValue(textMessageName);
+    });
   });
 
   test("Create a copy of a Text Message on an app from an app's Messaging tab", async ({}) => {
