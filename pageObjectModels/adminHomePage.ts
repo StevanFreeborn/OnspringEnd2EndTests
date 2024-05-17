@@ -97,6 +97,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createListCopyUsingListTileButton(listToCopy: string, listName: string) {
+    await this.listTileLink.hover();
+    await this.listTileCreateButton.waitFor();
+    await this.listTileCreateButton.click();
+
+    await this.createListDialog.copyFromRadioButton.waitFor();
+    await this.createListDialog.copyFromRadioButton.click();
+    await this.createListDialog.copyFromDropdown.click();
+    await this.createListDialog.getListToCopy(listToCopy).click();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
+  }
+
   async createListCopyUsingHeaderCreateButton(listToCopy: string, listName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();

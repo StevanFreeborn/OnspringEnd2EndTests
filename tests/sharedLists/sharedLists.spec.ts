@@ -102,7 +102,7 @@ test.describe('shared lists', () => {
       description: 'Test-640',
     });
 
-    const getListToCopyName = FakeDataFactory.createFakeListName();
+    const listToCopyName = FakeDataFactory.createFakeListName();
     const listCopyName = FakeDataFactory.createFakeListName();
 
     await test.step('Navigate to the admin home page', async () => {
@@ -110,7 +110,7 @@ test.describe('shared lists', () => {
     });
 
     await test.step('Create list to copy', async () => {
-      await adminHomePage.createListUsingHeaderCreateButton(getListToCopyName);
+      await adminHomePage.createListUsingHeaderCreateButton(listToCopyName);
       await adminHomePage.page.waitForURL(editListPage.pathRegex);
     });
 
@@ -119,7 +119,7 @@ test.describe('shared lists', () => {
     });
 
     await test.step('Create a copy of the shared list', async () => {
-      await adminHomePage.createListCopyUsingHeaderCreateButton(getListToCopyName, listCopyName);
+      await adminHomePage.createListCopyUsingHeaderCreateButton(listToCopyName, listCopyName);
       await adminHomePage.page.waitForURL(editListPage.pathRegex);
     });
 
@@ -128,13 +128,39 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Create a copy of a shared list via the create button on the Lists tile on the admin home page', async () => {
+  test('Create a copy of a shared list via the create button on the Lists tile on the admin home page', async ({
+    adminHomePage,
+    editListPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-641',
     });
 
-    expect(true).toBeTruthy();
+    const listToCopyName = FakeDataFactory.createFakeListName();
+    const listCopyName = FakeDataFactory.createFakeListName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create list to copy', async () => {
+      await adminHomePage.createListUsingListTileButton(listToCopyName);
+      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the shared list', async () => {
+      await adminHomePage.createListCopyUsingListTileButton(listToCopyName, listCopyName);
+      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Verify the shared list was created', async () => {
+      await expect(editListPage.generalTab.nameInput).toHaveValue(listCopyName);
+    });
   });
 
   test('Create a copy of a shared list via the "Create List" button on the shared list home page', async () => {
