@@ -13,6 +13,7 @@ export class AdminNav {
   readonly containerCreateMenuOption: Locator;
   readonly importConfigCreateMenuOption: Locator;
   readonly emailBodyCreateMenuOption: Locator;
+  readonly listCreateMenuOption: Locator;
 
   private getMenuOption(menuOptionText: string) {
     return this.adminCreateMenu.getByText(menuOptionText);
@@ -31,5 +32,6 @@ export class AdminNav {
     this.containerCreateMenuOption = this.getMenuOption('Container');
     this.importConfigCreateMenuOption = this.getMenuOption('Import Configuration');
     this.emailBodyCreateMenuOption = this.getMenuOption('Email Body');
+    this.listCreateMenuOption = this.getMenuOption('List');
   }
 }

@@ -6,6 +6,7 @@ import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/creat
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
+import { CreateListDialog } from './../componentObjectModels/dialogs/createListDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
 export class AdminHomePage extends BaseAdminPage {
@@ -37,6 +38,10 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createImportConfigDialog: CreateImportConfigDialog;
 
   readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
+
+  readonly listTileLink: Locator;
+  readonly listTileCreateButton: Locator;
+  readonly createListDialog: CreateListDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -82,10 +87,60 @@ export class AdminHomePage extends BaseAdminPage {
     this.createImportConfigDialog = new CreateImportConfigDialog(page);
 
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
+
+    this.listTileLink = this.getTileLink(3);
+    this.listTileCreateButton = this.getTileCreateButton('Lists');
+    this.createListDialog = new CreateListDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createListCopyUsingListTileButton(listToCopy: string, listName: string) {
+    await this.listTileLink.hover();
+    await this.listTileCreateButton.waitFor();
+    await this.listTileCreateButton.click();
+
+    await this.createListDialog.copyFromRadioButton.waitFor();
+    await this.createListDialog.copyFromRadioButton.click();
+    await this.createListDialog.copyFromDropdown.click();
+    await this.createListDialog.getListToCopy(listToCopy).click();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
+  }
+
+  async createListCopyUsingHeaderCreateButton(listToCopy: string, listName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.listCreateMenuOption.click();
+
+    await this.createListDialog.copyFromRadioButton.waitFor();
+    await this.createListDialog.copyFromRadioButton.click();
+    await this.createListDialog.copyFromDropdown.click();
+    await this.createListDialog.getListToCopy(listToCopy).click();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
+  }
+
+  async createListUsingListTileButton(listName: string) {
+    await this.listTileLink.hover();
+    await this.listTileCreateButton.waitFor();
+    await this.listTileCreateButton.click();
+
+    await this.createListDialog.nameInput.waitFor();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
+  }
+
+  async createListUsingHeaderCreateButton(listName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.listCreateMenuOption.click();
+
+    await this.createListDialog.nameInput.waitFor();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
   }
 
   async createImportCopyUsingIntegrationsTileButton(importToCopy: string, importName: string) {

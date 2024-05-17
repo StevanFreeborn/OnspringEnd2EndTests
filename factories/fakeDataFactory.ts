@@ -11,12 +11,18 @@ export const TEST_CONTAINER_NAME = 'container-test';
 export const TEST_DATA_IMPORT_NAME = 'data-import-test';
 export const TEST_EMAIL_BODY_NAME = 'email-body-test';
 export const DEFAULT_EMAIL_SENDING_DOMAIN = env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech';
+export const TEST_LIST_NAME = 'list-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeListName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_LIST_NAME}`;
   }
 
   static createFakeFirstName() {
