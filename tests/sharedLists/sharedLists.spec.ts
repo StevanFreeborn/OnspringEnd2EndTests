@@ -163,13 +163,39 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Create a copy of a shared list via the "Create List" button on the shared list home page', async () => {
+  test('Create a copy of a shared list via the "Create List" button on the shared list home page', async ({
+    sharedListAdminPage,
+    editListPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-642',
     });
 
-    expect(true).toBeTruthy();
+    const listToCopyName = FakeDataFactory.createFakeListName();
+    const listCopyName = FakeDataFactory.createFakeListName();
+
+    await test.step('Navigate to the shared list home page', async () => {
+      await sharedListAdminPage.goto();
+    });
+
+    await test.step('Create list to copy', async () => {
+      await sharedListAdminPage.createList(listToCopyName);
+      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the shared list home page', async () => {
+      await sharedListAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the shared list', async () => {
+      await sharedListAdminPage.createListCopy(listToCopyName, listCopyName);
+      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Verify the shared list was created', async () => {
+      await expect(editListPage.generalTab.nameInput).toHaveValue(listCopyName);
+    });
   });
 
   test('Update a shared list', async () => {

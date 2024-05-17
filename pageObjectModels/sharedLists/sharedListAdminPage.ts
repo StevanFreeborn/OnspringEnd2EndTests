@@ -23,6 +23,17 @@ export class SharedListAdminPage extends BaseAdminPage {
     await this.page.goto('/Admin/SharedList');
   }
 
+  async createListCopy(listToCopy: string, listName: string) {
+    await this.createListButton.click();
+
+    await this.createListDialog.copyFromRadioButton.waitFor();
+    await this.createListDialog.copyFromRadioButton.click();
+    await this.createListDialog.copyFromDropdown.click();
+    await this.createListDialog.getListToCopy(listToCopy).click();
+    await this.createListDialog.nameInput.fill(listName);
+    await this.createListDialog.saveButton.click();
+  }
+
   async createList(listName: string) {
     await this.createListButton.click();
 
