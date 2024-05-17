@@ -1,5 +1,6 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { SharedList } from '../../models/sharedList';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditSharedListPage } from '../../pageObjectModels/sharedLists/editSharedListPage';
 import { SharedListAdminPage } from '../../pageObjectModels/sharedLists/sharedListAdminPage';
@@ -198,13 +199,41 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Update a shared list', async () => {
+  test('Update a shared list', async ({ sharedListAdminPage, editListPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-643',
     });
 
-    expect(true).toBeTruthy();
+    const expectedStatus = false;
+    const expectedDescription = 'Test description';
+
+    const list = new SharedList({
+      name: FakeDataFactory.createFakeListName(),
+      description: expectedDescription,
+      status: expectedStatus,
+    });
+
+    await test.step('Navigate to the shared list home page', async () => {
+      await sharedListAdminPage.goto();
+    });
+
+    await test.step('Create a shared list', async () => {
+      await sharedListAdminPage.createList(list.name);
+      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+    });
+
+    await test.step('Update the shared list', async () => {
+      await editListPage.updateList(list);
+      await editListPage.save();
+    });
+
+    await test.step('Verify the shared list was updated', async () => {
+      await editListPage.page.reload();
+      await expect(editListPage.generalTab.nameInput).toHaveValue(list.name);
+      await expect(editListPage.generalTab.descriptionEditor).toHaveText(expectedDescription);
+      await expect(editListPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', expectedStatus.toString());
+    });
   });
 
   test('Delete a shared list', async ({ sharedListAdminPage }) => {
