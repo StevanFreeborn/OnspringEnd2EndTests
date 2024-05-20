@@ -5,6 +5,7 @@ import { App } from '../../models/app';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditTextMessagePage } from '../../pageObjectModels/messaging/editTextMessagePage';
+import { TextMessageAdminPage } from '../../pageObjectModels/messaging/textMessageAdminPage';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
 
@@ -13,6 +14,7 @@ type TextMessageTestFixtures = {
   appAdminPage: AppAdminPage;
   editTextPage: EditTextMessagePage;
   adminHomePage: AdminHomePage;
+  textMessageAdminPage: TextMessageAdminPage;
 };
 
 const test = base.extend<TextMessageTestFixtures>({
@@ -20,6 +22,7 @@ const test = base.extend<TextMessageTestFixtures>({
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   editTextPage: async ({ sysAdminPage }, use) => await use(new EditTextMessagePage(sysAdminPage)),
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
+  textMessageAdminPage: async ({ sysAdminPage }, use) => await use(new TextMessageAdminPage(sysAdminPage)),
 });
 
 test.describe(
@@ -165,13 +168,37 @@ test.describe(
       });
     });
 
-    test('Add Text Message to an app from the Create Text Message button on the text message page', async ({}) => {
+    test('Add Text Message to an app from the Create Text Message button on the text message page', async ({
+      app,
+      textMessageAdminPage,
+      editTextPage,
+      appAdminPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-223',
       });
 
-      expect(true).toBeTruthy();
+      const textMessageName = FakeDataFactory.createFakeTextMessageName();
+
+      await test.step('Navigate to the text message admin page', async () => {
+        await textMessageAdminPage.goto();
+      });
+
+      await test.step('Create a new text message', async () => {
+        await textMessageAdminPage.createTextMessage(app.name, textMessageName);
+        await textMessageAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Verify the text message was added', async () => {
+        await expect(editTextPage.generalTab.nameInput).toHaveValue(textMessageName);
+
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+
+        const row = appAdminPage.messagingTab.textMessageGrid.getByRole('row', { name: textMessageName });
+        await expect(row).toBeVisible();
+      });
     });
 
     test('Create a copy of a Text Message on an app from the Create Text Message button on the text message page', async ({}) => {
