@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { Subscription } from '../../models/emailBody';
+import { EmailSubscription } from '../../models/emailBody';
 import { DualPaneSelector } from './../controls/dualPaneSelector';
 import { TreeviewSelector } from './../controls/treeviewSelector';
 
@@ -30,7 +30,7 @@ export class EmailRecipientsTab {
     );
   }
 
-  async selectSubscription(subscription: Subscription) {
+  async selectSubscription(subscription: EmailSubscription) {
     await this.subscriptionSelect.click();
     await this.subscriptionSelect.page().getByRole('option', { name: subscription }).click();
   }

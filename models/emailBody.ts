@@ -1,65 +1,37 @@
-import { EmailReminder } from './emailReminder';
-import { RuleLogic } from './ruleLogic';
+import { Message, MessageObject } from './message';
 
-type Status = 'Active' | 'Inactive';
-export type Subscription = 'Required' | 'Optional';
-export type Priority = 'Normal' | 'High' | 'Low';
+export type EmailSubscription = 'Required' | 'Optional';
+export type EmailPriority = 'Normal' | 'High' | 'Low';
 export type SendOnSaveOption = 'Always' | 'Only When Record Added' | 'Never (Reminders Only)';
 
-type EmailBodyObject = {
-  id?: number;
-  name: string;
-  appName: string;
-  status: Status;
+type EmailBodyObject = MessageObject & {
   subject: string;
   body: string;
   fromName: string;
   fromAddress: string;
-  description?: string;
   template?: string;
   allowDownloads?: boolean;
   recordLinkText?: string;
-  recipientsBasedOnFields?: string[];
-  specificGroups?: string[];
-  specificUsers?: string[];
   emailAddressesInTextField?: string;
   specificExternalUsers?: string[];
   optInCertification?: boolean;
-  subscription?: Subscription;
-  priority?: Priority;
-  sendOnSave?: SendOnSaveOption;
-  enableReminders?: boolean;
-  reminderDateField?: string;
-  reminders?: EmailReminder[];
-  sendLogic?: RuleLogic;
+  subscription?: EmailSubscription;
+  priority?: EmailPriority;
 };
 
-export class EmailBody {
-  id: number;
-  readonly name: string;
-  readonly appName: string;
-  readonly status: Status;
+export class EmailBody extends Message {
   readonly subject: string;
   readonly body: string;
   readonly fromName: string;
   readonly fromAddress: string;
-  readonly description: string;
   readonly template: string;
   readonly recordLinkText: string;
   readonly allowDownloads: boolean;
-  readonly recipientsBasedOnFields: string[];
-  readonly specificGroups: string[];
-  readonly specificUsers: string[];
   readonly emailAddressesInTextField: string;
   readonly specificExternalUsers: string[];
   readonly optInCertification: boolean;
-  readonly subscription: Subscription;
-  readonly priority: Priority;
-  readonly sendOnSave: SendOnSaveOption;
-  readonly enableReminders: boolean;
-  readonly reminderDateField: string;
-  readonly reminders: EmailReminder[];
-  readonly sendLogic?: RuleLogic;
+  readonly subscription: EmailSubscription;
+  readonly priority: EmailPriority;
 
   constructor({
     id = 0,
@@ -69,7 +41,7 @@ export class EmailBody {
     body,
     fromName,
     fromAddress,
-    status = 'Active',
+    status = true,
     description = '',
     template = 'None',
     recordLinkText = '',
@@ -88,39 +60,33 @@ export class EmailBody {
     reminders = [],
     sendLogic,
   }: EmailBodyObject) {
-    this.id = id;
-    this.name = name;
-    this.appName = appName;
-    this.status = status;
+    super({
+      id,
+      appName,
+      name,
+      status,
+      description,
+      recipientsBasedOnFields,
+      specificGroups,
+      specificUsers,
+      sendOnSave,
+      enableReminders,
+      reminderDateField,
+      reminders,
+      sendLogic,
+    });
     this.subject = subject;
     this.body = body;
     this.fromName = fromName;
     this.fromAddress = fromAddress;
-    this.description = description;
     this.template = template;
     this.allowDownloads = allowDownloads;
     this.recordLinkText = recordLinkText;
-    this.recipientsBasedOnFields = recipientsBasedOnFields;
-    this.specificGroups = specificGroups;
-    this.specificUsers = specificUsers;
     this.emailAddressesInTextField = emailAddressesInTextField;
     this.specificExternalUsers = specificExternalUsers;
     this.optInCertification = optInCertification;
     this.subscription = subscription;
     this.priority = priority;
-    this.sendOnSave = sendOnSave;
-    this.enableReminders = enableReminders;
-    this.reminderDateField = reminderDateField;
-    this.reminders = reminders;
-    this.sendLogic = sendLogic;
-
-    if (this.name === '') {
-      throw new Error('Email body name cannot be empty');
-    }
-
-    if (this.appName === '') {
-      throw new Error('App name cannot be empty');
-    }
 
     if (this.subject === '') {
       throw new Error('Subject cannot be empty');

@@ -18,7 +18,7 @@ export enum Timing {
   After = 'After',
 }
 
-export abstract class EmailReminder {
+export abstract class MessageReminder {
   readonly repetition: Repetition;
 
   protected constructor({ repetition }: { repetition: Repetition }) {
@@ -26,7 +26,7 @@ export abstract class EmailReminder {
   }
 }
 
-export class OnceOnDateReminder extends EmailReminder {
+export class OnceOnDateReminder extends MessageReminder {
   readonly dateFieldName: string;
 
   constructor({ dateFieldName }: { dateFieldName: string }) {
@@ -37,7 +37,7 @@ export class OnceOnDateReminder extends EmailReminder {
   }
 }
 
-export class OnceReminder extends EmailReminder {
+export class OnceReminder extends MessageReminder {
   readonly quantity: number;
   readonly increment: Increment;
   readonly timing: Timing;
@@ -52,7 +52,7 @@ export class OnceReminder extends EmailReminder {
   }
 }
 
-export class EveryReminder extends EmailReminder {
+export class EveryReminder extends MessageReminder {
   readonly quantity: number;
   readonly increment: Increment;
   readonly timing: Timing;

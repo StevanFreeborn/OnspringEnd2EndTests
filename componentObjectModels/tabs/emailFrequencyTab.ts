@@ -1,13 +1,13 @@
 import { Locator, Page } from '@playwright/test';
 import { SendOnSaveOption } from '../../models/emailBody';
 import {
-  EmailReminder,
   EveryReminder,
   Increment,
+  MessageReminder,
   OnceOnDateReminder,
   OnceReminder,
   Repetition,
-} from '../../models/emailReminder';
+} from '../../models/messageReminder';
 
 export class EmailFrequencyTab {
   private readonly sendOnSaveSelect: Locator;
@@ -49,7 +49,7 @@ export class EmailFrequencyTab {
     await reminderDetail.page().getByRole('option', { name: increment }).click();
   }
 
-  private async addReminder(reminder: EmailReminder, clickAddReminder = true) {
+  private async addReminder(reminder: MessageReminder, clickAddReminder = true) {
     const reminderLocator = this.remindersContainer.locator('.reminder').last();
     const reminderDetails = reminderLocator.locator('.reminder-details');
 
@@ -78,7 +78,7 @@ export class EmailFrequencyTab {
     throw new Error('Invalid reminder type');
   }
 
-  async addReminders(reminders: EmailReminder[]) {
+  async addReminders(reminders: MessageReminder[]) {
     const [firstReminder, ...rest] = reminders;
 
     await this.addReminder(firstReminder, false);

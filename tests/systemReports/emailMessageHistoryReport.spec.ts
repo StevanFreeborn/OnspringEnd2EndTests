@@ -111,7 +111,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: `${emailBodyName} - Test Subject`,
       body: 'This is a test email body',
       fromName: 'Automation Test',
@@ -173,7 +173,7 @@ test.describe('email message history report', () => {
         new EmailBody({
           name: emailBodyName,
           appName: app.name,
-          status: 'Active',
+          status: true,
           subject: `${i} ${emailBodyName} - Test Subject`,
           body: 'This is a test email body',
           fromName: 'Automation Test',
@@ -257,7 +257,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: testEmailSubject,
       body: 'This is a test email body',
       fromName: 'Automation Test',
@@ -362,7 +362,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: `${emailBodyName} - Test Subject`,
       body: 'This is a test email body',
       fromName: 'Automation Test',
@@ -424,7 +424,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: `${emailBodyName} - Test Subject`,
       body: 'This is a test email body',
       fromName: 'Automation Test',
@@ -497,7 +497,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: `${emailBodyName} - Test Subject`,
       body: 'This is a test email body',
       fromName: 'Automation Test',
@@ -561,7 +561,7 @@ test.describe('email message history report', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: app.name,
-      status: 'Active',
+      status: true,
       subject: `${emailBodyName} - Test Subject`,
       body: 'This is a test email body',
       fromName: 'Automation Test',

@@ -257,7 +257,7 @@ test.describe('email body', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: targetApp.name,
-      status: 'Active',
+      status: true,
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
@@ -378,7 +378,7 @@ test.describe('email body', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: targetApp.name,
-      status: 'Active',
+      status: true,
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
