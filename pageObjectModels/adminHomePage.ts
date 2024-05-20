@@ -102,6 +102,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createTextCopyUsingHeaderCreateButton(appName: string, textToCopyName: string, textCopyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.textCreateMenuOption.click();
+
+    await this.createTextDialog.selectApp(appName);
+    await this.createTextDialog.copyFromRadioButton.click();
+    await this.createTextDialog.copyFromDropdown.click();
+    await this.createTextDialog.getTextToCopy(textToCopyName).click();
+    await this.createTextDialog.nameInput.fill(textCopyName);
+    await this.createTextDialog.saveButton.click();
+  }
+
   async createTextUsingHeaderCreateButton(appName: string, textMessageName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();
