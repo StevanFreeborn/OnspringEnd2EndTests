@@ -30,6 +30,15 @@ export class AppMessagingTab {
     await this.createEmailBodyDialog.saveButton.click();
   }
 
+  async createEmailBodyCopy(emailToCopy: string, emailBodyName: string) {
+    await this.addEmailBodyLink.click();
+    await this.createEmailBodyDialog.copyFromRadioButton.click();
+    await this.createEmailBodyDialog.copyFromDropdown.click();
+    await this.createEmailBodyDialog.getEmailBodyToCopy(emailToCopy).click();
+    await this.createEmailBodyDialog.nameInput.fill(emailBodyName);
+    await this.createEmailBodyDialog.saveButton.click();
+  }
+
   async createTextMessage(textMessageName: string) {
     await this.addTextMessageLink.click();
     await this.createTextMessageDialog.nameInput.fill(textMessageName);
