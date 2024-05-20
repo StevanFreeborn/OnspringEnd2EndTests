@@ -31,4 +31,16 @@ export class TextMessageAdminPage extends BaseAdminPage {
     await this.createTextDialog.selectApp(appName);
     await this.createTextDialog.saveButton.click();
   }
+
+  async createTextMessageCopy(appName: string, textToCopy: string, textMessageName: string) {
+    await this.createTextMessageButton.click();
+
+    await this.createTextDialog.copyFromRadioButton.waitFor();
+    await this.createTextDialog.selectApp(appName);
+    await this.createTextDialog.copyFromRadioButton.click();
+    await this.createTextDialog.copyFromDropdown.click();
+    await this.createTextDialog.getTextToCopy(textToCopy).click();
+    await this.createTextDialog.nameInput.fill(textMessageName);
+    await this.createTextDialog.saveButton.click();
+  }
 }
