@@ -44,4 +44,13 @@ export class AppMessagingTab {
     await this.createTextMessageDialog.nameInput.fill(textMessageName);
     await this.createTextMessageDialog.saveButton.click();
   }
+
+  async createTextMessageCopy(textToCopy: string, textMessageName: string) {
+    await this.addTextMessageLink.click();
+    await this.createTextMessageDialog.copyFromRadioButton.click();
+    await this.createTextMessageDialog.copyFromDropdown.click();
+    await this.createTextMessageDialog.getTextToCopy(textToCopy).click();
+    await this.createTextMessageDialog.nameInput.fill(textMessageName);
+    await this.createTextMessageDialog.saveButton.click();
+  }
 }

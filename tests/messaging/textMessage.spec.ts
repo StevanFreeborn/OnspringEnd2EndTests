@@ -42,13 +42,42 @@ test.describe('text message', () => {
     });
   });
 
-  test("Create a copy of a Text Message on an app from an app's Messaging tab", async ({}) => {
+  test("Create a copy of a Text Message on an app from an app's Messaging tab", async ({
+    app,
+    appAdminPage,
+    editTextPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-220',
     });
 
-    expect(true).toBeTruthy();
+    const textToCopyName = FakeDataFactory.createFakeTextMessageName();
+    const textCopyName = FakeDataFactory.createFakeTextMessageName();
+
+    await test.step('Navigate to the app messaging tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create a new text message', async () => {
+      await appAdminPage.messagingTab.createTextMessage(textToCopyName);
+      await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the app messaging tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create a copy of the text message', async () => {
+      await appAdminPage.messagingTab.createTextMessageCopy(textToCopyName, textCopyName);
+      await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+    });
+
+    await test.step('Verify the text message copy was added', async () => {
+      await expect(editTextPage.generalTab.nameInput).toHaveValue(textCopyName);
+    });
   });
 
   test('Add Text Message to an app from the Create button in the admin header', async ({}) => {
