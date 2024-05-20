@@ -6,6 +6,7 @@ import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/creat
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
+import { CreateTextMessageDialogForApp } from '../componentObjectModels/tabs/createTextMessageDialog';
 import { CreateListDialog } from './../componentObjectModels/dialogs/createListDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
@@ -42,6 +43,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly listTileLink: Locator;
   readonly listTileCreateButton: Locator;
   readonly createListDialog: CreateListDialog;
+
+  readonly createTextDialog: CreateTextMessageDialogForApp;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -91,10 +94,22 @@ export class AdminHomePage extends BaseAdminPage {
     this.listTileLink = this.getTileLink(3);
     this.listTileCreateButton = this.getTileCreateButton('Lists');
     this.createListDialog = new CreateListDialog(page);
+
+    this.createTextDialog = new CreateTextMessageDialogForApp(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createTextUsingHeaderCreateButton(appName: string, textMessageName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.textCreateMenuOption.click();
+
+    await this.createTextDialog.selectApp(appName);
+    await this.createTextDialog.nameInput.fill(textMessageName);
+    await this.createTextDialog.saveButton.click();
   }
 
   async createListCopyUsingListTileButton(listToCopy: string, listName: string) {

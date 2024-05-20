@@ -1,3 +1,3 @@
-export enum AnnotationType {
-  TestId = 'Test Id',
-}
+export const AnnotationType = {
+  TestId: 'Test Id',
+} as const;
