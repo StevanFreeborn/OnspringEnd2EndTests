@@ -285,6 +285,20 @@ test.describe(
         await appAdminPage.page.waitForURL(editTextPage.pathRegex);
       });
 
+      await test.step('Navigate back to the app messaging tab', async () => {
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+      });
+
+      await test.step('Open the text message configurations', async () => {
+        const textMessageRow = appAdminPage.messagingTab.textMessageGrid.getByRole('row', { name: textMessage.name });
+
+        await textMessageRow.hover();
+        await textMessageRow.getByTitle('Edit Text Message').click();
+
+        await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
       await test.step('Update the text message configurations', async () => {
         await editTextPage.updateTextMessage(textMessage);
         await editTextPage.saveButton.click();
