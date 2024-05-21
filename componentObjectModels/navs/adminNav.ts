@@ -15,6 +15,7 @@ export class AdminNav {
   readonly emailBodyCreateMenuOption: Locator;
   readonly listCreateMenuOption: Locator;
   readonly textCreateMenuOption: Locator;
+  readonly sendingNumberCreateMenuOption: Locator;
 
   private getMenuOption(menuOptionText: string) {
     return this.adminCreateMenu.getByText(menuOptionText);
@@ -35,5 +36,6 @@ export class AdminNav {
     this.emailBodyCreateMenuOption = this.getMenuOption('Email Body');
     this.listCreateMenuOption = this.getMenuOption('List');
     this.textCreateMenuOption = this.getMenuOption('Text Message');
+    this.sendingNumberCreateMenuOption = this.getMenuOption('Sending Number');
   }
 }

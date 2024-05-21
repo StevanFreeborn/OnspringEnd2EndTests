@@ -9,7 +9,7 @@ export abstract class BaseMessageGeneralTab {
   constructor(page: Page) {
     this.nameInput = page.getByLabel('Name', { exact: true });
     this.descriptionEditor = page.locator('.content-area.mce-content-body:visible');
-    this.statusSwitch = page.getByRole('switch', { name: 'Status' });
+    this.statusSwitch = page.getByRole('switch');
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
   }
 

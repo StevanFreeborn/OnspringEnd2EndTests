@@ -4,6 +4,7 @@ import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
 import { ContainersAdminPage } from '../pageObjectModels/containers/containersAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
+import { SendingNumberAdminPage } from '../pageObjectModels/messaging/sendingNumberAdminPage';
 import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityAdminPage';
 import { SharedListAdminPage } from '../pageObjectModels/sharedLists/sharedListAdminPage';
 import { SurveysAdminPage } from '../pageObjectModels/surveys/surveysAdminPage';
@@ -48,5 +49,9 @@ teardown.describe('cleanup', () => {
 
   teardown('cleanup:lists delete all lists created as part of tests', async ({ sysAdminPage }) => {
     await new SharedListAdminPage(sysAdminPage).deleteAllTestLists();
+  });
+
+  teardown('cleanup:sendingNumbers delete all sending numbers created as part of tests', async ({ sysAdminPage }) => {
+    await new SendingNumberAdminPage(sysAdminPage).deleteAllTestNumbers();
   });
 });

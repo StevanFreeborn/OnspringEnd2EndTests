@@ -1,7 +1,10 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
+import { smsSendingNumber } from '../../fixtures/messaging.fixtures';
 import { App } from '../../models/app';
+import { SendingNumber } from '../../models/sendingNumber';
+import { TextMessage } from '../../models/textMessage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditTextMessagePage } from '../../pageObjectModels/messaging/editTextMessagePage';
@@ -11,6 +14,7 @@ import { Tags } from '../tags';
 
 type TextMessageTestFixtures = {
   app: App;
+  sendingNumber: SendingNumber;
   appAdminPage: AppAdminPage;
   editTextPage: EditTextMessagePage;
   adminHomePage: AdminHomePage;
@@ -19,6 +23,7 @@ type TextMessageTestFixtures = {
 
 const test = base.extend<TextMessageTestFixtures>({
   app: app,
+  sendingNumber: smsSendingNumber,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   editTextPage: async ({ sysAdminPage }, use) => await use(new EditTextMessagePage(sysAdminPage)),
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
@@ -31,6 +36,11 @@ test.describe(
     tag: [Tags.NotFedRAMP],
   },
   () => {
+    test.beforeEach(({ environment }) => {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(environment.isFedspring(), 'This feature is not applicable to the FEDSPRING environment');
+    });
+
     test("Add Text Message to an app from an app's Messaging tab", async ({ app, appAdminPage, editTextPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -244,13 +254,51 @@ test.describe(
       });
     });
 
-    test("Update a Text Message's configurations on an app from an app's Messaging tab", async ({}) => {
+    test("Update a Text Message's configurations on an app from an app's Messaging tab", async ({
+      app,
+      sendingNumber,
+      appAdminPage,
+      editTextPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-225',
       });
 
-      expect(true).toBeTruthy();
+      const textMessage = new TextMessage({
+        appName: app.name,
+        name: FakeDataFactory.createFakeTextMessageName(),
+        message: 'Hello, world!',
+        status: false,
+        description: 'This is a test text message',
+        fromNumber: sendingNumber.smsSendingNumber,
+        recipientsBasedOnFields: ['Created By'],
+      });
+
+      await test.step('Navigate to the app messaging tab', async () => {
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+      });
+
+      await test.step('Create a new text message', async () => {
+        await appAdminPage.messagingTab.createTextMessage(textMessage.name);
+        await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Update the text message configurations', async () => {
+        await editTextPage.updateTextMessage(textMessage);
+        await editTextPage.saveButton.click();
+      });
+
+      await test.step('Verify the text message configurations were updated', async () => {
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+
+        const row = appAdminPage.messagingTab.textMessageGrid.getByRole('row', { name: textMessage.name });
+        await expect(row).toBeVisible();
+        await expect(row).toHaveText(new RegExp(textMessage.name, 'i'));
+        await expect(row).toHaveText(/disabled/i);
+      });
     });
 
     test("Update a Text Message's configurations on an app from the Text Message page", async ({}) => {

@@ -2,7 +2,6 @@ import { Message, MessageObject } from './message';
 
 export type EmailSubscription = 'Required' | 'Optional';
 export type EmailPriority = 'Normal' | 'High' | 'Low';
-export type SendOnSaveOption = 'Always' | 'Only When Record Added' | 'Never (Reminders Only)';
 
 type EmailBodyObject = MessageObject & {
   subject: string;

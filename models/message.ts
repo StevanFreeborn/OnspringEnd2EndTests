@@ -6,7 +6,7 @@ export type MessageObject = {
   id?: number;
   appName: string;
   name: string;
-  status: boolean;
+  status?: boolean;
   description?: string;
   recipientsBasedOnFields?: string[];
   specificGroups?: string[];
@@ -37,7 +37,7 @@ export abstract class Message {
     id = 0,
     appName,
     name,
-    status,
+    status = true,
     description = '',
     recipientsBasedOnFields = [],
     specificGroups = [],
