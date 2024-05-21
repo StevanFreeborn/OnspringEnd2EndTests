@@ -372,22 +372,72 @@ test.describe(
       });
     });
 
-    test("Delete a Text Message from an app's Messaging tab", async ({}) => {
+    test("Delete a Text Message from an app's Messaging tab", async ({ app, appAdminPage, editTextPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-227',
       });
 
-      expect(true).toBeTruthy();
+      const textMessageName = FakeDataFactory.createFakeTextMessageName();
+      const textMessageRow = appAdminPage.messagingTab.textMessageGrid.getByRole('row', { name: textMessageName });
+
+      await test.step('Navigate to the app messaging tab', async () => {
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+      });
+
+      await test.step('Create a new text message', async () => {
+        await appAdminPage.messagingTab.createTextMessage(textMessageName);
+        await appAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Delete the text message', async () => {
+        await appAdminPage.goto(app.id);
+        await appAdminPage.messagingTabButton.click();
+
+        await textMessageRow.hover();
+        await textMessageRow.getByTitle('Delete Text Message').click();
+
+        await appAdminPage.messagingTab.deleteEmailBodyDialog.deleteButton.click();
+        await appAdminPage.messagingTab.deleteEmailBodyDialog.waitForDialogToBeDismissed();
+      });
+
+      await test.step('Verify the text message was deleted', async () => {
+        await expect(textMessageRow).not.toBeAttached();
+      });
     });
 
-    test('Delete a Text Message from the Text Message page', async ({}) => {
+    test('Delete a Text Message from the Text Message page', async ({ app, textMessageAdminPage, editTextPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-228',
       });
 
-      expect(true).toBeTruthy();
+      const textMessageName = FakeDataFactory.createFakeTextMessageName();
+      const textMessageRow = textMessageAdminPage.textMessageGrid.getByRole('row', { name: textMessageName });
+
+      await test.step('Navigate to the text message admin page', async () => {
+        await textMessageAdminPage.goto();
+      });
+
+      await test.step('Create a new text message', async () => {
+        await textMessageAdminPage.createTextMessage(app.name, textMessageName);
+        await textMessageAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Delete the text message', async () => {
+        await textMessageAdminPage.goto();
+
+        await textMessageRow.hover();
+        await textMessageRow.getByTitle('Delete Text Message').click();
+
+        await textMessageAdminPage.deleteTextMessageDialog.deleteButton.click();
+        await textMessageAdminPage.deleteTextMessageDialog.waitForDialogToBeDismissed();
+      });
+
+      await test.step('Verify the text message was deleted', async () => {
+        await expect(textMessageRow).not.toBeAttached();
+      });
     });
   }
 );
