@@ -53,7 +53,7 @@ export class SendingNumberAdminPage extends BaseAdminPage {
       const rowElement = await deleteNumberRow.elementHandle();
 
       try {
-        await this.deleteNumberDialog.numberSelector.click({ timeout: 3000 });
+        await this.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
         await this.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
         // eslint-disable-next-line no-empty
       } catch (error) {}
@@ -86,7 +86,7 @@ export class SendingNumberAdminPage extends BaseAdminPage {
       await numberRow.getByTitle('Delete SMS Sending Number').click();
 
       try {
-        await this.deleteNumberDialog.numberSelector.click({ timeout: 3000 });
+        await this.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
         await this.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
         // eslint-disable-next-line no-empty
       } catch (error) {}

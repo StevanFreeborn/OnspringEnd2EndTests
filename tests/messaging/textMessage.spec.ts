@@ -301,7 +301,7 @@ test.describe(
 
       await test.step('Update the text message configurations', async () => {
         await editTextPage.updateTextMessage(textMessage);
-        await editTextPage.saveButton.click();
+        await editTextPage.save();
       });
 
       await test.step('Verify the text message configurations were updated', async () => {
@@ -315,13 +315,61 @@ test.describe(
       });
     });
 
-    test("Update a Text Message's configurations on an app from the Text Message page", async ({}) => {
+    test("Update a Text Message's configurations on an app from the Text Message page", async ({
+      app,
+      sendingNumber,
+      textMessageAdminPage,
+      editTextPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-226',
       });
 
-      expect(true).toBeTruthy();
+      const textMessage = new TextMessage({
+        appName: app.name,
+        name: FakeDataFactory.createFakeTextMessageName(),
+        message: 'Hello, world!',
+        status: false,
+        description: 'This is a test text message',
+        fromNumber: sendingNumber.smsSendingNumber,
+        recipientsBasedOnFields: ['Created By'],
+      });
+
+      await test.step('Navigate to the text message admin page', async () => {
+        await textMessageAdminPage.goto();
+      });
+
+      await test.step('Create a new text message', async () => {
+        await textMessageAdminPage.createTextMessage(textMessage.appName, textMessage.name);
+        await textMessageAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Navigate back to the text message admin page', async () => {
+        await textMessageAdminPage.goto();
+      });
+
+      await test.step('Open the text message configurations', async () => {
+        const textMessageRow = textMessageAdminPage.textMessageGrid.getByRole('row', { name: textMessage.name });
+
+        await textMessageRow.hover();
+        await textMessageRow.getByTitle('Edit Text Message').click();
+
+        await textMessageAdminPage.page.waitForURL(editTextPage.pathRegex);
+      });
+
+      await test.step('Update the text message configurations', async () => {
+        await editTextPage.updateTextMessage(textMessage);
+        await editTextPage.save();
+      });
+
+      await test.step('Verify the text message configurations were updated', async () => {
+        await textMessageAdminPage.goto();
+        const row = textMessageAdminPage.textMessageGrid.getByRole('row', { name: textMessage.name });
+        await expect(row).toBeVisible();
+        await expect(row).toHaveText(new RegExp(textMessage.name, 'i'));
+        await expect(row).toHaveText(/disabled/i);
+      });
     });
 
     test("Delete a Text Message from an app's Messaging tab", async ({}) => {
