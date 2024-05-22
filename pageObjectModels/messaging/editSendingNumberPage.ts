@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
-import { BaseAdminPage } from '../baseAdminPage';
+import { BaseSendingNumberPage } from './baseSendingNumberPage';
 
-export class EditSendingNumberPage extends BaseAdminPage {
+export class EditSendingNumberPage extends BaseSendingNumberPage {
   readonly pathRegex: RegExp;
 
   constructor(page: Page) {
