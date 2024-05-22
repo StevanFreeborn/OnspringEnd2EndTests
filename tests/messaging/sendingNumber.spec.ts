@@ -22,8 +22,6 @@ const test = base.extend<SendingNumberTestFixtures>({
 });
 
 test.describe('sms sending number', () => {
-  test.describe.configure({ mode: 'default' });
-
   let sendingNumbersToDelete: string[] = [];
 
   test.afterEach(async ({ sendingNumberAdminPage }) => {
