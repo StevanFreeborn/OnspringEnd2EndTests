@@ -1,27 +1,16 @@
 import { Locator, Page } from '@playwright/test';
-import { Subscription } from '../../models/emailBody';
-import { DualPaneSelector } from './../controls/dualPaneSelector';
+import { EmailSubscription } from '../../models/emailBody';
 import { TreeviewSelector } from './../controls/treeviewSelector';
+import { MessageRecipientsTab } from './messageRecipientsTab';
 
-export class EmailRecipientsTab {
-  private readonly page: Page;
-  readonly basedOnFieldValuesSelector: DualPaneSelector;
-  readonly specificGroupsSelector: DualPaneSelector;
-  readonly specificUsersSelector: DualPaneSelector;
+export class EmailRecipientsTab extends MessageRecipientsTab {
   readonly subscriptionSelect: Locator;
   readonly emailTextField: TreeviewSelector;
   readonly specificExternalUsersTextBox: Locator;
   readonly optInCertCheckbox: Locator;
 
-  private getSelectorLocator(label: string) {
-    return this.page.locator(`.label:has-text("${label}") + .data .onx-selector`);
-  }
-
   constructor(page: Page) {
-    this.page = page;
-    this.basedOnFieldValuesSelector = new DualPaneSelector(this.getSelectorLocator('Based on Values in these Fields'));
-    this.specificGroupsSelector = new DualPaneSelector(this.getSelectorLocator('Specific Groups'));
-    this.specificUsersSelector = new DualPaneSelector(this.getSelectorLocator('Specific Users'));
+    super(page);
     this.subscriptionSelect = page.getByRole('listbox', { name: 'Subscription' });
     this.emailTextField = new TreeviewSelector(this.getSelectorLocator('Email Addresses in this Text Field'));
     this.specificExternalUsersTextBox = page.getByRole('textbox', { name: 'Specific External Users' });
@@ -30,7 +19,7 @@ export class EmailRecipientsTab {
     );
   }
 
-  async selectSubscription(subscription: Subscription) {
+  async selectSubscription(subscription: EmailSubscription) {
     await this.subscriptionSelect.click();
     await this.subscriptionSelect.page().getByRole('option', { name: subscription }).click();
   }

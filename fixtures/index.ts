@@ -10,6 +10,7 @@ import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
 import { SheetParser } from '../services/sheetParser';
+import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
 import { TestFile, jpgFile, txtFile } from './file.fixtures';
@@ -24,7 +25,13 @@ import {
 import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
 
+type Environment = {
+  getEnvironment: () => typeof env.TEST_ENV;
+  isFedspring: () => boolean;
+};
+
 type Fixtures = {
+  environment: Environment;
   sysAdminPage: Page;
   sysAdminEmail: EmailService;
   pdfParser: PdfParser;
@@ -50,6 +57,10 @@ type QuestionTestFixtures = {
 };
 
 export const test = base.extend<Fixtures>({
+  environment: {
+    getEnvironment: () => env.TEST_ENV,
+    isFedspring: () => env.TEST_ENV === 'FEDSPRING_IST',
+  },
   sysAdminPage: sysAdminPage,
   sysAdminEmail: sysAdminEmailService,
   pdfParser: pdfParser,

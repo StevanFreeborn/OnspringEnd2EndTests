@@ -1,10 +1,8 @@
 import { Page } from '@playwright/test';
-import { RuleControlWithAddNew } from '../controls/ruleControl';
+import { MessageRulesTab } from './messageRulesTab';
 
-export class EmailRulesTab {
-  sendLogic: RuleControlWithAddNew;
-
+export class EmailRulesTab extends MessageRulesTab {
   constructor(page: Page) {
-    this.sendLogic = new RuleControlWithAddNew(page.locator('.label:has-text("Send Logic") + .data .rule-config'));
+    super(page);
   }
 }

@@ -13,6 +13,7 @@
     "datetimepicker",
     "domcontentloaded",
     "endtests",
+    "fedramp",
     "FEDSPRING",
     "filechooser",
     "FULLNAME",
@@ -40,42 +41,5 @@
     "VPRIOR"
   ],
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "githubIssues.issueBranchTitle": "${user}/issue-${issueNumber}-${sanitizedIssueTitle}",
-  "playwright.workspaceSettings": {
-    "configs": [
-      {
-        "relativeConfigFile": "playwright.config.ts",
-        "selected": true,
-        "enabled": true,
-        "projects": [
-          {
-            "name": "chrome",
-            "enabled": true
-          },
-          {
-            "name": "edge",
-            "enabled": false
-          },
-          {
-            "name": "cleanup",
-            "enabled": false
-          },
-          {
-            "name": "setup",
-            "enabled": true
-          },
-          {
-            "name": "teardown",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "relativeConfigFile": "playwright.service.config.ts",
-        "selected": false,
-        "enabled": false,
-        "projects": []
-      }
-    ]
-  }
+  "githubIssues.issueBranchTitle": "${user}/issue-${issueNumber}-${sanitizedIssueTitle}"
 }

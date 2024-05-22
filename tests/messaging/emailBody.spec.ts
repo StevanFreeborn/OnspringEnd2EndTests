@@ -98,12 +98,7 @@ test.describe('email body', () => {
     });
 
     await test.step('Create a copy of the email body', async () => {
-      await appAdminPage.messagingTab.addEmailBodyLink.click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.copyFromRadioButton.click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.copyFromDropdown.click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.getEmailBodyToCopy(emailBodyName).click();
-      await appAdminPage.messagingTab.createEmailBodyDialog.nameInput.fill(emailBodyCopyName);
-      await appAdminPage.messagingTab.createEmailBodyDialog.saveButton.click();
+      await appAdminPage.messagingTab.createEmailBodyCopy(emailBodyName, emailBodyCopyName);
       await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
     });
 
@@ -262,7 +257,7 @@ test.describe('email body', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: targetApp.name,
-      status: 'Active',
+      status: true,
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
@@ -383,7 +378,7 @@ test.describe('email body', () => {
     const emailBody = new EmailBody({
       name: emailBodyName,
       appName: targetApp.name,
-      status: 'Active',
+      status: true,
       subject: `Test Subject - ${emailBodyName}`,
       body: bodyTemplate + ' {:Record Id}',
       fromName: 'Automation Test',
