@@ -12,12 +12,23 @@ export const TEST_DATA_IMPORT_NAME = 'data-import-test';
 export const TEST_EMAIL_BODY_NAME = 'email-body-test';
 export const DEFAULT_EMAIL_SENDING_DOMAIN = env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech';
 export const TEST_LIST_NAME = 'list-test';
+export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeSendingNumberName(): string {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_SENDING_NUMBER_NAME}`;
+  }
+
+  static createFakeTextMessageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-text-message-test`;
   }
 
   static createFakeListName() {

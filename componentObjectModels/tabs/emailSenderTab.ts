@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { Priority } from '../../models/emailBody';
+import { EmailPriority } from '../../models/emailBody';
 
 export class EmailSenderTab {
   readonly fromNameInput: Locator;
@@ -12,7 +12,7 @@ export class EmailSenderTab {
     this.prioritySelect = page.getByRole('listbox', { name: 'Priority' });
   }
 
-  async selectPriority(priority: Priority) {
+  async selectPriority(priority: EmailPriority) {
     await this.prioritySelect.click();
     await this.prioritySelect.page().getByRole('option', { name: priority }).click();
   }
