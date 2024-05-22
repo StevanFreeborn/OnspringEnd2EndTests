@@ -1,27 +1,17 @@
 import { Locator, Page } from '@playwright/test';
 import { RequestNumberDialog } from '../../componentObjectModels/dialogs/requestNumberDialog';
 import { SendingNumber } from '../../models/sendingNumber';
-import { BaseAdminPage } from '../baseAdminPage';
+import { BaseSendingNumberPage } from './baseSendingNumberPage';
 
-export class AddSendingNumberPage extends BaseAdminPage {
+export class AddSendingNumberPage extends BaseSendingNumberPage {
   readonly path: string;
-  readonly saveButton: Locator;
-  readonly nameInput: Locator;
-  readonly descriptionEditor: Locator;
-  readonly defaultCheckbox: Locator;
   readonly requestPhoneNumberLink: Locator;
-  readonly smsSendingNumber: Locator;
   readonly requestNumberDialog: RequestNumberDialog;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/TextSendingNumber/Add';
-    this.saveButton = page.getByRole('link', { name: 'Save Changes' });
-    this.nameInput = page.getByLabel('Name');
-    this.descriptionEditor = page.locator('.content-area.mce-content-body');
-    this.defaultCheckbox = page.getByRole('checkbox');
     this.requestPhoneNumberLink = page.getByRole('link', { name: 'Request Phone Number' });
-    this.smsSendingNumber = page.locator('#form-selected-number');
     this.requestNumberDialog = new RequestNumberDialog(page);
   }
 
