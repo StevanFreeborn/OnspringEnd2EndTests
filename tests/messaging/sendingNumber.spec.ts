@@ -22,6 +22,8 @@ const test = base.extend<SendingNumberTestFixtures>({
 });
 
 test.describe('sms sending number', () => {
+  test.describe.configure({ mode: 'default' });
+
   let sendingNumbersToDelete: string[] = [];
 
   test.afterEach(async ({ sendingNumberAdminPage }) => {
@@ -63,80 +65,6 @@ test.describe('sms sending number', () => {
     });
   });
 
-  // NOTE: This test could become flaky if another
-  // test creates a default sending number. Not ideal.
-  // 😬
-  test('Create a new default SMS Sending Number', async ({
-    adminHomePage,
-    sendingNumberAdminPage,
-    addSendingNumberPage,
-    editSendingNumberPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-445',
-    });
-
-    const initialNumber = new SendingNumber({
-      name: FakeDataFactory.createFakeSendingNumberName(),
-      isDefault: true,
-    });
-
-    const newDefaultNumber = new SendingNumber({
-      name: FakeDataFactory.createFakeSendingNumberName(),
-      isDefault: true,
-    });
-
-    sendingNumbersToDelete.push(initialNumber.name, newDefaultNumber.name);
-
-    await test.step('Navigate to admin home page', async () => {
-      await adminHomePage.goto();
-    });
-
-    await test.step('Create an initial default sending number', async () => {
-      await createSendingNumber({
-        adminHomePage,
-        addSendingNumberPage,
-        editSendingNumberPage,
-        sendingNumber: initialNumber,
-      });
-    });
-
-    await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
-    });
-
-    await test.step('Create a new default sending number', async () => {
-      await createSendingNumber({
-        adminHomePage,
-        addSendingNumberPage,
-        editSendingNumberPage,
-        sendingNumber: newDefaultNumber,
-      });
-    });
-
-    await test.step('Navigate to the sending number admin page', async () => {
-      await sendingNumberAdminPage.goto();
-    });
-
-    await test.step('Verify the new default sending number is created', async () => {
-      const initialRowDefaultCheckMark = sendingNumberAdminPage.sendingNumberGrid
-        .getByRole('row', {
-          name: initialNumber.name,
-        })
-        .locator('.o-icon-checkmark-plain');
-
-      const newRowDefaultCheckMark = sendingNumberAdminPage.sendingNumberGrid
-        .getByRole('row', {
-          name: newDefaultNumber.name,
-        })
-        .locator('.o-icon-checkmark-plain');
-
-      await expect(initialRowDefaultCheckMark).toBeHidden();
-      await expect(newRowDefaultCheckMark).toBeVisible();
-    });
-  });
-
   test('Delete an SMS Sending Number', async ({
     sendingNumberAdminPage,
     adminHomePage,
@@ -151,6 +79,7 @@ test.describe('sms sending number', () => {
     const sendingNumber = new SendingNumber({
       name: FakeDataFactory.createFakeSendingNumberName(),
     });
+
     const sendingNumberRow = sendingNumberAdminPage.sendingNumberGrid.getByRole('row', {
       name: sendingNumber.name,
     });

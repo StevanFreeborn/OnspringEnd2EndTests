@@ -4,7 +4,6 @@ import { SendingNumber } from '../models/sendingNumber';
 import { AdminHomePage } from '../pageObjectModels/adminHomePage';
 import { AddSendingNumberPage } from '../pageObjectModels/messaging/addSendingNumberPage';
 import { EditSendingNumberPage } from '../pageObjectModels/messaging/editSendingNumberPage';
-import { SendingNumberAdminPage } from '../pageObjectModels/messaging/sendingNumberAdminPage';
 
 export async function smsSendingNumber(
   { sysAdminPage }: { sysAdminPage: Page },
@@ -12,7 +11,6 @@ export async function smsSendingNumber(
 ) {
   const sendingNumber = await createSendingNumber(sysAdminPage);
   await use(sendingNumber);
-  await new SendingNumberAdminPage(sysAdminPage).deleteSendingNumbers([sendingNumber.name]);
 }
 
 async function createSendingNumber(sysAdminPage: Page) {
