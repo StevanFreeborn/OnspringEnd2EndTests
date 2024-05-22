@@ -63,6 +63,9 @@ test.describe('sms sending number', () => {
     });
   });
 
+  // NOTE: This test could become flaky if another
+  // test creates a default sending number. Not ideal.
+  // 😬
   test('Create a new default SMS Sending Number', async ({
     adminHomePage,
     sendingNumberAdminPage,
