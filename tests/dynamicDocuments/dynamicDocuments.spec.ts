@@ -349,13 +349,72 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test("Update a dynamic document's configurations from the Documents admin page", async ({}) => {
+  test("Update a dynamic document's configurations from the Documents admin page", async ({
+    app,
+    documentAdminPage,
+    editDocumentPage,
+    dynamicDocumentService,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-246',
     });
 
-    expect(true).toBeTruthy();
+    const template = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: 'This was generated for record: {:Record Id}',
+            }),
+          ],
+        },
+      ],
+    });
+
+    const templatePath = await dynamicDocumentService.createTemplate(template);
+
+    const document = new DynamicDocument({
+      name: FakeDataFactory.createFakeDocumentName(),
+      templatePath: templatePath,
+      status: true,
+    });
+
+    const updatedName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create the dynamic document', async () => {
+      await documentAdminPage.createDocument(app.name, document.name);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Update the dynamic document', async () => {
+      const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: document.name });
+
+      await documentRow.hover();
+      await documentRow.getByTitle('Edit Document').click();
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+
+      document.name = updatedName;
+      await editDocumentPage.fillOutForm(document);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Verify the dynamic document was updated', async () => {
+      await documentAdminPage.goto();
+
+      const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: updatedName });
+
+      await expect(documentRow).toBeVisible();
+      await expect(documentRow).toHaveText(/enabled/i);
+    });
   });
 
   test("Delete a dynamic document on an app from an app's Documents tab", async ({}) => {
