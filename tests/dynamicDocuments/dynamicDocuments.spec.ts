@@ -121,7 +121,7 @@ test.describe('Dynamic Documents', () => {
     });
 
     await test.step('Create the dynamic document', async () => {
-      await appAdminPage.documentsTab.addDocument(documentName);
+      await appAdminPage.documentsTab.createDocument(documentName);
       await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
     });
 
@@ -157,13 +157,42 @@ test.describe('Dynamic Documents', () => {
     expect(true).toBeTruthy();
   });
 
-  test("Create a copy of a dynamic document via the Add Document button on an app's Documents tab", async () => {
+  test("Create a copy of a dynamic document via the Add Document button on an app's Documents tab", async ({
+    app,
+    appAdminPage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-867',
     });
 
-    expect(true).toBeTruthy();
+    const documentToCopy = FakeDataFactory.createFakeDocumentName();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step("Navigate to the app's Documents tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create the dynamic document to copy', async () => {
+      await appAdminPage.documentsTab.createDocument(documentToCopy);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the app Documents tab', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create a copy of the dynamic document', async () => {
+      await appAdminPage.documentsTab.createDocumentCopy(documentToCopy, documentName);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
   test("Update a dynamic document's configurations on an app from an app's Documents tab", async ({}) => {
