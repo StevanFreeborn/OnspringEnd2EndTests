@@ -47,6 +47,8 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createTextDialog: CreateTextMessageDialogForApp;
 
+  readonly documentTileLink: Locator;
+  readonly documentTileCreateButton: Locator;
   readonly createDocumentDialog: CreateDynamicDocumentDialogForApp;
 
   private getTileLink(tilePosition: number) {
@@ -100,11 +102,23 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.createTextDialog = new CreateTextMessageDialogForApp(page);
 
+    this.documentTileLink = this.getTileLink(9);
+    this.documentTileCreateButton = this.getTileCreateButton('Documents');
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createDynamicDocumentUsingDocumentTileButton(appName: string, documentName: string) {
+    await this.documentTileLink.hover();
+    await this.documentTileCreateButton.waitFor();
+    await this.documentTileCreateButton.click();
+
+    await this.createDocumentDialog.selectApp(appName);
+    await this.createDocumentDialog.nameInput.fill(documentName);
+    await this.createDocumentDialog.saveButton.click();
   }
 
   async createDynamicDocumentUsingHeaderCreateButton(appName: string, documentName: string) {

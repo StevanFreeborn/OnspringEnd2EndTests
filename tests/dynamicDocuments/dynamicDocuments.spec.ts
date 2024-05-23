@@ -45,13 +45,30 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test('Create a dynamic document via the create button on the Documents tile on the admin home page', async ({}) => {
+  test('Create a dynamic document via the create button on the Documents tile on the admin home page', async ({
+    app,
+    adminHomePage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-240',
     });
 
-    expect(true).toBeTruthy();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the dynamic document', async () => {
+      await adminHomePage.createDynamicDocumentUsingDocumentTileButton(app.name, documentName);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
   test('Create a dynamic document via the "Create Document" button on the Documents admin page', async ({}) => {
