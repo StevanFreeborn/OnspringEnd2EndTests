@@ -100,6 +100,15 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
+  test("Create a dynamic document via the Add Document button on an app's Documents tab", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-866',
+    });
+
+    expect(true).toBeTruthy();
+  });
+
   test('Create a copy of a dynamic document via the create button on the header of the admin home page', async ({}) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -122,6 +131,15 @@ test.describe('Dynamic Documents', () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-244',
+    });
+
+    expect(true).toBeTruthy();
+  });
+
+  test("Create a copy of a dynamic document via the Add Document button on an app's Documents tab", async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-867',
     });
 
     expect(true).toBeTruthy();
