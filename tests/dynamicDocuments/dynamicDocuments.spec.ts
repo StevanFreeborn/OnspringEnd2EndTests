@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DocumentAdminPage } from '../../pageObjectModels/documents/documentAdminPage';
 import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
 import { AnnotationType } from '../annotations';
@@ -12,6 +13,7 @@ type DynamicDocumentTestFixtures = {
   adminHomePage: AdminHomePage;
   editDocumentPage: EditDocumentPage;
   documentAdminPage: DocumentAdminPage;
+  appAdminPage: AppAdminPage;
 };
 
 const test = base.extend<DynamicDocumentTestFixtures>({
@@ -19,6 +21,7 @@ const test = base.extend<DynamicDocumentTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editDocumentPage: async ({ sysAdminPage }, use) => await use(new EditDocumentPage(sysAdminPage)),
   documentAdminPage: async ({ sysAdminPage }, use) => await use(new DocumentAdminPage(sysAdminPage)),
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
 });
 
 test.describe('Dynamic Documents', () => {
@@ -100,13 +103,31 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test("Create a dynamic document via the Add Document button on an app's Documents tab", async () => {
+  test("Create a dynamic document via the Add Document button on an app's Documents tab", async ({
+    app,
+    appAdminPage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-866',
     });
 
-    expect(true).toBeTruthy();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step("Navigate to the app's Documents tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create the dynamic document', async () => {
+      await appAdminPage.documentsTab.addDocument(documentName);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
   test('Create a copy of a dynamic document via the create button on the header of the admin home page', async ({}) => {
