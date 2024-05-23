@@ -3,7 +3,7 @@ import { DynamicDocument } from '../../models/dynamicDocument';
 
 export class DocumentInformationTab {
   private readonly page: Page;
-  private readonly documentNameInput: Locator;
+  readonly documentNameInput: Locator;
   private readonly statusSwitch: Locator;
   private readonly statusToggle: Locator;
   private readonly addNewFileLink: Locator;

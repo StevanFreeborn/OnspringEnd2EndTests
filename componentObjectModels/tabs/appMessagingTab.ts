@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateEmailBodyDialog } from '../dialogs/createEmailBodyDialog';
+import { CreateTextMessageDialog } from '../dialogs/createTextMessageDialog';
 import { DeleteEmailBodyDialog } from '../dialogs/deleteEmailBodyDialog';
-import { CreateTextMessageDialog } from './createTextMessageDialog';
 
 export class AppMessagingTab {
   readonly addEmailBodyLink: Locator;

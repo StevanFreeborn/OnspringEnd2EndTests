@@ -1,18 +1,48 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
 import { AnnotationType } from '../annotations';
 
-type DynamicDocumentTestFixtures = {};
+type DynamicDocumentTestFixtures = {
+  app: App;
+  adminHomePage: AdminHomePage;
+  editDocumentPage: EditDocumentPage;
+};
 
-const test = base.extend<DynamicDocumentTestFixtures>({});
+const test = base.extend<DynamicDocumentTestFixtures>({
+  app: app,
+  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
+  editDocumentPage: async ({ sysAdminPage }, use) => await use(new EditDocumentPage(sysAdminPage)),
+});
 
 test.describe('Dynamic Documents', () => {
-  test('Create a dynamic document via the create button on the header of the admin home page', async ({}) => {
+  test('Create a dynamic document via the create button on the header of the admin home page', async ({
+    app,
+    adminHomePage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-239',
     });
 
-    expect(true).toBeTruthy();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the dynamic document', async () => {
+      await adminHomePage.createDynamicDocumentUsingHeaderCreateButton(app.name, documentName);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
   test('Create a dynamic document via the create button on the Documents tile on the admin home page', async ({}) => {

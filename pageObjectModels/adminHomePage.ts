@@ -1,12 +1,13 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
+import { CreateTextMessageDialogForApp } from '../componentObjectModels/dialogs/createTextMessageDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
-import { CreateTextMessageDialogForApp } from '../componentObjectModels/tabs/createTextMessageDialog';
 import { CreateListDialog } from './../componentObjectModels/dialogs/createListDialog';
 import { BaseAdminPage } from './baseAdminPage';
 
@@ -45,6 +46,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createListDialog: CreateListDialog;
 
   readonly createTextDialog: CreateTextMessageDialogForApp;
+
+  readonly createDocumentDialog: CreateDynamicDocumentDialogForApp;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -96,10 +99,22 @@ export class AdminHomePage extends BaseAdminPage {
     this.createListDialog = new CreateListDialog(page);
 
     this.createTextDialog = new CreateTextMessageDialogForApp(page);
+
+    this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createDynamicDocumentUsingHeaderCreateButton(appName: string, documentName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dynamicDocumentCreateMenuOption.click();
+
+    await this.createDocumentDialog.selectApp(appName);
+    await this.createDocumentDialog.nameInput.fill(documentName);
+    await this.createDocumentDialog.saveButton.click();
   }
 
   async createTextCopyUsingHeaderCreateButton(appName: string, textToCopyName: string, textCopyName: string) {

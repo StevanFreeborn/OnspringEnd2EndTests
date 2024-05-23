@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateTextMessageDialogForApp } from '../../componentObjectModels/dialogs/createTextMessageDialog';
 import { DeleteTextMessageDialog } from '../../componentObjectModels/dialogs/deleteTextMessageDialog';
-import { CreateTextMessageDialogForApp } from '../../componentObjectModels/tabs/createTextMessageDialog';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class TextMessageAdminPage extends BaseAdminPage {

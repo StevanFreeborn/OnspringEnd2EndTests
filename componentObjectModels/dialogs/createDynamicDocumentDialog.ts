@@ -1,17 +1,17 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseCreateOrAddDialogWithSaveButton } from '../dialogs/baseCreateOrAddDialog';
+import { BaseCreateOrAddDialogWithSaveButton } from './baseCreateOrAddDialog';
 
-export class CreateTextMessageDialog extends BaseCreateOrAddDialogWithSaveButton {
+export class CreateDynamicDocumentDialog extends BaseCreateOrAddDialogWithSaveButton {
   constructor(page: Page) {
     super(page);
   }
 
-  getTextToCopy(textName: string) {
-    return this.getItemToCopy(textName);
+  getDocumentToCopy(documentName: string) {
+    return this.getItemToCopy(documentName);
   }
 }
 
-export class CreateTextMessageDialogForApp extends CreateTextMessageDialog {
+export class CreateDynamicDocumentDialogForApp extends CreateDynamicDocumentDialog {
   private readonly appSelect: Locator;
 
   constructor(page: Page) {
