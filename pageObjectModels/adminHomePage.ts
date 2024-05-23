@@ -111,6 +111,23 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createDynamicDocumentCopyUsingDocumentTileButton(
+    appName: string,
+    documentToCopy: string,
+    documentName: string
+  ) {
+    await this.documentTileLink.hover();
+    await this.documentTileCreateButton.waitFor();
+    await this.documentTileCreateButton.click();
+
+    await this.createDocumentDialog.selectApp(appName);
+    await this.createDocumentDialog.copyFromRadioButton.click();
+    await this.createDocumentDialog.copyFromDropdown.click();
+    await this.createDocumentDialog.getDocumentToCopy(documentToCopy).click();
+    await this.createDocumentDialog.nameInput.fill(documentName);
+    await this.createDocumentDialog.saveButton.click();
+  }
+
   async createDynamicDocumentUsingDocumentTileButton(appName: string, documentName: string) {
     await this.documentTileLink.hover();
     await this.documentTileCreateButton.waitFor();
@@ -118,6 +135,23 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createDocumentDialog.selectApp(appName);
     await this.createDocumentDialog.nameInput.fill(documentName);
+    await this.createDocumentDialog.saveButton.click();
+  }
+
+  async createDynamicDocumentCopyUsingHeaderCreateButton(
+    appName: string,
+    documentToCopyName: string,
+    documentCopyName: string
+  ) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dynamicDocumentCreateMenuOption.click();
+
+    await this.createDocumentDialog.selectApp(appName);
+    await this.createDocumentDialog.copyFromRadioButton.click();
+    await this.createDocumentDialog.copyFromDropdown.click();
+    await this.createDocumentDialog.getDocumentToCopy(documentToCopyName).click();
+    await this.createDocumentDialog.nameInput.fill(documentCopyName);
     await this.createDocumentDialog.saveButton.click();
   }
 

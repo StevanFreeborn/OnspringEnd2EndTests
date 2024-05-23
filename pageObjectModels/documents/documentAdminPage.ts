@@ -26,4 +26,14 @@ export class DocumentAdminPage extends BaseAdminPage {
     await this.createDocumentDialog.nameInput.fill(documentName);
     await this.createDocumentDialog.saveButton.click();
   }
+
+  async createDocumentCopy(appName: string, documentToCopy: string, documentName: string) {
+    await this.createDocumentButton.click();
+    await this.createDocumentDialog.selectApp(appName);
+    await this.createDocumentDialog.copyFromRadioButton.click();
+    await this.createDocumentDialog.copyFromDropdown.click();
+    await this.createDocumentDialog.getDocumentToCopy(documentToCopy).click();
+    await this.createDocumentDialog.nameInput.fill(documentName);
+    await this.createDocumentDialog.saveButton.click();
+  }
 }

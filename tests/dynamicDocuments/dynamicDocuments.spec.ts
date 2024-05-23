@@ -130,31 +130,112 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test('Create a copy of a dynamic document via the create button on the header of the admin home page', async ({}) => {
+  test('Create a copy of a dynamic document via the create button on the header of the admin home page', async ({
+    app,
+    adminHomePage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-242',
     });
 
-    expect(true).toBeTruthy();
+    const documentToCopy = FakeDataFactory.createFakeDocumentName();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the dynamic document to copy', async () => {
+      await adminHomePage.createDynamicDocumentUsingHeaderCreateButton(app.name, documentToCopy);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the dynamic document', async () => {
+      await adminHomePage.createDynamicDocumentCopyUsingHeaderCreateButton(app.name, documentToCopy, documentName);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
-  test('Create a copy of a dynamic document via the create button on the Documents tile on the admin home page', async ({}) => {
+  test('Create a copy of a dynamic document via the create button on the Documents tile on the admin home page', async ({
+    app,
+    adminHomePage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-243',
     });
 
-    expect(true).toBeTruthy();
+    const documentToCopy = FakeDataFactory.createFakeDocumentName();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the dynamic document to copy', async () => {
+      await adminHomePage.createDynamicDocumentUsingDocumentTileButton(app.name, documentToCopy);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the dynamic document', async () => {
+      await adminHomePage.createDynamicDocumentCopyUsingDocumentTileButton(app.name, documentToCopy, documentName);
+      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
-  test('Create a copy of a dynamic document via the "Create Document" button on the Documents admin page', async ({}) => {
+  test('Create a copy of a dynamic document via the "Create Document" button on the Documents admin page', async ({
+    app,
+    documentAdminPage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-244',
     });
 
-    expect(true).toBeTruthy();
+    const documentToCopy = FakeDataFactory.createFakeDocumentName();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+
+    await test.step('Navigate to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create the dynamic document to copy', async () => {
+      await documentAdminPage.createDocument(app.name, documentToCopy);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the dynamic document', async () => {
+      await documentAdminPage.createDocumentCopy(app.name, documentToCopy, documentName);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Verify the dynamic document was created', async () => {
+      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+    });
   });
 
   test("Create a copy of a dynamic document via the Add Document button on an app's Documents tab", async ({
