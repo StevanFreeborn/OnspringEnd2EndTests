@@ -18,7 +18,7 @@ export class DocumentInformationTab {
     this.saveFilePath = /\/Admin\/Document\/SaveDocumentFiles/;
   }
 
-  private async updateStatus(status: boolean) {
+  async updateStatus(status: boolean) {
     const checked = await this.statusSwitch.getAttribute('aria-checked');
     const expected = status ? 'true' : 'false';
 
