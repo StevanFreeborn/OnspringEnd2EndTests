@@ -228,7 +228,7 @@ test.describe('content record', () => {
 
     await test.step('Copy the content record', async () => {
       await editContentPage.actionMenuButton.click();
-      await editContentPage.actionMenuButton.copyRecordLink.click();
+      await editContentPage.actionMenu.copyRecordLink.click();
       await editContentPage.page.waitForURL(copyContentPage.pathRegex);
 
       await copyContentPage.saveRecordButton.click();
@@ -543,7 +543,7 @@ test.describe('content record', () => {
 
     await test.step('Delete the content record', async () => {
       await editContentPage.actionMenuButton.click();
-      await editContentPage.actionMenuButton.deleteRecordLink.click();
+      await editContentPage.actionMenu.deleteRecordLink.click();
 
       const backToOriginResponse = editContentPage.page.waitForResponse(/BackToOrigin/);
       await editContentPage.deleteRecordDialog.deleteButton.click();
@@ -577,7 +577,7 @@ test.describe('content record', () => {
 
     await test.step('Print the content record to PDF', async () => {
       await editContentPage.actionMenuButton.click();
-      await editContentPage.actionMenuButton.printRecordLink.click();
+      await editContentPage.actionMenu.printRecordLink.click();
 
       await editContentPage.printRecordModal.selectPrintAction('Print to a PDF and download');
 
