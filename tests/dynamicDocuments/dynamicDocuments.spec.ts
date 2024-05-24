@@ -663,22 +663,164 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test("Enable a dynamic document from an app's Documents tab", async ({}) => {
+  test("Enable a dynamic document from an app's Documents tab", async ({
+    app,
+    appAdminPage,
+    dynamicDocumentService,
+    editDocumentPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-256',
     });
 
-    expect(true).toBeTruthy();
+    const template = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: 'This was generated for record: {:Record Id}',
+            }),
+          ],
+        },
+      ],
+    });
+
+    const templatePath = await dynamicDocumentService.createTemplate(template);
+
+    const document = new DynamicDocument({
+      name: FakeDataFactory.createFakeDocumentName(),
+      templatePath: templatePath,
+      status: false,
+    });
+
+    let recordId: number;
+
+    await test.step("Navigate to the app's Documents tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create the dynamic document to enable', async () => {
+      await appAdminPage.documentsTab.createDocument(document.name);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+
+      await editDocumentPage.fillOutForm(document);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Verify the dynamic document is disabled', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      recordId = editContentPage.getRecordIdFromUrl();
+
+      await editContentPage.actionMenuButton.click();
+
+      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+    });
+
+    await test.step('Enable the dynamic document', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+
+      const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: document.name });
+
+      await documentRow.hover();
+      await documentRow.getByTitle('Edit Document').click();
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+
+      await editDocumentPage.informationTab.updateStatus(true);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Verify the dynamic document is enabled', async () => {
+      await editContentPage.goto(app.id, recordId);
+
+      await editContentPage.actionMenuButton.click();
+
+      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+    });
   });
 
-  test('Enable a dynamic document from the Documents admin page', async ({}) => {
+  test('Enable a dynamic document from the Documents admin page', async ({
+    app,
+    documentAdminPage,
+    dynamicDocumentService,
+    editDocumentPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-257',
     });
 
-    expect(true).toBeTruthy();
+    const template = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: 'This was generated for record: {:Record Id}',
+            }),
+          ],
+        },
+      ],
+    });
+
+    const templatePath = await dynamicDocumentService.createTemplate(template);
+
+    const document = new DynamicDocument({
+      name: FakeDataFactory.createFakeDocumentName(),
+      templatePath: templatePath,
+      status: false,
+    });
+
+    let recordId: number;
+
+    await test.step('Navigate to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create the dynamic document to enable', async () => {
+      await documentAdminPage.createDocument(app.name, document.name);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+
+      await editDocumentPage.fillOutForm(document);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Verify the dynamic document is disabled', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      recordId = editContentPage.getRecordIdFromUrl();
+
+      await editContentPage.actionMenuButton.click();
+
+      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+    });
+
+    await test.step('Enable the dynamic document', async () => {
+      await documentAdminPage.goto();
+      await documentAdminPage.documentsGrid.getByRole('row', { name: document.name }).click();
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+
+      await editDocumentPage.informationTab.updateStatus(true);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Verify the dynamic document is enabled', async () => {
+      await editContentPage.goto(app.id, recordId);
+
+      await editContentPage.actionMenuButton.click();
+
+      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+    });
   });
 
   test('Add a report token to a dynamic document', async ({}) => {
