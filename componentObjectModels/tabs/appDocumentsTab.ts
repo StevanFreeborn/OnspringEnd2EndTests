@@ -1,15 +1,18 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateDynamicDocumentDialog } from '../dialogs/createDynamicDocumentDialog';
+import { DeleteDocumentDialog } from '../dialogs/deleteDocumentDialog';
 
 export class AppDocumentsTab {
   private readonly addDocumentLink: Locator;
   private readonly createDocumentDialog: CreateDynamicDocumentDialog;
   readonly documentsGrid: Locator;
+  readonly deleteDocumentDialog: DeleteDocumentDialog;
 
   constructor(page: Page) {
     this.addDocumentLink = page.getByRole('link', { name: 'Add Document' });
     this.documentsGrid = page.locator('#grid-documents');
     this.createDocumentDialog = new CreateDynamicDocumentDialog(page);
+    this.deleteDocumentDialog = new DeleteDocumentDialog(page);
   }
 
   async createDocument(name: string) {

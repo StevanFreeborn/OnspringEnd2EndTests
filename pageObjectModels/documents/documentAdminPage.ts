@@ -1,12 +1,14 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateDynamicDocumentDialogForApp } from '../../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { BaseAdminPage } from '../baseAdminPage';
+import { DeleteDocumentDialog } from '../../componentObjectModels/dialogs/deleteDocumentDialog';
 
 export class DocumentAdminPage extends BaseAdminPage {
   readonly path: string;
   readonly documentsGrid: Locator;
   private readonly createDocumentButton: Locator;
   private readonly createDocumentDialog: CreateDynamicDocumentDialogForApp;
+  readonly deleteDocumentDialog: DeleteDocumentDialog;
 
   constructor(page: Page) {
     super(page);
@@ -14,6 +16,7 @@ export class DocumentAdminPage extends BaseAdminPage {
     this.documentsGrid = page.locator('#grid');
     this.createDocumentButton = page.getByRole('button', { name: 'Create Document' });
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
+    this.deleteDocumentDialog = new DeleteDocumentDialog(page);
   }
 
   async goto() {

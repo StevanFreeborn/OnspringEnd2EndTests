@@ -417,22 +417,84 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test("Delete a dynamic document on an app from an app's Documents tab", async ({}) => {
+  test("Delete a dynamic document on an app from an app's Documents tab", async ({
+    app,
+    appAdminPage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-247',
     });
 
-    expect(true).toBeTruthy();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+    const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: documentName });
+
+    await test.step("Navigate to the app's Documents tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Create the dynamic document to delete', async () => {
+      await appAdminPage.documentsTab.createDocument(documentName);
+      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step("Navigate back to the app's Documents tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.documentsTabButton.click();
+    });
+
+    await test.step('Delete the dynamic document', async () => {
+      await documentRow.hover();
+      await documentRow.getByTitle('Delete Document').click();
+
+      await appAdminPage.documentsTab.deleteDocumentDialog.deleteButton.click();
+      await appAdminPage.documentsTab.deleteDocumentDialog.waitForDialogToBeDismissed();
+    });
+
+    await test.step('Verify the dynamic document was deleted', async () => {
+      await expect(documentRow).not.toBeAttached();
+    });
   });
 
-  test('Delete a dynamic document from the Documents admin page', async ({}) => {
+  test('Delete a dynamic document from the Documents admin page', async ({
+    app,
+    documentAdminPage,
+    editDocumentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-248',
     });
 
-    expect(true).toBeTruthy();
+    const documentName = FakeDataFactory.createFakeDocumentName();
+    const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: documentName });
+
+    await test.step('Navigate to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create the dynamic document to delete', async () => {
+      await documentAdminPage.createDocument(app.name, documentName);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the Documents admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Delete the dynamic document', async () => {
+      await documentRow.hover();
+      await documentRow.getByTitle('Delete Document').click();
+
+      await documentAdminPage.deleteDocumentDialog.deleteButton.click();
+      await documentAdminPage.deleteDocumentDialog.waitForDialogToBeDismissed();
+    });
+
+    await test.step('Verify the dynamic document was deleted', async () => {
+      await expect(documentRow).not.toBeAttached();
+    });
   });
 
   test("Disable a dynamic document from an app's Documents tab", async ({}) => {
