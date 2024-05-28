@@ -27,7 +27,7 @@ export class SendingNumber {
     id = 0,
     name,
     description = '',
-    isDefault = true,
+    isDefault = false,
     country = 'United States (+1)',
     digitPattern = 'Begins With',
     digits = '',

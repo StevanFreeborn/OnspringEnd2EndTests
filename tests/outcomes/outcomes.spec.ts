@@ -1847,7 +1847,7 @@ test.describe('Outcomes', () => {
     });
 
     await test.step('Create a dynamic document', async () => {
-      await appAdminPage.documentsTab.addDocument(document.name);
+      await appAdminPage.documentsTab.createDocument(document.name);
       await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
       await editDocumentPage.fillOutForm(document);
       await editDocumentPage.save();

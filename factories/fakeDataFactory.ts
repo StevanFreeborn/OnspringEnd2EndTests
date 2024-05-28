@@ -21,6 +21,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeReportName(): string {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-report-test`;
+  }
+
   static createFakeSendingNumberName(): string {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_SENDING_NUMBER_NAME}`;
