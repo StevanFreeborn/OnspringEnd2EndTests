@@ -1,15 +1,21 @@
 import { Document, Paragraph } from 'docx';
+import { GetAttachmentFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { Locator, test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { AttachmentField } from '../../models/attachmentField';
 import { DynamicDocument } from '../../models/dynamicDocument';
+import { SavedReport } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { DocumentAdminPage } from '../../pageObjectModels/documents/documentAdminPage';
 import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
+import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
+import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
 
 type DynamicDocumentTestFixtures = {
@@ -20,6 +26,8 @@ type DynamicDocumentTestFixtures = {
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
+  reportAppPage: ReportAppPage;
+  reportPage: ReportPage;
 };
 
 const test = base.extend<DynamicDocumentTestFixtures>({
@@ -30,6 +38,8 @@ const test = base.extend<DynamicDocumentTestFixtures>({
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
+  reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
+  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
 });
 
 test.describe('Dynamic Documents', () => {
@@ -823,12 +833,141 @@ test.describe('Dynamic Documents', () => {
     });
   });
 
-  test('Add a report token to a dynamic document', async ({}) => {
+  test('Add a report token to a dynamic document', async ({
+    app,
+    reportAppPage,
+    reportPage,
+    appAdminPage,
+    dynamicDocumentService,
+    documentAdminPage,
+    editDocumentPage,
+    addContentPage,
+    editContentPage,
+    downloadService,
+    pdfParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-794',
     });
 
-    expect(true).toBeTruthy();
+    const report = new SavedReport({
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step('Create report to reference in dynamic document', async () => {
+      await reportAppPage.goto(app.id);
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    const attachmentField = new AttachmentField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Create an attachment field and add to app layout to save generated document in', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
+
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        fieldName: attachmentField.name,
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    const template = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: `{:Report:${report.name}}`,
+            }),
+          ],
+        },
+      ],
+    });
+
+    const templatePath = await dynamicDocumentService.createTemplate(template);
+
+    const document = new DynamicDocument({
+      name: FakeDataFactory.createFakeDocumentName(),
+      templatePath: templatePath,
+      status: true,
+      saveToFieldAccess: 'Allowed',
+      attachmentField: attachmentField.name,
+      fileType: 'Microsoft Word or PDF',
+    });
+
+    await test.step('Navigate to the document admin page', async () => {
+      await documentAdminPage.goto();
+    });
+
+    await test.step('Create a dynamic document', async () => {
+      await documentAdminPage.createDocument(app.name, document.name);
+      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+    });
+
+    await test.step('Add a report token to the dynamic document', async () => {
+      await editDocumentPage.fillOutForm(document);
+      await editDocumentPage.save();
+    });
+
+    await test.step('Generate the dynamic document', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.generateDocumentLink.click();
+      await editContentPage.generateDocumentModal.fillOutForm({
+        fileType: 'PDF',
+        documentAction: 'Save to an attachment field',
+      });
+      await editContentPage.generateDocumentModal.okButton.click();
+      await editContentPage.generateDocumentModal.closeButton.click();
+    });
+
+    let generatedDocumentRow: Locator;
+
+    await test.step('Verify the dynamic document was generated', async () => {
+      await expect(async () => {
+        await editContentPage.page.reload();
+
+        const attachmentControl = await editContentPage.form.getField({
+          fieldName: attachmentField.name,
+          fieldType: attachmentField.type as FieldType,
+          tabName,
+          sectionName,
+        } as GetAttachmentFieldParams);
+
+        const attachmentName = `${editContentPage.getRecordIdFromUrl()} - ${document.name}.pdf`;
+        generatedDocumentRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
+
+        await expect(generatedDocumentRow).toBeVisible({ timeout: 5_000 });
+      }).toPass({
+        intervals: [5_000],
+        timeout: 300_000,
+      });
+    });
+
+    await test.step('Verify the dynamic document contains the report data', async () => {
+      const pdfDownload = editContentPage.page.waitForEvent('download');
+      await generatedDocumentRow.click();
+      const pdf = await pdfDownload;
+      const pdfFilePath = await downloadService.saveDownload(pdf);
+      const foundCreatedByText = await pdfParser.findTextInPDF(pdfFilePath, ['Record Id', '1']);
+
+      expect(foundCreatedByText).toBe(true);
+    });
   });
 });

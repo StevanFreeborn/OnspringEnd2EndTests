@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { DeleteRecordDialog } from '../../componentObjectModels/dialogs/deleteRecordDialog';
 import { ContentRecordActionMenu } from '../../componentObjectModels/menus/contentRecordActionMenu';
+import { GenerateDynamicDocumentModal } from '../../componentObjectModels/modals/generateDynamicDocumentModal';
 import { PrintContentRecordModal } from '../../componentObjectModels/modals/printContentRecordModal';
 import { BaseFormPage } from '../baseFormPage';
 
@@ -11,6 +12,7 @@ export class BaseContentPage extends BaseFormPage {
   readonly actionMenu: ContentRecordActionMenu;
   readonly deleteRecordDialog: DeleteRecordDialog;
   readonly printRecordModal: PrintContentRecordModal;
+  readonly generateDocumentModal: GenerateDynamicDocumentModal;
 
   protected constructor(page: Page) {
     super(page);
@@ -20,5 +22,6 @@ export class BaseContentPage extends BaseFormPage {
     this.actionMenu = new ContentRecordActionMenu(page.locator('#action-menu'));
     this.deleteRecordDialog = new DeleteRecordDialog(page);
     this.printRecordModal = new PrintContentRecordModal(page);
+    this.generateDocumentModal = new GenerateDynamicDocumentModal(page);
   }
 }
