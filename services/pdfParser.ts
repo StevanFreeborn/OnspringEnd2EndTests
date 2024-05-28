@@ -3,7 +3,7 @@ import { TextItem } from 'pdfjs-dist/types/src/display/api';
 
 export class PdfParser {
   async findTextInPDF(pdfPath: string, text: string | string[]) {
-    const loadingTask = getDocument(pdfPath);
+    const loadingTask = getDocument({ url: pdfPath, verbosity: 0 });
     const pdf = await loadingTask.promise;
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {

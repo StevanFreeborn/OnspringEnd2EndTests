@@ -3,7 +3,7 @@ import { DynamicDocument } from '../../models/dynamicDocument';
 
 export class DocumentInformationTab {
   private readonly page: Page;
-  private readonly documentNameInput: Locator;
+  readonly documentNameInput: Locator;
   private readonly statusSwitch: Locator;
   private readonly statusToggle: Locator;
   private readonly addNewFileLink: Locator;
@@ -18,7 +18,7 @@ export class DocumentInformationTab {
     this.saveFilePath = /\/Admin\/Document\/SaveDocumentFiles/;
   }
 
-  private async updateStatus(status: boolean) {
+  async updateStatus(status: boolean) {
     const checked = await this.statusSwitch.getAttribute('aria-checked');
     const expected = status ? 'true' : 'false';
 
