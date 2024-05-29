@@ -37,13 +37,40 @@ test.describe('bitsight data connector', () => {
     });
   });
 
-  test('Create a copy of a Bitsight connector', async () => {
+  test('Create a copy of a Bitsight connector', async ({ adminHomePage, editConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-396',
     });
 
-    expect(true).toBe(true);
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorName = FakeDataFactory.createFakeConnectorName();
+
+    await test.step('Navigate to the admin page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a Bitsight connector to copy', async () => {
+      await adminHomePage.createConnectorUsingHeaderCreateButton(connectorToCopyName, 'BitSight Data Connector');
+      await adminHomePage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the Bitsight connector', async () => {
+      await adminHomePage.createConnectorCopyUsingHeaderCreateButton(
+        connectorToCopyName,
+        connectorName,
+        'BitSight Data Connector'
+      );
+      await adminHomePage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the copy of the Bitsight connector is created', async () => {
+      await expect(editConnectorPage.nameInput).toHaveValue(connectorName);
+    });
   });
 
   test('Delete a Bitsight connector', async () => {

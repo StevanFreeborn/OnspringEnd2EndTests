@@ -117,6 +117,23 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createConnectorCopyUsingHeaderCreateButton(
+    connectorToCopyName: string,
+    connectorName: string,
+    connectorType: DataConnectorType
+  ) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dataConnectorCreateMenuOption.click();
+
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.copyFromRadioButton.click();
+    await this.createDataConnectorDialog.copyFromDropdown.click();
+    await this.createDataConnectorDialog.getConnectorToCopy(connectorToCopyName).click();
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
+  }
+
   async createConnectorUsingHeaderCreateButton(connectorName: string, connectorType: DataConnectorType) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();

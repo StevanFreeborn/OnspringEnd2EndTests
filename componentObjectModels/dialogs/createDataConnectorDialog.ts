@@ -14,4 +14,8 @@ export class CreateDataConnectorDialog extends BaseCreateOrAddDialogWithSaveButt
     await this.connectorTypeSelector.click();
     await this.page.getByRole('option', { name: type }).click();
   }
+
+  getConnectorToCopy(connectorToCopyName: string) {
+    return this.getItemToCopy(connectorToCopyName);
+  }
 }
