@@ -1,20 +1,30 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { EditBitsightConnectorPage } from '../../pageObjectModels/dataConnectors/editBitsightConnectorPage';
 import { AnnotationType } from '../annotations';
 
 type BitsightTestFixtures = {
   adminHomePage: AdminHomePage;
   editConnectorPage: EditBitsightConnectorPage;
+  dataConnectorsAdminPage: DataConnectorAdminPage;
 };
 
 const test = base.extend<BitsightTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editConnectorPage: async ({ sysAdminPage }, use) => await use(new EditBitsightConnectorPage(sysAdminPage)),
+  dataConnectorsAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
 });
 
 test.describe('bitsight data connector', () => {
+  let connectorsToDelete: string[] = [];
+
+  test.afterEach(async ({ dataConnectorsAdminPage }) => {
+    await dataConnectorsAdminPage.deleteConnectors(connectorsToDelete);
+    connectorsToDelete = [];
+  });
+
   test('Create a new Bitsight connector', async ({ adminHomePage, editConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -22,6 +32,7 @@ test.describe('bitsight data connector', () => {
     });
 
     const connectorName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorName);
 
     await test.step('Navigate to the admin page', async () => {
       await adminHomePage.goto();
@@ -45,6 +56,7 @@ test.describe('bitsight data connector', () => {
 
     const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
     const connectorName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorName);
 
     await test.step('Navigate to the admin page', async () => {
       await adminHomePage.goto();
@@ -73,13 +85,37 @@ test.describe('bitsight data connector', () => {
     });
   });
 
-  test('Delete a Bitsight connector', async () => {
+  test('Delete a Bitsight connector', async ({ adminHomePage, editConnectorPage, dataConnectorsAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-397',
     });
 
-    expect(true).toBe(true);
+    const connectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorRow = dataConnectorsAdminPage.connectorsGrid.getByRole('row', { name: connectorName });
+
+    await test.step('Navigate to the admin page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the Bitsight connector to delete', async () => {
+      await adminHomePage.createConnectorUsingHeaderCreateButton(connectorName, 'BitSight Data Connector');
+      await adminHomePage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Delete the Bitsight connector', async () => {
+      await dataConnectorsAdminPage.goto();
+
+      await connectorRow.hover();
+      await connectorRow.getByTitle('Delete Data Connector').click();
+
+      await dataConnectorsAdminPage.deleteConnectorDialog.deleteButton.click();
+      await dataConnectorsAdminPage.deleteConnectorDialog.waitForDialogToBeDismissed();
+    });
+
+    await test.step('Verify the Bitsight connector is deleted', async () => {
+      await expect(connectorRow).not.toBeAttached();
+    });
   });
 
   test('Configure a new Bitsight connector', async () => {

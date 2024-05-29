@@ -2,6 +2,7 @@ import { test as teardown } from '../fixtures';
 import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
 import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
 import { ContainersAdminPage } from '../pageObjectModels/containers/containersAdminPage';
+import { DataConnectorAdminPage } from '../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
 import { SendingNumberAdminPage } from '../pageObjectModels/messaging/sendingNumberAdminPage';
@@ -53,5 +54,9 @@ teardown.describe('cleanup', () => {
 
   teardown('cleanup:sendingNumbers delete all sending numbers created as part of tests', async ({ sysAdminPage }) => {
     await new SendingNumberAdminPage(sysAdminPage).deleteAllTestNumbers();
+  });
+
+  teardown('cleanup:connectors delete all data connectors created as part of tests', async ({ sysAdminPage }) => {
+    await new DataConnectorAdminPage(sysAdminPage).deleteAllTestConnectors();
   });
 });
