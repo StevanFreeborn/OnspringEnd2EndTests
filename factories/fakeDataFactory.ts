@@ -13,6 +13,7 @@ export const TEST_EMAIL_BODY_NAME = 'email-body-test';
 export const DEFAULT_EMAIL_SENDING_DOMAIN = env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech';
 export const TEST_LIST_NAME = 'list-test';
 export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
+export const TEST_CONNECTOR_NAME = 'connector-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -21,12 +22,17 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
-  static createFakeReportName(): string {
+  static createFakeConnectorName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_CONNECTOR_NAME}`;
+  }
+
+  static createFakeReportName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-report-test`;
   }
 
-  static createFakeSendingNumberName(): string {
+  static createFakeSendingNumberName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_SENDING_NUMBER_NAME}`;
   }
