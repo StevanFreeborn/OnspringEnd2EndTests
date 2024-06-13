@@ -16,13 +16,17 @@ export abstract class DataConnectorConnectionTab {
     this.viewRunHistoryLink = page.getByRole('link', { name: 'View Run History' });
   }
 
-  abstract fillOutForm(dataConnector: DataConnector): Promise<void>;
-
-  protected async updateStatus(status: boolean) {
+  private async updateStatus(status: boolean) {
     const currentStatus = await this.statusToggle.getAttribute('aria-checked');
 
     if ((status === true && currentStatus === 'false') || (status === false && currentStatus === 'true')) {
       await this.statusSwitch.click();
     }
+  }
+
+  async fillOutForm(dataConnector: DataConnector) {
+    await this.nameInput.fill(dataConnector.name);
+    await this.descriptionEditor.fill(dataConnector.description);
+    await this.updateStatus(dataConnector.status);
   }
 }

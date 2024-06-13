@@ -11,9 +11,7 @@ export class BitsightConnectionTab extends DataConnectorConnectionTab {
   }
 
   async fillOutForm(dataConnector: BitsightDataConnector) {
-    await this.nameInput.fill(dataConnector.name);
-    await this.descriptionEditor.fill(dataConnector.description);
+    await super.fillOutForm(dataConnector);
     await this.bitsightApiKeyInput.fill(dataConnector.apiKey);
-    await this.updateStatus(dataConnector.status);
   }
 }
