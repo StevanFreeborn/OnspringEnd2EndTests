@@ -1,22 +1,16 @@
 import { Locator, Page } from '@playwright/test';
+import { DataConnectorConnectionTab } from '../../componentObjectModels/tabs/dataConnectorConnectionTab';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export abstract class EditConnectorPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
-  readonly nameInput: Locator;
-  readonly descriptionEditor: Locator;
-  readonly statusSwitch: Locator;
-  readonly statusToggle: Locator;
-  readonly viewRunHistoryLink: Locator;
+  readonly connectionTabButton: Locator;
+  abstract readonly connectionTab: DataConnectorConnectionTab;
 
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Edit/;
-    this.nameInput = page.getByLabel('Name');
-    this.descriptionEditor = page.locator('.content-area.mce-content-body');
-    this.statusSwitch = page.getByRole('switch', { name: 'Status' });
-    this.statusToggle = this.statusSwitch.locator('span').nth(3);
-    this.viewRunHistoryLink = page.getByRole('link', { name: 'View Run History' });
+    this.connectionTabButton = page.getByRole('tab', { name: 'Connection' });
   }
 
   async goto(id: number) {

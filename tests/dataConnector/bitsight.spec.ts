@@ -1,20 +1,42 @@
+import { env } from '../../env';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import {
+  BitsightAlertFieldMapping,
+  BitsightAppMapping,
+  BitsightDataConnector,
+  BitsightPortfolioFieldMapping,
+  BitsightRatingDetailsFieldMapping,
+} from '../../models/bitsightDataConnector';
+import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { EditBitsightConnectorPage } from '../../pageObjectModels/dataConnectors/editBitsightConnectorPage';
 import { AnnotationType } from '../annotations';
 
 type BitsightTestFixtures = {
+  bitSightApiKey: string;
+  appAdminPage: AppAdminPage;
   adminHomePage: AdminHomePage;
   editConnectorPage: EditBitsightConnectorPage;
   dataConnectorsAdminPage: DataConnectorAdminPage;
+  alertsApp: App;
+  portfolioApp: App;
+  ratingDetailsApp: App;
 };
 
 const test = base.extend<BitsightTestFixtures>({
+  bitSightApiKey: env.BITSIGHT_API_KEY,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editConnectorPage: async ({ sysAdminPage }, use) => await use(new EditBitsightConnectorPage(sysAdminPage)),
   dataConnectorsAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
+  alertsApp: app,
+  portfolioApp: app,
+  ratingDetailsApp: app,
 });
 
 test.describe('bitsight data connector', () => {
@@ -44,7 +66,7 @@ test.describe('bitsight data connector', () => {
     });
 
     await test.step('Verify the new Bitsight connector is created', async () => {
-      await expect(editConnectorPage.nameInput).toHaveValue(connectorName);
+      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(connectorName);
     });
   });
 
@@ -81,7 +103,7 @@ test.describe('bitsight data connector', () => {
     });
 
     await test.step('Verify the copy of the Bitsight connector is created', async () => {
-      await expect(editConnectorPage.nameInput).toHaveValue(connectorName);
+      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(connectorName);
     });
   });
 
@@ -118,10 +140,88 @@ test.describe('bitsight data connector', () => {
     });
   });
 
-  test('Configure a new Bitsight connector', async () => {
+  test('Configure a new Bitsight connector', async ({
+    appAdminPage,
+    adminHomePage,
+    editConnectorPage,
+    alertsApp,
+    portfolioApp,
+    ratingDetailsApp,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-398',
+    });
+
+    const alertIdField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const companyIdField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const ratingIdField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    await test.step('Add fields to alert app', async () => {
+      await appAdminPage.goto(alertsApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(alertIdField);
+    });
+
+    await test.step('Add fields to portfolio app', async () => {
+      await appAdminPage.goto(portfolioApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(companyIdField);
+    });
+
+    await test.step('Add fields to rating details app', async () => {
+      await appAdminPage.goto(ratingDetailsApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(ratingIdField);
+    });
+
+    const dataConnector = new BitsightDataConnector({
+      name: FakeDataFactory.createFakeConnectorName(),
+      status: true,
+      apiKey: '',
+      startingOnDate: new Date(Date.now() + 1 * 60_000),
+      frequency: 'Every Day',
+      appMappings: new BitsightAppMapping({
+        alertApp: {
+          appName: alertsApp.name,
+          mappings: new BitsightAlertFieldMapping({
+            alertIdField: alertIdField.name,
+          }),
+        },
+        portfolioApp: {
+          appName: portfolioApp.name,
+          mappings: new BitsightPortfolioFieldMapping({
+            companyIdField: companyIdField.name,
+          }),
+        },
+        ratingDetailsApp: {
+          appName: ratingDetailsApp.name,
+          mappings: new BitsightRatingDetailsFieldMapping({
+            ratingIdField: ratingIdField.name,
+          }),
+        },
+      }),
+    });
+
+    await test.step('Navigate to the admin page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the Bitsight connector', async () => {
+      await adminHomePage.createConnectorUsingHeaderCreateButton(dataConnector.name, 'BitSight Data Connector');
+      await adminHomePage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Configure the Bitsight connector', async () => {
+      await editConnectorPage.updateConnector(dataConnector);
     });
 
     expect(true).toBe(true);
