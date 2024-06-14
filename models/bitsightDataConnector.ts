@@ -50,9 +50,7 @@ export class BitsightDataConnector extends DataConnector {
     const nameMappings: Record<string, string>[] = [];
 
     for (const mapping of mappings) {
-      const keys = Object.keys(mapping);
-
-      for (const key of keys) {
+      for (const key in mapping) {
         const value = mapping[key];
         nameMappings.push({ key: value.appName });
       }
