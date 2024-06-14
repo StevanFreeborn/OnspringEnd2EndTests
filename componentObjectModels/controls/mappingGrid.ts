@@ -10,6 +10,15 @@ export class MappingGrid {
   }
 
   async performMapping(mappings: Record<string, string>[]) {
+    // for each mapping we need to check some things
+    // 1. check if key is mapped
+    //    1. if it is mapped
+    //       1. Check if mapped to corresponding value
+    //          1. if it is do nothing
+    //          2. if it isn't move field to correct value
+    //    2. if it is not mapped
+    //       1. map it
+
     throw new Error(`Method not implemented: ${mappings}`);
   }
 }
