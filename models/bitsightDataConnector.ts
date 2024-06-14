@@ -40,6 +40,26 @@ export class BitsightDataConnector extends DataConnector {
     this.notificationGroups = notificationGroups;
     this.notificationUsers = notificationUsers;
   }
+
+  getAllAppMappings() {
+    const mappings = [
+      this.appMappings.alertsMapping,
+      this.appMappings.portfolioMapping,
+      this.appMappings.ratingDetailsMapping,
+    ];
+    const nameMappings: Record<string, string>[] = [];
+
+    for (const mapping of mappings) {
+      const keys = Object.keys(mapping);
+
+      for (const key of keys) {
+        const value = mapping[key];
+        nameMappings.push({ key: value.appName });
+      }
+    }
+
+    return nameMappings;
+  }
 }
 
 export class BitsightAppMapping {
