@@ -1,4 +1,5 @@
 import { Page, test as base } from '@playwright/test';
+import { UserFactory } from '../factories/userFactory';
 import { App } from '../models/app';
 import { Role } from '../models/role';
 import { Survey } from '../models/survey';
@@ -32,6 +33,7 @@ type Environment = {
 
 type Fixtures = {
   environment: Environment;
+  sysAdminUser: User;
   sysAdminPage: Page;
   sysAdminEmail: EmailService;
   pdfParser: PdfParser;
@@ -61,6 +63,7 @@ export const test = base.extend<Fixtures>({
     getEnvironment: () => env.TEST_ENV,
     isFedspring: () => env.TEST_ENV === 'FEDSPRING_IST',
   },
+  sysAdminUser: UserFactory.createSysAdminUser(),
   sysAdminPage: sysAdminPage,
   sysAdminEmail: sysAdminEmailService,
   pdfParser: pdfParser,

@@ -45,6 +45,8 @@ export class AddUserAdminPage extends UserAdminPage {
       }
     }
 
+    await this.securityTab.sysAdminCheckbox.setChecked(user.sysAdmin);
+
     await this.saveRecordButton.click();
   }
 }

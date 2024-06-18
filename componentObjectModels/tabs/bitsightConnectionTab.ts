@@ -3,15 +3,15 @@ import { BitsightDataConnector } from '../../models/bitsightDataConnector';
 import { DataConnectorConnectionTab } from './dataConnectorConnectionTab';
 
 export class BitsightConnectionTab extends DataConnectorConnectionTab {
-  readonly bitsightApiKeyInput: Locator;
+  readonly apiKeyInput: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.bitsightApiKeyInput = page.getByLabel('BitSight API Token');
+    this.apiKeyInput = page.getByLabel('BitSight API Token');
   }
 
   async fillOutForm(dataConnector: BitsightDataConnector) {
     await super.fillOutForm(dataConnector);
-    await this.bitsightApiKeyInput.fill(dataConnector.apiKey);
+    await this.apiKeyInput.fill(dataConnector.apiKey);
   }
 }

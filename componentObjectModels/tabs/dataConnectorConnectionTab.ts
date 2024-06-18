@@ -17,10 +17,10 @@ export abstract class DataConnectorConnectionTab {
   }
 
   private async updateStatus(status: boolean) {
-    const currentStatus = await this.statusToggle.getAttribute('aria-checked');
+    const currentStatus = await this.statusSwitch.getAttribute('aria-checked');
 
     if ((status === true && currentStatus === 'false') || (status === false && currentStatus === 'true')) {
-      await this.statusSwitch.click();
+      await this.statusToggle.click();
     }
   }
 

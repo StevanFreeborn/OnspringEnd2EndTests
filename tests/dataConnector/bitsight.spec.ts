@@ -147,46 +147,33 @@ test.describe('bitsight data connector', () => {
     alertsApp,
     portfolioApp,
     ratingDetailsApp,
+    bitSightApiKey,
   }) => {
+    test.slow();
+
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-398',
     });
 
-    const alertIdField = new TextField({
-      name: FakeDataFactory.createFakeFieldName(),
-    });
+    const { alertIdField, companyIdField, ratingIdField } = getBitsightAppFields();
 
-    const companyIdField = new TextField({
-      name: FakeDataFactory.createFakeFieldName(),
-    });
-
-    const ratingIdField = new TextField({
-      name: FakeDataFactory.createFakeFieldName(),
-    });
-
-    await test.step('Add fields to alert app', async () => {
-      await appAdminPage.goto(alertsApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(alertIdField);
-    });
-
-    await test.step('Add fields to portfolio app', async () => {
-      await appAdminPage.goto(portfolioApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(companyIdField);
-    });
-
-    await test.step('Add fields to rating details app', async () => {
-      await appAdminPage.goto(ratingDetailsApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(ratingIdField);
+    await test.step('Setup the Bitsight apps', async () => {
+      await setupBitsightApps({
+        appAdminPage,
+        alertsApp,
+        portfolioApp,
+        ratingDetailsApp,
+        alertIdField,
+        companyIdField,
+        ratingIdField,
+      });
     });
 
     const dataConnector = new BitsightDataConnector({
       name: FakeDataFactory.createFakeConnectorName(),
-      status: true,
-      apiKey: '',
+      status: false,
+      apiKey: bitSightApiKey,
       startingOnDate: new Date(Date.now() + 1 * 60_000),
       frequency: 'Every Day',
       appMappings: new BitsightAppMapping({
@@ -211,6 +198,8 @@ test.describe('bitsight data connector', () => {
       }),
     });
 
+    connectorsToDelete.push(dataConnector.name);
+
     await test.step('Navigate to the admin page', async () => {
       await adminHomePage.goto();
     });
@@ -224,15 +213,158 @@ test.describe('bitsight data connector', () => {
       await editConnectorPage.updateConnector(dataConnector);
     });
 
-    expect(true).toBe(true);
+    await test.step('Verify the Bitsight connector was configured', async () => {
+      await editConnectorPage.page.reload();
+
+      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnector.name);
+      await expect(editConnectorPage.connectionTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
+      await expect(editConnectorPage.connectionTab.apiKeyInput).toHaveValue(dataConnector.apiKey);
+    });
   });
 
-  test('Verify a new Bitsight connector runs successfully', async () => {
+  test('Verify a new Bitsight connector runs successfully', async ({
+    appAdminPage,
+    adminHomePage,
+    editConnectorPage,
+    alertsApp,
+    portfolioApp,
+    ratingDetailsApp,
+    bitSightApiKey,
+    sysAdminEmail,
+    sysAdminUser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-399',
     });
 
-    expect(true).toBe(true);
+    test.slow();
+
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-398',
+    });
+
+    const { alertIdField, companyIdField, ratingIdField } = getBitsightAppFields();
+
+    await test.step('Setup the Bitsight apps', async () => {
+      await setupBitsightApps({
+        appAdminPage,
+        alertsApp,
+        portfolioApp,
+        ratingDetailsApp,
+        alertIdField,
+        companyIdField,
+        ratingIdField,
+      });
+    });
+
+    const dataConnector = new BitsightDataConnector({
+      name: FakeDataFactory.createFakeConnectorName(),
+      status: true,
+      apiKey: bitSightApiKey,
+      startingOnDate: new Date(Date.now() + 1 * 60_000),
+      frequency: 'Every Day',
+      appMappings: new BitsightAppMapping({
+        alertApp: {
+          appName: alertsApp.name,
+          mappings: new BitsightAlertFieldMapping({
+            alertIdField: alertIdField.name,
+          }),
+        },
+        portfolioApp: {
+          appName: portfolioApp.name,
+          mappings: new BitsightPortfolioFieldMapping({
+            companyIdField: companyIdField.name,
+          }),
+        },
+        ratingDetailsApp: {
+          appName: ratingDetailsApp.name,
+          mappings: new BitsightRatingDetailsFieldMapping({
+            ratingIdField: ratingIdField.name,
+          }),
+        },
+      }),
+      notificationUsers: [sysAdminUser.fullName],
+    });
+
+    connectorsToDelete.push(dataConnector.name);
+
+    await test.step('Navigate to the admin page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the Bitsight connector', async () => {
+      await adminHomePage.createConnectorUsingHeaderCreateButton(dataConnector.name, 'BitSight Data Connector');
+      await adminHomePage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Configure the Bitsight connector', async () => {
+      await editConnectorPage.updateConnector(dataConnector);
+    });
+
+    await test.step('Verify the Bitsight connector runs successfully', async () => {
+      await expect(async () => {
+        const searchCriteria = [
+          ['SUBJECT', 'Onspring Data Connector Complete'],
+          ['TEXT', dataConnector.name],
+          ['UNSEEN'],
+        ];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+      }).toPass({
+        intervals: [30_000],
+        timeout: 300_000,
+      });
+    });
   });
 });
+
+function getBitsightAppFields() {
+  const alertIdField = new TextField({
+    name: FakeDataFactory.createFakeFieldName(),
+  });
+
+  const companyIdField = new TextField({
+    name: FakeDataFactory.createFakeFieldName(),
+  });
+
+  const ratingIdField = new TextField({
+    name: FakeDataFactory.createFakeFieldName(),
+  });
+
+  return { alertIdField, companyIdField, ratingIdField };
+}
+
+async function setupBitsightApps({
+  appAdminPage,
+  alertsApp,
+  portfolioApp,
+  ratingDetailsApp,
+  alertIdField,
+  companyIdField,
+  ratingIdField,
+}: {
+  appAdminPage: AppAdminPage;
+  alertsApp: App;
+  portfolioApp: App;
+  ratingDetailsApp: App;
+  alertIdField: TextField;
+  companyIdField: TextField;
+  ratingIdField: TextField;
+}) {
+  await appAdminPage.goto(alertsApp.id);
+  await appAdminPage.layoutTabButton.click();
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(alertIdField);
+
+  await appAdminPage.goto(portfolioApp.id);
+  await appAdminPage.layoutTabButton.click();
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(companyIdField);
+
+  await appAdminPage.goto(ratingDetailsApp.id);
+  await appAdminPage.layoutTabButton.click();
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(ratingIdField);
+
+  return { alertIdField, companyIdField, ratingIdField };
+}

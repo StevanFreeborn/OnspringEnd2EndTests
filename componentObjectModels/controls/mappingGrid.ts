@@ -16,6 +16,10 @@ export class MappingGrid {
 
     for (const mapping of mappings) {
       for (const [key, value] of Object.entries(mapping)) {
+        if (!value) {
+          continue;
+        }
+
         const targetRow = this.mappings.locator('tr', {
           has: page.locator(`.field-cell:has-text("${value}")`),
         });
