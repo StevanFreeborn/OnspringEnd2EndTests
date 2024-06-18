@@ -1,24 +1,38 @@
 import { Locator } from '@playwright/test';
 
 export class MappingGrid {
+  private readonly container: Locator;
   private readonly sourceFields: Locator;
   private readonly mappings: Locator;
 
   constructor(container: Locator) {
+    this.container = container;
     this.sourceFields = container.locator('.drag-items-container');
     this.mappings = container.locator('.mappable-items');
   }
 
   async performMapping(mappings: Record<string, string>[]) {
-    // for each mapping we need to check some things
-    // 1. check if key is mapped
-    //    1. if it is mapped
-    //       1. Check if mapped to corresponding value
-    //          1. if it is do nothing
-    //          2. if it isn't move field to correct value
-    //    2. if it is not mapped
-    //       1. map it
+    const page = this.container.page();
 
-    throw new Error(`Method not implemented: ${mappings}`);
+    for (const mapping of mappings) {
+      for (const [key, value] of Object.entries(mapping)) {
+        const targetRow = this.mappings.locator('tr', {
+          has: page.locator(`.field-cell:has-text("${value}")`),
+        });
+
+        const targetRowMappedItem = targetRow.locator('.map-item-container');
+        const mappedItemText = await targetRowMappedItem.textContent();
+        const isMappedCorrectly = mappedItemText === key;
+
+        if (isMappedCorrectly) {
+          continue;
+        }
+
+        const sourceField = this.sourceFields.locator(`.draggable:has-text("${key}")`);
+        const targetField = targetRow.locator('.drag-and-drop-cell');
+
+        await sourceField.dragTo(targetField);
+      }
+    }
   }
 }

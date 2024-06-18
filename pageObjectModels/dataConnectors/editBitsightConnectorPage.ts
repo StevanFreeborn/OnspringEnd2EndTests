@@ -8,6 +8,7 @@ export class EditBitsightConnectorPage extends EditConnectorPage {
   readonly appMappingTabButton: Locator;
   readonly connectionTab: BitsightConnectionTab;
   readonly appMappingTab: BitsightAppMappingTab;
+  readonly dataMappingTab: BitsightDataMappingTab;
 
   constructor(page: Page) {
     super(page);
