@@ -54,6 +54,7 @@ const envSchema = z
       .string()
       .transform(v => (!v ? undefined : v))
       .optional(),
+    BITSIGHT_API_KEY: z.string().min(1),
   })
   .refine(data => {
     const testEnv = data.TEST_ENV;

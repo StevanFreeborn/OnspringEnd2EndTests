@@ -10,6 +10,8 @@ import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
 import { CreateListDialog } from './../componentObjectModels/dialogs/createListDialog';
 import { BaseAdminPage } from './baseAdminPage';
+import { DataConnectorType } from '../models/dataConnector';
+import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 
 export class AdminHomePage extends BaseAdminPage {
   readonly path: string;
@@ -50,6 +52,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly documentTileLink: Locator;
   readonly documentTileCreateButton: Locator;
   readonly createDocumentDialog: CreateDynamicDocumentDialogForApp;
+
+  readonly createDataConnectorDialog: CreateDataConnectorDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -105,10 +109,39 @@ export class AdminHomePage extends BaseAdminPage {
     this.documentTileLink = this.getTileLink(9);
     this.documentTileCreateButton = this.getTileCreateButton('Documents');
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
+
+    this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createConnectorCopyUsingHeaderCreateButton(
+    connectorToCopyName: string,
+    connectorName: string,
+    connectorType: DataConnectorType
+  ) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dataConnectorCreateMenuOption.click();
+
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.copyFromRadioButton.click();
+    await this.createDataConnectorDialog.copyFromDropdown.click();
+    await this.createDataConnectorDialog.getConnectorToCopy(connectorToCopyName).click();
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
+  }
+
+  async createConnectorUsingHeaderCreateButton(connectorName: string, connectorType: DataConnectorType) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dataConnectorCreateMenuOption.click();
+
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
   }
 
   async createDynamicDocumentCopyUsingDocumentTileButton(

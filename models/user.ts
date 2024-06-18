@@ -14,6 +14,7 @@ export class User {
   readonly fullName: string;
   readonly status: UserStatus;
   readonly roles: string[];
+  readonly sysAdmin: boolean;
   authStoragePath?: string;
 
   constructor(
@@ -23,7 +24,8 @@ export class User {
     username: string,
     password: string,
     status: UserStatus,
-    roles: string[] = []
+    roles: string[] = [],
+    sysAdmin: boolean = false
   ) {
     this.firstName = firstName;
     this.lastName = lastName;
@@ -33,5 +35,6 @@ export class User {
     this.fullName = `${firstName} ${lastName}`;
     this.status = status;
     this.roles = roles;
+    this.sysAdmin = sysAdmin;
   }
 }
