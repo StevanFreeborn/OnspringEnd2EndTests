@@ -215,4 +215,19 @@ export class DateFieldControl {
     await this.selectDateUsingCalendar(year, month, day);
     await this.selectTimeUsingClock(time);
   }
+
+  private formatDate(date: Date) {
+    const locale = 'en-US';
+    const options = { timeZone: 'America/Chicago' };
+    const dateString = date.toLocaleDateString(locale, options);
+    const timeString = date.toLocaleTimeString(locale, options);
+    const [time, period] = timeString.split(' ');
+    const [hours, minutes] = time.split(':');
+    return `${dateString} ${hours}:${minutes} ${period}`;
+  }
+
+  async enterDate(date: Date) {
+    const formattedDate = this.formatDate(date);
+    await this.input.fill(formattedDate);
+  }
 }

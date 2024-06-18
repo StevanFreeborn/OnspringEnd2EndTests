@@ -13,13 +13,13 @@ export class UserFactory {
     return new User(firstName, lastName, email, username, password, UserStatus.Active);
   }
 
-  static createNewUser(status: UserStatus) {
+  static createNewUser(status: UserStatus, sysAdmin: boolean = false) {
     const firstName = FakeDataFactory.createFakeFirstName();
     const lastName = FakeDataFactory.createFakeLastName();
     const email = FakeDataFactory.createFakeUserEmail();
     const username = FakeDataFactory.createFakeUsername();
     const password = FakeDataFactory.createFakePassword();
 
-    return new User(firstName, lastName, email, username, password, status);
+    return new User(firstName, lastName, email, username, password, status, [], sysAdmin);
   }
 }

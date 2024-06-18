@@ -48,3 +48,31 @@ export async function activeUserWithRole(
 
   await usersSecurityAdminPage.deleteUsers([user.username]);
 }
+
+export async function createUserFixture(
+  {
+    sysAdminPage,
+    sysAdmin = false,
+    userStatus,
+    roles = [],
+  }: { sysAdminPage: Page; sysAdmin?: boolean; userStatus: UserStatus; roles?: string[] },
+  use: (r: User) => Promise<void>
+) {
+  const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
+  const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
+  const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
+  const user = UserFactory.createNewUser(userStatus, sysAdmin);
+  user.roles.push(...roles);
+
+  await addUserAdminPage.goto();
+  await addUserAdminPage.addUser(user);
+  await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+  await editUserAdminPage.page.waitForLoadState();
+  await editUserAdminPage.changePassword(user.password);
+  await editUserAdminPage.saveUser();
+  user.id = editUserAdminPage.getUserIdFromUrl();
+
+  await use(user);
+
+  await usersSecurityAdminPage.deleteUsers([user.username]);
+}

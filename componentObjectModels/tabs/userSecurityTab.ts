@@ -5,6 +5,7 @@ import { ChangePasswordDialog } from '../dialogs/changePasswordDialog';
 
 export class UserSecurityTab {
   private readonly page: Page;
+  readonly sysAdminCheckbox: Locator;
   readonly rolesReferenceFieldGird: ReferenceFieldGrid;
   readonly groupsReferenceFieldGird: ReferenceFieldGrid;
   readonly changePasswordLink: Locator;
@@ -12,6 +13,7 @@ export class UserSecurityTab {
 
   constructor(userAdminPage: UserAdminPage) {
     this.page = userAdminPage.page;
+    this.sysAdminCheckbox = this.page.getByRole('checkbox', { name: /system administrator/i });
     this.rolesReferenceFieldGird = new ReferenceFieldGrid(
       this.page.locator(userAdminPage.createFormControlSelector('Roles', 'div.onx-reference-grid'))
     );
