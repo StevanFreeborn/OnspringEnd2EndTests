@@ -217,8 +217,10 @@ export class DateFieldControl {
   }
 
   private formatDate(date: Date) {
-    const dateString = date.toLocaleDateString();
-    const timeString = date.toLocaleTimeString();
+    const locale = 'en-US';
+    const options = { timeZone: 'America/Chicago' };
+    const dateString = date.toLocaleDateString(locale, options);
+    const timeString = date.toLocaleTimeString(locale, options);
     const [time, period] = timeString.split(' ');
     const [hours, minutes] = time.split(':');
     return `${dateString} ${hours}:${minutes} ${period}`;
