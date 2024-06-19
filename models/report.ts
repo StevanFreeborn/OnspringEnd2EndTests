@@ -1,15 +1,22 @@
-// eslint-disable-next-line @typescript-eslint/ban-types
-type ReportObject = {};
 type ReportSchedulingStatus = 'Enabled' | 'Disabled';
 type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
+type ReportObject = {
+  appName: string;
+};
 
 export abstract class Report {
-  constructor({}: ReportObject) {}
+  appName: string;
+
+  constructor({ appName }: ReportObject) {
+    this.appName = appName;
+  }
 }
 
+type TempReportObject = ReportObject;
+
 export class TempReport extends Report {
-  constructor({}: ReportObject) {
-    super({});
+  constructor({ appName }: TempReportObject) {
+    super({ appName });
   }
 }
 
@@ -24,8 +31,8 @@ export class SavedReport extends Report {
   security: ReportSecurity;
   scheduling: ReportSchedulingStatus;
 
-  constructor({ name, security = 'Private to me', scheduling = 'Disabled' }: SavedReportObject) {
-    super({});
+  constructor({ appName, name, security = 'Private to me', scheduling = 'Disabled' }: SavedReportObject) {
+    super({ appName });
     this.name = name;
     this.security = security;
     this.scheduling = scheduling;

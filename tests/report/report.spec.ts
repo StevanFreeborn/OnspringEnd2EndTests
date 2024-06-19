@@ -1,17 +1,23 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
+import { SavedReport } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
+import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
 
 type ReportTestFixtures = {
   sourceApp: App;
+  reportHomePage: ReportHomePage;
+  reportPage: ReportPage;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
@@ -19,6 +25,8 @@ type ReportTestFixtures = {
 
 const test = base.extend<ReportTestFixtures>({
   sourceApp: app,
+  reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
+  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
@@ -27,24 +35,37 @@ const test = base.extend<ReportTestFixtures>({
 test.describe('report', () => {
   test('Create a report via the "Create Report" button on the report home page', async ({
     sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
+    reportHomePage,
+    reportPage,
   }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-594',
     });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
-
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    const report = new SavedReport({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
     });
 
-    expect(true).toBe(true);
+    await test.step('Navigate to the report home page', async () => {
+      await reportHomePage.goto();
+    });
+
+    await test.step('Create the report', async () => {
+      await reportHomePage.createReport(report);
+      await reportHomePage.reportDesigner.saveChangesAndRun();
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was created', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
+      await expect(recordIdColumn).toBeVisible();
+    });
   });
 
   test('Create a report via the "Create Report" button on an app\'s or survey\'s reports home page.', ({}) => {
@@ -317,6 +338,14 @@ test.describe('report', () => {
     expect(true).toBe(true);
   });
 });
+
+// const fields = getFieldsForApp();
+// let records = buildRecords(fields.groupField, fields.seriesField);
+
+// await test.step('Setup source app with fields and records', async () => {
+//   await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+//   records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+// });
 
 function getFieldsForApp() {
   const groupField = new ListField({

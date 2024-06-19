@@ -1,12 +1,18 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { BasePage } from '../basePage';
 
 export class ReportPage extends BasePage {
   readonly pathRegex: RegExp;
+  readonly breadcrumb: Locator;
+  private readonly reportContents: Locator;
+  readonly dataGridContainer: Locator;
 
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Report\/\d+\/Display/;
+    this.breadcrumb = page.locator('.bcrumb-container');
+    this.reportContents = page.locator('#report-contents');
+    this.dataGridContainer = this.reportContents.locator('#grid');
   }
 
   async goto(reportId: number) {

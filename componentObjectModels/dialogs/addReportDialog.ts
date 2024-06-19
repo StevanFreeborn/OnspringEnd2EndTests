@@ -5,14 +5,14 @@ type SchedulingStatus = 'Enabled' | 'Disabled';
 type Security = 'Private to me' | 'Private by Role' | 'Public';
 
 export class AddReportDialog {
-  private blankReportRadioButton: Locator;
-  private copyReportRadioButton: Locator;
-  private reportToCopySelector: Locator;
-  private tempReportRadioButton: Locator;
-  private savedReportRadioButton: Locator;
-  private reportNameInput: Locator;
-  private schedulingSelector: Locator;
-  private securitySelector: Locator;
+  private readonly blankReportRadioButton: Locator;
+  private readonly copyReportRadioButton: Locator;
+  private readonly reportToCopySelector: Locator;
+  private readonly tempReportRadioButton: Locator;
+  private readonly savedReportRadioButton: Locator;
+  private readonly reportNameInput: Locator;
+  private readonly schedulingSelector: Locator;
+  private readonly securitySelector: Locator;
   private readonly saveButton: Locator;
 
   constructor(page: Page) {
@@ -21,7 +21,7 @@ export class AddReportDialog {
     this.reportToCopySelector = page.getByText(/select a report/i);
     this.tempReportRadioButton = page.getByRole('radio', { name: 'Add as a temporary report (can be saved later)' });
     this.savedReportRadioButton = page.getByRole('radio', { name: 'Create as a saved report' });
-    this.reportNameInput = page.getByPlaceholder('Report Name');
+    this.reportNameInput = page.getByPlaceholder('Report Name', { exact: true });
     this.schedulingSelector = page.locator('.label:has-text("Scheduling") + .data').getByRole('listbox');
     this.securitySelector = page.locator('.label:has-text("Security") + .data').getByRole('listbox');
     this.saveButton = page.getByRole('button', { name: 'Save' });
