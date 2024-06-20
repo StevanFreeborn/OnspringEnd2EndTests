@@ -10,6 +10,7 @@ import { SavedReport } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
 import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
 import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
@@ -17,6 +18,7 @@ import { AnnotationType } from '../annotations';
 type ReportTestFixtures = {
   sourceApp: App;
   reportHomePage: ReportHomePage;
+  reportAppPage: ReportAppPage;
   reportPage: ReportPage;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
@@ -26,6 +28,7 @@ type ReportTestFixtures = {
 const test = base.extend<ReportTestFixtures>({
   sourceApp: app,
   reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
+  reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
   reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
@@ -68,13 +71,39 @@ test.describe('report', () => {
     });
   });
 
-  test('Create a report via the "Create Report" button on an app\'s or survey\'s reports home page.', ({}) => {
+  test('Create a report via the "Create Report" button on an app\'s or survey\'s reports home page.', async ({
+    sourceApp,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-595',
     });
 
-    expect(true).toBe(true);
+    const report = new SavedReport({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step("Navigate to the app's or survey's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was created', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
+      await expect(recordIdColumn).toBeVisible();
+    });
   });
 
   test('Create a copy of a report', ({}) => {
