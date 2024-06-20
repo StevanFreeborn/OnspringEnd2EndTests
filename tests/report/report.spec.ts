@@ -152,13 +152,41 @@ test.describe('report', () => {
     });
   });
 
-  test('Update a report', ({}) => {
+  test('Update a report', async ({ sourceApp, reportAppPage, reportPage }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-597',
     });
 
-    expect(true).toBe(true);
+    const report = new SavedReport({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report to update', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Update the report', async () => {
+      report.name = FakeDataFactory.createFakeReportName();
+      await reportPage.updateReport(report);
+      await reportPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was updated', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
+      await expect(recordIdColumn).toBeVisible();
+    });
   });
 
   test('Delete a report', ({}) => {
