@@ -18,7 +18,7 @@ export class AddReportDialog {
   constructor(page: Page) {
     this.blankReportRadioButton = page.getByRole('radio', { name: 'A blank report' });
     this.copyReportRadioButton = page.getByRole('radio', { name: 'A copy of' });
-    this.reportToCopySelector = page.getByText(/select a report/i);
+    this.reportToCopySelector = page.locator('.copy-from-dropdown');
     this.tempReportRadioButton = page.getByRole('radio', { name: 'Add as a temporary report (can be saved later)' });
     this.savedReportRadioButton = page.getByRole('radio', { name: 'Create as a saved report' });
     this.reportNameInput = page.getByPlaceholder('Report Name', { exact: true });
@@ -34,7 +34,7 @@ export class AddReportDialog {
 
   private async selectReportToCopy(reportToCopy: string) {
     await this.reportToCopySelector.click();
-    await this.reportToCopySelector.page().getByText(reportToCopy).click();
+    await this.reportToCopySelector.page().getByRole('option', { name: reportToCopy }).click();
   }
 
   private async selectSecurity(security: Security) {
@@ -69,7 +69,13 @@ export class AddReportDialog {
     if (report instanceof SavedReport) {
       await this.savedReportRadioButton.click();
       await this.reportNameInput.fill(report.name);
-      await this.selectScheduling(report.scheduling);
+
+      const isSchedulingVisible = await this.schedulingSelector.isVisible();
+
+      if (isSchedulingVisible) {
+        await this.selectScheduling(report.scheduling);
+      }
+
       await this.selectSecurity(report.security);
     }
 

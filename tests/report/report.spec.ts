@@ -106,13 +106,50 @@ test.describe('report', () => {
     });
   });
 
-  test('Create a copy of a report', ({}) => {
+  test('Create a copy of a report', async ({ sourceApp, reportHomePage, reportPage }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-596',
     });
 
-    expect(true).toBe(true);
+    const reportToCopy = new SavedReport({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    const copy = new SavedReport({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step('Navigate to the report home page', async () => {
+      await reportHomePage.goto();
+    });
+
+    await test.step('Create the report to copy', async () => {
+      await reportHomePage.createReport(reportToCopy);
+      await reportHomePage.reportDesigner.saveChangesAndRun();
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the report home page', async () => {
+      await reportHomePage.goto();
+    });
+
+    await test.step('Create a copy of the report', async () => {
+      await reportHomePage.createCopyOfReport(reportToCopy.name, copy);
+      await reportHomePage.reportDesigner.saveChangesAndRun();
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was created', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${copy.appName}[\\s\\S]*${copy.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
+      await expect(recordIdColumn).toBeVisible();
+    });
   });
 
   test('Update a report', ({}) => {
