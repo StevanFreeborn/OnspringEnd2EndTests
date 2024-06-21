@@ -6,7 +6,7 @@ import { App } from '../../models/app';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
-import { SavedReport } from '../../models/report';
+import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
@@ -223,13 +223,63 @@ test.describe('report', () => {
     });
   });
 
-  test('Bulk edit records in a report', ({}) => {
+  test('Bulk edit records in a report', async ({
+    sourceApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-599',
     });
 
-    expect(true).toBe(true);
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      displayFields: ['Record Id', 'Group', 'Series'],
+    });
+
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Bulk edit records in the report', async () => {
+      await reportPage.selectAllRecords();
+      await reportPage.bulkEditSelectedRecords();
+      await reportPage.bulkEditModal.updateFields([
+        {
+          field: fields.groupField,
+          value: fields.groupField.values[0].value,
+        },
+      ]);
+      await reportPage.bulkEditModal.saveChanges();
+      await reportPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the records were updated', async () => {
+      const groupFieldCells = await reportPage.getAllFieldCells(fields.groupField);
+
+      for (const cell of groupFieldCells) {
+        await expect(cell).toHaveText(fields.groupField.values[0].value);
+      }
+    });
   });
 
   test('Bulk delete records in a report', ({}) => {
@@ -457,14 +507,6 @@ test.describe('report', () => {
     expect(true).toBe(true);
   });
 });
-
-// const fields = getFieldsForApp();
-// let records = buildRecords(fields.groupField, fields.seriesField);
-
-// await test.step('Setup source app with fields and records', async () => {
-//   await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-//   records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-// });
 
 function getFieldsForApp() {
   const groupField = new ListField({

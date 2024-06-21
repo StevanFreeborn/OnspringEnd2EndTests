@@ -28,11 +28,13 @@ export class ReportAppPage extends BasePage {
     await this.createReportButton.click();
     await this.addReportDialog.addReport(report);
     await this.reportDesigner.waitFor();
+    await this.reportDesigner.updateReport(report);
   }
 
   async createCopyOfReport(reportToCopy: string, report: Report) {
     await this.createReportButton.click();
     await this.addReportDialog.addReportCopy(reportToCopy, report);
     await this.reportDesigner.waitFor();
+    await this.reportDesigner.updateReport(report);
   }
 }
