@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { BulkDeleteDialog } from '../../componentObjectModels/dialogs/bulkDeleteDialog';
 import { DeleteReportDialog } from '../../componentObjectModels/dialogs/deleteReportDialog';
 import { BulkEditModal } from '../../componentObjectModels/modals/bulkEditModal';
 import { ReportDesignerModal } from '../../componentObjectModels/modals/reportDesignerModal';
@@ -20,6 +21,7 @@ export class ReportPage extends BasePage {
   readonly bulkActionMenu: Locator;
   readonly reportDesigner: ReportDesignerModal;
   readonly bulkEditModal: BulkEditModal;
+  readonly bulkDeleteDialog: BulkDeleteDialog;
 
   constructor(page: Page) {
     super(page);
@@ -36,6 +38,7 @@ export class ReportPage extends BasePage {
     this.reportDesigner = new ReportDesignerModal(page);
     this.deleteReportDialog = new DeleteReportDialog(page);
     this.bulkEditModal = new BulkEditModal(page);
+    this.bulkDeleteDialog = new BulkDeleteDialog(page);
   }
 
   async goto(reportId: number) {
@@ -75,6 +78,12 @@ export class ReportPage extends BasePage {
     await this.bulkActionButton.click();
     await this.bulkActionMenu.waitFor();
     await this.bulkActionMenu.getByText('Edit Selected Records').click();
+  }
+
+  async bulkDeleteSelectedRecords() {
+    await this.bulkActionButton.click();
+    await this.bulkActionMenu.waitFor();
+    await this.bulkActionMenu.getByText('Delete Selected Records').click();
   }
 
   async getAllFieldCells(field: LayoutItem) {

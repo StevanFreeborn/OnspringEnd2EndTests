@@ -236,18 +236,18 @@ test.describe('report', () => {
       type: 'Test-599',
     });
 
-    const report = new SavedReportAsReportDataOnly({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      displayFields: ['Record Id', 'Group', 'Series'],
-    });
-
     const fields = getFieldsForApp();
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
       await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
       records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      displayFields: Object.values(fields).map(field => field.name),
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
@@ -282,13 +282,53 @@ test.describe('report', () => {
     });
   });
 
-  test('Bulk delete records in a report', ({}) => {
+  test('Bulk delete records in a report', async ({
+    sourceApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-600',
     });
 
-    expect(true).toBe(true);
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Bulk delete records in the report', async () => {
+      await reportPage.selectAllRecords();
+      await reportPage.bulkDeleteSelectedRecords();
+      await reportPage.bulkDeleteDialog.confirmDelete();
+      await reportPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the records were deleted', async () => {
+      const rows = reportPage.dataGridContainer.locator('tbody').locator('tr');
+      await expect(rows).toHaveCount(0);
+    });
   });
 
   test('Apply liver filters to a report', ({}) => {
