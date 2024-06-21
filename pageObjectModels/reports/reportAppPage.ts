@@ -9,6 +9,7 @@ export class ReportAppPage extends BasePage {
   private readonly createReportButton: Locator;
   private readonly addReportDialog: AddReportDialog;
   readonly reportDesigner: ReportDesignerModal;
+  readonly allReportsGrid: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -16,6 +17,7 @@ export class ReportAppPage extends BasePage {
     this.createReportButton = page.getByRole('button', { name: 'Create Report' });
     this.addReportDialog = new AddReportDialog(page);
     this.reportDesigner = new ReportDesignerModal(page);
+    this.allReportsGrid = page.locator('#grid-0');
   }
 
   async goto(appId: number) {

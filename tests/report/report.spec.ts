@@ -189,13 +189,38 @@ test.describe('report', () => {
     });
   });
 
-  test('Delete a report', ({}) => {
+  test('Delete a report', async ({ sourceApp, reportAppPage, reportPage }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-598',
     });
 
-    expect(true).toBe(true);
+    const report = new SavedReport({
+      appName: 'Test App',
+      name: 'Test Report',
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report to delete', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Delete the report', async () => {
+      await reportPage.deleteReport();
+      await reportPage.page.waitForURL(reportAppPage.pathRegex);
+      await reportAppPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the report was deleted', async () => {
+      const reportRow = reportAppPage.allReportsGrid.getByRole('row', { name: report.name });
+
+      await expect(reportRow).toBeHidden();
+    });
   });
 
   test('Bulk edit records in a report', ({}) => {
