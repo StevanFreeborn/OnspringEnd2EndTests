@@ -7,6 +7,7 @@ import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
 
 export async function appAdminPage({ sysAdminPage }: { sysAdminPage: Page }, use: (r: AppAdminPage) => Promise<void>) {
   const appAdminPage = new AppAdminPage(sysAdminPage);
+
   await use(appAdminPage);
 }
 

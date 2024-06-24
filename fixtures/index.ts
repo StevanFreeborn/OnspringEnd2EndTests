@@ -46,6 +46,7 @@ type Fixtures = {
   dynamicDocumentService: DynamicDocumentService;
   jpgFile: TestFile;
   txtFile: TestFile;
+  apiURL: string;
 };
 
 type FieldTestFixtures = {
@@ -76,15 +77,7 @@ export const test = base.extend<Fixtures>({
   dynamicDocumentService: dynamicDocumentService,
   jpgFile: jpgFile,
   txtFile: txtFile,
-});
-
-export const apiTest = test.extend<ApiTestOptions>({
   apiURL: ['', { option: true }],
-  request: async ({ apiURL, playwright }, use) => {
-    const onspringAPIRequestContext = await playwright.request.newContext({ baseURL: apiURL });
-    await use(onspringAPIRequestContext);
-    await onspringAPIRequestContext.dispose();
-  },
 });
 
 export const layoutItemTest = test.extend<FieldTestFixtures>({
