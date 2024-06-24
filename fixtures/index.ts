@@ -31,6 +31,10 @@ type Environment = {
   isFedspring: () => boolean;
 };
 
+export type ApiTestOptions = {
+  apiURL: string;
+};
+
 type Fixtures = {
   environment: Environment;
   sysAdminUser: User;
@@ -74,6 +78,15 @@ export const test = base.extend<Fixtures>({
   txtFile: txtFile,
 });
 
+export const apiTest = test.extend<ApiTestOptions>({
+  apiURL: ['', { option: true }],
+  request: async ({ apiURL, playwright }, use) => {
+    const onspringAPIRequestContext = await playwright.request.newContext({ baseURL: apiURL });
+    await use(onspringAPIRequestContext);
+    await onspringAPIRequestContext.dispose();
+  },
+});
+
 export const layoutItemTest = test.extend<FieldTestFixtures>({
   appAdminPage: appAdminPage,
   app: app,
@@ -89,14 +102,6 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
   },
   sourceSurvey: survey,
   targetSurvey: survey,
-});
-
-export type ApiTestOptions = {
-  apiURL: string | undefined;
-};
-
-export const apiTest = base.extend<ApiTestOptions>({
-  apiURL: ['', { option: true }],
 });
 
 export * from '@playwright/test';

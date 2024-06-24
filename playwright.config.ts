@@ -44,7 +44,8 @@ switch (TEST_ENV) {
 
 const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 
-// Onspring servers timeout after 100 seconds. Want to be able to capture timeouts when they occur.
+// Onspring servers timeout after 100 seconds.
+// Want to be able to capture timeouts when they occur.
 const expectNavAndActionTimeout = 2 * MS_PER_MIN;
 
 export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
