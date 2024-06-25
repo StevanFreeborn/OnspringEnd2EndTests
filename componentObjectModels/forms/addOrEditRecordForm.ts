@@ -30,6 +30,7 @@ export type GetReferenceFieldParams = BaseGetFieldParams & {
 
 export class AddOrEditRecordForm extends BaseForm {
   readonly contentContainer: Locator;
+
   createFormControlSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = CSS.escape(toPascalCase(field));
     return `.data-${pascalCaseFieldName} ${controlSelector}`;

@@ -11,7 +11,7 @@ export abstract class AddOrEditLayoutItemModal {
   protected readonly saveButton: Locator;
 
   constructor(page: Page) {
-    this.saveButton = page.getByRole('button', { name: 'Save' });
+    this.saveButton = page.getByRole('button', { name: 'Save', exact: true }).last();
   }
 
   /**
