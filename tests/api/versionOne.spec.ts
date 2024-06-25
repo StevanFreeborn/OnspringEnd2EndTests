@@ -1,18 +1,26 @@
-import { test as base, expect } from '../../fixtures';
-import { performApiTestsSetup } from '../../fixtures/api.fixtures';
-import { App } from '../../models/app';
-import { LayoutItem } from '../../models/layoutItem';
-
-type APIv1TestFixtures = {
-  setupResult: { app: App; fields: LayoutItem[] };
-};
-
-const test = base.extend<APIv1TestFixtures>({
-  setupResult: async ({ sysAdminPage }, use) => performApiTestsSetup({ sysAdminPage }, use),
-});
+import { APIRequestContext, expect, test } from '../../fixtures';
+import { ApiSetupResult, createRequestContext, performApiTestsSetup } from '../../fixtures/api.fixtures';
 
 test.describe('API v1', () => {
-  test('performs setup', ({ setupResult }) => {
-    expect(setupResult.fields).toBeDefined();
+  test.describe.configure({
+    mode: 'default',
+  });
+
+  let setup: ApiSetupResult;
+  let request: APIRequestContext;
+
+  test.beforeAll(async ({ sysAdminPage }) => {
+    setup = await performApiTestsSetup({ sysAdminPage });
+  });
+
+  test.beforeEach(async ({ apiURL }) => {
+    request = await createRequestContext(apiURL, setup.apiKey.key);
+  });
+
+  test.afterEach(async () => await request.dispose());
+
+  test('performs setup', async () => {
+    const res = await request.get('/apps');
+    expect(res.status()).toBe(200);
   });
 });

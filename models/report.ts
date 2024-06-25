@@ -14,6 +14,7 @@ type ReportObject = {
 };
 
 export abstract class Report {
+  id?: number;
   appName: string;
   displayType: ReportDisplayType;
   displayFields: string[];

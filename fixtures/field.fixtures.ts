@@ -9,9 +9,12 @@ export async function createFields(sysAdminPage: Page, app: App, fields: LayoutI
   await appAdminPage.goto(app.id);
   await appAdminPage.layoutTabButton.click();
 
+  const createdFields: LayoutItem[] = [];
+
   for (const field of fields) {
     await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-    field.id = await appAdminPage.layoutTab.getFieldIdFromFieldsAndObjectsGrid(field);
+    const fieldId = await appAdminPage.layoutTab.getFieldIdFromFieldsAndObjectsGrid(field);
+    createdFields.push({ ...field, id: fieldId });
   }
 
   return fields;
