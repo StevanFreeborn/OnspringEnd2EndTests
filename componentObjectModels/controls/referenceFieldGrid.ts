@@ -17,7 +17,7 @@ export class ReferenceFieldGrid {
     this.control = control;
     this.filterInput = this.control.getByPlaceholder('Select Related');
     this.searchResults = this.page.locator('div.grid-search-results:visible');
-    this.createNewButton = this.control.getByRole('button', { name: 'Create New' });
+    this.createNewButton = this.control.getByTitle('Create New');
     this.quickAddButton = this.control.getByRole('button', { name: 'Quick Add' });
     this.gridTable = this.control.getByRole('grid');
   }

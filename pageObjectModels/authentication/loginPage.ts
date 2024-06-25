@@ -4,7 +4,7 @@ import { User } from '../../models/user';
 export class LoginPage {
   static readonly invalidCredentialError = {
     text: 'Username/Password combination is not valid',
-    color: 'rgb(204, 0, 0)',
+    color: 'rgb(231, 76, 60)',
     fontWeight: '700',
   };
 
