@@ -23,6 +23,8 @@ export class AddUserAdminPage extends UserAdminPage {
 
   async addUser(user: User) {
     await this.goto();
+
+    await this.generalTabButton.click();
     await this.fillRequiredUserFields(user);
 
     switch (user.status) {
@@ -45,6 +47,7 @@ export class AddUserAdminPage extends UserAdminPage {
       }
     }
 
+    await this.securityTabButton.click();
     await this.securityTab.sysAdminCheckbox.setChecked(user.sysAdmin);
 
     await this.saveRecordButton.click();
