@@ -289,6 +289,13 @@ test.describe('data import', () => {
       await editDataImportPage.dataFileTab.nameInput.fill(updatedDataImportName);
       await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
       await editDataImportPage.dataFileTab.addImportFile(importFilePath);
+
+      await editDataImportPage.dataMappingTabButton.click();
+      const fieldMapping = editDataImportPage.dataMappingTab.getFieldMapping(textField.name);
+      const regex = new RegExp(textField.name, 'i');
+      await expect(fieldMapping.appField).toHaveText(regex);
+      await expect(fieldMapping.mappedField).toHaveText(regex);
+
       await editDataImportPage.save();
     });
 
