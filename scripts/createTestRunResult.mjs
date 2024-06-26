@@ -50,7 +50,7 @@ const res = await fetch('https://api.onspring.ist/records', {
     'content-type': 'application/json',
   },
   body: JSON.stringify({
-    appId: 380,
+    appId: 672,
     fields: {
       44337: RELEASE_RECORD_ID,
       44339: envListValue,
