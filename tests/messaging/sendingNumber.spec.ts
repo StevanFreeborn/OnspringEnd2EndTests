@@ -5,6 +5,7 @@ import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AddSendingNumberPage } from '../../pageObjectModels/messaging/addSendingNumberPage';
 import { EditSendingNumberPage } from '../../pageObjectModels/messaging/editSendingNumberPage';
 import { AnnotationType } from '../annotations';
+import { Tags } from '../tags';
 import { SendingNumberAdminPage } from './../../pageObjectModels/messaging/sendingNumberAdminPage';
 
 type SendingNumberTestFixtures = {
@@ -21,104 +22,115 @@ const test = base.extend<SendingNumberTestFixtures>({
   sendingNumberAdminPage: async ({ sysAdminPage }, use) => await use(new SendingNumberAdminPage(sysAdminPage)),
 });
 
-test.describe('sms sending number', () => {
-  let sendingNumbersToDelete: string[] = [];
+test.describe(
+  'sms sending number',
+  {
+    tag: [Tags.NotFedRAMP],
+  },
+  () => {
+    let sendingNumbersToDelete: string[] = [];
 
-  test.afterEach(async ({ sendingNumberAdminPage }) => {
-    await sendingNumberAdminPage.deleteSendingNumbers(sendingNumbersToDelete);
-    sendingNumbersToDelete = [];
-  });
-
-  test('Create a new custom SMS Sending Number', async ({
-    adminHomePage,
-    addSendingNumberPage,
-    editSendingNumberPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-444',
+    test.beforeEach(({ environment }) => {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(environment.isFedspring(), 'This feature is not applicable to the FEDSPRING environment');
     });
 
-    const sendingNumber = new SendingNumber({
-      name: FakeDataFactory.createFakeSendingNumberName(),
+    test.afterEach(async ({ sendingNumberAdminPage }) => {
+      await sendingNumberAdminPage.deleteSendingNumbers(sendingNumbersToDelete);
+      sendingNumbersToDelete = [];
     });
 
-    sendingNumbersToDelete.push(sendingNumber.name);
+    test('Create a new custom SMS Sending Number', async ({
+      adminHomePage,
+      addSendingNumberPage,
+      editSendingNumberPage,
+    }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-444',
+      });
 
-    await test.step('Navigate to admin home page', async () => {
-      await adminHomePage.goto();
-    });
+      const sendingNumber = new SendingNumber({
+        name: FakeDataFactory.createFakeSendingNumberName(),
+      });
 
-    await test.step('Create a new sending number', async () => {
-      await createSendingNumber({
-        adminHomePage,
-        addSendingNumberPage,
-        editSendingNumberPage,
-        sendingNumber,
+      sendingNumbersToDelete.push(sendingNumber.name);
+
+      await test.step('Navigate to admin home page', async () => {
+        await adminHomePage.goto();
+      });
+
+      await test.step('Create a new sending number', async () => {
+        await createSendingNumber({
+          adminHomePage,
+          addSendingNumberPage,
+          editSendingNumberPage,
+          sendingNumber,
+        });
+      });
+
+      await test.step('Verify the sending number is created', async () => {
+        await expect(editSendingNumberPage.nameInput).toHaveValue(sendingNumber.name);
       });
     });
 
-    await test.step('Verify the sending number is created', async () => {
-      await expect(editSendingNumberPage.nameInput).toHaveValue(sendingNumber.name);
-    });
-  });
+    test('Delete an SMS Sending Number', async ({
+      sendingNumberAdminPage,
+      adminHomePage,
+      addSendingNumberPage,
+      editSendingNumberPage,
+    }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-446',
+      });
 
-  test('Delete an SMS Sending Number', async ({
-    sendingNumberAdminPage,
-    adminHomePage,
-    addSendingNumberPage,
-    editSendingNumberPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-446',
-    });
+      const sendingNumber = new SendingNumber({
+        name: FakeDataFactory.createFakeSendingNumberName(),
+      });
 
-    const sendingNumber = new SendingNumber({
-      name: FakeDataFactory.createFakeSendingNumberName(),
-    });
+      const sendingNumberRow = sendingNumberAdminPage.sendingNumberGrid.getByRole('row', {
+        name: sendingNumber.name,
+      });
 
-    const sendingNumberRow = sendingNumberAdminPage.sendingNumberGrid.getByRole('row', {
-      name: sendingNumber.name,
-    });
+      await test.step('Navigate to admin home page', async () => {
+        await adminHomePage.goto();
+      });
 
-    await test.step('Navigate to admin home page', async () => {
-      await adminHomePage.goto();
-    });
+      await test.step('Create the sending number to delete', async () => {
+        await createSendingNumber({
+          adminHomePage,
+          addSendingNumberPage,
+          editSendingNumberPage,
+          sendingNumber,
+        });
+      });
 
-    await test.step('Create the sending number to delete', async () => {
-      await createSendingNumber({
-        adminHomePage,
-        addSendingNumberPage,
-        editSendingNumberPage,
-        sendingNumber,
+      await test.step('Navigate to sending number admin page', async () => {
+        await sendingNumberAdminPage.goto();
+      });
+
+      await test.step('Delete the sending number', async () => {
+        await sendingNumberRow.hover();
+        await sendingNumberRow.getByTitle('Delete SMS Sending Number').click();
+
+        try {
+          await sendingNumberAdminPage.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
+          await sendingNumberAdminPage.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
+          // eslint-disable-next-line no-empty
+        } catch (error) {}
+
+        await sendingNumberAdminPage.deleteNumberDialog.okInput.pressSequentially('OK', { delay: 150 });
+        await sendingNumberAdminPage.deleteNumberDialog.deleteButton.click();
+        await sendingNumberAdminPage.deleteNumberDialog.waitForDialogToBeDismissed();
+      });
+
+      await test.step('Verify the sending number is deleted', async () => {
+        await expect(sendingNumberRow).not.toBeAttached();
       });
     });
-
-    await test.step('Navigate to sending number admin page', async () => {
-      await sendingNumberAdminPage.goto();
-    });
-
-    await test.step('Delete the sending number', async () => {
-      await sendingNumberRow.hover();
-      await sendingNumberRow.getByTitle('Delete SMS Sending Number').click();
-
-      try {
-        await sendingNumberAdminPage.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
-        await sendingNumberAdminPage.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
-        // eslint-disable-next-line no-empty
-      } catch (error) {}
-
-      await sendingNumberAdminPage.deleteNumberDialog.okInput.pressSequentially('OK', { delay: 150 });
-      await sendingNumberAdminPage.deleteNumberDialog.deleteButton.click();
-      await sendingNumberAdminPage.deleteNumberDialog.waitForDialogToBeDismissed();
-    });
-
-    await test.step('Verify the sending number is deleted', async () => {
-      await expect(sendingNumberRow).not.toBeAttached();
-    });
-  });
-});
+  }
+);
 
 async function createSendingNumber({
   adminHomePage,
