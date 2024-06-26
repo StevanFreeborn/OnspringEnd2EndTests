@@ -14,19 +14,19 @@ if (REQUIRED_ARGS.some(arg => !arg)) {
 }
 
 const environmentListValuesMap = {
-  ALPHA: '6f662bda-bd21-42c0-949b-e66907193e7e',
-  BETA: '8f9e8676-aeff-4abe-a658-250a430da1d1',
-  QA: '2794c144-8457-48d1-87ad-31592431320a',
-  IST: '9fcb72c5-a741-45ec-aeb1-52087a03f22c',
-  VPRIOR: '2d82f659-881c-44c8-ba96-c2ff18bb172c',
-  VNEXT: '35119fcc-c229-4c7b-bfb2-c265836f4ea1',
-  PROD: '2bd3c586-e233-4bf4-ab4b-8a6b25a9789d',
-  FEDSPRING_IST: '4a67c97a-b5e3-48fb-8432-39e7cbf9dbb8',
+  ALPHA: '38eb9972-8d92-4032-9e7b-cb577206b8b3',
+  BETA: '9f1fa75a-578d-4e01-b46a-922ce3d435a7',
+  QA: '4a96f409-1e2b-4b05-9b64-dde3d1d31663',
+  IST: 'e576c37d-9976-419f-bf7b-e5976ceb8e21',
+  VPRIOR: '073dbe4c-c2de-46b3-8385-b60886cb354b',
+  VNEXT: 'b64dc2db-9e80-4822-a1b3-add2aacfbcbd',
+  PROD: '770d679e-23c6-4127-af66-27be70721a60',
+  FEDSPRING_IST: '22645656-dbc4-4dca-8736-1f83fac8e095',
 };
 
 const resultListValuesMap = {
-  failure: 'd68e5251-a53d-4c33-85f1-4c5fac2587ea',
-  success: 'b887ca04-be14-4d75-9e4f-6d2e03b5f4f8',
+  failure: 'ce037eb6-fe1f-47f5-bb45-a6b3504a9e81',
+  success: 'e0b25771-55b0-4ed7-955c-94c94392b481',
 };
 
 const envListValue = environmentListValuesMap[ENVIRONMENT];
@@ -42,7 +42,7 @@ if (!resultListValue) {
   process.exit(1);
 }
 
-const res = await fetch('https://api.onspring.ist/Records', {
+const res = await fetch('https://api.onspring.ist/records', {
   method: 'PUT',
   headers: {
     'x-apikey': API_KEY,
@@ -52,12 +52,12 @@ const res = await fetch('https://api.onspring.ist/Records', {
   body: JSON.stringify({
     appId: 380,
     fields: {
-      11660: RELEASE_RECORD_ID,
-      11663: envListValue,
-      11662: resultListValue,
-      11664: REPORT_URL,
-      11666: WORKFLOW_NUMBER,
-      11667: WORKFLOW_ATTEMPT,
+      44337: RELEASE_RECORD_ID,
+      44339: envListValue,
+      44340: resultListValue,
+      44341: REPORT_URL,
+      44342: WORKFLOW_NUMBER,
+      44343: WORKFLOW_ATTEMPT,
     },
   }),
 });
