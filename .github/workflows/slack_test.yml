@@ -2,14 +2,19 @@ name: Test Slack Notification
 on:
   workflow_dispatch:
     inputs:
-      send_slack_notification:
+      send_notification:
         type: boolean
         description: 'Send Slack notification'
         required: false
         default: false
+      release_record_id:
+        type: number
+        description: 'Record ID of target release'
+        required: false
+        default: 0
 jobs:
   test:
-    if: ${{ github.event.inputs.send_slack_notification }}
+    if: ${{ github.event.inputs.send_notification }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,7 +23,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: latest
-      - name: Install dependencies
-        run: npm ci
       - name: Create test run result
-        run: node ./scripts/createTestRunResult.mjs
+        run: node ./scripts/createTestRunResult.mjs ${{ secrets.ONSPRING_CORP_API_KEY }} ${{ github.event.inputs.release_record_id }} https://onspringqareports.stevanfreeborn.com/reports/1719348419098-BETA-failure-Playwright_Tests-119-1/ ALPHA success 1 1
