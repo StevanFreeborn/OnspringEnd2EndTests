@@ -214,7 +214,7 @@ jobs:
         with:
           node-version: latest
       - name: Add test run result to Corp
-        run: node ./scripts/addTestRunResult.mjs ${{ secrets.ONSPRING_CORP_API_KEY }} ${{ github.event.inputs.release_record_id }} ${{ github.event.inputs.environment }} ${{ needs.run_tests.result }} ${{ needs.merge_reports_and_publish.outputs.reportUrl }}  ${{ github.run_number }} ${{ github.run_attempt }}
+        run: node ./scripts/createTestRunResult.mjs ${{ secrets.ONSPRING_CORP_API_KEY }} ${{ github.event.inputs.release_record_id }} ${{ github.event.inputs.environment }} ${{ needs.run_tests.result }} ${{ needs.merge_reports_and_publish.outputs.reportUrl }}  ${{ github.run_number }} ${{ github.run_attempt }}
   cleanup:
     name: 'Cleanup test artifacts'
     if: always()
