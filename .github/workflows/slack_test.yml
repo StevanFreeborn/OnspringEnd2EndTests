@@ -9,7 +9,7 @@ on:
         default: false
 jobs:
   test:
-    if: ${{ github.event.inputs.send_slack_notification == true }}
+    if: ${{ github.event.inputs.send_slack_notification }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
