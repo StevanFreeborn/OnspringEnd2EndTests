@@ -14,7 +14,7 @@ on:
         default: 0
 jobs:
   test:
-    if: ${{ github.event.inputs.send_notification == true }}
+    if: ${{ github.event.inputs.send_notification == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
