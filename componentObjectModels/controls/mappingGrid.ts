@@ -35,6 +35,7 @@ export class MappingGrid {
         const sourceField = this.sourceFields.locator(`.draggable:has-text("${key}")`);
         const targetField = targetRow.locator('.drag-and-drop-cell');
 
+        await targetField.scrollIntoViewIfNeeded();
         await sourceField.dragTo(targetField);
       }
     }
