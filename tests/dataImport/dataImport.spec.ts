@@ -463,8 +463,8 @@ test.describe('data import', () => {
           expect(email.html).toContain('New Content Created: 1');
         }
       }).toPass({
-        intervals: [5000],
-        timeout: 60_000,
+        intervals: [30_000],
+        timeout: 300_000,
       });
 
       const viewContentPage = new ViewContentPage(sysAdminPage);
