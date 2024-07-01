@@ -51,11 +51,12 @@ export async function activeUserWithRole(
 
 export async function createUserFixture(
   {
+    browser,
     sysAdminPage,
     sysAdmin = false,
     userStatus,
     roles = [],
-  }: { sysAdminPage: Page; sysAdmin?: boolean; userStatus: UserStatus; roles?: string[] },
+  }: { browser: Browser; sysAdminPage: Page; sysAdmin?: boolean; userStatus: UserStatus; roles?: string[] },
   use: (r: User) => Promise<void>
 ) {
   const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
@@ -72,7 +73,27 @@ export async function createUserFixture(
   await editUserAdminPage.saveUser();
   user.id = editUserAdminPage.getUserIdFromUrl();
 
+  const userAuthStoragePath = await logUserIn({ browser, user });
+  user.authStoragePath = userAuthStoragePath;
+
   await use(user);
 
   await usersSecurityAdminPage.deleteUsers([user.username]);
+}
+
+async function logUserIn({ browser, user }: { browser: Browser; user: User }) {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  page.on('response', errorResponseHandler);
+
+  const loginPage = new LoginPage(page);
+  const dashboardPage = new DashboardPage(page);
+  await loginPage.login(user);
+  await loginPage.page.waitForURL(dashboardPage.path);
+
+  const userAuthStoragePath = path.join(AUTH_DIR, `${user.username}.json`);
+  await page.context().storageState({ path: userAuthStoragePath });
+  await context.close();
+
+  return userAuthStoragePath;
 }
