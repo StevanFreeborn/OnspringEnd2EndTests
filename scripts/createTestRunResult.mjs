@@ -1,16 +1,20 @@
-const API_KEY = process.argv[2];
-const RELEASE_RECORD_ID = process.argv[3];
-const ENVIRONMENT = process.argv[4];
-const RESULT = process.argv[5];
-const REPORT_URL = process.argv[6];
-const WORKFLOW_NUMBER = process.argv[7];
-const WORKFLOW_ATTEMPT = process.argv[8];
+import 'dotenv/config';
+
+const API_KEY = process.env.ONSPRING_CORP_API_KEY;
+const RELEASE_RECORD_ID = process.env.RELEASE_RECORD_ID;
+const ENVIRONMENT = process.env.ENVIRONMENT;
+const RESULT = process.env.RUN_RESULT;
+const REPORT_URL = process.env.REPORT_URL;
+const WORKFLOW_NUMBER = process.env.WORKFLOW_NUMBER;
+const WORKFLOW_ATTEMPT = process.env.WORKFLOW_ATTEMPT;
 
 const REQUIRED_ARGS = [API_KEY, RELEASE_RECORD_ID, ENVIRONMENT, RESULT, REPORT_URL, WORKFLOW_NUMBER, WORKFLOW_ATTEMPT];
 
-if (REQUIRED_ARGS.some(arg => !arg)) {
-  console.error('Missing required argument');
-  process.exit(1);
+for (const [index, arg] of REQUIRED_ARGS.entries()) {
+  if (!arg) {
+    console.error(`Missing required argument at index ${index}`);
+    process.exit(1);
+  }
 }
 
 const environmentListValuesMap = {
