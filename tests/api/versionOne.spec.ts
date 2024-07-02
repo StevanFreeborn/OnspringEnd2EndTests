@@ -1,8 +1,12 @@
+/* eslint-disable playwright/no-conditional-expect */
+/* eslint-disable playwright/no-conditional-in-test */
 import { APIRequestContext, expect, test } from '../../fixtures';
-import { ApiSetupResult, createRequestContext, performApiTestsSetup } from '../../fixtures/api.fixtures';
-import { ApiKeysAdminPage } from '../../pageObjectModels/apiKeys/apiKeysAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
+import {
+  ApiSetupResult,
+  createRequestContext,
+  performApiTestCleanup,
+  performApiTestsSetup,
+} from '../../fixtures/api.fixtures';
 
 test.describe('API v1', () => {
   test.describe.configure({
@@ -12,8 +16,8 @@ test.describe('API v1', () => {
   let setup: ApiSetupResult;
   let request: APIRequestContext;
 
-  test.beforeAll(async ({ sysAdminPage }) => {
-    setup = await performApiTestsSetup({ sysAdminPage });
+  test.beforeAll(async ({ sysAdminPage, useCachedApiSetup }) => {
+    setup = await performApiTestsSetup({ sysAdminPage, useCache: useCachedApiSetup });
   });
 
   test.beforeEach(async ({ apiURL }) => {
@@ -24,10 +28,8 @@ test.describe('API v1', () => {
     await request.dispose();
   });
 
-  test.afterAll(async ({ sysAdminPage }) => {
-    await new ApiKeysAdminPage(sysAdminPage).deleteApiKeys([setup.apiKey.name]);
-    await new AppsAdminPage(sysAdminPage).deleteApps([setup.app.name]);
-    await new RolesSecurityAdminPage(sysAdminPage).deleteRoles([setup.role.name]);
+  test.afterAll(async ({ sysAdminPage, useCachedApiSetup }) => {
+    await performApiTestCleanup({ sysAdminPage, setup, useCache: useCachedApiSetup });
   });
 
   test.describe('Ping', () => {
@@ -114,6 +116,72 @@ test.describe('API v1', () => {
 
         for (const prop of expectedProperties) {
           expect(field).toHaveProperty(prop.name, prop.value);
+        }
+
+        const expectedListValueProperties = [
+          {
+            name: 'Id',
+            value: expect.any(String),
+          },
+          {
+            name: 'Name',
+            value: expect.any(String),
+          },
+          {
+            name: 'SortOrder',
+            value: expect.any(Number),
+          },
+          {
+            name: 'NumericValue',
+            value: expect.any(Number),
+          },
+          {
+            name: 'Color',
+            value: expect.any(String),
+          },
+        ];
+
+        // list field
+        if (field.Type === 400) {
+          expect(field).toHaveProperty('Multiplicity', expect.any(Number));
+
+          const values = field.Values;
+
+          expect(Array.isArray(values)).toBe(true);
+
+          for (const value of values) {
+            for (const prop of expectedListValueProperties) {
+              if (value[prop.name] === null) {
+                continue;
+              }
+
+              expect(value).toHaveProperty(prop.name, prop.value);
+            }
+          }
+        }
+
+        // reference field
+        if (field.Type === 500) {
+          expect(field).toHaveProperty('Multiplicity', expect.any(Number));
+        }
+
+        // formula field
+        if (field.Type === 900) {
+          expect(field).toHaveProperty('OutputType', expect.any(Number));
+
+          const values = field.Values;
+
+          expect(Array.isArray(values)).toBe(true);
+
+          for (const value of values) {
+            for (const prop of expectedListValueProperties) {
+              if (value[prop.name] === null) {
+                continue;
+              }
+
+              expect(value).toHaveProperty(prop.name, prop.value);
+            }
+          }
         }
       }
     });

@@ -33,6 +33,7 @@ type Environment = {
 
 export type ApiTestOptions = {
   apiURL: string;
+  useCachedApiSetup: boolean;
 };
 
 type Fixtures = {
@@ -47,6 +48,7 @@ type Fixtures = {
   jpgFile: TestFile;
   txtFile: TestFile;
   apiURL: string;
+  useCachedApiSetup: boolean;
 };
 
 type FieldTestFixtures = {
@@ -78,6 +80,7 @@ export const test = base.extend<Fixtures>({
   jpgFile: jpgFile,
   txtFile: txtFile,
   apiURL: ['', { option: true }],
+  useCachedApiSetup: [false, { option: true }],
 });
 
 export const layoutItemTest = test.extend<FieldTestFixtures>({
