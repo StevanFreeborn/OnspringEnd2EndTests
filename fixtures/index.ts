@@ -80,7 +80,6 @@ export const test = base.extend<Fixtures>({
   jpgFile: jpgFile,
   txtFile: txtFile,
   apiURL: ['', { option: true }],
-  useCachedApiSetup: [false, { option: true }],
 });
 
 export const layoutItemTest = test.extend<FieldTestFixtures>({

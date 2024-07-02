@@ -105,12 +105,24 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       teardown: 'teardown',
     },
     {
+      name: 'api-setup',
+      testDir: 'setups',
+      testMatch: '**/*.apiSetup.ts',
+      teardown: 'api-teardown',
+    },
+    {
       name: 'teardown',
       testDir: 'teardowns',
       testMatch: '**/**.teardown.ts',
     },
     {
+      name: 'api-teardown',
+      testDir: 'teardowns',
+      testMatch: '**/*.apiTeardown.ts',
+    },
+    {
       name: 'chrome',
+      testIgnore: '**/api/**',
       use: {
         ...devices['Desktop Chrome'],
       },
@@ -118,10 +130,16 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     },
     {
       name: 'edge',
+      testIgnore: '**/api/**',
       use: {
         ...devices['Desktop Edge'],
       },
       dependencies: ['setup'],
+    },
+    {
+      name: 'api',
+      testDir: 'tests/api',
+      dependencies: ['api-setup'],
     },
     {
       name: 'cleanup',

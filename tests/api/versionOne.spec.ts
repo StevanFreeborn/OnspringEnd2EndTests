@@ -1,58 +1,42 @@
 /* eslint-disable playwright/no-conditional-expect */
 /* eslint-disable playwright/no-conditional-in-test */
-import { APIRequestContext, expect, test } from '../../fixtures';
-import {
-  ApiSetupResult,
-  createRequestContext,
-  performApiTestCleanup,
-  performApiTestsSetup,
-} from '../../fixtures/api.fixtures';
+import { APIRequestContext, test as base, expect } from '../../fixtures';
+import { ApiSetupResult, createApiSetupFixture, createRequestContextFixture } from '../../fixtures/api.fixtures';
+
+const test = base.extend<
+  {
+    request: APIRequestContext;
+  },
+  {
+    setup: ApiSetupResult;
+  }
+>({
+  setup: [async ({}, use) => await createApiSetupFixture(use), { scope: 'worker' }],
+  request: async ({ apiURL, setup }, use) => await createRequestContextFixture({ apiUrl: `${apiURL}/v1/`, setup }, use),
+});
 
 test.describe('API v1', () => {
-  test.describe.configure({
-    mode: 'default',
-  });
-
-  let setup: ApiSetupResult;
-  let request: APIRequestContext;
-
-  test.beforeAll(async ({ sysAdminPage, useCachedApiSetup }) => {
-    setup = await performApiTestsSetup({ sysAdminPage, useCache: useCachedApiSetup });
-  });
-
-  test.beforeEach(async ({ apiURL }) => {
-    request = await createRequestContext(apiURL, setup.apiKey.key);
-  });
-
-  test.afterEach(async () => {
-    await request.dispose();
-  });
-
-  test.afterAll(async ({ sysAdminPage, useCachedApiSetup }) => {
-    await performApiTestCleanup({ sysAdminPage, setup, useCache: useCachedApiSetup });
-  });
-
   test.describe('Ping', () => {
-    test('it should return 204 status code', async () => {
-      const response = await request.get('/v1/ping');
+    test('it should return 204 status code', async ({ request }) => {
+      const response = await request.get('ping');
       expect(response.status()).toBe(204);
     });
   });
 
   test.describe('Get Apps', () => {
-    test('it should return 200 status code', async () => {
-      const response = await request.get('/v1/apps');
+    test('it should return 200 status code', async ({ request }) => {
+      const response = await request.get('/apps');
       expect(response.status()).toBe(200);
     });
 
-    test('it should return expected data structure', async () => {
-      const response = await request.get('/v1/apps');
+    test('it should return expected data structure', async ({ request }) => {
+      const response = await request.get('apps');
       const body = await response.json();
 
       expect(Array.isArray(body)).toBe(true);
 
       for (const app of body) {
-        const expectedProperties = [
+        const expectedAppProperties = [
           {
             name: 'Id',
             value: expect.any(Number),
@@ -63,7 +47,7 @@ test.describe('API v1', () => {
           },
         ];
 
-        for (const prop of expectedProperties) {
+        for (const prop of expectedAppProperties) {
           expect(app).toHaveProperty(prop.name, prop.value);
         }
       }
@@ -71,13 +55,13 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Fields By AppId', () => {
-    test('it should return 200 status code', async () => {
-      const response = await request.get(`/v1/fields?appId=${setup.app.id}`);
+    test('it should return 200 status code', async ({ request, setup }) => {
+      const response = await request.get(`fields?appId=${setup.app.id}`);
       expect(response.status()).toBe(200);
     });
 
-    test('it should return expected data structure', async () => {
-      const response = await request.get(`/v1/fields?appId=${setup.app.id}`);
+    test('it should return expected data structure', async ({ request, setup }) => {
+      const response = await request.get(`fields?appId=${setup.app.id}`);
       const body = await response.json();
 
       expect(Array.isArray(body)).toBe(true);
@@ -134,13 +118,13 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Field By Field Id', () => {
-    test('it should return 200 status code', async () => {
-      const response = await request.get(`/v1/fields/${setup.fields.statusField.id}`);
+    test('it should return 200 status code', async ({ request, setup }) => {
+      const response = await request.get(`fields/${setup.fields.statusField.id}`);
       expect(response.status()).toBe(200);
     });
 
-    test('it should return expected data structure', async () => {
-      const response = await request.get(`/v1/fields/${setup.fields.statusField.id}`);
+    test('it should return expected data structure', async ({ request, setup }) => {
+      const response = await request.get(`fields/${setup.fields.statusField.id}`);
       const body = await response.json();
 
       for (const prop of expectedFieldProperties) {
@@ -162,6 +146,8 @@ test.describe('API v1', () => {
       }
     });
   });
+
+  test.describe('Get Records By App Id', () => {});
 });
 
 const expectedFieldProperties = [

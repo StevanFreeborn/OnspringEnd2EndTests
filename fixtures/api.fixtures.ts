@@ -1,4 +1,4 @@
-import { Page, request } from '@playwright/test';
+import { APIRequestContext, Page, request } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { env } from '../env';
@@ -37,6 +37,27 @@ const FILE_NAME = `${env.TEST_ENV}_api_setup_result.json`;
 const DIRECTORY_PATH = path.join(process.cwd(), FILE_DIRECTORY);
 const FILE_PATH = path.join(DIRECTORY_PATH, FILE_NAME);
 
+export async function createRequestContextFixture(
+  { apiUrl, setup }: { apiUrl: string; setup: ApiSetupResult },
+  use: (r: APIRequestContext) => Promise<void>
+) {
+  const context = await request.newContext({
+    baseURL: apiUrl,
+    extraHTTPHeaders: {
+      'x-apikey': setup.apiKey.key,
+    },
+  });
+
+  await use(context);
+
+  await context.dispose();
+}
+
+export async function createApiSetupFixture(use: (r: ApiSetupResult) => Promise<void>) {
+  const setup = getApiSetupResult();
+  await use(setup);
+}
+
 export async function performApiTestsSetup({
   sysAdminPage,
   useCache = false,
@@ -45,8 +66,7 @@ export async function performApiTestsSetup({
   useCache?: boolean;
 }) {
   if (useCache && existsSync(FILE_PATH)) {
-    const fileContent = readFileSync(FILE_PATH, 'utf-8');
-    return JSON.parse(fileContent) as ApiSetupResult;
+    return;
   }
 
   const testFields = getTestFields();
@@ -91,41 +111,35 @@ export async function performApiTestsSetup({
     field.id = createdField.id;
   }
 
-  const result = { app, fields: testFields, report, role, apiKey };
-
-  if (useCache === false) {
-    return result;
-  }
-
   if (existsSync(DIRECTORY_PATH) === false) {
     mkdirSync(DIRECTORY_PATH);
   }
 
-  writeFileSync(FILE_PATH, JSON.stringify(result, null, 2));
-
-  return result;
+  writeFileSync(FILE_PATH, JSON.stringify({ app, fields: testFields, report, role, apiKey }, null, 2));
 }
 
 export async function performApiTestCleanup({
   sysAdminPage,
-  setup,
   useCache = false,
 }: {
   sysAdminPage: Page;
-  setup: ApiSetupResult;
   useCache?: boolean;
 }) {
   if (useCache) {
     return;
   }
 
+  const setup = getApiSetupResult();
+
   await new ApiKeysAdminPage(sysAdminPage).deleteApiKeys([setup.apiKey.name]);
   await new AppsAdminPage(sysAdminPage).deleteApps([setup.app.name]);
   await new RolesSecurityAdminPage(sysAdminPage).deleteRoles([setup.role.name]);
 
-  if (existsSync(FILE_PATH)) {
-    rmSync(FILE_PATH);
-  }
+  rmSync(FILE_PATH);
+}
+
+function getApiSetupResult() {
+  return JSON.parse(readFileSync(FILE_PATH, 'utf8')) as ApiSetupResult;
 }
 
 async function createApiKey(sysAdminPage: Page, key: ApiKey) {
@@ -141,15 +155,6 @@ async function createApiKey(sysAdminPage: Page, key: ApiKey) {
 
   key.key = await apiKeyAdminPage.getApiKey();
   return key;
-}
-
-export async function createRequestContext(apiUrl: string, apiKey: string) {
-  return request.newContext({
-    baseURL: apiUrl,
-    extraHTTPHeaders: {
-      'x-apikey': apiKey,
-    },
-  });
 }
 
 function getTestFields() {
