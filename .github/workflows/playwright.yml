@@ -213,8 +213,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: latest
+      - name: Install dependencies
+        run: npm ci
       - name: Add test run result to Corp
-        run: node ./scripts/createTestRunResult.mjs ${{ secrets.ONSPRING_CORP_API_KEY }} ${{ github.event.inputs.release_record_id }} ${{ github.event.inputs.environment }} ${{ needs.run_tests.result }} ${{ needs.merge_reports_and_publish.outputs.reportUrl }} ${{ github.run_number }} ${{ github.run_attempt }}
+        env:
+          ONSPRING_CORP_API_KEY: ${{ secrets.ONSPRING_CORP_API_KEY }}
+          RELEASE_RECORD_ID: ${{ github.event.inputs.release_record_id }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+          RUN_RESULT: ${{ needs.run_tests.result }}
+          REPORT_URL: ${{ needs.merge_reports_and_publish.outputs.reportUrl }}
+          WORKFLOW_NUMBER: ${{ github.run_number }}
+          WORKFLOW_ATTEMPT: ${{ github.run_attempt }}
+        run: node ./scripts/createTestRunResult.mjs
   cleanup:
     name: 'Cleanup test artifacts'
     if: always()
