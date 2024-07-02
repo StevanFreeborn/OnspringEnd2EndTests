@@ -1,6 +1,7 @@
 import { Page, request } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
+import { env } from '../env';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
 import { ApiKey } from '../models/apiKey';
 import { App } from '../models/app';
@@ -32,7 +33,7 @@ export type ApiSetupResult = {
 };
 
 const FILE_DIRECTORY = 'apiSetupResults';
-const FILE_NAME = 'apiSetupResult.json';
+const FILE_NAME = `${env.TEST_ENV}_api_setup_result.json`;
 const DIRECTORY_PATH = path.join(process.cwd(), FILE_DIRECTORY);
 const FILE_PATH = path.join(DIRECTORY_PATH, FILE_NAME);
 
