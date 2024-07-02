@@ -9,7 +9,7 @@ import { ListField } from '../models/listField';
 import { ListValue } from '../models/listValue';
 import { ReferenceField } from '../models/referenceField';
 import { Report, SavedReport } from '../models/report';
-import { AppPermission } from '../models/role';
+import { AppPermission, Role } from '../models/role';
 import { TextField } from '../models/textField';
 import { ApiKeyAdminPage } from '../pageObjectModels/apiKeys/apiKeyAdminPage';
 import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
@@ -22,6 +22,7 @@ export type ApiSetupResult = {
   app: App;
   fields: ReturnType<typeof getTestFields>;
   report: Report;
+  role: Role;
   apiKey: ApiKey;
 };
 
@@ -37,6 +38,7 @@ export async function performApiTestsSetup({ sysAdminPage }: { sysAdminPage: Pag
       appName: app.name,
       name: FakeDataFactory.createFakeReportName(),
       displayFields: createdFields.map(f => f.name),
+      security: 'Public',
     })
   );
 
@@ -67,7 +69,7 @@ export async function performApiTestsSetup({ sysAdminPage }: { sysAdminPage: Pag
     field.id = createdField.id;
   }
 
-  return { app, fields: testFields, report, apiKey };
+  return { app, fields: testFields, report, role, apiKey };
 }
 
 async function createApiKey(sysAdminPage: Page, key: ApiKey) {
