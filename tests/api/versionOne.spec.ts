@@ -83,63 +83,9 @@ test.describe('API v1', () => {
       expect(Array.isArray(body)).toBe(true);
 
       for (const field of body) {
-        const expectedProperties = [
-          {
-            name: 'Id',
-            value: expect.any(Number),
-          },
-          {
-            name: 'AppId',
-            value: expect.any(Number),
-          },
-          {
-            name: 'IsRequired',
-            value: expect.any(Boolean),
-          },
-          {
-            name: 'IsUnique',
-            value: expect.any(Boolean),
-          },
-          {
-            name: 'Name',
-            value: expect.any(String),
-          },
-          {
-            name: 'Status',
-            value: expect.any(Number),
-          },
-          {
-            name: 'Type',
-            value: expect.any(Number),
-          },
-        ];
-
-        for (const prop of expectedProperties) {
+        for (const prop of expectedFieldProperties) {
           expect(field).toHaveProperty(prop.name, prop.value);
         }
-
-        const expectedListValueProperties = [
-          {
-            name: 'Id',
-            value: expect.any(String),
-          },
-          {
-            name: 'Name',
-            value: expect.any(String),
-          },
-          {
-            name: 'SortOrder',
-            value: expect.any(Number),
-          },
-          {
-            name: 'NumericValue',
-            value: expect.any(Number),
-          },
-          {
-            name: 'Color',
-            value: expect.any(String),
-          },
-        ];
 
         // list field
         if (field.Type === 400) {
@@ -187,5 +133,87 @@ test.describe('API v1', () => {
     });
   });
 
-  test.describe('Get Field By Field Id', () => {});
+  test.describe('Get Field By Field Id', () => {
+    test('it should return 200 status code', async () => {
+      const response = await request.get(`/v1/fields/${setup.fields.statusField.id}`);
+      expect(response.status()).toBe(200);
+    });
+
+    test('it should return expected data structure', async () => {
+      const response = await request.get(`/v1/fields/${setup.fields.statusField.id}`);
+      const body = await response.json();
+
+      for (const prop of expectedFieldProperties) {
+        expect(body).toHaveProperty(prop.name, prop.value);
+      }
+
+      const values = body.Values;
+
+      expect(Array.isArray(values)).toBe(true);
+
+      for (const value of values) {
+        for (const prop of expectedListValueProperties) {
+          if (value[prop.name] === null) {
+            continue;
+          }
+
+          expect(value).toHaveProperty(prop.name, prop.value);
+        }
+      }
+    });
+  });
 });
+
+const expectedFieldProperties = [
+  {
+    name: 'Id',
+    value: expect.any(Number),
+  },
+  {
+    name: 'AppId',
+    value: expect.any(Number),
+  },
+  {
+    name: 'IsRequired',
+    value: expect.any(Boolean),
+  },
+  {
+    name: 'IsUnique',
+    value: expect.any(Boolean),
+  },
+  {
+    name: 'Name',
+    value: expect.any(String),
+  },
+  {
+    name: 'Status',
+    value: expect.any(Number),
+  },
+  {
+    name: 'Type',
+    value: expect.any(Number),
+  },
+];
+
+const expectedListValueProperties = [
+  {
+    name: 'Id',
+    value: expect.any(String),
+  },
+  {
+    name: 'Name',
+    value: expect.any(String),
+  },
+  {
+    name: 'SortOrder',
+    value: expect.any(Number),
+  },
+  {
+    name: 'NumericValue',
+    value: expect.any(Number),
+  },
+  {
+    name: 'Color',
+    value: expect.any(String),
+  },
+];
