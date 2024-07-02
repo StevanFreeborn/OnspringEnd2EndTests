@@ -17,5 +17,5 @@ export async function createFields(sysAdminPage: Page, app: App, fields: LayoutI
     createdFields.push({ ...field, id: fieldId });
   }
 
-  return fields;
+  return createdFields;
 }
