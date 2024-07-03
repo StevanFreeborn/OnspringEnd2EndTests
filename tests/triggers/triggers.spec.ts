@@ -171,6 +171,8 @@ test.describe('Triggers', () => {
     });
 
     await test.step('Delete the trigger', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.triggersTabButton.click();
       await appAdminPage.triggersTab.deleteTrigger(trigger.name);
     });
 
