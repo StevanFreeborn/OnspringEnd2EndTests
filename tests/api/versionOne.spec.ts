@@ -265,6 +265,47 @@ test.describe('API v1', () => {
       expect(body).toHaveProperty('recordId', expect.any(Number));
     });
   });
+
+  test.describe('Update A Record', () => {
+    test('it should return expected status code', async ({ request, setup }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Update the record', async () => {
+        const response = await request.put(`records/${setup.app.id}/${createdRecordId}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Updated Test Record',
+            },
+          },
+        });
+
+        expect(response.status()).toBe(204);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
 });
 
 const expectedFieldProperties = [
