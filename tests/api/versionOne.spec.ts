@@ -25,13 +25,11 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Apps', () => {
-    test('it should return 200 status code', async ({ request }) => {
-      const response = await request.get('/apps');
-      expect(response.status()).toBe(200);
-    });
-
-    test('it should return expected data structure', async ({ request }) => {
+    test('it should return expected status code and data structure', async ({ request }) => {
       const response = await request.get('apps');
+
+      expect(response.status()).toBe(200);
+
       const body = await response.json();
 
       expect(Array.isArray(body)).toBe(true);
@@ -56,13 +54,11 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Fields By AppId', () => {
-    test('it should return 200 status code', async ({ request, setup }) => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
       const response = await request.get(`fields?appId=${setup.app.id}`);
-      expect(response.status()).toBe(200);
-    });
 
-    test('it should return expected data structure', async ({ request, setup }) => {
-      const response = await request.get(`fields?appId=${setup.app.id}`);
+      expect(response.status()).toBe(200);
+
       const body = await response.json();
 
       expect(Array.isArray(body)).toBe(true);
@@ -119,13 +115,11 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Field By Field Id', () => {
-    test('it should return 200 status code', async ({ request, setup }) => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
       const response = await request.get(`fields/${setup.fields.statusField.id}`);
-      expect(response.status()).toBe(200);
-    });
 
-    test('it should return expected data structure', async ({ request, setup }) => {
-      const response = await request.get(`fields/${setup.fields.statusField.id}`);
+      expect(response.status()).toBe(200);
+
       const body = await response.json();
 
       for (const prop of expectedFieldProperties) {
@@ -149,12 +143,7 @@ test.describe('API v1', () => {
   });
 
   test.describe('Get Records By App Id', () => {
-    test('it should return 200 status code', async ({ request, setup }) => {
-      const response = await request.get(`records/${setup.app.id}`);
-      expect(response.status()).toBe(200);
-    });
-
-    test('it should return expected data structure', async ({ request, setup }) => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
       let createdRecordId = 0;
 
       await test.step('Create a record', async () => {
@@ -178,6 +167,9 @@ test.describe('API v1', () => {
 
       await test.step('Get records', async () => {
         const response = await request.get(`records/${setup.app.id}`);
+
+        expect(response.status()).toBe(200);
+
         const body = await response.json();
 
         expect(Array.isArray(body)).toBe(true);
@@ -195,6 +187,57 @@ test.describe('API v1', () => {
             expect(field).toHaveProperty('FieldId', expect.any(Number));
             expect(field).toHaveProperty('Value');
           }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Get Record By Id', () => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get the record', async () => {
+        const response = await request.get(`records/${setup.app.id}/${createdRecordId}`);
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toHaveProperty('AppId', expect.any(Number));
+        expect(body).toHaveProperty('RecordId', expect.any(Number));
+
+        const fieldData = body.FieldData;
+
+        expect(Array.isArray(fieldData)).toBe(true);
+
+        for (const field of fieldData) {
+          expect(field).toHaveProperty('Type', expect.any(Number));
+          expect(field).toHaveProperty('FieldId', expect.any(Number));
+          expect(field).toHaveProperty('Value');
         }
       });
 
