@@ -55,6 +55,19 @@ export async function createBaseAuthPage(
 
   page.on('response', errorResponseHandler);
 
+  page.on('pageerror', async error => {
+    const err = {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+
+    await testInfo.attach(error.name, {
+      body: JSON.stringify(err, null, 2),
+      contentType: 'application/json',
+    });
+  });
+
   try {
     await use(page);
     await context.close();
