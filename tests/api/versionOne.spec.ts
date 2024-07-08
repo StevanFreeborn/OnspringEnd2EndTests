@@ -3,14 +3,15 @@
 import { APIRequestContext, test as base, expect } from '../../fixtures';
 import { ApiSetupResult, createApiSetupFixture, createRequestContextFixture } from '../../fixtures/api.fixtures';
 
-const test = base.extend<
-  {
-    request: APIRequestContext;
-  },
-  {
-    setup: ApiSetupResult;
-  }
->({
+type VersionOneTestFixtures = {
+  request: APIRequestContext;
+};
+
+type VersionOneWorkerFixtures = {
+  setup: ApiSetupResult;
+};
+
+const test = base.extend<VersionOneTestFixtures, VersionOneWorkerFixtures>({
   setup: [async ({}, use) => await createApiSetupFixture(use), { scope: 'worker' }],
   request: async ({ apiURL, setup }, use) => await createRequestContextFixture({ apiUrl: `${apiURL}/v1/`, setup }, use),
 });
@@ -147,7 +148,61 @@ test.describe('API v1', () => {
     });
   });
 
-  test.describe('Get Records By App Id', () => {});
+  test.describe('Get Records By App Id', () => {
+    test('it should return 200 status code', async ({ request, setup }) => {
+      const response = await request.get(`records/${setup.app.id}`);
+      expect(response.status()).toBe(200);
+    });
+
+    test('it should return expected data structure', async ({ request, setup }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get records', async () => {
+        const response = await request.get(`records/${setup.app.id}`);
+        const body = await response.json();
+
+        expect(Array.isArray(body)).toBe(true);
+
+        for (const record of body) {
+          expect(record).toHaveProperty('AppId', expect.any(Number));
+          expect(record).toHaveProperty('RecordId', expect.any(Number));
+
+          const fieldData = record.FieldData;
+
+          expect(Array.isArray(fieldData)).toBe(true);
+
+          for (const field of fieldData) {
+            expect(field).toHaveProperty('Type', expect.any(Number));
+            expect(field).toHaveProperty('FieldId', expect.any(Number));
+            expect(field).toHaveProperty('Value');
+          }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
 });
 
 const expectedFieldProperties = [
