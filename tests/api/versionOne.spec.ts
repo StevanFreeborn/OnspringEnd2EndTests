@@ -246,6 +246,25 @@ test.describe('API v1', () => {
       });
     });
   });
+
+  test.describe('Add A Record', () => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
+      const response = await request.post(`records/${setup.app.id}`, {
+        data: {
+          FieldData: {
+            [setup.fields.nameField.id]: 'Test Record',
+          },
+        },
+      });
+
+      expect(response.status()).toBe(201);
+
+      const body = await response.json();
+
+      expect(body).toBeInstanceOf(Object);
+      expect(body).toHaveProperty('recordId', expect.any(Number));
+    });
+  });
 });
 
 const expectedFieldProperties = [
