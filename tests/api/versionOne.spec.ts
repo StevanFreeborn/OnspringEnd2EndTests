@@ -408,6 +408,16 @@ test.describe('API v1', () => {
       });
     });
   });
+
+  test.describe('Get An Attachment', () => {});
+
+  test.describe('Get An Image', () => {});
+
+  test.describe('Delete A Record', () => {});
+
+  test.describe('Get Reports By App Id', () => {});
+
+  test.describe('Get Report Data By Id', () => {});
 });
 
 const expectedFieldProperties = [
