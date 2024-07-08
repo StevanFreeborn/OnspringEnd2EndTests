@@ -359,6 +359,55 @@ test.describe('API v1', () => {
       });
     });
   });
+
+  test.describe('Update A Record With Image', () => {
+    test('it should return expected status code and data structure', async ({ setup, request, jpgFile }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Update the record with image', async () => {
+        const file = await readFile(jpgFile.path);
+
+        const response = await request.post(`files/${setup.app.id}/${createdRecordId}/${setup.fields.imageField.id}`, {
+          data: file,
+          params: {
+            fileName: jpgFile.name,
+            modifiedTime: new Date().toISOString(),
+            fileNotes: 'Test file notes',
+          },
+        });
+
+        expect(response.status()).toBe(201);
+
+        const body = await response.json();
+
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toHaveProperty('fileId', expect.any(Number));
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
 });
 
 const expectedFieldProperties = [
