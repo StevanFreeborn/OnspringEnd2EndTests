@@ -1,5 +1,6 @@
 /* eslint-disable playwright/no-conditional-expect */
 /* eslint-disable playwright/no-conditional-in-test */
+import { readFile } from 'fs/promises';
 import { APIRequestContext, test as base, expect } from '../../fixtures';
 import { ApiSetupResult, createApiSetupFixture, createRequestContextFixture } from '../../fixtures/api.fixtures';
 
@@ -299,6 +300,58 @@ test.describe('API v1', () => {
         });
 
         expect(response.status()).toBe(204);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Update A Record With Attachment', () => {
+    test('it should return expected status code and data structure', async ({ setup, request, txtFile }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Update the record with attachment', async () => {
+        const file = await readFile(txtFile.path);
+
+        const response = await request.post(
+          `files/${setup.app.id}/${createdRecordId}/${setup.fields.attachmentsField.id}`,
+          {
+            data: file,
+            params: {
+              fileName: txtFile.name,
+              modifiedTime: new Date().toISOString(),
+              fileNotes: 'Test file notes',
+            },
+          }
+        );
+
+        expect(response.status()).toBe(201);
+
+        const body = await response.json();
+
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toHaveProperty('fileId', expect.any(Number));
       });
 
       await test.step('Delete the record', async () => {
