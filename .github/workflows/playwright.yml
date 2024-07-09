@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [chrome, edge]
+        project: [chrome, edge, api]
         shard: ${{ fromJson(needs.generate_shards.outputs.shards) }}
     steps:
       - name: Checkout repository
