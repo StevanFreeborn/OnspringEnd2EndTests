@@ -250,20 +250,30 @@ test.describe('API v1', () => {
 
   test.describe('Add A Record', () => {
     test('it should return expected status code and data structure', async ({ request, setup }) => {
-      const response = await request.post(`records/${setup.app.id}`, {
-        data: {
-          FieldData: {
-            [setup.fields.nameField.id]: 'Test Record',
+      let createdRecordId = 0;
+
+      await test.step('Add a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
           },
-        },
+        });
+
+        expect(response.status()).toBe(201);
+
+        const body = await response.json();
+
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toHaveProperty('recordId', expect.any(Number));
+
+        createdRecordId = parseInt(body.recordId);
       });
 
-      expect(response.status()).toBe(201);
-
-      const body = await response.json();
-
-      expect(body).toBeInstanceOf(Object);
-      expect(body).toHaveProperty('recordId', expect.any(Number));
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
     });
   });
 
@@ -590,7 +600,62 @@ test.describe('API v1', () => {
     });
   });
 
-  test.describe('Get Report Data By Id', () => {});
+  test.describe('Get Report Data By Id', () => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
+      const testRecords = [{ [setup.fields.nameField.id]: 'Test Record' }];
+      const createdRecordIds: number[] = [];
+
+      await test.step('Create report data', async () => {
+        for (const record of testRecords) {
+          const response = await request.post(`records/${setup.app.id}`, {
+            data: {
+              FieldData: record,
+            },
+          });
+
+          if (response.status() !== 201) {
+            throw new Error('Failed to create record');
+          }
+
+          const body = await response.json();
+
+          createdRecordIds.push(parseInt(body.recordId));
+        }
+      });
+
+      await test.step('Get the report', async () => {
+        const response = await request.get(`reports/${setup.report.id}`);
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toHaveProperty('Columns', expect.any(Array));
+        expect(body).toHaveProperty('Rows', expect.any(Array));
+
+        const expectedColumns = Object.values(setup.fields).map(f => f.name);
+        expect(body.Columns).toEqual(expect.arrayContaining(expectedColumns));
+
+        expect(body.Rows.length).toBeGreaterThanOrEqual(testRecords.length);
+
+        for (const row of body.Rows) {
+          expect(Array.isArray(row)).toBe(true);
+          expect(row.length).toBeGreaterThanOrEqual(expectedColumns.length);
+
+          for (const cell of row) {
+            expect(cell).toBeDefined();
+          }
+        }
+      });
+
+      await test.step('Delete the report data', async () => {
+        for (const recordId of createdRecordIds) {
+          await request.delete(`records/${setup.app.id}/${recordId}`);
+        }
+      });
+    });
+  });
 });
 
 const expectedFieldProperties = [
