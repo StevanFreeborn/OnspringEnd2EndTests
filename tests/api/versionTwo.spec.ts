@@ -55,6 +55,30 @@ test.describe('API v2', () => {
       }
     });
   });
+
+  test.describe('Get Apps By App Ids', () => {});
+
+  test.describe('Get Fields By App Id', () => {});
+
+  test.describe('Get Field By Field Id', () => {});
+
+  test.describe('Get Fields By Field Ids', () => {});
+
+  test.describe('Get Records By App Id', () => {});
+
+  test.describe('Get Record By Record Id', () => {});
+
+  test.describe('Get Records By Record Ids', () => {});
+
+  test.describe('Get Records By Query', () => {});
+
+  test.describe('Get Image File Info', () => {});
+
+  test.describe('Get Image File', () => {});
+
+  test.describe('Get Attachment File Info', () => {});
+
+  test.describe('Get Attachment File', () => {});
 });
 
 const expectedAppProperties = [
