@@ -572,7 +572,23 @@ test.describe('API v1', () => {
     });
   });
 
-  test.describe('Get Reports By App Id', () => {});
+  test.describe('Get Reports By App Id', () => {
+    test('it should return expected status code and data structure', async ({ request, setup }) => {
+      const response = await request.get(`reports?appId=${setup.app.id}`);
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      expect(Array.isArray(body)).toBe(true);
+
+      for (const report of body) {
+        expect(report).toHaveProperty('Id', expect.any(Number));
+        expect(report).toHaveProperty('AppId', setup.app.id);
+        expect(report).toHaveProperty('Name', expect.any(String));
+      }
+    });
+  });
 
   test.describe('Get Report Data By Id', () => {});
 });
