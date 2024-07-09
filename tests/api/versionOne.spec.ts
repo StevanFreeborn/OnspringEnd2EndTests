@@ -409,11 +409,168 @@ test.describe('API v1', () => {
     });
   });
 
-  test.describe('Get An Attachment', () => {});
+  test.describe('Get An Attachment', () => {
+    test('it should return expected status code and data', async ({ setup, request, txtFile }) => {
+      let createdRecordId = 0;
+      let createdFileId = 0;
 
-  test.describe('Get An Image', () => {});
+      const file = await readFile(txtFile.path);
 
-  test.describe('Delete A Record', () => {});
+      await test.step('Create a record with attachment', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const fileResponse = await request.post(
+          `files/${setup.app.id}/${createdRecordId}/${setup.fields.attachmentsField.id}`,
+          {
+            data: file,
+            params: {
+              fileName: txtFile.name,
+              modifiedTime: new Date().toISOString(),
+              fileNotes: 'Test file notes',
+            },
+          }
+        );
+
+        if (fileResponse.status() !== 201) {
+          throw new Error('Failed to add attachment');
+        }
+
+        const fileBody = await fileResponse.json();
+
+        createdFileId = parseInt(fileBody.fileId);
+
+        expect(createdFileId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get the attachment', async () => {
+        const response = await request.get(
+          `files/${setup.app.id}/${createdRecordId}/${setup.fields.attachmentsField.id}?fileId=${createdFileId}`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.body();
+
+        expect(body).toEqual(file);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Get An Image', () => {
+    test('it should return expected status code and data', async ({ setup, request, jpgFile }) => {
+      let createdRecordId = 0;
+      let createdFileId = 0;
+
+      const file = await readFile(jpgFile.path);
+
+      await test.step('Create a record with image', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const fileResponse = await request.post(
+          `files/${setup.app.id}/${createdRecordId}/${setup.fields.imageField.id}`,
+          {
+            data: file,
+            params: {
+              fileName: jpgFile.name,
+              modifiedTime: new Date().toISOString(),
+              fileNotes: 'Test file notes',
+            },
+          }
+        );
+
+        if (fileResponse.status() !== 201) {
+          throw new Error('Failed to add image');
+        }
+
+        const fileBody = await fileResponse.json();
+
+        createdFileId = parseInt(fileBody.fileId);
+
+        expect(createdFileId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get the image', async () => {
+        const response = await request.get(
+          `files/${setup.app.id}/${createdRecordId}/${setup.fields.imageField.id}?fileId=${createdFileId}`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.body();
+
+        expect(body).toEqual(file);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Delete A Record', () => {
+    test('it should return expected status code', async ({ request, setup }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.post(`records/${setup.app.id}`, {
+          data: {
+            FieldData: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.recordId);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Delete the record', async () => {
+        const response = await request.delete(`records/${setup.app.id}/${createdRecordId}`);
+
+        expect(response.status()).toBe(204);
+      });
+    });
+  });
 
   test.describe('Get Reports By App Id', () => {});
 
