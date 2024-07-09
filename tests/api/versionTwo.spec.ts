@@ -41,6 +41,20 @@ test.describe('API v2', () => {
       }
     });
   });
+
+  test.describe('Get App By App Id', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const response = await request.get(`apps/id/${setup.app.id}`);
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      for (const property of expectedAppProperties) {
+        expect(body).toHaveProperty(property.name, property.value);
+      }
+    });
+  });
 });
 
 const expectedAppProperties = [
