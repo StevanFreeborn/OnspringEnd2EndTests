@@ -1102,11 +1102,153 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Add List Value to List', () => {});
+  test.describe('Add List Value to List', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let listId = 0;
+      let createdListValueId = '';
 
-  test.describe('Update List Value In List', () => {});
+      await test.step('Get list id', async () => {
+        const response = await request.get(`fields/id/${setup.fields.statusField.id}`);
 
-  test.describe('Delete List Value From List', () => {});
+        if (response.status() !== 200) {
+          throw new Error('Failed to get field');
+        }
+
+        const body = await response.json();
+
+        listId = body.listId;
+
+        expect(listId).toBeGreaterThan(0);
+      });
+
+      await test.step('Add list value to list', async () => {
+        const response = await request.put(`lists/id/${listId}/items`, {
+          data: {
+            name: 'Test List Value',
+            numericValue: 1,
+            color: '#000000',
+          },
+        });
+
+        expect(response.status()).toBe(201);
+
+        const body = await response.json();
+
+        expect(body).toHaveProperty('id', expect.any(String));
+
+        createdListValueId = body.id;
+      });
+
+      await test.step('Delete the list value', async () => {
+        await request.delete(`lists/id/${listId}/itemId/${createdListValueId}`);
+      });
+    });
+  });
+
+  test.describe('Update List Value In List', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let listId = 0;
+      let createdListValueId = '';
+
+      await test.step('Get list id', async () => {
+        const response = await request.get(`fields/id/${setup.fields.statusField.id}`);
+
+        if (response.status() !== 200) {
+          throw new Error('Failed to get field');
+        }
+
+        const body = await response.json();
+
+        listId = body.listId;
+
+        expect(listId).toBeGreaterThan(0);
+      });
+
+      await test.step('Add list value to list', async () => {
+        const response = await request.put(`lists/id/${listId}/items`, {
+          data: {
+            name: 'Test List Value',
+            numericValue: 1,
+            color: '#000000',
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to add list value');
+        }
+
+        const body = await response.json();
+
+        createdListValueId = body.id;
+      });
+
+      await test.step('Update list value in list', async () => {
+        const response = await request.put(`lists/id/${listId}/items`, {
+          data: {
+            id: createdListValueId,
+            name: 'Updated Test List Value',
+            numericValue: 2,
+            color: '#FFFFFF',
+          },
+        });
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        expect(body).toHaveProperty('id', createdListValueId);
+      });
+
+      await test.step('Delete the list value', async () => {
+        await request.delete(`lists/id/${listId}/itemId/${createdListValueId}`);
+      });
+    });
+  });
+
+  test.describe('Delete List Value From List', () => {
+    test('it should return expected status code', async ({ setup, request }) => {
+      let listId = 0;
+      let createdListValueId = '';
+
+      await test.step('Get list id', async () => {
+        const response = await request.get(`fields/id/${setup.fields.statusField.id}`);
+
+        if (response.status() !== 200) {
+          throw new Error('Failed to get field');
+        }
+
+        const body = await response.json();
+
+        listId = body.listId;
+
+        expect(listId).toBeGreaterThan(0);
+      });
+
+      await test.step('Add list value to list', async () => {
+        const response = await request.put(`lists/id/${listId}/items`, {
+          data: {
+            name: 'Test List Value',
+            numericValue: 1,
+            color: '#000000',
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to add list value');
+        }
+
+        const body = await response.json();
+
+        createdListValueId = body.id;
+      });
+
+      await test.step('Delete the list value', async () => {
+        const response = await request.delete(`lists/id/${listId}/itemId/${createdListValueId}`);
+
+        expect(response.status()).toBe(204);
+      });
+    });
+  });
 });
 
 const expectedAppProperties = [
