@@ -924,13 +924,183 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Delete A Record', () => {});
+  test.describe('Delete A Record', () => {
+    test('it should return expected status code', async ({ setup, request }) => {
+      let createdRecordId = 0;
 
-  test.describe('Delete Records', () => {});
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
 
-  test.describe('Delete An Image File', () => {});
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
 
-  test.describe('Delete An Attachment File', () => {});
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Delete the record', async () => {
+        const response = await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+
+        expect(response.status()).toBe(204);
+      });
+    });
+  });
+
+  test.describe('Delete Records', () => {
+    test('it should return expected status code', async ({ setup, request }) => {
+      const testRecords = [{ appId: setup.app.id, fields: { [setup.fields.nameField.id]: 'Test Record' } }];
+      const createdRecordIds: number[] = [];
+
+      await test.step('Create records', async () => {
+        for (const record of testRecords) {
+          const response = await request.put(`records`, {
+            data: record,
+          });
+
+          if (response.status() !== 201) {
+            throw new Error('Failed to create record');
+          }
+
+          const body = await response.json();
+          createdRecordIds.push(parseInt(body.id));
+        }
+      });
+
+      await test.step('Delete records', async () => {
+        const response = await request.post('records/batch-delete', {
+          data: {
+            appId: setup.app.id,
+            recordIds: createdRecordIds,
+          },
+        });
+
+        expect(response.status()).toBe(204);
+      });
+    });
+  });
+
+  test.describe('Delete An Image File', () => {
+    test('it should return expected status code', async ({ setup, request, jpgFile }) => {
+      const file = createReadStream(jpgFile.path);
+      let createdRecordId = 0;
+      let createdImageFileId = 0;
+
+      await test.step('Create a record with an image', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.imageField.id,
+            modifiedDate: new Date().toISOString(),
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create image file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdImageFileId = parseInt(createFileBody.id);
+      });
+
+      await test.step('Delete the image file', async () => {
+        const response = await request.delete(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.imageField.id}/fileId/${createdImageFileId}`
+        );
+
+        expect(response.status()).toBe(204);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Delete An Attachment File', () => {
+    test('it should return expected status code', async ({ setup, request, txtFile }) => {
+      const file = createReadStream(txtFile.path);
+      let createdRecordId = 0;
+      let createdAttachmentFileId = 0;
+
+      await test.step('Create a record with an attachment', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.attachmentsField.id,
+            modifiedDate: new Date().toISOString(),
+            notes: 'Test Attachment',
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create attachment file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdAttachmentFileId = parseInt(createFileBody.id);
+      });
+
+      await test.step('Delete the attachment file', async () => {
+        const response = await request.delete(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.attachmentsField.id}/fileId/${createdAttachmentFileId}`
+        );
+
+        expect(response.status()).toBe(204);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
 
   test.describe('Add List Value to List', () => {});
 
