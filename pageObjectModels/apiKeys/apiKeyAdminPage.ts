@@ -1,7 +1,8 @@
 import { Locator, Page } from '@playwright/test';
-import { ApiKeyGeneralTab } from '../../componentObjectModels/tabs/apiKeyGeneralTab';
-import { BaseAdminPage } from '../baseAdminPage';
 import { ApiKeyDevInfoTab } from '../../componentObjectModels/tabs/apiKeyDevInfoTab';
+import { ApiKeyGeneralTab } from '../../componentObjectModels/tabs/apiKeyGeneralTab';
+import { ApiKey } from '../../models/apiKey';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class ApiKeyAdminPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
@@ -43,6 +44,25 @@ export class ApiKeyAdminPage extends BaseAdminPage {
     const urlParts = url.split('/');
     const apiKeyId = urlParts[urlParts.length - 2];
     return parseInt(apiKeyId);
+  }
+
+  async updateApiKey(key: ApiKey) {
+    await this.generalTabButton.click();
+    await this.generalTab.nameInput.fill(key.name);
+    await this.generalTab.descriptionEditor.fill(key.description);
+    await this.generalTab.selectRole(key.role);
+    await this.generalTab.updateStatus(key.status);
+  }
+
+  async getApiKey() {
+    await this.devInfoTabButton.click();
+    const apiKey = await this.devInfoTab.apiKey.textContent();
+
+    if (apiKey === null) {
+      throw new Error('Unable to get the api key.');
+    }
+
+    return apiKey.trim();
   }
 
   async save() {

@@ -19,4 +19,12 @@ export class ApiKeyGeneralTab {
     await this.roleSelect.click();
     await this.roleSelect.page().getByRole('option', { name: role }).click();
   }
+
+  async updateStatus(status: boolean) {
+    const currentStatus = await this.statusSwitch.getAttribute('aria-checked');
+
+    if ((status === true && currentStatus === 'false') || (status === false && currentStatus === 'true')) {
+      await this.statusToggle.click();
+    }
+  }
 }

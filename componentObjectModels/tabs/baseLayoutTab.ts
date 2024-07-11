@@ -1,9 +1,14 @@
 import { Locator, Page } from '@playwright/test';
+import { AttachmentField } from '../../models/attachmentField';
+import { DateField } from '../../models/dateField';
 import { FormattedTextBlock } from '../../models/formattedTextBlock';
 import { FormulaField } from '../../models/formulaField';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
+import { NumberField } from '../../models/numberField';
 import { ReferenceField } from '../../models/referenceField';
+import { TextField } from '../../models/textField';
+import { TimeSpanField } from '../../models/timeSpanField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
@@ -47,12 +52,12 @@ export class BaseLayoutTab extends LayoutItemCreator {
       }
       case 'Attachment': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as AttachmentField);
         break;
       }
       case 'Image': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as AttachmentField);
         break;
       }
       case 'Formula': {
@@ -62,7 +67,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
       }
       case 'Time Span': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as TimeSpanField);
         break;
       }
       case 'List': {
@@ -72,17 +77,17 @@ export class BaseLayoutTab extends LayoutItemCreator {
       }
       case 'Date/Time': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as DateField);
         break;
       }
       case 'Number': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as NumberField);
         break;
       }
       case 'Text': {
         const addFieldModal = this.getLayoutItemModal(item.type, frameNumber);
-        await addFieldModal.generalTab.fillOutGeneralTab(item);
+        await addFieldModal.generalTab.fillOutGeneralTab(item as TextField);
         break;
       }
       default:
@@ -149,5 +154,39 @@ export class BaseLayoutTab extends LayoutItemCreator {
     await this.addLayoutItemDialog.continueButton.click();
     await addItemResponse;
     await this.addLayoutItem(item, 1);
+  }
+
+  async getFieldIdFromFieldsAndObjectsGrid(field: LayoutItem) {
+    if (field instanceof FormattedTextBlock) {
+      throw new Error('Formatted Text Blocks do not have field IDs.');
+    }
+
+    const columnHeaders = await this.fieldsAndObjectsGrid.locator('th').all();
+    let columnHeaderIndex = -1;
+
+    for (const [index, header] of columnHeaders.entries()) {
+      const headerText = await header.textContent();
+
+      if (headerText === 'Field ID') {
+        columnHeaderIndex = index;
+        break;
+      }
+    }
+
+    if (columnHeaderIndex === -1) {
+      throw new Error('The Field ID column header was not found.');
+    }
+
+    const fieldRow = this.fieldsAndObjectsGrid.getByRole('row', { name: new RegExp(field.name, 'i') }).first();
+    const fieldIdCell = fieldRow.locator('td').nth(columnHeaderIndex);
+    const fieldId = await fieldIdCell.textContent();
+
+    if (fieldId === null) {
+      throw new Error(`The field ID for the field "${field.name}" was not found.`);
+    }
+
+    const fieldIdNumber = parseInt(fieldId);
+
+    return fieldIdNumber;
   }
 }

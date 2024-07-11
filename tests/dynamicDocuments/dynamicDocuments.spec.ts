@@ -852,6 +852,7 @@ test.describe('Dynamic Documents', () => {
     });
 
     const report = new SavedReport({
+      appName: app.name,
       name: FakeDataFactory.createFakeReportName(),
     });
 

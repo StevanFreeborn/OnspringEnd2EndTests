@@ -4,6 +4,7 @@
     "source.organizeImports": "explicit"
   },
   "cSpell.words": [
+    "bcrumb",
     "BITSIGHT",
     "checkmark",
     "Cmro",
@@ -19,6 +20,7 @@
     "FEDSPRING",
     "filechooser",
     "FULLNAME",
+    "gantt",
     "gridcell",
     "iife",
     "jsxdev",

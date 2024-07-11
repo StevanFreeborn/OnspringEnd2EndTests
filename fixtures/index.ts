@@ -31,6 +31,11 @@ type Environment = {
   isFedspring: () => boolean;
 };
 
+export type ApiTestOptions = {
+  apiURL: string;
+  useCachedApiSetup: boolean;
+};
+
 type Fixtures = {
   environment: Environment;
   sysAdminUser: User;
@@ -42,6 +47,8 @@ type Fixtures = {
   dynamicDocumentService: DynamicDocumentService;
   jpgFile: TestFile;
   txtFile: TestFile;
+  apiURL: string;
+  useCachedApiSetup: boolean;
 };
 
 type FieldTestFixtures = {
@@ -72,6 +79,7 @@ export const test = base.extend<Fixtures>({
   dynamicDocumentService: dynamicDocumentService,
   jpgFile: jpgFile,
   txtFile: txtFile,
+  apiURL: ['', { option: true }],
 });
 
 export const layoutItemTest = test.extend<FieldTestFixtures>({
@@ -89,14 +97,6 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
   },
   sourceSurvey: survey,
   targetSurvey: survey,
-});
-
-export type ApiTestOptions = {
-  apiURL: string | undefined;
-};
-
-export const apiTest = base.extend<ApiTestOptions>({
-  apiURL: ['', { option: true }],
 });
 
 export * from '@playwright/test';
