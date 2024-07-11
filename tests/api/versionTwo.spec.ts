@@ -1,5 +1,7 @@
 /* eslint-disable playwright/no-conditional-expect */
 /* eslint-disable playwright/no-conditional-in-test */
+import { createReadStream } from 'fs';
+import { readFile } from 'fs/promises';
 import { APIRequestContext, test as base, expect } from '../../fixtures';
 import { ApiSetupResult, createApiSetupFixture, createRequestContextFixture } from '../../fixtures/api.fixtures';
 
@@ -427,34 +429,261 @@ test.describe('API v2', () => {
   });
 
   test.describe('Get Image File Info', () => {
-    test('it should return expected status code and data structure', async ({ setup, request }) => {
+    test('it should return expected status code and data structure', async ({ setup, request, jpgFile }) => {
+      const file = createReadStream(jpgFile.path);
       let createdRecordId = 0;
       let createdImageFileId = 0;
 
-      await test.step('Create a record with an image', async () => {});
+      await test.step('Create a record with an image', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+              [setup.fields.imageField.id]: {
+                fileName: 'test-image.jpg',
+                fileType: 'image/jpeg',
+                data: 'base64-encoded-image-data',
+              },
+            },
+          },
+        });
 
-      await test.step('Get image file info', async () => {});
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
 
-      await test.step('Delete the record', async () => {});
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.imageField.id,
+            modifiedDate: new Date().toISOString(),
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create image file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdImageFileId = parseInt(createFileBody.id);
+
+        expect(createdImageFileId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get image file info', async () => {
+        const response = await request.get(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.imageField.id}/fileId/${createdImageFileId}`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        for (const property of expectedFileInfoProperties) {
+          expect(body).toHaveProperty(property.name, property.value);
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
     });
   });
 
   test.describe('Get Image File', () => {
-    test('it should return expected status code and data', async ({ setup, request }) => {
+    test('it should return expected status code and data', async ({ setup, request, jpgFile }) => {
+      const fileBuffer = await readFile(jpgFile.path);
+      const file = createReadStream(jpgFile.path);
       let createdRecordId = 0;
       let createdImageFileId = 0;
 
-      await test.step('Create a record with an image', async () => {});
+      await test.step('Create a record with an image', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
 
-      await test.step('Get image file', async () => {});
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
 
-      await test.step('Delete the record', async () => {});
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.imageField.id,
+            modifiedDate: new Date().toISOString(),
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create image file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdImageFileId = parseInt(createFileBody.id);
+      });
+
+      await test.step('Get image file', async () => {
+        const response = await request.get(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.imageField.id}/fileId/${createdImageFileId}/file`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const buffer = await response.body();
+
+        expect(buffer).toEqual(fileBuffer);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
     });
   });
 
-  test.describe('Get Attachment File Info', () => {});
+  test.describe('Get Attachment File Info', () => {
+    test('it should return expected status code and data structure', async ({ setup, request, txtFile }) => {
+      const file = createReadStream(txtFile.path);
+      let createdRecordId = 0;
+      let createdAttachmentFileId = 0;
 
-  test.describe('Get Attachment File', () => {});
+      await test.step('Create a record with an attachment', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.attachmentsField.id,
+            modifiedDate: new Date().toISOString(),
+            notes: 'Test Attachment',
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create attachment file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdAttachmentFileId = parseInt(createFileBody.id);
+      });
+
+      await test.step('Get attachment file info', async () => {
+        const response = await request.get(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.attachmentsField.id}/fileId/${createdAttachmentFileId}`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        for (const property of expectedFileInfoProperties) {
+          expect(body).toHaveProperty(property.name, property.value);
+        }
+
+        expect(body).toHaveProperty('notes', expect.any(String));
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Get Attachment File', () => {
+    test('it should return expected status code and data', async ({ setup, request, txtFile }) => {
+      const fileBuffer = await readFile(txtFile.path);
+      const file = createReadStream(txtFile.path);
+      let createdRecordId = 0;
+      let createdAttachmentFileId = 0;
+
+      await test.step('Create a record with an attachment', async () => {
+        const createRecordResponse = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (createRecordResponse.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const createRecordBody = await createRecordResponse.json();
+        createdRecordId = parseInt(createRecordBody.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+
+        const createFileResponse = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.attachmentsField.id,
+            modifiedDate: new Date().toISOString(),
+            notes: 'Test Attachment',
+            file: file,
+          },
+        });
+
+        if (createFileResponse.status() !== 201) {
+          throw new Error('Failed to create attachment file');
+        }
+
+        const createFileBody = await createFileResponse.json();
+        createdAttachmentFileId = parseInt(createFileBody.id);
+      });
+
+      await test.step('Get attachment file', async () => {
+        const response = await request.get(
+          `files/recordId/${createdRecordId}/fieldId/${setup.fields.attachmentsField.id}/fileId/${createdAttachmentFileId}/file`
+        );
+
+        expect(response.status()).toBe(200);
+
+        const buffer = await response.body();
+
+        expect(buffer).toEqual(fileBuffer);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
 });
 
 const expectedAppProperties = [
@@ -576,5 +805,36 @@ const expectedFieldDataProperties = [
   {
     name: 'value',
     value: expect.anything(),
+  },
+];
+
+const expectedFileInfoProperties = [
+  {
+    name: 'type',
+    value: expect.any(String),
+  },
+  {
+    name: 'contentType',
+    value: expect.any(String),
+  },
+  {
+    name: 'name',
+    value: expect.any(String),
+  },
+  {
+    name: 'createdDate',
+    value: expect.any(String),
+  },
+  {
+    name: 'modifiedDate',
+    value: expect.any(String),
+  },
+  {
+    name: 'owner',
+    value: expect.any(String),
+  },
+  {
+    name: 'fileHref',
+    value: expect.any(String),
   },
 ];
