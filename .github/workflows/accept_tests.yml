@@ -241,7 +241,7 @@ jobs:
             })
   cleanup:
     name: 'Cleanup test artifacts'
-    if: always()
+    if: ${{ !cancelled() }}
     needs: [check_for_test_file_changes, generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:
