@@ -309,9 +309,122 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Get Records By Record Ids', () => {});
+  test.describe('Get Records By Record Ids', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let createdRecordId = 0;
 
-  test.describe('Get Records By Query', () => {});
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get records', async () => {
+        const response = await request.post(`records/batch-get`, {
+          data: {
+            appId: setup.app.id,
+            recordIds: [createdRecordId],
+          },
+        });
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        expect(body).toHaveProperty('count', expect.any(Number));
+
+        for (const item of body.items) {
+          for (const property of expectedRecordProperties) {
+            expect(item).toHaveProperty(property.name, property.value);
+          }
+
+          for (const fieldData of item.fieldData) {
+            for (const property of expectedFieldDataProperties) {
+              expect(fieldData).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Get Records By Query', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const recordName = 'Test Record';
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: recordName,
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get records', async () => {
+        const response = await request.post(`records/query`, {
+          data: {
+            appId: setup.app.id,
+            filter: `${setup.fields.nameField.id} eq '${recordName}'`,
+          },
+        });
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        for (const property of expectedPaginationProperties) {
+          expect(body).toHaveProperty(property.name, property.value);
+        }
+
+        for (const item of body.items) {
+          for (const property of expectedRecordProperties) {
+            expect(item).toHaveProperty(property.name, property.value);
+          }
+
+          for (const fieldData of item.fieldData) {
+            for (const property of expectedFieldDataProperties) {
+              expect(fieldData).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
 
   test.describe('Get Image File Info', () => {});
 
