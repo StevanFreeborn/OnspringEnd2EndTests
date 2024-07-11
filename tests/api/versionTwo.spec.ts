@@ -80,7 +80,7 @@ test.describe('API v2', () => {
 
   test.describe('Get Fields By App Id', () => {
     test('it should return expected status code and data structure', async ({ setup, request }) => {
-      const response = await request.get(`fields/appid/${setup.app.id}`);
+      const response = await request.get(`fields/appId/${setup.app.id}`);
 
       expect(response.status()).toBe(200);
 
@@ -207,9 +207,107 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Get Records By App Id', () => {});
+  test.describe('Get Records By App Id', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let createdRecordId = 0;
 
-  test.describe('Get Record By Record Id', () => {});
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get records', async () => {
+        const response = await request.get(`records/appId/${setup.app.id}`);
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        for (const property of expectedPaginationProperties) {
+          expect(body).toHaveProperty(property.name, property.value);
+        }
+
+        for (const item of body.items) {
+          for (const property of expectedRecordProperties) {
+            expect(item).toHaveProperty(property.name, property.value);
+          }
+
+          for (const fieldData of item.fieldData) {
+            for (const property of expectedFieldDataProperties) {
+              expect(fieldData).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
+
+  test.describe('Get Record By Record Id', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Get record', async () => {
+        const response = await request.get(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+
+        expect(response.status()).toBe(200);
+
+        const body = await response.json();
+
+        for (const property of expectedRecordProperties) {
+          expect(body).toHaveProperty(property.name, property.value);
+        }
+
+        for (const fieldData of body.fieldData) {
+          for (const property of expectedFieldDataProperties) {
+            expect(fieldData).toHaveProperty(property.name, property.value);
+          }
+        }
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+  });
 
   test.describe('Get Records By Record Ids', () => {});
 
@@ -313,5 +411,35 @@ const expectedListValueProperties = [
   {
     name: 'color',
     value: expect.any(String),
+  },
+];
+
+const expectedRecordProperties = [
+  {
+    name: 'appId',
+    value: expect.any(Number),
+  },
+  {
+    name: 'recordId',
+    value: expect.any(Number),
+  },
+  {
+    name: 'fieldData',
+    value: expect.any(Array),
+  },
+];
+
+const expectedFieldDataProperties = [
+  {
+    name: 'type',
+    value: expect.any(String),
+  },
+  {
+    name: 'fieldId',
+    value: expect.any(Number),
+  },
+  {
+    name: 'value',
+    value: expect.anything(),
   },
 ];
