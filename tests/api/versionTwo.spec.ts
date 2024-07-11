@@ -123,9 +123,89 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Get Field By Field Id', () => {});
+  test.describe('Get Field By Field Id', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const response = await request.get(`fields/id/${setup.fields.statusField.id}`);
 
-  test.describe('Get Fields By Field Ids', () => {});
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      for (const property of expectedFieldProperties) {
+        expect(body).toHaveProperty(property.name, property.value);
+      }
+
+      if (body.type === 'List') {
+        expect(body).toHaveProperty('multiplicity', expect.any(String));
+
+        for (const value of body.values) {
+          for (const property of expectedListValueProperties) {
+            expect(value).toHaveProperty(property.name, property.value);
+          }
+        }
+      }
+
+      if (body.type === 'Reference') {
+        expect(body).toHaveProperty('multiplicity', expect.any(String));
+        expect(body).toHaveProperty('referencedAppId', expect.any(Number));
+      }
+
+      if (body.type === 'Formula') {
+        expect(body).toHaveProperty('outputType', expect.any(String));
+
+        for (const value of body.values) {
+          for (const property of expectedListValueProperties) {
+            expect(value).toHaveProperty(property.name, property.value);
+          }
+        }
+      }
+    });
+  });
+
+  test.describe('Get Fields By Field Ids', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const response = await request.post('fields/batch-get', {
+        data: Object.values(setup.fields).map(f => f.id),
+      });
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      expect(body).toHaveProperty('count', expect.any(Number));
+
+      for (const item of body.items) {
+        for (const property of expectedFieldProperties) {
+          expect(item).toHaveProperty(property.name, property.value);
+        }
+
+        if (item.type === 'List') {
+          expect(item).toHaveProperty('multiplicity', expect.any(String));
+
+          for (const value of item.values) {
+            for (const property of expectedListValueProperties) {
+              expect(value).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+
+        if (item.type === 'Reference') {
+          expect(item).toHaveProperty('multiplicity', expect.any(String));
+          expect(item).toHaveProperty('referencedAppId', expect.any(Number));
+        }
+
+        if (item.type === 'Formula') {
+          expect(item).toHaveProperty('outputType', expect.any(String));
+
+          for (const value of item.values) {
+            for (const property of expectedListValueProperties) {
+              expect(value).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+      }
+    });
+  });
 
   test.describe('Get Records By App Id', () => {});
 
