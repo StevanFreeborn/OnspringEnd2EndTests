@@ -165,7 +165,10 @@ function getTestFields() {
     ownerField: new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: 'Users' }),
     statusField: new ListField({
       name: FakeDataFactory.createFakeFieldName(),
-      values: [new ListValue({ value: 'In Progress' }), new ListValue({ value: 'Complete' })],
+      values: [
+        new ListValue({ value: 'In Progress', numericValue: 0 }),
+        new ListValue({ value: 'Complete', numericValue: 1 }),
+      ],
     }),
     attachmentsField: new AttachmentField({ name: FakeDataFactory.createFakeFieldName() }),
     imageField: new ImageField({ name: FakeDataFactory.createFakeFieldName() }),

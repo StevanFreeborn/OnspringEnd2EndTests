@@ -1,3 +1,5 @@
+/* eslint-disable playwright/no-conditional-expect */
+/* eslint-disable playwright/no-conditional-in-test */
 import { APIRequestContext, test as base, expect } from '../../fixtures';
 import { ApiSetupResult, createApiSetupFixture, createRequestContextFixture } from '../../fixtures/api.fixtures';
 
@@ -56,9 +58,70 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Get Apps By App Ids', () => {});
+  test.describe('Get Apps By App Ids', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const response = await request.post('apps/batch-get', {
+        data: [setup.app.id],
+      });
 
-  test.describe('Get Fields By App Id', () => {});
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      expect(body).toHaveProperty('count', expect.any(Number));
+
+      for (const item of body.items) {
+        for (const property of expectedAppProperties) {
+          expect(item).toHaveProperty(property.name, property.value);
+        }
+      }
+    });
+  });
+
+  test.describe('Get Fields By App Id', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      const response = await request.get(`fields/appid/${setup.app.id}`);
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+
+      for (const property of expectedPaginationProperties) {
+        expect(body).toHaveProperty(property.name, property.value);
+      }
+
+      for (const item of body.items) {
+        for (const property of expectedFieldProperties) {
+          expect(item).toHaveProperty(property.name, property.value);
+        }
+
+        if (item.type === 'List') {
+          expect(item).toHaveProperty('multiplicity', expect.any(String));
+
+          for (const value of item.values) {
+            for (const property of expectedListValueProperties) {
+              expect(value).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+
+        if (item.type === 'Reference') {
+          expect(item).toHaveProperty('multiplicity', expect.any(String));
+          expect(item).toHaveProperty('referencedAppId', expect.any(Number));
+        }
+
+        if (item.type === 'Formula') {
+          expect(item).toHaveProperty('outputType', expect.any(String));
+
+          for (const value of item.values) {
+            for (const property of expectedListValueProperties) {
+              expect(value).toHaveProperty(property.name, property.value);
+            }
+          }
+        }
+      }
+    });
+  });
 
   test.describe('Get Field By Field Id', () => {});
 
@@ -116,5 +179,59 @@ const expectedPaginationProperties = [
   {
     name: 'items',
     value: expect.any(Array),
+  },
+];
+
+const expectedFieldProperties = [
+  {
+    name: 'id',
+    value: expect.any(Number),
+  },
+  {
+    name: 'appId',
+    value: expect.any(Number),
+  },
+  {
+    name: 'isRequired',
+    value: expect.any(Boolean),
+  },
+  {
+    name: 'isUnique',
+    value: expect.any(Boolean),
+  },
+  {
+    name: 'name',
+    value: expect.any(String),
+  },
+  {
+    name: 'status',
+    value: expect.any(String),
+  },
+  {
+    name: 'type',
+    value: expect.any(String),
+  },
+];
+
+const expectedListValueProperties = [
+  {
+    name: 'id',
+    value: expect.any(String),
+  },
+  {
+    name: 'name',
+    value: expect.any(String),
+  },
+  {
+    name: 'sortOrder',
+    value: expect.any(Number),
+  },
+  {
+    name: 'numericValue',
+    value: expect.any(Number),
+  },
+  {
+    name: 'color',
+    value: expect.any(String),
   },
 ];

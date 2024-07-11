@@ -38,6 +38,7 @@ export class ListValuesGrid {
     await this.addValueButton.click();
     const row = this.getLastValueRow();
     await row.valueInput.fill(listValue.value);
+    await row.numericValueInput.fill(listValue.numericValue.toString());
   }
 
   async clearGrid() {
