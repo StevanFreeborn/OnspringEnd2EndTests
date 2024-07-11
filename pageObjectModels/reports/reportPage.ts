@@ -45,7 +45,7 @@ export class ReportPage extends BasePage {
     await this.page.goto(`/Report/${reportId}/Display`, { waitUntil: 'networkidle' });
   }
 
-  async getReportIdFromUrl() {
+  getReportIdFromUrl() {
     if (this.page.url().match(this.pathRegex) === null) {
       throw new Error('The current page is not a report display page.');
     }

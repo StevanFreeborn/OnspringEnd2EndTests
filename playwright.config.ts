@@ -44,7 +44,8 @@ switch (TEST_ENV) {
 
 const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 
-// Onspring servers timeout after 100 seconds. Want to be able to capture timeouts when they occur.
+// Onspring servers timeout after 100 seconds.
+// Want to be able to capture timeouts when they occur.
 const expectNavAndActionTimeout = 2 * MS_PER_MIN;
 
 export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
@@ -88,6 +89,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     navigationTimeout: expectNavAndActionTimeout,
     baseURL: BASE_URL,
     apiURL: API_URL,
+    useCachedApiSetup: isCI ? false : true,
     trace: 'retain-on-first-failure',
     screenshot: 'only-on-failure',
     video: {
@@ -103,12 +105,24 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       teardown: 'teardown',
     },
     {
+      name: 'api-setup',
+      testDir: 'setups',
+      testMatch: '**/*.apiSetup.ts',
+      teardown: 'api-teardown',
+    },
+    {
       name: 'teardown',
       testDir: 'teardowns',
       testMatch: '**/**.teardown.ts',
     },
     {
+      name: 'api-teardown',
+      testDir: 'teardowns',
+      testMatch: '**/*.apiTeardown.ts',
+    },
+    {
       name: 'chrome',
+      testIgnore: '**/api/**',
       use: {
         ...devices['Desktop Chrome'],
       },
@@ -116,10 +130,16 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     },
     {
       name: 'edge',
+      testIgnore: '**/api/**',
       use: {
         ...devices['Desktop Edge'],
       },
       dependencies: ['setup'],
+    },
+    {
+      name: 'api',
+      testDir: 'tests/api',
+      dependencies: ['api-setup'],
     },
     {
       name: 'cleanup',

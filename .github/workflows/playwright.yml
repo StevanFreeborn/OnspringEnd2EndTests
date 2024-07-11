@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [chrome, edge]
+        project: [chrome, edge, api]
         shard: ${{ fromJson(needs.generate_shards.outputs.shards) }}
     steps:
       - name: Checkout repository
@@ -227,7 +227,7 @@ jobs:
         run: node ./scripts/createTestRunResult.mjs
   cleanup:
     name: 'Cleanup test artifacts'
-    if: always()
+    if: ${{ !cancelled() }}
     needs: [generate_shards, run_tests]
     runs-on: ubuntu-latest
     container:

@@ -42,9 +42,15 @@ export async function createRoleFixture(
   }: { sysAdminPage: Page; roleStatus: RoleStatus; appPermissions: AppPermission[] },
   use: (r: Role) => Promise<void>
 ) {
+  const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
+  const role = await createRole(sysAdminPage, roleStatus, appPermissions);
+  await use(role);
+  await roleSecurityAdminPage.deleteRoles([role.name]);
+}
+
+export async function createRole(sysAdminPage: Page, roleStatus: RoleStatus, appPermissions: AppPermission[]) {
   const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
   const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-  const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
   const roleName = FakeDataFactory.createFakeRoleName();
   const role = new Role({
     name: roleName,
@@ -58,7 +64,5 @@ export async function createRoleFixture(
 
   role.id = editRoleAdminPage.getRoleIdFromUrl();
 
-  await use(role);
-
-  await roleSecurityAdminPage.deleteRoles([roleName]);
+  return role;
 }

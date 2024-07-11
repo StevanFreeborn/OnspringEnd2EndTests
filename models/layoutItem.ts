@@ -26,7 +26,7 @@ export type LayoutItemObject = {
 };
 
 export abstract class LayoutItem {
-  readonly id: number;
+  id: number;
   readonly name: string;
   readonly type: LayoutItemType;
   readonly permissions: LayoutItemPermission[];
