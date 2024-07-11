@@ -426,9 +426,31 @@ test.describe('API v2', () => {
     });
   });
 
-  test.describe('Get Image File Info', () => {});
+  test.describe('Get Image File Info', () => {
+    test('it should return expected status code and data structure', async ({ setup, request }) => {
+      let createdRecordId = 0;
+      let createdImageFileId = 0;
 
-  test.describe('Get Image File', () => {});
+      await test.step('Create a record with an image', async () => {});
+
+      await test.step('Get image file info', async () => {});
+
+      await test.step('Delete the record', async () => {});
+    });
+  });
+
+  test.describe('Get Image File', () => {
+    test('it should return expected status code and data', async ({ setup, request }) => {
+      let createdRecordId = 0;
+      let createdImageFileId = 0;
+
+      await test.step('Create a record with an image', async () => {});
+
+      await test.step('Get image file', async () => {});
+
+      await test.step('Delete the record', async () => {});
+    });
+  });
 
   test.describe('Get Attachment File Info', () => {});
 
