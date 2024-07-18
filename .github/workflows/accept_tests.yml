@@ -129,7 +129,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: lts/*
       - name: Install dependencies
         run: npm ci
       - name: Run your tests
@@ -161,7 +161,7 @@ jobs:
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: lts/*
       - name: Install dependencies
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: npm ci
@@ -254,7 +254,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: lts/*
       - name: Install dependencies
         run: npm ci
       - name: Run your tests
