@@ -42,7 +42,7 @@
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-plugin-playwright": "^1.6.0",
-    "imap": "^0.8.19",
+    "imap": "^0.8.17",
     "mailparser": "^3.7.1",
     "node-xlsx": "^0.24.0",
     "pdfjs-dist": "^4.2.67",
