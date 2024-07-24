@@ -1,6 +1,8 @@
 import { Locator, Page } from '@playwright/test';
+import { DualPaneSelector } from '../../componentObjectModels/controls/dualPaneSelector';
 import { BulkDeleteDialog } from '../../componentObjectModels/dialogs/bulkDeleteDialog';
 import { DeleteReportDialog } from '../../componentObjectModels/dialogs/deleteReportDialog';
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BulkEditModal } from '../../componentObjectModels/modals/bulkEditModal';
 import { ReportDesignerModal } from '../../componentObjectModels/modals/reportDesignerModal';
 import { LayoutItem } from '../../models/layoutItem';
@@ -22,6 +24,7 @@ export class ReportPage extends BasePage {
   readonly reportDesigner: ReportDesignerModal;
   readonly bulkEditModal: BulkEditModal;
   readonly bulkDeleteDialog: BulkDeleteDialog;
+  readonly liveFilterMenu: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -39,6 +42,7 @@ export class ReportPage extends BasePage {
     this.deleteReportDialog = new DeleteReportDialog(page);
     this.bulkEditModal = new BulkEditModal(page);
     this.bulkDeleteDialog = new BulkDeleteDialog(page);
+    this.liveFilterMenu = page.locator('.k-filter-menu');
   }
 
   async goto(reportId: number) {
@@ -111,5 +115,41 @@ export class ReportPage extends BasePage {
     }
 
     return cells;
+  }
+
+  async applyLiveFilter({
+    fieldName,
+    fieldType,
+    operator,
+    value,
+  }: {
+    fieldName: string;
+    fieldType: FieldType;
+    operator: string;
+    value: string;
+  }) {
+    const headerCell = this.dataGridContainer.locator('thead').locator('th', { hasText: fieldName });
+
+    const liveFilterButton = headerCell.getByTitle('Filter');
+    await liveFilterButton.click();
+    await this.liveFilterMenu.waitFor();
+
+    switch (fieldType) {
+      case 'List': {
+        await this.liveFilterMenu.locator('.k-dropdown.rule-operator').click();
+        await this.page.getByRole('option', { name: operator }).click();
+
+        const selector = this.liveFilterMenu.locator('.list.selector-container .onx-selector');
+
+        const valueSelector = new DualPaneSelector(selector);
+        await valueSelector.selectOption(value);
+        break;
+      }
+      default:
+        throw new Error(`Field type "${fieldType}" is not supported.`);
+    }
+
+    await this.liveFilterMenu.getByText('Apply').click();
+    await this.page.waitForLoadState('networkidle');
   }
 }
