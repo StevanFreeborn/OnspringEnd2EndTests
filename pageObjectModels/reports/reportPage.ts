@@ -2,8 +2,10 @@ import { Locator, Page } from '@playwright/test';
 import { DualPaneSelector } from '../../componentObjectModels/controls/dualPaneSelector';
 import { BulkDeleteDialog } from '../../componentObjectModels/dialogs/bulkDeleteDialog';
 import { DeleteReportDialog } from '../../componentObjectModels/dialogs/deleteReportDialog';
+import { ExportUnderwayDialog } from '../../componentObjectModels/dialogs/reportExportUnderwayDialog';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BulkEditModal } from '../../componentObjectModels/modals/bulkEditModal';
+import { ExportReportModal } from '../../componentObjectModels/modals/exportReportModal';
 import { ReportDesignerModal } from '../../componentObjectModels/modals/reportDesignerModal';
 import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
@@ -16,6 +18,8 @@ export class ReportPage extends BasePage {
   private readonly deleteReportDialog: DeleteReportDialog;
   private readonly recordListPathRegex: RegExp;
   private readonly filterInput: Locator;
+  private readonly exportReportModal: ExportReportModal;
+  private readonly exportUnderwayDialog: ExportUnderwayDialog;
   readonly pathRegex: RegExp;
   readonly breadcrumb: Locator;
   readonly dataGridContainer: Locator;
@@ -46,6 +50,8 @@ export class ReportPage extends BasePage {
     this.bulkDeleteDialog = new BulkDeleteDialog(this.page);
     this.liveFilterMenu = this.page.locator('.k-filter-menu');
     this.filterInput = this.page.getByPlaceholder('Filter');
+    this.exportReportModal = new ExportReportModal(this.page);
+    this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
   }
 
   async goto(reportId: number) {
@@ -172,5 +178,15 @@ export class ReportPage extends BasePage {
     const getRecordListResponse = this.page.waitForResponse(this.recordListPathRegex);
     await this.filterInput.pressSequentially(text, { delay: 150 });
     await getRecordListResponse;
+  }
+
+  async exportReport() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.getByText('Export Report').click();
+
+    await this.exportReportModal.exportButton.click();
+
+    await this.exportUnderwayDialog.waitFor();
+    await this.exportUnderwayDialog.close();
   }
 }
