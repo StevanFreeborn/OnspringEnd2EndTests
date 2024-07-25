@@ -274,7 +274,7 @@ test.describe('report', () => {
     });
 
     await test.step('Verify the records were updated', async () => {
-      const groupFieldCells = await reportPage.getAllFieldCells(fields.groupField);
+      const groupFieldCells = await reportPage.getAllFieldCells(fields.groupField.name);
 
       for (const cell of groupFieldCells) {
         await expect(cell).toHaveText(fields.groupField.values[0].value);
@@ -384,13 +384,55 @@ test.describe('report', () => {
     });
   });
 
-  test('Sort a report', ({}) => {
+  test('Sort a report', async ({
+    sourceApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-602',
     });
 
-    expect(true).toBe(true);
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportAppPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Sort the report', async () => {
+      await reportPage.sortByField({ fieldName: 'Record Id', sortOrder: 'desc' });
+    });
+
+    await test.step('Verify the report has been sorted', async () => {
+      const expectedRecordIds = records.map(record => record.id).sort((a, b) => b - a);
+      const recordIdCells = await reportPage.getAllFieldCells('Record Id');
+      const recordIds = await Promise.all(recordIdCells.map(cell => cell.textContent()));
+      const actualRecordIds = recordIds.filter(id => id !== null).map(id => parseInt(id));
+
+      expect(actualRecordIds).toEqual(expectedRecordIds);
+    });
   });
 
   test('Filter a report', ({}) => {

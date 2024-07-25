@@ -5,7 +5,6 @@ import { DeleteReportDialog } from '../../componentObjectModels/dialogs/deleteRe
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BulkEditModal } from '../../componentObjectModels/modals/bulkEditModal';
 import { ReportDesignerModal } from '../../componentObjectModels/modals/reportDesignerModal';
-import { LayoutItem } from '../../models/layoutItem';
 import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
 
@@ -16,6 +15,7 @@ export class ReportPage extends BasePage {
   private readonly editReportButton: Locator;
   private readonly deleteReportDialog: DeleteReportDialog;
   readonly pathRegex: RegExp;
+  readonly recordListPathRegex: RegExp;
   readonly breadcrumb: Locator;
   readonly dataGridContainer: Locator;
   readonly selectAllCheckbox: Locator;
@@ -29,6 +29,7 @@ export class ReportPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Report\/\d+\/Display/;
+    this.recordListPathRegex = /\/Report\/\d+\/RecordList/;
     this.breadcrumb = page.locator('.bcrumb-container');
     this.reportContents = page.locator('#report-contents');
     this.dataGridContainer = this.reportContents.locator('#grid');
@@ -90,20 +91,20 @@ export class ReportPage extends BasePage {
     await this.bulkActionMenu.getByText('Delete Selected Records').click();
   }
 
-  async getAllFieldCells(field: LayoutItem) {
+  async getAllFieldCells(fieldName: string) {
     const headers = await this.dataGridContainer.locator('thead').locator('th').all();
     let fieldIndex = -1;
 
     for (const [index, header] of headers.entries()) {
       const headerText = await header.textContent();
 
-      if (headerText === field.name) {
+      if (headerText === fieldName) {
         fieldIndex = index;
       }
     }
 
     if (fieldIndex === -1) {
-      throw new Error(`The field "${field.name}" was not found in the report.`);
+      throw new Error(`The field "${fieldName}" was not found in the report.`);
     }
 
     const rows = await this.dataGridContainer.locator('tbody').locator('tr').all();
@@ -149,7 +150,19 @@ export class ReportPage extends BasePage {
         throw new Error(`Field type "${fieldType}" is not supported.`);
     }
 
+    const recordListResponse = this.page.waitForResponse(this.recordListPathRegex);
     await this.liveFilterMenu.getByText('Apply').click();
-    await this.page.waitForLoadState('networkidle');
+    await recordListResponse;
+  }
+
+  async sortByField({ fieldName, sortOrder }: { fieldName: string; sortOrder: 'asc' | 'desc' }) {
+    const headerCell = this.dataGridContainer.locator('thead').locator('th', { hasText: fieldName });
+    const dataDir = async () => await headerCell.getAttribute('data-dir');
+
+    while ((await dataDir()) !== sortOrder) {
+      const getRecordListResponse = this.page.waitForResponse(this.recordListPathRegex);
+      await headerCell.click();
+      await getRecordListResponse;
+    }
   }
 }
