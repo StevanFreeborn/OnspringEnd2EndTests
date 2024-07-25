@@ -14,8 +14,9 @@ export class ReportPage extends BasePage {
   private readonly actionMenu: Locator;
   private readonly editReportButton: Locator;
   private readonly deleteReportDialog: DeleteReportDialog;
+  private readonly recordListPathRegex: RegExp;
+  private readonly filterInput: Locator;
   readonly pathRegex: RegExp;
-  readonly recordListPathRegex: RegExp;
   readonly breadcrumb: Locator;
   readonly dataGridContainer: Locator;
   readonly selectAllCheckbox: Locator;
@@ -30,20 +31,21 @@ export class ReportPage extends BasePage {
     super(page);
     this.pathRegex = /\/Report\/\d+\/Display/;
     this.recordListPathRegex = /\/Report\/\d+\/RecordList/;
-    this.breadcrumb = page.locator('.bcrumb-container');
-    this.reportContents = page.locator('#report-contents');
+    this.breadcrumb = this.page.locator('.bcrumb-container');
+    this.reportContents = this.page.locator('#report-contents');
     this.dataGridContainer = this.reportContents.locator('#grid');
     this.selectAllCheckbox = this.dataGridContainer.locator('[data-select-all]');
     this.bulkActionButton = this.dataGridContainer.locator('[data-bulk-menu-button]');
     this.bulkActionMenu = this.dataGridContainer.locator('.popover-menu');
-    this.actionMenuButton = page.locator('#action-menu-button');
-    this.actionMenu = page.locator('#action-menu');
-    this.editReportButton = page.getByRole('link', { name: 'Edit Report' });
-    this.reportDesigner = new ReportDesignerModal(page);
-    this.deleteReportDialog = new DeleteReportDialog(page);
-    this.bulkEditModal = new BulkEditModal(page);
-    this.bulkDeleteDialog = new BulkDeleteDialog(page);
-    this.liveFilterMenu = page.locator('.k-filter-menu');
+    this.actionMenuButton = this.page.locator('#action-menu-button');
+    this.actionMenu = this.page.locator('#action-menu');
+    this.editReportButton = this.page.getByRole('link', { name: 'Edit Report' });
+    this.reportDesigner = new ReportDesignerModal(this.page);
+    this.deleteReportDialog = new DeleteReportDialog(this.page);
+    this.bulkEditModal = new BulkEditModal(this.page);
+    this.bulkDeleteDialog = new BulkDeleteDialog(this.page);
+    this.liveFilterMenu = this.page.locator('.k-filter-menu');
+    this.filterInput = this.page.getByPlaceholder('Filter');
   }
 
   async goto(reportId: number) {
@@ -164,5 +166,11 @@ export class ReportPage extends BasePage {
       await headerCell.click();
       await getRecordListResponse;
     }
+  }
+
+  async filterByText(text: string) {
+    const getRecordListResponse = this.page.waitForResponse(this.recordListPathRegex);
+    await this.filterInput.pressSequentially(text, { delay: 150 });
+    await getRecordListResponse;
   }
 }
