@@ -6,6 +6,7 @@ import { ExportUnderwayDialog } from '../../componentObjectModels/dialogs/report
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { BulkEditModal } from '../../componentObjectModels/modals/bulkEditModal';
 import { ExportReportModal } from '../../componentObjectModels/modals/exportReportModal';
+import { PrintReportModal } from '../../componentObjectModels/modals/printReportModal';
 import { ReportDesignerModal } from '../../componentObjectModels/modals/reportDesignerModal';
 import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
@@ -20,6 +21,7 @@ export class ReportPage extends BasePage {
   private readonly filterInput: Locator;
   private readonly exportReportModal: ExportReportModal;
   private readonly exportUnderwayDialog: ExportUnderwayDialog;
+  private readonly printReportModal: PrintReportModal;
   readonly pathRegex: RegExp;
   readonly breadcrumb: Locator;
   readonly dataGridContainer: Locator;
@@ -52,6 +54,7 @@ export class ReportPage extends BasePage {
     this.filterInput = this.page.getByPlaceholder('Filter');
     this.exportReportModal = new ExportReportModal(this.page);
     this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
+    this.printReportModal = new PrintReportModal(this.page);
   }
 
   async goto(reportId: number) {
@@ -188,5 +191,14 @@ export class ReportPage extends BasePage {
 
     await this.exportUnderwayDialog.waitFor();
     await this.exportUnderwayDialog.close();
+  }
+
+  async printReport() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.getByText('Print Report').click();
+
+    await this.printReportModal.waitFor();
+
+    await this.printReportModal.okButton.click();
   }
 }

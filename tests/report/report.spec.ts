@@ -571,13 +571,79 @@ test.describe('report', () => {
     });
   });
 
-  test('Print a report', ({}) => {
+  test('Print a report', async ({
+    sourceApp,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+    downloadService,
+    pdfParser,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-605',
     });
 
-    expect(true).toBe(true);
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportAppPage.page.waitForLoadState('networkidle');
+    });
+
+    let pdfPath: string;
+
+    await test.step('Print the report to PDF', async () => {
+      const context = reportPage.page.context();
+      const printPagePromise = context.waitForEvent('page');
+
+      await reportPage.printReport();
+      const printPage = await printPagePromise;
+
+      const printPageUrl = printPage.url();
+
+      expect(printPageUrl).toMatch(/\/Report\/\d+\/Print/);
+
+      const pdfResponse = await reportPage.page.request.post(printPageUrl);
+      const responseHeaders = pdfResponse.headers();
+      const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
+
+      expect(nameMatch).not.toBeNull();
+
+      const pdfName = nameMatch![1];
+
+      expect(pdfName).toBe(`${report.name}.pdf`);
+
+      const pdf = await pdfResponse.body();
+
+      pdfPath = await downloadService.saveBuffer(pdf, pdfName);
+    });
+
+    await test.step('Verify the printed report contains expected text', async () => {
+      const expectedText = [report.name, 'Record Id'].concat(records.map(record => record.id.toString()));
+      const foundExpectedText = await pdfParser.findTextInPDF(pdfPath, expectedText);
+
+      expect(foundExpectedText).toBe(true);
+    });
   });
 
   test('Add related data to a report', ({}) => {
