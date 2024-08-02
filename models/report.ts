@@ -47,25 +47,55 @@ export class TempReport extends Report {
   }
 }
 
+type ReportSchedule = {
+  sendFrequency: 'Every Day' | 'Every Weekday' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom Schedule';
+  startingOn: Date;
+  customSchedule?: {
+    quantity: number;
+    unit: 'Day(s)' | 'Week(s)' | 'Month(s)' | 'Year(s)';
+  };
+  endingOn?: Date;
+  sendAs: 'Attachment' | 'Link' | 'Embedded Content';
+  type: 'Microsoft Excel' | 'PDF';
+  data: 'Export Report Data'; // more options to be added. availability of options depends on the type of report
+  dataFormat: 'Excel Readability' | 'Onspring Import';
+  numberDateFormat: 'For Excel Functions or Import' | 'Onspring Display Format';
+  sendIfEmpty: boolean;
+  includeAllLevels: boolean;
+  specificGroups: string[];
+  specificUsers: string[];
+  fromName: string;
+  fromAddress: string;
+  subject: string;
+  body: string;
+  appendAdditionalRecipients: boolean;
+};
+
 type SavedReportObject = ReportObject & {
   name: string;
+  description?: string;
   security?: ReportSecurity;
   scheduling?: ReportSchedulingStatus;
+  schedule?: ReportSchedule;
 };
 
 export class SavedReport extends Report {
   name: string;
+  description: string;
   security: ReportSecurity;
   scheduling: ReportSchedulingStatus;
+  schedule?: ReportSchedule;
 
   constructor({
     appName,
     name,
+    description = '',
     displayType,
     displayFields,
     relatedData,
     security = 'Private to me',
     scheduling = 'Disabled',
+    schedule,
   }: SavedReportObject) {
     super({
       appName,
@@ -74,8 +104,14 @@ export class SavedReport extends Report {
       relatedData,
     });
     this.name = name;
+    this.description = description;
     this.security = security;
     this.scheduling = scheduling;
+    this.schedule = schedule;
+
+    if (this.scheduling === 'Enabled' && this.schedule === undefined) {
+      throw new Error('A schedule must be provided when scheduling is enabled');
+    }
   }
 }
 
@@ -94,6 +130,9 @@ export class SavedReportAsReportDataOnly extends SavedReport {
     displayType,
     displayFields,
     relatedData,
+    security,
+    scheduling,
+    schedule,
     bulkDelete = true,
     bulkEdit = true,
   }: SavedReportAsReportDataOnlyObject) {
@@ -103,6 +142,9 @@ export class SavedReportAsReportDataOnly extends SavedReport {
       displayType,
       displayFields,
       relatedData,
+      security,
+      scheduling,
+      schedule,
     });
     this.bulkEdit = bulkEdit;
     this.bulkDelete = bulkDelete;

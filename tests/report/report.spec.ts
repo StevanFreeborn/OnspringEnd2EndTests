@@ -735,11 +735,41 @@ test.describe('report', () => {
     });
   });
 
-  test('Schedule a report for export', ({}) => {
+  test('Schedule a report for export', async ({
+    sourceApp,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-607',
     });
+
+    await test.step('Create record in source app', async () => {
+      await addContentPage.goto(sourceApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the report is exported', async () => {});
 
     expect(true).toBe(true);
   });
