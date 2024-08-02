@@ -22,7 +22,7 @@ export class ReportVisualTab {
   async fillOutForm(report: Report) {
     await this.selectDisplayType(report.displayType);
 
-    if (report instanceof SavedReportAsReportDataOnly) {
+    if (report instanceof SavedReportAsReportDataOnly && report.relatedData.length === 0) {
       await this.bulkEditCheckbox.setChecked(report.bulkEdit);
       await this.bulkDeleteCheckbox.setChecked(report.bulkDelete);
     }

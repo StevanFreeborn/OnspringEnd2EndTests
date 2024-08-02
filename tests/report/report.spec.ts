@@ -6,6 +6,7 @@ import { App } from '../../models/app';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
+import { ReferenceField } from '../../models/referenceField';
 import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -16,6 +17,7 @@ import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
 
 type ReportTestFixtures = {
+  referencedApp: App;
   sourceApp: App;
   reportHomePage: ReportHomePage;
   reportAppPage: ReportAppPage;
@@ -26,6 +28,7 @@ type ReportTestFixtures = {
 };
 
 const test = base.extend<ReportTestFixtures>({
+  referencedApp: app,
   sourceApp: app,
   reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
   reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
@@ -646,13 +649,90 @@ test.describe('report', () => {
     });
   });
 
-  test('Add related data to a report', ({}) => {
+  test('Add related data to a report', async ({
+    appAdminPage,
+    sourceApp,
+    addContentPage,
+    editContentPage,
+    referencedApp,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-606',
     });
 
-    expect(true).toBe(true);
+    const initialFields = getFieldsForApp();
+    const fields = {
+      ...initialFields,
+      referenceField: new ReferenceField({
+        name: FakeDataFactory.createFakeFieldName(),
+        reference: referencedApp.name,
+      }),
+    };
+
+    let relatedRecordId: string;
+
+    await test.step('Create record in referenced app', async () => {
+      await addContentPage.goto(referencedApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      relatedRecordId = editContentPage.getRecordIdFromUrl().toString();
+    });
+
+    let records = buildRecords(fields.groupField, fields.seriesField, {
+      referenceField: fields.referenceField,
+      relatedRecordId: relatedRecordId!,
+    });
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      relatedData: [
+        {
+          referenceField: fields.referenceField.name,
+          displayFields: ['Record Id'],
+        },
+      ],
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportAppPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the report was created', async () => {
+      const numOfMasterRows = await reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row').count();
+      expect(numOfMasterRows).toEqual(records.length);
+
+      for (let i = 0; i < numOfMasterRows; i++) {
+        const detailListResponse = reportAppPage.page.waitForResponse(/\/Report\/\d+\/DetailRecordList/);
+        const masterRow = reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row').nth(i);
+        await masterRow.locator('td').first().getByRole('link').click();
+        await detailListResponse;
+
+        const detailRow = reportPage.dataGridContainer.locator('tbody').locator('tr.k-detail-row').nth(i);
+        const fieldGridHeader = detailRow.locator('.toolbar-container', { hasText: fields.referenceField.name });
+        const recordIdHeader = detailRow.locator('thead').locator('th', { hasText: 'Record Id' });
+        const relatedRecord = detailRow.locator('tbody').locator('tr', { hasText: relatedRecordId });
+
+        await expect(fieldGridHeader).toBeVisible();
+        await expect(recordIdHeader).toBeVisible();
+        await expect(relatedRecord).toBeVisible();
+      }
+    });
   });
 
   test('Schedule a report for export', ({}) => {
@@ -865,29 +945,45 @@ type Record = {
   fieldValues: { field: string; value: string; tabName: string; sectionName: string; type: FieldType }[];
 };
 
-function buildRecords(groupField: ListField, seriesField: ListField) {
+function buildRecords(
+  groupField: ListField,
+  seriesField: ListField,
+  relationship?: { referenceField: ReferenceField; relatedRecordId: string }
+) {
   const records = [];
 
   for (const group of groupField.values) {
     for (const series of seriesField.values) {
+      const fieldValues = [
+        {
+          field: groupField.name,
+          value: group.value,
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          type: groupField.type as FieldType,
+        },
+        {
+          field: seriesField.name,
+          value: series.value,
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          type: seriesField.type as FieldType,
+        },
+      ];
+
+      if (relationship) {
+        fieldValues.push({
+          field: relationship.referenceField.name,
+          value: relationship.relatedRecordId,
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          type: relationship.referenceField.type as FieldType,
+        });
+      }
+
       records.push({
         id: 0,
-        fieldValues: [
-          {
-            field: groupField.name,
-            value: group.value,
-            tabName: 'Tab 2',
-            sectionName: 'Section 1',
-            type: groupField.type as FieldType,
-          },
-          {
-            field: seriesField.name,
-            value: series.value,
-            tabName: 'Tab 2',
-            sectionName: 'Section 1',
-            type: seriesField.type as FieldType,
-          },
-        ],
+        fieldValues: fieldValues,
       });
     }
   }
@@ -908,19 +1004,29 @@ async function addRecordsToApp(
 
     for (const fieldValue of record.fieldValues) {
       switch (fieldValue.type) {
-        case 'List':
-          {
-            const field = await addContentPage.form.getField({
-              tabName: fieldValue.tabName,
-              sectionName: fieldValue.sectionName,
-              fieldName: fieldValue.field,
-              fieldType: fieldValue.type,
-            });
+        case 'List': {
+          const field = await addContentPage.form.getField({
+            tabName: fieldValue.tabName,
+            sectionName: fieldValue.sectionName,
+            fieldName: fieldValue.field,
+            fieldType: fieldValue.type,
+          });
 
-            await field.click();
-            await field.page().getByRole('option', { name: fieldValue.value }).click();
-          }
+          await field.click();
+          await field.page().getByRole('option', { name: fieldValue.value }).click();
           break;
+        }
+        case 'Reference': {
+          const field = await addContentPage.form.getField({
+            tabName: fieldValue.tabName,
+            sectionName: fieldValue.sectionName,
+            fieldName: fieldValue.field,
+            fieldType: fieldValue.type,
+          });
+
+          await field.searchForAndSelectRecord(fieldValue.value);
+          break;
+        }
         default:
           throw new Error(`Field type ${fieldValue.type} is not supported.`);
       }

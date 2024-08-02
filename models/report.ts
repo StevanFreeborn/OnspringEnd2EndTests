@@ -7,10 +7,16 @@ type ReportDisplayType =
   | 'Display as a Gantt Chart'
   | 'Display as a Map';
 
+export type RelatedData = {
+  referenceField: string;
+  displayFields: string[];
+};
+
 type ReportObject = {
   appName: string;
   displayType?: ReportDisplayType;
   displayFields?: string[];
+  relatedData?: RelatedData[];
 };
 
 export abstract class Report {
@@ -18,19 +24,26 @@ export abstract class Report {
   appName: string;
   displayType: ReportDisplayType;
   displayFields: string[];
+  relatedData: RelatedData[];
 
-  constructor({ appName, displayType = 'Display Report Data Only', displayFields = [] }: ReportObject) {
+  constructor({
+    appName,
+    displayType = 'Display Report Data Only',
+    displayFields = [],
+    relatedData = [],
+  }: ReportObject) {
     this.appName = appName;
     this.displayType = displayType;
     this.displayFields = displayFields;
+    this.relatedData = relatedData;
   }
 }
 
 type TempReportObject = ReportObject;
 
 export class TempReport extends Report {
-  constructor({ appName }: TempReportObject) {
-    super({ appName });
+  constructor({ appName, displayType, displayFields, relatedData }: TempReportObject) {
+    super({ appName, displayType, displayFields, relatedData });
   }
 }
 
@@ -48,11 +61,18 @@ export class SavedReport extends Report {
   constructor({
     appName,
     name,
+    displayType,
     displayFields,
+    relatedData,
     security = 'Private to me',
     scheduling = 'Disabled',
   }: SavedReportObject) {
-    super({ appName, displayFields });
+    super({
+      appName,
+      displayFields,
+      displayType,
+      relatedData,
+    });
     this.name = name;
     this.security = security;
     this.scheduling = scheduling;
@@ -68,8 +88,22 @@ export class SavedReportAsReportDataOnly extends SavedReport {
   bulkEdit: boolean;
   bulkDelete: boolean;
 
-  constructor({ appName, name, displayFields, bulkDelete = true, bulkEdit = true }: SavedReportAsReportDataOnlyObject) {
-    super({ appName, name, displayFields });
+  constructor({
+    appName,
+    name,
+    displayType,
+    displayFields,
+    relatedData,
+    bulkDelete = true,
+    bulkEdit = true,
+  }: SavedReportAsReportDataOnlyObject) {
+    super({
+      appName,
+      name,
+      displayType,
+      displayFields,
+      relatedData,
+    });
     this.bulkEdit = bulkEdit;
     this.bulkDelete = bulkDelete;
   }
