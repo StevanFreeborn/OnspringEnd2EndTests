@@ -932,18 +932,18 @@ function getFieldsForApp() {
   const groupField = new ListField({
     name: 'Group',
     values: [
-      new ListValue({ value: 'Group A' }),
-      new ListValue({ value: 'Group B' }),
-      new ListValue({ value: 'Group C' }),
+      new ListValue({ value: 'Group A', color: '#FF0000' }),
+      new ListValue({ value: 'Group B', color: '#0000FF' }),
+      new ListValue({ value: 'Group C', color: '#FFFF00' }),
     ],
   });
 
   const seriesField = new ListField({
     name: 'Series',
     values: [
-      new ListValue({ value: 'Series 1' }),
-      new ListValue({ value: 'Series 2' }),
-      new ListValue({ value: 'Series 3' }),
+      new ListValue({ value: 'Series 1', color: '#00FF00' }),
+      new ListValue({ value: 'Series 2', color: '#FFA500' }),
+      new ListValue({ value: 'Series 3', color: '#800080' }),
     ],
   });
 

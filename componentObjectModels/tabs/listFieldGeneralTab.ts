@@ -8,7 +8,7 @@ export class ListFieldGeneralTab extends FieldGeneralTab {
 
   constructor(frame: FrameLocator) {
     super(frame);
-    this.listValuesGrid = new ListValuesGrid(this.frame.locator('.list-values').first());
+    this.listValuesGrid = new ListValuesGrid(this.frame.locator('.list-values').first(), this.frame);
   }
 
   async fillOutGeneralTab(listField: ListField) {

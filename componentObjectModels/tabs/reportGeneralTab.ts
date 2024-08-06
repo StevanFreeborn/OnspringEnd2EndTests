@@ -7,7 +7,7 @@ export class ReportGeneralTab {
 
   constructor(frame: FrameLocator) {
     this.nameInput = frame.getByLabel('Report Name');
-    this.descriptionEditor = frame.locator('.content-area.mce-content-body');
+    this.descriptionEditor = frame.locator('.content-area.mce-content-body').first();
   }
 
   async fillOutForm(report: SavedReport) {
