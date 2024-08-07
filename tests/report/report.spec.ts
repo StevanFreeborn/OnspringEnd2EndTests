@@ -7,7 +7,7 @@ import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
-import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
+import { ReportSchedule, SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
@@ -741,11 +741,14 @@ test.describe('report', () => {
     editContentPage,
     reportAppPage,
     reportPage,
+    sysAdminEmail,
   }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-607',
     });
+
+    test.slow();
 
     await test.step('Create record in source app', async () => {
       await addContentPage.goto(sourceApp.id);
@@ -757,9 +760,20 @@ test.describe('report', () => {
       await reportAppPage.goto(sourceApp.id);
     });
 
+    const reportName = FakeDataFactory.createFakeReportName();
+
     const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
+      name: reportName,
+      scheduling: 'Enabled',
+      schedule: new ReportSchedule({
+        sendFrequency: 'Every Day',
+        startingOn: new Date(Date.now() + 1 * 60_000),
+        fromName: 'Automation Test',
+        fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+        subject: `Scheduled Report ${reportName}`,
+        body: 'This is the body of the scheduled report.',
+      }),
     });
 
     await test.step('Create the report', async () => {
@@ -769,9 +783,17 @@ test.describe('report', () => {
       await reportPage.page.waitForLoadState('networkidle');
     });
 
-    await test.step('Verify the report is exported', async () => {});
+    await test.step('Verify the report is exported', async () => {
+      await expect(async () => {
+        const searchCriteria = [['TEXT', report.schedule!.subject]];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
 
-    expect(true).toBe(true);
+        expect(result.isOk()).toBe(true);
+      }).toPass({
+        intervals: [90_000, 30_000],
+        timeout: 300_000,
+      });
+    });
   });
 
   test('Configure a bar chart', ({}) => {

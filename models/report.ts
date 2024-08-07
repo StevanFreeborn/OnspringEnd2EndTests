@@ -1,4 +1,4 @@
-type ReportSchedulingStatus = 'Enabled' | 'Disabled';
+export type ReportSchedulingStatus = 'Enabled' | 'Disabled';
 type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
 type ReportDisplayType =
   | 'Display Report Data Only'
@@ -47,7 +47,31 @@ export class TempReport extends Report {
   }
 }
 
-type ReportSchedule = {
+type ReportScheduleObject = {
+  sendFrequency: 'Every Day' | 'Every Weekday' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom Schedule';
+  startingOn: Date;
+  customSchedule?: {
+    quantity: number;
+    unit: 'Day(s)' | 'Week(s)' | 'Month(s)' | 'Year(s)';
+  };
+  endingOn?: Date;
+  sendAs?: 'Attachment' | 'Link' | 'Embedded Content';
+  type?: 'Microsoft Excel' | 'PDF';
+  data?: 'Export Report Data'; // more options to be added. availability of options depends on the type of report
+  dataFormat?: 'Excel Readability' | 'Onspring Import';
+  numberDateFormat?: 'For Excel Functions or Import' | 'Onspring Display Format';
+  doNotSendIfEmpty?: boolean;
+  includeAllLevels?: boolean;
+  specificGroups?: string[];
+  specificUsers?: string[];
+  fromName: string;
+  fromAddress: string;
+  subject: string;
+  body: string;
+  appendAdditionalRecipients?: boolean;
+};
+
+export class ReportSchedule {
   sendFrequency: 'Every Day' | 'Every Weekday' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom Schedule';
   startingOn: Date;
   customSchedule?: {
@@ -60,7 +84,7 @@ type ReportSchedule = {
   data: 'Export Report Data'; // more options to be added. availability of options depends on the type of report
   dataFormat: 'Excel Readability' | 'Onspring Import';
   numberDateFormat: 'For Excel Functions or Import' | 'Onspring Display Format';
-  sendIfEmpty: boolean;
+  doNotSendIfEmpty: boolean;
   includeAllLevels: boolean;
   specificGroups: string[];
   specificUsers: string[];
@@ -69,7 +93,51 @@ type ReportSchedule = {
   subject: string;
   body: string;
   appendAdditionalRecipients: boolean;
-};
+
+  constructor({
+    sendFrequency,
+    startingOn,
+    customSchedule,
+    endingOn,
+    sendAs = 'Attachment',
+    type = 'Microsoft Excel',
+    data = 'Export Report Data',
+    dataFormat = 'Excel Readability',
+    numberDateFormat = 'For Excel Functions or Import',
+    doNotSendIfEmpty = true,
+    includeAllLevels = false,
+    specificGroups = [],
+    specificUsers = [],
+    fromName,
+    fromAddress,
+    subject,
+    body,
+    appendAdditionalRecipients = false,
+  }: ReportScheduleObject) {
+    this.sendFrequency = sendFrequency;
+    this.startingOn = startingOn;
+    this.customSchedule = customSchedule;
+    this.endingOn = endingOn;
+    this.sendAs = sendAs;
+    this.type = type;
+    this.data = data;
+    this.dataFormat = dataFormat;
+    this.numberDateFormat = numberDateFormat;
+    this.doNotSendIfEmpty = doNotSendIfEmpty;
+    this.includeAllLevels = includeAllLevels;
+    this.specificGroups = specificGroups;
+    this.specificUsers = specificUsers;
+    this.fromName = fromName;
+    this.fromAddress = fromAddress;
+    this.subject = subject;
+    this.body = body;
+    this.appendAdditionalRecipients = appendAdditionalRecipients;
+
+    if (this.sendFrequency === 'Custom Schedule' && this.customSchedule === undefined) {
+      throw new Error('A custom schedule must be provided when the send frequency is Custom Schedule');
+    }
+  }
+}
 
 type SavedReportObject = ReportObject & {
   name: string;
@@ -109,8 +177,25 @@ export class SavedReport extends Report {
     this.scheduling = scheduling;
     this.schedule = schedule;
 
-    if (this.scheduling === 'Enabled' && this.schedule === undefined) {
-      throw new Error('A schedule must be provided when scheduling is enabled');
+    if (this.scheduling === 'Enabled') {
+      if (this.schedule === undefined) {
+        throw new Error('A schedule must be provided when scheduling is enabled');
+      }
+
+      if (
+        this.security === 'Private to me' &&
+        (this.schedule.specificGroups.length > 0 || this.schedule.specificUsers.length > 0)
+      ) {
+        throw new Error('Specific groups and users cannot be provided when the report is private to me');
+      }
+
+      if (
+        this.security !== 'Private to me' &&
+        this.schedule.specificGroups.length === 0 &&
+        this.schedule.specificUsers.length === 0
+      ) {
+        throw new Error('Specific groups or users must be provided when the report is not private to me');
+      }
     }
   }
 }
