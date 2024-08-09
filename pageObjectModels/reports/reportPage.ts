@@ -12,7 +12,6 @@ import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
 
 export class ReportPage extends BasePage {
-  private readonly reportContents: Locator;
   private readonly actionMenuButton: Locator;
   private readonly actionMenu: Locator;
   private readonly editReportButton: Locator;
@@ -24,6 +23,7 @@ export class ReportPage extends BasePage {
   private readonly printReportModal: PrintReportModal;
   readonly pathRegex: RegExp;
   readonly breadcrumb: Locator;
+  readonly reportContents: Locator;
   readonly dataGridContainer: Locator;
   readonly selectAllCheckbox: Locator;
   readonly bulkActionButton: Locator;

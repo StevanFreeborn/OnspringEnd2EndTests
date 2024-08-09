@@ -3,11 +3,12 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { BarChart } from '../../models/chart';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
-import { ReportSchedule, SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
+import { ReportSchedule, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
@@ -49,7 +50,7 @@ test.describe('report', () => {
       type: 'Test-594',
     });
 
-    const report = new SavedReport({
+    const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
     });
@@ -84,7 +85,7 @@ test.describe('report', () => {
       type: 'Test-595',
     });
 
-    const report = new SavedReport({
+    const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
     });
@@ -115,12 +116,12 @@ test.describe('report', () => {
       type: 'Test-596',
     });
 
-    const reportToCopy = new SavedReport({
+    const reportToCopy = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
     });
 
-    const copy = new SavedReport({
+    const copy = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
     });
@@ -161,7 +162,7 @@ test.describe('report', () => {
       type: 'Test-597',
     });
 
-    const report = new SavedReport({
+    const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
     });
@@ -198,7 +199,7 @@ test.describe('report', () => {
       type: 'Test-598',
     });
 
-    const report = new SavedReport({
+    const report = new SavedReportAsReportDataOnly({
       appName: 'Test App',
       name: 'Test Report',
     });
@@ -369,7 +370,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Apply live filter to the report', async () => {
@@ -421,7 +422,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Sort the report', async () => {
@@ -472,7 +473,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Filter the report', async () => {
@@ -526,7 +527,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Export the report', async () => {
@@ -610,7 +611,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     let pdfPath: string;
@@ -710,7 +711,7 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the report was created', async () => {
@@ -796,13 +797,50 @@ test.describe('report', () => {
     });
   });
 
-  test('Configure a bar chart', ({}) => {
+  test('Configure a bar chart', async ({
+    appAdminPage,
+    sourceApp,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-608',
     });
 
-    expect(true).toBe(true);
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsChart({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      chart: new BarChart({
+        visibility: 'Display Chart Only',
+        groupData: fields.groupField.name,
+      }),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the bar chart displays as expected', async () => {
+      await expect(reportPage.reportContents).toHaveScreenshot();
+    });
   });
 
   test('Configure a column chart', ({}) => {

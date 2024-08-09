@@ -1,3 +1,5 @@
+import { Chart } from './chart';
+
 export type ReportSchedulingStatus = 'Enabled' | 'Disabled';
 type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
 type ReportDisplayType =
@@ -147,7 +149,7 @@ type SavedReportObject = ReportObject & {
   schedule?: ReportSchedule;
 };
 
-export class SavedReport extends Report {
+export abstract class SavedReport extends Report {
   name: string;
   description: string;
   security: ReportSecurity;
@@ -200,7 +202,7 @@ export class SavedReport extends Report {
   }
 }
 
-type SavedReportAsReportDataOnlyObject = SavedReportObject & {
+type SavedReportAsReportDataOnlyObject = Omit<SavedReportObject, 'displayType'> & {
   bulkEdit?: boolean;
   bulkDelete?: boolean;
 };
@@ -212,7 +214,6 @@ export class SavedReportAsReportDataOnly extends SavedReport {
   constructor({
     appName,
     name,
-    displayType,
     displayFields,
     relatedData,
     security,
@@ -224,7 +225,7 @@ export class SavedReportAsReportDataOnly extends SavedReport {
     super({
       appName,
       name,
-      displayType,
+      displayType: 'Display Report Data Only',
       displayFields,
       relatedData,
       security,
@@ -233,5 +234,36 @@ export class SavedReportAsReportDataOnly extends SavedReport {
     });
     this.bulkEdit = bulkEdit;
     this.bulkDelete = bulkDelete;
+  }
+}
+
+type SavedReportAsChartObject = Omit<SavedReportObject, 'displayType'> & {
+  chart: Chart;
+};
+
+export class SavedReportAsChart extends SavedReport {
+  chart: Chart;
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    chart,
+  }: SavedReportAsChartObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Chart',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.chart = chart;
   }
 }
