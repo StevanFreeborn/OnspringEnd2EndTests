@@ -16,6 +16,7 @@ import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
 import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
 import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
+import { Tags } from '../tags';
 
 type ReportTestFixtures = {
   referencedApp: App;
@@ -797,386 +798,446 @@ test.describe('report', () => {
     });
   });
 
-  test('Configure a bar chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-608',
-    });
+  test(
+    'Configure a bar chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-608',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new BarChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new BarChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the bar chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the bar chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a column chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-609',
-    });
+  test(
+    'Configure a column chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-609',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new ColumnChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new ColumnChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the column chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the column chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a pie chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-610',
-    });
+  test(
+    'Configure a pie chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-610',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new PieChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new PieChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the pie chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the pie chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a donut chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-611',
-    });
+  test(
+    'Configure a donut chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-611',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new DonutChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new DonutChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the donut chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the donut chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a line chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-612',
-    });
+  test(
+    'Configure a line chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-612',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new LineChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new LineChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the line chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the line chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a spline chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-613',
-    });
+  test(
+    'Configure a spline chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-613',
+      });
 
-    const fields = getFieldsForApp();
-    let records = buildRecords(fields.groupField, fields.seriesField);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
 
-    await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
-    });
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
 
-    const report = new SavedReportAsChart({
-      appName: sourceApp.name,
-      name: FakeDataFactory.createFakeReportName(),
-      chart: new SplineChart({
-        visibility: 'Display Chart Only',
-        groupData: fields.groupField.name,
-      }),
-    });
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new SplineChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
 
-    await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
-    });
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
 
-    await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
-      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
-    });
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
 
-    await test.step('Verify the spline chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
-    });
-  });
+      await test.step('Verify the spline chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
+    }
+  );
 
-  test('Configure a funnel chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-614',
-    });
+  test(
+    'Configure a funnel chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-614',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a pyramid chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-615',
-    });
+  test(
+    'Configure a pyramid chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-615',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a stacked bar chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-616',
-    });
+  test(
+    'Configure a stacked bar chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-616',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a column plus line chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-617',
-    });
+  test(
+    'Configure a column plus line chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-617',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a stacked column chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-618',
-    });
+  test(
+    'Configure a stacked column chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-618',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure stacked column plus line chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-619',
-    });
+  test(
+    'Configure stacked column plus line chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-619',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a bubble chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-620',
-    });
+  test(
+    'Configure a bubble chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-620',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a heat map chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-621',
-    });
+  test(
+    'Configure a heat map chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-621',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a calendar', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-622',
-    });
+  test(
+    'Configure a calendar',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-622',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a gantt chart', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-623',
-    });
+  test(
+    'Configure a gantt chart',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-623',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 
-  test('Configure a point map', ({}) => {
-    test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-624',
-    });
+  test(
+    'Configure a point map',
+    {
+      tag: [Tags.Snapshot],
+    },
+    ({}) => {
+      test.info().annotations.push({
+        description: AnnotationType.TestId,
+        type: 'Test-624',
+      });
 
-    expect(true).toBe(true);
-  });
+      expect(true).toBe(true);
+    }
+  );
 });
 
 function getFieldsForApp() {
