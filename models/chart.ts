@@ -6,7 +6,14 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar';
+type ChartType = 'Bar' | 'Column';
+
+const DisplayOptionLabels = {
+  showValues: 'Show Values',
+  threeD: '3D',
+  rotateLabels: 'Rotate Labels',
+  singlePlotColor: 'Single Plot Color',
+} as const;
 
 export type ChartDisplayOption = {
   name: string;
@@ -50,10 +57,18 @@ export abstract class Chart {
 type BarChartObject = Omit<ChartObject, 'type' | 'mode'> & {
   showValues?: boolean;
   threeD?: boolean;
+  singlePlotColor?: boolean;
 };
 
 export class BarChart extends Chart {
-  constructor({ visibility, groupData, summaryData, showValues = false, threeD = false }: BarChartObject) {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    showValues = false,
+    threeD = false,
+    singlePlotColor = false,
+  }: BarChartObject) {
     super({
       visibility,
       groupData,
@@ -61,8 +76,42 @@ export class BarChart extends Chart {
       type: 'Bar',
       mode: 'Simple',
       displayOptions: [
-        { name: 'Show Values', status: showValues },
-        { name: '3D', status: threeD },
+        { name: DisplayOptionLabels.showValues, status: showValues },
+        { name: DisplayOptionLabels.threeD, status: threeD },
+        { name: DisplayOptionLabels.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type ColumnChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  threeD?: boolean;
+  rotateLabels?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class ColumnChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    showValues = false,
+    threeD = false,
+    rotateLabels = false,
+    singlePlotColor = false,
+  }: ColumnChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Column',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabels.showValues, status: showValues },
+        { name: DisplayOptionLabels.threeD, status: threeD },
+        { name: DisplayOptionLabels.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabels.singlePlotColor, status: singlePlotColor },
       ],
     });
   }

@@ -3,7 +3,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
-import { BarChart } from '../../models/chart';
+import { BarChart, ColumnChart } from '../../models/chart';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
@@ -843,13 +843,50 @@ test.describe('report', () => {
     });
   });
 
-  test('Configure a column chart', ({}) => {
+  test('Configure a column chart', async ({
+    appAdminPage,
+    sourceApp,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
     test.info().annotations.push({
       description: AnnotationType.TestId,
       type: 'Test-609',
     });
 
-    expect(true).toBe(true);
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsChart({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      chart: new ColumnChart({
+        visibility: 'Display Chart Only',
+        groupData: fields.groupField.name,
+      }),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.reportDesigner.saveChangesAndRun();
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.page.waitForLoadState('networkidle');
+    });
+
+    await test.step('Verify the column chart displays as expected', async () => {
+      await expect(reportPage.reportContents).toHaveScreenshot();
+    });
   });
 
   test('Configure a pie chart', ({}) => {
