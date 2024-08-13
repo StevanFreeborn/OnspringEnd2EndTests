@@ -56,7 +56,7 @@ export class ReportVisualTab {
 
   private async selectChartType(chartType: string) {
     await this.chartTypeSelector.click();
-    await this.frame.getByRole('option', { name: chartType }).click();
+    await this.frame.getByRole('option', { name: chartType }).first().click();
   }
 
   private async selectDisplayOptions(displayOptions: ChartDisplayOption[]) {

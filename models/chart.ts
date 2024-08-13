@@ -6,7 +6,7 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut';
+type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -186,6 +186,36 @@ export class DonutChart extends Chart {
         { name: DisplayOptionLabel.showSlices, status: showSlices },
         { name: DisplayOptionLabel.viewUsingPercentages, status: viewUsingPercentages },
         { name: DisplayOptionLabel.showLegend, status: showLegend },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type LineChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  rotateLabels?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class LineChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    showValues = false,
+    rotateLabels = false,
+    singlePlotColor = false,
+  }: LineChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Line',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
         { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
       ],
     });
