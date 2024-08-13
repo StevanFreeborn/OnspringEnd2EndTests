@@ -221,3 +221,33 @@ export class LineChart extends Chart {
     });
   }
 }
+
+type SplineChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  rotateLabels?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class SplineChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    showValues = false,
+    rotateLabels = false,
+    singlePlotColor = false,
+  }: SplineChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Line',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
