@@ -15,6 +15,7 @@ const DisplayOptionLabel = {
   singlePlotColor: 'Single Plot Color',
   showSlices: 'Show Slices',
   viewUsingPercentages: 'View using percentages',
+  viewUsingProgression: 'View using progression',
   showLegend: 'Show Legend',
 } as const;
 
@@ -246,6 +247,42 @@ export class SplineChart extends Chart {
       displayOptions: [
         { name: DisplayOptionLabel.showValues, status: showValues },
         { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type FunnelChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  threeD?: boolean;
+  showSlices?: boolean;
+  viewUsingPercentages?: boolean;
+  viewUsingProgression?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class FunnelChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    threeD = false,
+    showSlices = false,
+    viewUsingPercentages = false,
+    viewUsingProgression = false,
+    singlePlotColor = false,
+  }: FunnelChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Funnel',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.showSlices, status: showSlices },
+        { name: DisplayOptionLabel.viewUsingPercentages, status: viewUsingPercentages },
+        { name: DisplayOptionLabel.viewUsingProgression, status: viewUsingProgression },
         { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
       ],
     });
