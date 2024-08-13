@@ -836,6 +836,7 @@ test.describe('report', () => {
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
     });
 
     await test.step('Verify the bar chart displays as expected', async () => {
@@ -882,6 +883,7 @@ test.describe('report', () => {
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
     });
 
     await test.step('Verify the column chart displays as expected', async () => {
@@ -928,6 +930,7 @@ test.describe('report', () => {
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
     });
 
     await test.step('Verify the pie chart displays as expected', async () => {
@@ -974,6 +977,7 @@ test.describe('report', () => {
       await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
     });
 
     await test.step('Verify the donut chart displays as expected', async () => {
