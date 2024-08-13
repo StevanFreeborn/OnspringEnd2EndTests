@@ -6,13 +6,16 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column';
+type ChartType = 'Bar' | 'Column' | 'Pie';
 
-const DisplayOptionLabels = {
+const DisplayOptionLabel = {
   showValues: 'Show Values',
   threeD: '3D',
   rotateLabels: 'Rotate Labels',
   singlePlotColor: 'Single Plot Color',
+  showSlices: 'Show Slices',
+  viewUsingPercentages: 'View using percentages',
+  showLegend: 'Show Legend',
 } as const;
 
 export type ChartDisplayOption = {
@@ -76,9 +79,9 @@ export class BarChart extends Chart {
       type: 'Bar',
       mode: 'Simple',
       displayOptions: [
-        { name: DisplayOptionLabels.showValues, status: showValues },
-        { name: DisplayOptionLabels.threeD, status: threeD },
-        { name: DisplayOptionLabels.singlePlotColor, status: singlePlotColor },
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
       ],
     });
   }
@@ -108,10 +111,46 @@ export class ColumnChart extends Chart {
       type: 'Column',
       mode: 'Simple',
       displayOptions: [
-        { name: DisplayOptionLabels.showValues, status: showValues },
-        { name: DisplayOptionLabels.threeD, status: threeD },
-        { name: DisplayOptionLabels.rotateLabels, status: rotateLabels },
-        { name: DisplayOptionLabels.singlePlotColor, status: singlePlotColor },
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type PieChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  threeD?: boolean;
+  showSlices?: boolean;
+  viewUsingPercentages?: boolean;
+  showLegend?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class PieChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    threeD = false,
+    showSlices = false,
+    viewUsingPercentages = false,
+    showLegend = false,
+    singlePlotColor = false,
+  }: PieChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Pie',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.showSlices, status: showSlices },
+        { name: DisplayOptionLabel.viewUsingPercentages, status: viewUsingPercentages },
+        { name: DisplayOptionLabel.showLegend, status: showLegend },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
       ],
     });
   }
