@@ -6,7 +6,7 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line';
+type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line' | 'Spline' | 'Funnel';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -241,7 +241,7 @@ export class SplineChart extends Chart {
       visibility,
       groupData,
       summaryData,
-      type: 'Line',
+      type: 'Spline',
       mode: 'Simple',
       displayOptions: [
         { name: DisplayOptionLabel.showValues, status: showValues },
