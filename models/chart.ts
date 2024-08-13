@@ -6,7 +6,7 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column' | 'Pie';
+type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -144,6 +144,42 @@ export class PieChart extends Chart {
       groupData,
       summaryData,
       type: 'Pie',
+      mode: 'Simple',
+      displayOptions: [
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.showSlices, status: showSlices },
+        { name: DisplayOptionLabel.viewUsingPercentages, status: viewUsingPercentages },
+        { name: DisplayOptionLabel.showLegend, status: showLegend },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type DonutChartObject = Omit<ChartObject, 'type' | 'mode'> & {
+  threeD?: boolean;
+  showSlices?: boolean;
+  viewUsingPercentages?: boolean;
+  showLegend?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class DonutChart extends Chart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    threeD = false,
+    showSlices = false,
+    viewUsingPercentages = false,
+    showLegend = false,
+    singlePlotColor = false,
+  }: DonutChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      type: 'Donut',
       mode: 'Simple',
       displayOptions: [
         { name: DisplayOptionLabel.threeD, status: threeD },
