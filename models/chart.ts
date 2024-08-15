@@ -19,7 +19,8 @@ type ChartType =
   | 'Pyramid'
   | 'Stacked Bar'
   | 'Column Plus Line'
-  | 'Stacked Column';
+  | 'Stacked Column'
+  | 'Stacked Column Plus Line';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -471,5 +472,53 @@ export class StackedColumnChart extends AdvancedChart {
         { name: DisplayOptionLabel.showStackTotals, status: showStackTotals },
       ],
     });
+  }
+}
+
+type StackedColumnPlusLineChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  lineChart: LineChart | SplineChart | SavedReportAsChart;
+  showValues?: boolean;
+  rotateValues?: boolean;
+  threeD?: boolean;
+  rotateLabels?: boolean;
+  showStackTotals?: boolean;
+  dualYAxis?: boolean;
+};
+
+export class StackedColumnPlusLineChart extends AdvancedChart {
+  lineChart: LineChart | SplineChart | SavedReportAsChart;
+  dualYAxis: boolean;
+
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    lineChart,
+    showValues = false,
+    rotateValues = false,
+    threeD = false,
+    rotateLabels = false,
+    showStackTotals = false,
+    dualYAxis = false,
+  }: StackedColumnPlusLineChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Stacked Column Plus Line',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.rotateValues, status: rotateValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.showStackTotals, status: showStackTotals },
+        { name: DisplayOptionLabel.dualYAxis, status: dualYAxis },
+      ],
+    });
+    this.lineChart = lineChart;
+    this.dualYAxis = dualYAxis;
   }
 }

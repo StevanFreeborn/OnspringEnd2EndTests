@@ -1,5 +1,12 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { AdvancedChart, ChartDisplayOption, ColumnPlusLineChart, LineChart, SplineChart } from '../../models/chart';
+import {
+  AdvancedChart,
+  ChartDisplayOption,
+  ColumnPlusLineChart,
+  LineChart,
+  SplineChart,
+  StackedColumnPlusLineChart,
+} from '../../models/chart';
 import { Report, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
 import { TreeviewSelector } from '../controls/treeviewSelector';
 
@@ -92,7 +99,7 @@ export class ReportVisualTab {
         await this.selectSummaryData(report.chart.summaryData);
       }
 
-      if (report.chart instanceof ColumnPlusLineChart) {
+      if (report.chart instanceof ColumnPlusLineChart || report.chart instanceof StackedColumnPlusLineChart) {
         const sourceSelector = this.lineChartConfiguration.getByRole('listbox').first();
         const appSelector = this.lineChartConfiguration.getByRole('listbox').nth(1);
         const existingChartSelector = this.lineChartConfiguration
