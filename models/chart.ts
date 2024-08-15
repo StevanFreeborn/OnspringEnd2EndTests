@@ -1,3 +1,5 @@
+import { SavedReportAsChart } from './report';
+
 type ChartVisibility =
   | 'Display Chart and Report Data'
   | 'Display Chart and Chart Data'
@@ -6,7 +8,17 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line' | 'Spline' | 'Funnel' | 'Pyramid' | 'Stacked Bar';
+type ChartType =
+  | 'Bar'
+  | 'Column'
+  | 'Pie'
+  | 'Donut'
+  | 'Line'
+  | 'Spline'
+  | 'Funnel'
+  | 'Pyramid'
+  | 'Stacked Bar'
+  | 'Column Plus Line';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -19,6 +31,7 @@ const DisplayOptionLabel = {
   showLegend: 'Show Legend',
   stackAllTo100Percent: 'Stack all to 100%',
   showStackTotals: 'Show Stack Totals',
+  dualYAxis: 'Dual Y Axis',
 } as const;
 
 export type ChartDisplayOption = {
@@ -370,5 +383,50 @@ export class StackedBarChart extends AdvancedChart {
         { name: DisplayOptionLabel.showStackTotals, status: showStackTotals },
       ],
     });
+  }
+}
+
+type ColumnPlusLineChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  lineChart: LineChart | SplineChart | SavedReportAsChart;
+  showValues?: boolean;
+  threeD?: boolean;
+  rotateLabels?: boolean;
+  dualYAxis?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class ColumnPlusLineChart extends AdvancedChart {
+  lineChart: LineChart | SplineChart | SavedReportAsChart;
+  dualYAxis: boolean;
+
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    lineChart,
+    showValues = false,
+    threeD = false,
+    rotateLabels = false,
+    dualYAxis = false,
+    singlePlotColor = false,
+  }: ColumnPlusLineChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Column Plus Line',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.dualYAxis, status: dualYAxis },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+    this.lineChart = lineChart;
+    this.dualYAxis = dualYAxis;
   }
 }

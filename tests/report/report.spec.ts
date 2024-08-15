@@ -6,6 +6,7 @@ import { App } from '../../models/app';
 import {
   BarChart,
   ColumnChart,
+  ColumnPlusLineChart,
   DonutChart,
   FunnelChart,
   LineChart,
@@ -1228,13 +1229,65 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    ({}) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-617',
       });
 
-      expect(true).toBe(true);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
+
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
+
+      const lineReport = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new LineChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+        }),
+      });
+
+      const columnReport = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new ColumnPlusLineChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+          seriesData: fields.seriesField.name,
+          lineChart: lineReport,
+        }),
+      });
+
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      await test.step('Create the line report', async () => {
+        await reportAppPage.createReport(lineReport);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      });
+
+      await test.step('Navigate back to the app reports home page', async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      await test.step('Create the column report', async () => {
+        await reportAppPage.createReport(columnReport);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
+
+      await test.step('Verify the column plus line chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
     }
   );
 

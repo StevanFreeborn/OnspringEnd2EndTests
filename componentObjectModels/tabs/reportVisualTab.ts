@@ -1,5 +1,5 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { AdvancedChart, ChartDisplayOption } from '../../models/chart';
+import { AdvancedChart, ChartDisplayOption, ColumnPlusLineChart, LineChart, SplineChart } from '../../models/chart';
 import { Report, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
 import { TreeviewSelector } from '../controls/treeviewSelector';
 
@@ -15,6 +15,7 @@ export class ReportVisualTab {
   private readonly chartTypeSelector: Locator;
   private readonly chartModeContainer: Locator;
   private readonly displayOptions: Locator;
+  private readonly lineChartConfiguration: Locator;
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
@@ -31,6 +32,7 @@ export class ReportVisualTab {
     this.chartTypeSelector = this.frame.locator('.label:has-text("Chart Type") + .data').getByRole('listbox');
     this.chartModeContainer = this.frame.locator('.chart-mode');
     this.displayOptions = this.frame.locator('.label:has-text("Display Options") + .data');
+    this.lineChartConfiguration = this.frame.locator('.label:has-text("Line Chart Configuration") + .data');
   }
 
   private async selectDisplayType(displayType: string) {
@@ -88,6 +90,34 @@ export class ReportVisualTab {
       } else {
         await this.selectGroupData(report.chart.groupData);
         await this.selectSummaryData(report.chart.summaryData);
+      }
+
+      if (report.chart instanceof ColumnPlusLineChart) {
+        const sourceSelector = this.lineChartConfiguration.getByRole('listbox').first();
+        const appSelector = this.lineChartConfiguration.getByRole('listbox').nth(1);
+        const existingChartSelector = this.lineChartConfiguration
+          .locator('[data-existing-subreport]')
+          .getByRole('listbox');
+
+        if (report.chart.lineChart instanceof SavedReportAsChart) {
+          const isLineChart =
+            report.chart.lineChart.chart instanceof LineChart || report.chart.lineChart.chart instanceof SplineChart;
+
+          if (isLineChart === false) {
+            throw new Error("Saved report's chart must be a line or spline chart");
+          }
+
+          await sourceSelector.click();
+          await this.frame.getByRole('option', { name: 'Use an existing chart report' }).click();
+
+          await appSelector.click();
+          await this.frame.getByRole('option', { name: report.chart.lineChart.appName }).click();
+
+          await existingChartSelector.click();
+          await this.frame.getByRole('option', { name: report.chart.lineChart.name }).click();
+        } else {
+          throw new Error('Using line chart is not implemented');
+        }
       }
 
       await this.selectVisibility(report.chart.visibility);
