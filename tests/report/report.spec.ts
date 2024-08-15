@@ -14,6 +14,7 @@ import {
   PyramidChart,
   SplineChart,
   StackedBarChart,
+  StackedColumnChart,
 } from '../../models/chart';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
@@ -1296,13 +1297,45 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    ({}) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-618',
       });
 
-      expect(true).toBe(true);
+      const fields = getFieldsForApp();
+      let records = buildRecords(fields.groupField, fields.seriesField);
+
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
+
+      const report = new SavedReportAsChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        chart: new StackedColumnChart({
+          visibility: 'Display Chart Only',
+          groupData: fields.groupField.name,
+          seriesData: fields.seriesField.name,
+        }),
+      });
+
+      await test.step("Navigate to the app's reports home page", async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.page.waitForLoadState('networkidle');
+        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+      });
+
+      await test.step('Verify the stacked column chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
     }
   );
 

@@ -18,7 +18,8 @@ type ChartType =
   | 'Funnel'
   | 'Pyramid'
   | 'Stacked Bar'
-  | 'Column Plus Line';
+  | 'Column Plus Line'
+  | 'Stacked Column';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -32,6 +33,7 @@ const DisplayOptionLabel = {
   stackAllTo100Percent: 'Stack all to 100%',
   showStackTotals: 'Show Stack Totals',
   dualYAxis: 'Dual Y Axis',
+  rotateValues: 'Rotate Values',
 } as const;
 
 export type ChartDisplayOption = {
@@ -428,5 +430,46 @@ export class ColumnPlusLineChart extends AdvancedChart {
     });
     this.lineChart = lineChart;
     this.dualYAxis = dualYAxis;
+  }
+}
+
+export type StackedColumnChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  rotateValues?: boolean;
+  threeD?: boolean;
+  rotateLabels?: boolean;
+  stackAllTo100Percent?: boolean;
+  showStackTotals?: boolean;
+};
+
+export class StackedColumnChart extends AdvancedChart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    showValues = false,
+    rotateValues = false,
+    threeD = false,
+    rotateLabels = false,
+    stackAllTo100Percent = false,
+    showStackTotals = false,
+  }: StackedColumnChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Stacked Column',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.rotateValues, status: rotateValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.stackAllTo100Percent, status: stackAllTo100Percent },
+        { name: DisplayOptionLabel.showStackTotals, status: showStackTotals },
+      ],
+    });
   }
 }
