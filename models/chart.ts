@@ -6,7 +6,7 @@ type ChartVisibility =
 
 type ChartMode = 'Simple' | 'Advanced';
 
-type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line' | 'Spline' | 'Funnel' | 'Pyramid';
+type ChartType = 'Bar' | 'Column' | 'Pie' | 'Donut' | 'Line' | 'Spline' | 'Funnel' | 'Pyramid' | 'Stacked Bar';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -17,6 +17,8 @@ const DisplayOptionLabel = {
   viewUsingPercentages: 'View using percentages',
   viewUsingProgression: 'View using progression',
   showLegend: 'Show Legend',
+  stackAllTo100Percent: 'Stack all to 100%',
+  showStackTotals: 'Show Stack Totals',
 } as const;
 
 export type ChartDisplayOption = {
@@ -55,6 +57,17 @@ export abstract class Chart {
     this.type = type;
     this.mode = mode;
     this.displayOptions = displayOptions;
+  }
+}
+
+type AdvancedChartObject = ChartObject & { seriesData: string };
+
+export abstract class AdvancedChart extends Chart {
+  seriesData: string;
+
+  constructor({ visibility, groupData, summaryData, seriesData, type, mode, displayOptions }: AdvancedChartObject) {
+    super({ visibility, groupData, summaryData, type, mode, displayOptions });
+    this.seriesData = seriesData;
   }
 }
 
@@ -320,6 +333,41 @@ export class PyramidChart extends Chart {
         { name: DisplayOptionLabel.viewUsingPercentages, status: viewUsingPercentages },
         { name: DisplayOptionLabel.viewUsingProgression, status: viewUsingProgression },
         { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+  }
+}
+
+type StackedBarChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  threeD?: boolean;
+  stackAllTo100Percent?: boolean;
+  showStackTotals?: boolean;
+};
+
+export class StackedBarChart extends AdvancedChart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    showValues = false,
+    threeD = false,
+    stackAllTo100Percent = false,
+    showStackTotals = false,
+  }: StackedBarChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Stacked Bar',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.stackAllTo100Percent, status: stackAllTo100Percent },
+        { name: DisplayOptionLabel.showStackTotals, status: showStackTotals },
       ],
     });
   }
