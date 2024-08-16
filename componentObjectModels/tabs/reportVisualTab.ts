@@ -1,6 +1,7 @@
 import { FrameLocator, Locator } from '@playwright/test';
 import {
   AdvancedChart,
+  BubbleChart,
   ChartDisplayOption,
   ColumnPlusLineChart,
   LineChart,
@@ -94,6 +95,10 @@ export class ReportVisualTab {
         await this.chartDataRuleControl.selectGroupData(report.chart.groupData);
         await this.chartDataRuleControl.selectSummaryData(report.chart.summaryData);
         await this.chartDataRuleControl.selectSeriesData(report.chart.seriesData);
+
+        if (report.chart instanceof BubbleChart) {
+          await this.chartDataRuleControl.selectGroupData(report.chart.additionalGroupData);
+        }
       } else {
         await this.selectGroupData(report.chart.groupData);
         await this.selectSummaryData(report.chart.summaryData);

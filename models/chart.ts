@@ -20,7 +20,8 @@ type ChartType =
   | 'Stacked Bar'
   | 'Column Plus Line'
   | 'Stacked Column'
-  | 'Stacked Column Plus Line';
+  | 'Stacked Column Plus Line'
+  | 'Bubble';
 
 const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -520,5 +521,42 @@ export class StackedColumnPlusLineChart extends AdvancedChart {
     });
     this.lineChart = lineChart;
     this.dualYAxis = dualYAxis;
+  }
+}
+
+type BubbleChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  additionalGroupData: string;
+  threeD?: boolean;
+  rotateLabels?: boolean;
+  singlePlotColor?: boolean;
+};
+
+export class BubbleChart extends AdvancedChart {
+  additionalGroupData: string;
+
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    additionalGroupData,
+    threeD = false,
+    rotateLabels = false,
+    singlePlotColor = false,
+  }: BubbleChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Bubble',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.threeD, status: threeD },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+      ],
+    });
+    this.additionalGroupData = additionalGroupData;
   }
 }
