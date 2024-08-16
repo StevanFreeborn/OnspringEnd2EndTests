@@ -1,7 +1,7 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
+import { app, createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import {
   BarChart,
@@ -24,6 +24,7 @@ import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
 import { ReportSchedule, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
@@ -55,6 +56,17 @@ const test = base.extend<ReportTestFixtures>({
 });
 
 test.describe('report', () => {
+  let appsToDelete: string[] = [];
+
+  test.afterEach(async ({ sysAdminPage }) => {
+    if (appsToDelete.length === 0) {
+      return;
+    }
+
+    await new AppsAdminPage(sysAdminPage).deleteApps(appsToDelete);
+    appsToDelete = [];
+  });
+
   test('Create a report via the "Create Report" button on the report home page', async ({
     sourceApp,
     reportHomePage,
@@ -1232,11 +1244,18 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-617',
       });
+
+      // The name of the source app needs to be unique to avoid conflicts...but
+      // it also needs to be consistent across test runs so that snapshots can be compared.
+      const projectName = test.info().project.name;
+      const appName = `configure_a_column_plus_line_chart_${projectName}`;
+      const sourceApp = await createApp(sysAdminPage, appName);
+      appsToDelete.push(appName);
 
       const fields = getFieldsForApp();
       let records = buildRecords(fields.groupField, fields.seriesField);
@@ -1346,11 +1365,18 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-619',
       });
+
+      // The name of the source app needs to be unique to avoid conflicts...but
+      // it also needs to be consistent across test runs so that snapshots can be compared.
+      const projectName = test.info().project.name;
+      const appName = `configure_a_column_plus_line_chart_${projectName}`;
+      const sourceApp = await createApp(sysAdminPage, appName);
+      appsToDelete.push(appName);
 
       const fields = getFieldsForApp();
       let records = buildRecords(fields.groupField, fields.seriesField);

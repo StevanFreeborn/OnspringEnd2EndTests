@@ -19,10 +19,9 @@ export async function app({ sysAdminPage }: { sysAdminPage: Page }, use: (r: App
   await new AppsAdminPage(sysAdminPage).deleteApps([app.name]);
 }
 
-export async function createApp(sysAdminPage: Page) {
+export async function createApp(sysAdminPage: Page, appName: string = FakeDataFactory.createFakeAppName()) {
   const adminHomePage = new AdminHomePage(sysAdminPage);
   const appAdminPage = new AppAdminPage(sysAdminPage);
-  const appName = FakeDataFactory.createFakeAppName();
 
   await adminHomePage.goto();
   await adminHomePage.createApp(appName);
