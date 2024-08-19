@@ -3,7 +3,9 @@ import {
   AdvancedChart,
   BubbleChart,
   ChartDisplayOption,
+  ColorStop,
   ColumnPlusLineChart,
+  HeatMapChart,
   LineChart,
   SplineChart,
   StackedColumnPlusLineChart,
@@ -24,6 +26,7 @@ export class ReportVisualTab {
   private readonly chartModeContainer: Locator;
   private readonly displayOptions: Locator;
   private readonly lineChartConfiguration: Locator;
+  private readonly colorStopsGrid: ColorStopsGrid;
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
@@ -41,6 +44,7 @@ export class ReportVisualTab {
     this.chartModeContainer = this.frame.locator('.chart-mode');
     this.displayOptions = this.frame.locator('.label:has-text("Display Options") + .data');
     this.lineChartConfiguration = this.frame.locator('.label:has-text("Line Chart Configuration") + .data');
+    this.colorStopsGrid = new ColorStopsGrid(this.frame.locator('#ColorStops'), this.frame);
   }
 
   private async selectDisplayType(displayType: string) {
@@ -132,6 +136,10 @@ export class ReportVisualTab {
         }
       }
 
+      if (report.chart instanceof HeatMapChart) {
+        await this.colorStopsGrid.addColorStops(report.chart.colorStops);
+      }
+
       await this.selectVisibility(report.chart.visibility);
       await this.selectDisplayOptions(report.chart.displayOptions);
     }
@@ -195,6 +203,43 @@ export class ChartDataRuleControl {
 
     for (const rule of rules) {
       await rule.getByTitle('Delete').click();
+    }
+  }
+}
+
+export class ColorStopsGrid {
+  private readonly frame: FrameLocator;
+  private readonly control: Locator;
+  private readonly addValueButton: Locator;
+  private readonly gridBody: Locator;
+
+  constructor(control: Locator, frame: FrameLocator) {
+    this.frame = frame;
+    this.control = control;
+    this.addValueButton = this.control.getByRole('button', { name: 'Add Value' });
+    this.gridBody = this.control.locator('.k-grid-content');
+  }
+
+  async addColorStop(colorStop: ColorStop) {
+    await this.addValueButton.click();
+
+    const row = this.gridBody.locator('tr').last();
+    const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
+
+    await colorPicker.click();
+
+    const colorPickerModal = this.frame.locator('[data-role="colorpicker"]');
+    const colorInput = colorPickerModal.getByPlaceholder('no color').first();
+
+    await colorInput.pressSequentially(colorStop.color, { delay: 150 });
+
+    const valueInput = row.locator('td[data-field="value"] input.k-formatted-value');
+    await valueInput.fill(colorStop.value.toString());
+  }
+
+  async addColorStops(colorStops: ColorStop[]) {
+    for (const colorStop of colorStops) {
+      await this.addColorStop(colorStop);
     }
   }
 }
