@@ -6,7 +6,8 @@ export class DocumentInformationTab {
   readonly documentNameInput: Locator;
   private readonly statusSwitch: Locator;
   private readonly statusToggle: Locator;
-  private readonly addNewFileLink: Locator;
+  private readonly fileOptionsButton: Locator;
+  private readonly fileOptionsMenu: Locator;
   private readonly saveFilePath: RegExp;
 
   constructor(page: Page) {
@@ -14,7 +15,8 @@ export class DocumentInformationTab {
     this.documentNameInput = page.getByLabel('Document Name');
     this.statusSwitch = page.getByRole('switch', { name: 'Status' });
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
-    this.addNewFileLink = page.locator('.k-upload-button');
+    this.fileOptionsButton = page.locator('#file-options-button');
+    this.fileOptionsMenu = page.locator('#document-file-options');
     this.saveFilePath = /\/Admin\/Document\/SaveDocumentFiles/;
   }
 
@@ -29,7 +31,8 @@ export class DocumentInformationTab {
 
   private async addFile(filePath: string) {
     const fileChooserPromise = this.page.waitForEvent('filechooser');
-    await this.addNewFileLink.click();
+    await this.fileOptionsButton.click();
+    await this.fileOptionsMenu.getByText('Upload New File').click();
 
     const fileChooser = await fileChooserPromise;
 
