@@ -1510,8 +1510,8 @@ test.describe('report', () => {
           groupData: fields.groupField.name,
           seriesData: fields.seriesField.name,
           colorStops: [
-            { value: 3, color: '#FF0000' },
-            { value: 6, color: '#00FF00' },
+            { value: 3, color: '#0000FF' },
+            { value: 6, color: '#800080' },
           ],
         }),
       });

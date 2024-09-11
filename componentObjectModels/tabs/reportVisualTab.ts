@@ -220,26 +220,35 @@ export class ColorStopsGrid {
     this.gridBody = this.control.locator('.k-grid-content');
   }
 
-  async addColorStop(colorStop: ColorStop) {
-    await this.addValueButton.click();
-
-    const row = this.gridBody.locator('tr').last();
-    const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
-
-    await colorPicker.click();
-
-    const colorPickerModal = this.frame.locator('[data-role="colorpicker"]');
-    const colorInput = colorPickerModal.getByPlaceholder('no color').first();
-
-    await colorInput.pressSequentially(colorStop.color, { delay: 150 });
-
-    const valueInput = row.locator('td[data-field="value"] input.k-formatted-value');
-    await valueInput.fill(colorStop.value.toString());
-  }
-
   async addColorStops(colorStops: ColorStop[]) {
-    for (const colorStop of colorStops) {
-      await this.addColorStop(colorStop);
+    for (const [index, colorStop] of colorStops.entries()) {
+      const row = this.gridBody.getByRole('row').nth(index);
+
+      await this.addValueButton.click();
+      await row.waitFor();
+
+      const valueInput = row.locator('td[data-field="value"] input:visible');
+
+      await valueInput.focus();
+      await valueInput.fill(colorStop.value.toString());
+
+      const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
+      const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
+
+      await colorPicker.click();
+
+      // TODO: ...😠...
+      // Without taking a short pause here the input to the
+      // colorpicker is not entered correctly
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await this.control.page().waitForTimeout(1000);
+
+      const colorInput = colorPickerModal.getByPlaceholder('no color');
+
+      await colorInput.clear();
+      await colorInput.pressSequentially(colorStop.color, { delay: 150 });
+
+      await colorPicker.click();
     }
   }
 }
