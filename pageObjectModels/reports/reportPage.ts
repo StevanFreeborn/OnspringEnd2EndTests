@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { CalendarChart } from '../../componentObjectModels/charts/calendarChart';
 import { DualPaneSelector } from '../../componentObjectModels/controls/dualPaneSelector';
 import { BulkDeleteDialog } from '../../componentObjectModels/dialogs/bulkDeleteDialog';
 import { DeleteReportDialog } from '../../componentObjectModels/dialogs/deleteReportDialog';
@@ -33,6 +34,8 @@ export class ReportPage extends BasePage {
   readonly bulkDeleteDialog: BulkDeleteDialog;
   readonly liveFilterMenu: Locator;
 
+  readonly calendarChart: CalendarChart;
+
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Report\/\d+\/Display/;
@@ -55,10 +58,17 @@ export class ReportPage extends BasePage {
     this.exportReportModal = new ExportReportModal(this.page);
     this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
     this.printReportModal = new PrintReportModal(this.page);
+
+    this.calendarChart = new CalendarChart(this.reportContents.locator('#calendar'));
   }
 
   async goto(reportId: number) {
     await this.page.goto(`/Report/${reportId}/Display`, { waitUntil: 'networkidle' });
+  }
+
+  async waitUntilLoaded() {
+    await this.page.waitForLoadState('networkidle');
+    await this.copyrightPatentInfo.waitFor({ state: 'hidden' });
   }
 
   getReportIdFromUrl() {

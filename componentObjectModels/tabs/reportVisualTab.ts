@@ -10,7 +10,14 @@ import {
   SplineChart,
   StackedColumnPlusLineChart,
 } from '../../models/chart';
-import { Report, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
+import {
+  CalendarValue,
+  Report,
+  SavedReportAsCalendar,
+  SavedReportAsChart,
+  SavedReportAsReportDataOnly,
+} from '../../models/report';
+import { DualPaneSelector } from '../controls/dualPaneSelector';
 import { TreeviewSelector } from '../controls/treeviewSelector';
 
 export class ReportVisualTab {
@@ -27,6 +34,11 @@ export class ReportVisualTab {
   private readonly displayOptions: Locator;
   private readonly lineChartConfiguration: Locator;
   private readonly colorStopsGrid: ColorStopsGrid;
+  private readonly colorBasedOnSelector: Locator;
+  private readonly defaultViewSelector: Locator;
+  private readonly agendaFieldsSelector: DualPaneSelector;
+  private readonly initialDateSelector: Locator;
+  private readonly calendarValuesGrid: CalendarValuesGrid;
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
@@ -45,6 +57,11 @@ export class ReportVisualTab {
     this.displayOptions = this.frame.locator('.label:has-text("Display Options") + .data');
     this.lineChartConfiguration = this.frame.locator('.label:has-text("Line Chart Configuration") + .data');
     this.colorStopsGrid = new ColorStopsGrid(this.frame.locator('#ColorStops'), this.frame);
+    this.colorBasedOnSelector = this.frame.locator('.label:has-text("Color Based On") + .data').getByRole('listbox');
+    this.defaultViewSelector = this.frame.locator('.label:has-text("Default View") + .data').getByRole('listbox');
+    this.agendaFieldsSelector = new DualPaneSelector(this.frame.locator('.label:has-text("Agenda Fields") + .data'));
+    this.initialDateSelector = this.frame.locator('.label:has-text("Initial Date") + .data').getByRole('listbox');
+    this.calendarValuesGrid = new CalendarValuesGrid(this.frame.locator('#CalendarValues'), this.frame);
   }
 
   private async selectDisplayType(displayType: string) {
@@ -80,6 +97,25 @@ export class ReportVisualTab {
       const checkbox = this.displayOptions.getByRole('checkbox', { name: option.name });
       await checkbox.setChecked(option.status);
     }
+  }
+
+  private async selectColorBasedOn(colorBasedOn: string) {
+    await this.colorBasedOnSelector.click();
+    await this.frame.getByRole('option', { name: colorBasedOn }).click();
+  }
+
+  private async selectDefaultView(defaultView: string) {
+    await this.defaultViewSelector.click();
+    await this.frame.getByRole('option', { name: defaultView }).click();
+  }
+
+  private async selectAgendaFields(agendaFields: string[]) {
+    await this.agendaFieldsSelector.selectOptions(agendaFields);
+  }
+
+  private async selectInitialDate(initialDate: string) {
+    await this.initialDateSelector.click();
+    await this.frame.getByRole('option', { name: initialDate }).click();
   }
 
   async fillOutForm(report: Report) {
@@ -142,6 +178,14 @@ export class ReportVisualTab {
 
       await this.selectVisibility(report.chart.visibility);
       await this.selectDisplayOptions(report.chart.displayOptions);
+    }
+
+    if (report instanceof SavedReportAsCalendar) {
+      await this.selectColorBasedOn(report.colorBasedOn);
+      await this.selectDefaultView(report.defaultView);
+      await this.calendarValuesGrid.addCalendarValues(report.calendarValues);
+      await this.selectAgendaFields(report.agendaFields);
+      await this.selectInitialDate(report.initialDate);
     }
   }
 }
@@ -207,7 +251,7 @@ export class ChartDataRuleControl {
   }
 }
 
-export class ColorStopsGrid {
+class ColorStopsGrid {
   private readonly frame: FrameLocator;
   private readonly control: Locator;
   private readonly addValueButton: Locator;
@@ -249,6 +293,56 @@ export class ColorStopsGrid {
       await colorInput.pressSequentially(colorStop.color, { delay: 150 });
 
       await colorPicker.click();
+    }
+  }
+}
+
+class CalendarValuesGrid {
+  private readonly frame: FrameLocator;
+  private readonly control: Locator;
+  private readonly addValueButton: Locator;
+  private readonly gridBody: Locator;
+
+  constructor(control: Locator, frame: FrameLocator) {
+    this.frame = frame;
+    this.control = control;
+    this.addValueButton = this.control.getByRole('button', { name: 'Add Value' });
+    this.gridBody = this.control.locator('.k-grid-content');
+  }
+
+  async addCalendarValues(values: CalendarValue[]) {
+    for (const [index, value] of values.entries()) {
+      const row = this.gridBody.getByRole('row').nth(index);
+
+      await this.addValueButton.click();
+      await row.waitFor();
+
+      const startDateFieldSelector = row.locator('td[data-field="startFieldConfigId"]').getByRole('listbox');
+      await startDateFieldSelector.click();
+      await this.frame.getByRole('option', { name: value.startDateField }).click();
+
+      if (value.endDateField) {
+        const endDateFieldSelector = row.locator('td[data-field="endFieldConfigId"]').getByRole('listbox');
+        await endDateFieldSelector.click();
+        await this.frame.getByRole('option', { name: value.endDateField }).click();
+      }
+
+      if (value.color) {
+        const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
+        const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
+
+        await colorPicker.click();
+
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await this.control.page().waitForTimeout(1000);
+
+        const colorInput = colorPickerModal.getByPlaceholder('no color');
+
+        await colorInput.clear();
+        await colorInput.pressSequentially(value.color, { delay: 150 });
+
+        await colorPicker.click();
+      }
     }
   }
 }

@@ -19,11 +19,17 @@ import {
   StackedColumnChart,
   StackedColumnPlusLineChart,
 } from '../../models/chart';
+import { DateField } from '../../models/dateField';
 import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
-import { ReportSchedule, SavedReportAsChart, SavedReportAsReportDataOnly } from '../../models/report';
+import {
+  ReportSchedule,
+  SavedReportAsCalendar,
+  SavedReportAsChart,
+  SavedReportAsReportDataOnly,
+} from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -861,8 +867,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the bar chart displays as expected', async () => {
@@ -907,8 +912,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the column chart displays as expected', async () => {
@@ -953,8 +957,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the pie chart displays as expected', async () => {
@@ -999,8 +1002,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the donut chart displays as expected', async () => {
@@ -1045,8 +1047,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the line chart displays as expected', async () => {
@@ -1091,8 +1092,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the spline chart displays as expected', async () => {
@@ -1137,8 +1137,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the funnel chart displays as expected', async () => {
@@ -1183,8 +1182,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the pyramid chart displays as expected', async () => {
@@ -1230,8 +1228,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the stacked bar chart displays as expected', async () => {
@@ -1304,8 +1301,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(columnReport);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the column plus line chart displays as expected', async () => {
@@ -1351,8 +1347,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the stacked column chart displays as expected', async () => {
@@ -1425,8 +1420,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(stackedColumnReport);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the stacked column plus line chart displays as expected', async () => {
@@ -1473,8 +1467,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the bubble chart displays as expected', async () => {
@@ -1524,8 +1517,7 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.page.waitForLoadState('networkidle');
-        await reportPage.copyrightPatentInfo.waitFor({ state: 'hidden' });
+        await reportPage.waitUntilLoaded();
       });
 
       await test.step('Verify the heat map chart displays as expected', async () => {
@@ -1539,13 +1531,99 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    ({}) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-622',
       });
 
-      expect(true).toBe(true);
+      const millisecondsInHour = 60 * 60 * 1000;
+      const testDate = new Date('2024-09-12T05:00:00Z');
+
+      const startDate = new DateField({
+        name: 'Start Date',
+        display: 'Date and Time',
+      });
+
+      const endDate = new DateField({
+        name: 'End Date',
+        display: 'Date and Time',
+      });
+
+      let records: Record[] = [
+        {
+          id: 0,
+          fieldValues: [
+            {
+              field: startDate.name,
+              value: new Date(testDate.getTime() + 8 * millisecondsInHour).toISOString(),
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: startDate.type as FieldType,
+            },
+            {
+              field: endDate.name,
+              value: new Date(testDate.getTime() + 9 * millisecondsInHour).toISOString(),
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: endDate.type as FieldType,
+            },
+          ],
+        },
+        {
+          id: 0,
+          fieldValues: [
+            {
+              field: startDate.name,
+              value: new Date(testDate.getTime() + 16 * millisecondsInHour).toISOString(),
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: startDate.type as FieldType,
+            },
+            {
+              field: endDate.name,
+              value: new Date(testDate.getTime() + 17 * millisecondsInHour).toISOString(),
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: endDate.type as FieldType,
+            },
+          ],
+        },
+      ];
+
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, [startDate, endDate]);
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
+
+      await test.step('Navigate to the app reports home page', async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      const report = new SavedReportAsCalendar({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        calendarValues: [
+          {
+            startDateField: startDate.name,
+            endDateField: endDate.name,
+            color: '#FF0000',
+          },
+        ],
+        defaultView: 'Day',
+      });
+
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.calendarChart.selectDate(testDate);
+        await reportPage.waitUntilLoaded();
+      });
+
+      await test.step('Verify the calendar displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
     }
   );
 
@@ -1731,6 +1809,17 @@ async function addRecordsToApp(
           });
 
           await field.searchForAndSelectRecord(fieldValue.value);
+          break;
+        }
+        case 'Date/Time': {
+          const field = await addContentPage.form.getField({
+            tabName: fieldValue.tabName,
+            sectionName: fieldValue.sectionName,
+            fieldName: fieldValue.field,
+            fieldType: fieldValue.type,
+          });
+
+          await field.enterDate(new Date(fieldValue.value));
           break;
         }
         default:

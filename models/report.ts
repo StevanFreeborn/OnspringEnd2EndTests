@@ -267,3 +267,66 @@ export class SavedReportAsChart extends SavedReport {
     this.chart = chart;
   }
 }
+
+type CalendarColors = 'Calendar Value Settings';
+
+type CalendarView = 'Week' | 'Day';
+
+type InitialCalendarDate = 'Today';
+
+export type CalendarValue = {
+  startDateField: string;
+  endDateField?: string;
+  color?: string;
+};
+
+type SavedReportAsCalendarObject = Omit<SavedReportObject, 'displayType'> & {
+  colorBasedOn?: CalendarColors;
+  defaultView?: CalendarView;
+  agendaFields?: string[];
+  initialDate?: InitialCalendarDate;
+  calendarValues: CalendarValue[];
+};
+
+export class SavedReportAsCalendar extends SavedReport {
+  colorBasedOn: CalendarColors;
+  defaultView: CalendarView;
+  agendaFields: string[];
+  initialDate: InitialCalendarDate;
+  calendarValues: CalendarValue[];
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    colorBasedOn = 'Calendar Value Settings',
+    defaultView = 'Week',
+    agendaFields = [],
+    initialDate = 'Today',
+    calendarValues,
+  }: SavedReportAsCalendarObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Calendar',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.colorBasedOn = colorBasedOn;
+    this.defaultView = defaultView;
+    this.agendaFields = agendaFields;
+    this.initialDate = initialDate;
+    this.calendarValues = calendarValues;
+
+    if (this.calendarValues.length === 0) {
+      throw new Error('At least one calendar value must be provided');
+    }
+  }
+}
