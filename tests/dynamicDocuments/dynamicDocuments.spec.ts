@@ -7,7 +7,7 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { AttachmentField } from '../../models/attachmentField';
 import { DynamicDocument } from '../../models/dynamicDocument';
-import { SavedReport } from '../../models/report';
+import { SavedReportAsReportDataOnly } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -851,7 +851,7 @@ test.describe('Dynamic Documents', () => {
       description: 'Test-794',
     });
 
-    const report = new SavedReport({
+    const report = new SavedReportAsReportDataOnly({
       appName: app.name,
       name: FakeDataFactory.createFakeReportName(),
     });

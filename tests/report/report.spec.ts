@@ -460,7 +460,7 @@ test.describe('report', () => {
       const expectedRecordIds = records.map(record => record.id).sort((a, b) => b - a);
       const recordIdCells = await reportPage.getAllFieldCells('Record Id');
       const recordIds = await Promise.all(recordIdCells.map(cell => cell.textContent()));
-      const actualRecordIds = recordIds.filter(id => id !== null).map(id => parseInt(id));
+      const actualRecordIds = recordIds.filter(id => id !== null).map(id => parseInt(id as string));
 
       expect(actualRecordIds).toEqual(expectedRecordIds);
     });
