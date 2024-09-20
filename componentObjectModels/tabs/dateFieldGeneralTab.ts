@@ -12,7 +12,7 @@ export class DateFieldGeneralTab extends FieldGeneralTab {
 
   private async selectDisplay(display: string) {
     await this.displaySelector.click();
-    await this.frame.getByRole('option', { name: display }).click();
+    await this.frame.getByRole('option', { name: display, exact: true }).click();
   }
 
   async fillOutGeneralTab(dateField: DateField) {

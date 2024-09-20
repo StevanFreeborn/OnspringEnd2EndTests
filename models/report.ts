@@ -1,4 +1,4 @@
-import { Chart } from './chart';
+import { Chart, ChartDisplayOption, DisplayOptionLabel } from './chart';
 
 export type ReportSchedulingStatus = 'Enabled' | 'Disabled';
 type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
@@ -327,6 +327,97 @@ export class SavedReportAsCalendar extends SavedReport {
 
     if (this.calendarValues.length === 0) {
       throw new Error('At least one calendar value must be provided');
+    }
+  }
+}
+
+type GanttChartColorBasedOn = 'Gantt Value Settings';
+type GanttChartTimeFrameDisplay = 'Show all data without scrolling';
+type GanttChartTimeIncrements = 'Hours' | 'Days' | 'Weeks' | 'Months' | 'Quarters' | 'Years';
+export type GanttChartValue = {
+  startDateField: string;
+  endDateField: string;
+  percentCompleteField?: string;
+  dependencyField?: string;
+  labelField?: string;
+  legendText?: string;
+  color: string;
+};
+
+type SavedReportAsGanttChartObject = Omit<SavedReportObject, 'displayType'> & {
+  groupData?: string;
+  rowHeaderFields?: string[];
+  colorBasedOn?: GanttChartColorBasedOn;
+  timeIncrements: GanttChartTimeIncrements[];
+  timeFrameDisplay?: GanttChartTimeFrameDisplay;
+  ganttValues: GanttChartValue[];
+  milestoneField?: string;
+  displayVerticalLine?: boolean;
+  threeD?: boolean;
+};
+
+export class SavedReportAsGanttChart extends SavedReport {
+  groupData: string;
+  rowHeaderFields: string[];
+  colorBasedOn: string;
+  timeIncrements: string[];
+  timeFrameDisplay: string;
+  ganttValues: GanttChartValue[];
+  milestoneField: string;
+  displayOptions: ChartDisplayOption[];
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    groupData = '',
+    rowHeaderFields = [],
+    colorBasedOn = 'Gantt Value Settings',
+    timeIncrements,
+    timeFrameDisplay = 'Show all data without scrolling',
+    ganttValues,
+    milestoneField = '',
+    displayVerticalLine = false,
+    threeD = false,
+  }: SavedReportAsGanttChartObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Gantt Chart',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.groupData = groupData;
+    this.rowHeaderFields = rowHeaderFields;
+    this.colorBasedOn = colorBasedOn;
+    this.timeIncrements = timeIncrements;
+    this.timeFrameDisplay = timeFrameDisplay;
+    this.ganttValues = ganttValues;
+    this.milestoneField = milestoneField;
+    this.displayOptions = [
+      {
+        name: DisplayOptionLabel.displayVerticalLine,
+        status: displayVerticalLine,
+      },
+      {
+        name: DisplayOptionLabel.threeD,
+        status: threeD,
+      },
+    ];
+
+    if (this.timeIncrements.length === 0) {
+      throw new Error('A time increment must be provided');
+    }
+
+    if (this.ganttValues.length === 0) {
+      throw new Error('At least one gantt value must be provided');
     }
   }
 }

@@ -24,7 +24,7 @@ type ChartType =
   | 'Bubble'
   | 'Heat Map';
 
-const DisplayOptionLabel = {
+export const DisplayOptionLabel = {
   showValues: 'Show Values',
   threeD: '3D',
   rotateLabels: 'Rotate Labels',
@@ -37,6 +37,7 @@ const DisplayOptionLabel = {
   showStackTotals: 'Show Stack Totals',
   dualYAxis: 'Dual Y Axis',
   rotateValues: 'Rotate Values',
+  displayVerticalLine: 'Display a vertical line at the current date/time',
 } as const;
 
 export type ChartDisplayOption = {

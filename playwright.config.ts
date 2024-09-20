@@ -37,6 +37,11 @@ switch (TEST_ENV) {
     BASE_URL = env.FEDSPRING_IST_INSTANCE_URL;
     break;
   case 'ALPHA':
+    BASE_URL = env.ALPHA_INSTANCE_URL;
+    break;
+  case 'AZURE':
+    BASE_URL = env.AZURE_INSTANCE_URL;
+    break;
   default:
     BASE_URL = env.ALPHA_INSTANCE_URL;
     break;

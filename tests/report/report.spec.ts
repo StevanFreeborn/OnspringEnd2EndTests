@@ -28,6 +28,7 @@ import {
   ReportSchedule,
   SavedReportAsCalendar,
   SavedReportAsChart,
+  SavedReportAsGanttChart,
   SavedReportAsReportDataOnly,
 } from '../../models/report';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -1632,13 +1633,93 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    ({}) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-623',
       });
 
-      expect(true).toBe(true);
+      const startDate = new DateField({
+        name: FakeDataFactory.createFakeFieldName(),
+      });
+
+      const endDate = new DateField({
+        name: FakeDataFactory.createFakeFieldName(),
+      });
+
+      let records: Record[] = [
+        {
+          id: 0,
+          fieldValues: [
+            {
+              field: startDate.name,
+              value: '2024-09-16T00:00:00Z',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: startDate.type as FieldType,
+            },
+            {
+              field: endDate.name,
+              value: '2024-09-18T00:00:00Z',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: endDate.type as FieldType,
+            },
+          ],
+        },
+        {
+          id: 0,
+          fieldValues: [
+            {
+              field: startDate.name,
+              value: '2024-09-18T00:00:00Z',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: startDate.type as FieldType,
+            },
+            {
+              field: endDate.name,
+              value: '2024-09-20T00:00:00Z',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: endDate.type as FieldType,
+            },
+          ],
+        },
+      ];
+
+      await test.step('Setup source app with fields and records', async () => {
+        await addFieldsToApp(appAdminPage, sourceApp, [startDate, endDate]);
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
+
+      await test.step('Navigate to the app reports home page', async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      const report = new SavedReportAsGanttChart({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        timeIncrements: ['Days'],
+        ganttValues: [
+          {
+            startDateField: startDate.name,
+            endDateField: endDate.name,
+            color: '#FF0000',
+          },
+        ],
+      });
+
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.waitUntilLoaded();
+      });
+
+      await test.step('Verify the gantt chart displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
     }
   );
 

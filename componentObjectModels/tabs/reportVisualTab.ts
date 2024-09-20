@@ -12,9 +12,11 @@ import {
 } from '../../models/chart';
 import {
   CalendarValue,
+  GanttChartValue,
   Report,
   SavedReportAsCalendar,
   SavedReportAsChart,
+  SavedReportAsGanttChart,
   SavedReportAsReportDataOnly,
 } from '../../models/report';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
@@ -39,6 +41,11 @@ export class ReportVisualTab {
   private readonly agendaFieldsSelector: DualPaneSelector;
   private readonly initialDateSelector: Locator;
   private readonly calendarValuesGrid: CalendarValuesGrid;
+  private readonly rowHeaderFieldsSelector: DualPaneSelector;
+  private readonly timeIncrementsSelector: DualPaneSelector;
+  private readonly timeFrameDisplaySelector: Locator;
+  private readonly milestoneFieldSelector: Locator;
+  private readonly ganttValuesGrid: GanttValuesGrid;
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
@@ -59,9 +66,25 @@ export class ReportVisualTab {
     this.colorStopsGrid = new ColorStopsGrid(this.frame.locator('#ColorStops'), this.frame);
     this.colorBasedOnSelector = this.frame.locator('.label:has-text("Color Based On") + .data').getByRole('listbox');
     this.defaultViewSelector = this.frame.locator('.label:has-text("Default View") + .data').getByRole('listbox');
-    this.agendaFieldsSelector = new DualPaneSelector(this.frame.locator('.label:has-text("Agenda Fields") + .data'));
+    this.agendaFieldsSelector = new DualPaneSelector(
+      this.frame.locator('.label:has-text("Agenda Fields") + .data .onx-selector'),
+      this.frame
+    );
     this.initialDateSelector = this.frame.locator('.label:has-text("Initial Date") + .data').getByRole('listbox');
     this.calendarValuesGrid = new CalendarValuesGrid(this.frame.locator('#CalendarValues'), this.frame);
+    this.rowHeaderFieldsSelector = new DualPaneSelector(
+      this.frame.locator('.label:has-text("Row Header Fields") + .data .onx-selector'),
+      this.frame
+    );
+    this.timeIncrementsSelector = new DualPaneSelector(
+      this.frame.locator('.label:has-text("Time Increments") + .data .onx-selector'),
+      this.frame
+    );
+    this.timeFrameDisplaySelector = this.frame
+      .locator('.label:has-text("Timeframe Display") + .data')
+      .getByRole('listbox');
+    this.milestoneFieldSelector = this.frame.locator('.label:has-text("Milestone Field") + .data').getByRole('listbox');
+    this.ganttValuesGrid = new GanttValuesGrid(this.frame.locator('#GanttValues'), this.frame);
   }
 
   private async selectDisplayType(displayType: string) {
@@ -116,6 +139,24 @@ export class ReportVisualTab {
   private async selectInitialDate(initialDate: string) {
     await this.initialDateSelector.click();
     await this.frame.getByRole('option', { name: initialDate }).click();
+  }
+
+  private async selectRowHeaderFields(rowHeaderFields: string[]) {
+    await this.rowHeaderFieldsSelector.selectOptions(rowHeaderFields);
+  }
+
+  private async selectTimeIncrements(timeIncrements: string[]) {
+    await this.timeIncrementsSelector.selectOptions(timeIncrements);
+  }
+
+  private async selectTimeFrameDisplay(timeFrameDisplay: string) {
+    await this.timeFrameDisplaySelector.click();
+    await this.frame.getByRole('option', { name: timeFrameDisplay }).click();
+  }
+
+  private async selectMilestoneField(milestoneField: string) {
+    await this.milestoneFieldSelector.click();
+    await this.frame.getByRole('option', { name: milestoneField }).click();
   }
 
   async fillOutForm(report: Report) {
@@ -173,7 +214,7 @@ export class ReportVisualTab {
       }
 
       if (report.chart instanceof HeatMapChart) {
-        await this.colorStopsGrid.addColorStops(report.chart.colorStops);
+        await this.colorStopsGrid.addValues(report.chart.colorStops);
       }
 
       await this.selectVisibility(report.chart.visibility);
@@ -183,9 +224,27 @@ export class ReportVisualTab {
     if (report instanceof SavedReportAsCalendar) {
       await this.selectColorBasedOn(report.colorBasedOn);
       await this.selectDefaultView(report.defaultView);
-      await this.calendarValuesGrid.addCalendarValues(report.calendarValues);
+      await this.calendarValuesGrid.addValues(report.calendarValues);
       await this.selectAgendaFields(report.agendaFields);
       await this.selectInitialDate(report.initialDate);
+    }
+
+    if (report instanceof SavedReportAsGanttChart) {
+      if (report.groupData) {
+        await this.selectGroupData(report.groupData);
+      }
+
+      await this.selectRowHeaderFields(report.rowHeaderFields);
+      await this.selectColorBasedOn(report.colorBasedOn);
+      await this.ganttValuesGrid.addValues(report.ganttValues);
+
+      if (report.milestoneField) {
+        await this.selectMilestoneField(report.milestoneField);
+      }
+
+      await this.selectDisplayOptions(report.displayOptions);
+      await this.selectTimeIncrements(report.timeIncrements);
+      await this.selectTimeFrameDisplay(report.timeFrameDisplay);
     }
   }
 }
@@ -251,11 +310,11 @@ export class ChartDataRuleControl {
   }
 }
 
-class ColorStopsGrid {
-  private readonly frame: FrameLocator;
-  private readonly control: Locator;
-  private readonly addValueButton: Locator;
-  private readonly gridBody: Locator;
+abstract class ValuesGrid {
+  protected readonly frame: FrameLocator;
+  protected readonly control: Locator;
+  protected readonly addValueButton: Locator;
+  protected readonly gridBody: Locator;
 
   constructor(control: Locator, frame: FrameLocator) {
     this.frame = frame;
@@ -264,7 +323,38 @@ class ColorStopsGrid {
     this.gridBody = this.control.locator('.k-grid-content');
   }
 
-  async addColorStops(colorStops: ColorStop[]) {
+  protected async selectColor(row: Locator, color: string) {
+    const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
+    const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
+
+    await colorPicker.click();
+
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.control.page().waitForTimeout(1000);
+
+    const colorInput = colorPickerModal.getByPlaceholder('no color');
+
+    await colorInput.clear();
+    await colorInput.pressSequentially(color, { delay: 150 });
+
+    await colorPicker.click();
+  }
+
+  protected async selectValueForField(row: Locator, field: string, value: string) {
+    const fieldSelector = row.locator(`td[data-field="${field}"]`).getByRole('listbox');
+    await fieldSelector.click();
+    await this.frame.getByRole('option', { name: value }).click();
+  }
+
+  abstract addValues(values: unknown[]): Promise<void>;
+}
+
+class ColorStopsGrid extends ValuesGrid {
+  constructor(control: Locator, frame: FrameLocator) {
+    super(control, frame);
+  }
+
+  async addValues(colorStops: ColorStop[]) {
     for (const [index, colorStop] of colorStops.entries()) {
       const row = this.gridBody.getByRole('row').nth(index);
 
@@ -276,72 +366,75 @@ class ColorStopsGrid {
       await valueInput.focus();
       await valueInput.fill(colorStop.value.toString());
 
-      const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
-      const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
-
-      await colorPicker.click();
-
-      // TODO: ...😠...
-      // Without taking a short pause here the input to the
-      // colorpicker is not entered correctly
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await this.control.page().waitForTimeout(1000);
-
-      const colorInput = colorPickerModal.getByPlaceholder('no color');
-
-      await colorInput.clear();
-      await colorInput.pressSequentially(colorStop.color, { delay: 150 });
-
-      await colorPicker.click();
+      await this.selectColor(row, colorStop.color);
     }
   }
 }
 
-class CalendarValuesGrid {
-  private readonly frame: FrameLocator;
-  private readonly control: Locator;
-  private readonly addValueButton: Locator;
-  private readonly gridBody: Locator;
-
+class CalendarValuesGrid extends ValuesGrid {
   constructor(control: Locator, frame: FrameLocator) {
-    this.frame = frame;
-    this.control = control;
-    this.addValueButton = this.control.getByRole('button', { name: 'Add Value' });
-    this.gridBody = this.control.locator('.k-grid-content');
+    super(control, frame);
   }
 
-  async addCalendarValues(values: CalendarValue[]) {
+  async addValues(values: CalendarValue[]) {
     for (const [index, value] of values.entries()) {
       const row = this.gridBody.getByRole('row').nth(index);
 
       await this.addValueButton.click();
       await row.waitFor();
 
-      const startDateFieldSelector = row.locator('td[data-field="startFieldConfigId"]').getByRole('listbox');
-      await startDateFieldSelector.click();
-      await this.frame.getByRole('option', { name: value.startDateField }).click();
+      await this.selectValueForField(row, 'startFieldConfigId', value.startDateField);
 
       if (value.endDateField) {
-        const endDateFieldSelector = row.locator('td[data-field="endFieldConfigId"]').getByRole('listbox');
-        await endDateFieldSelector.click();
-        await this.frame.getByRole('option', { name: value.endDateField }).click();
+        await this.selectValueForField(row, 'endFieldConfigId', value.endDateField);
       }
 
       if (value.color) {
-        const colorPicker = row.locator('td[data-field="color"] .k-colorpicker');
-        const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
+        await this.selectColor(row, value.color);
+      }
+    }
+  }
+}
 
-        await colorPicker.click();
+class GanttValuesGrid extends ValuesGrid {
+  constructor(control: Locator, frame: FrameLocator) {
+    super(control, frame);
+  }
 
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await this.control.page().waitForTimeout(1000);
+  async addValues(values: GanttChartValue[]) {
+    for (const [index, value] of values.entries()) {
+      await this.addValueButton.click();
 
-        const colorInput = colorPickerModal.getByPlaceholder('no color');
+      const row = this.gridBody.getByRole('row').nth(index);
+      await row.waitFor();
 
-        await colorInput.clear();
-        await colorInput.pressSequentially(value.color, { delay: 150 });
+      await this.selectValueForField(row, 'startFieldConfigId', value.startDateField);
+      await this.selectValueForField(row, 'endFieldConfigId', value.endDateField);
 
-        await colorPicker.click();
+      if (value.endDateField) {
+        await this.selectValueForField(row, 'endFieldConfigId', value.endDateField);
+      }
+
+      if (value.percentCompleteField) {
+        await this.selectValueForField(row, 'pctCompleteFieldConfigId', value.percentCompleteField);
+      }
+
+      if (value.dependencyField) {
+        await this.selectValueForField(row, 'dependencyFieldConfigId', value.dependencyField);
+      }
+
+      if (value.labelField) {
+        await this.selectValueForField(row, 'labelFieldConfigId', value.labelField);
+      }
+
+      if (value.legendText) {
+        const legendTextInput = row.locator('td[data-field="legendText"] input:visible');
+        await legendTextInput.focus();
+        await legendTextInput.fill(value.legendText);
+      }
+
+      if (value.color) {
+        await this.selectColor(row, value.color);
       }
     }
   }
