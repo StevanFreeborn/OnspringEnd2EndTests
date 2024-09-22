@@ -421,3 +421,77 @@ export class SavedReportAsGanttChart extends SavedReport {
     }
   }
 }
+
+type PointMapVisibility =
+  | 'Display Map and Report Data'
+  | 'Display Map and Map Data'
+  | 'Display Map Only'
+  | 'Display Map Data Only';
+
+type PointMapColorBasedOn = 'Selected Color';
+
+type SavedReportAsPointMapObject = Omit<SavedReportObject, 'displayType'> & {
+  visibility?: PointMapVisibility;
+  markerNameField: string;
+  basedOnColor?: PointMapColorBasedOn;
+  selectedColor?: string;
+  markerClustering?: boolean;
+  clusterColor?: string;
+};
+
+export class SavedReportAsPointMap extends SavedReport {
+  visibility: PointMapVisibility;
+  markerNameField: string;
+  displayOptions: ChartDisplayOption[];
+  basedOnColor: PointMapColorBasedOn;
+  selectedColor: string;
+  markerClustering: boolean;
+  clusterColor: string;
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    visibility = 'Display Map and Report Data',
+    markerNameField,
+    markerClustering = false,
+    basedOnColor = 'Selected Color',
+    selectedColor = '',
+    clusterColor = '',
+  }: SavedReportAsPointMapObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Map',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.visibility = visibility;
+    this.markerNameField = markerNameField;
+    this.basedOnColor = basedOnColor;
+    this.selectedColor = selectedColor;
+    this.markerClustering = markerClustering;
+    this.clusterColor = clusterColor;
+    this.displayOptions = [
+      {
+        name: DisplayOptionLabel.markerClustering,
+        status: markerClustering,
+      },
+    ];
+
+    if (this.basedOnColor === 'Selected Color' && this.selectedColor === '') {
+      throw new Error('A selected color must be provided when the color is based on selected color');
+    }
+
+    if (this.markerClustering && this.clusterColor === '') {
+      throw new Error('A cluster color must be provided when marker clustering is enabled');
+    }
+  }
+}

@@ -17,6 +17,7 @@ import {
   SavedReportAsCalendar,
   SavedReportAsChart,
   SavedReportAsGanttChart,
+  SavedReportAsPointMap,
   SavedReportAsReportDataOnly,
 } from '../../models/report';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
@@ -245,6 +246,10 @@ export class ReportVisualTab {
       await this.selectDisplayOptions(report.displayOptions);
       await this.selectTimeIncrements(report.timeIncrements);
       await this.selectTimeFrameDisplay(report.timeFrameDisplay);
+    }
+
+    if (report instanceof SavedReportAsPointMap) {
+      throw new Error('Point map is not implemented');
     }
   }
 }

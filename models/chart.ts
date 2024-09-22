@@ -38,6 +38,7 @@ export const DisplayOptionLabel = {
   dualYAxis: 'Dual Y Axis',
   rotateValues: 'Rotate Values',
   displayVerticalLine: 'Display a vertical line at the current date/time',
+  markerClustering: 'Enable marker clustering on map zoom out',
 } as const;
 
 export type ChartDisplayOption = {

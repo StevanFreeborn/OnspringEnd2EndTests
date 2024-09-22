@@ -29,12 +29,15 @@ import {
   SavedReportAsCalendar,
   SavedReportAsChart,
   SavedReportAsGanttChart,
+  SavedReportAsPointMap,
   SavedReportAsReportDataOnly,
 } from '../../models/report';
+import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
 import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
 import { ReportPage } from '../../pageObjectModels/reports/reportPage';
@@ -50,6 +53,7 @@ type ReportTestFixtures = {
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
+  viewContentPage: ViewContentPage;
 };
 
 const test = base.extend<ReportTestFixtures>({
@@ -61,6 +65,7 @@ const test = base.extend<ReportTestFixtures>({
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
+  viewContentPage: async ({ sysAdminPage }, use) => await use(new ViewContentPage(sysAdminPage)),
 });
 
 test.describe('report', () => {
@@ -1728,11 +1733,169 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    ({}) => {
+    async ({
+      sourceApp,
+      appAdminPage,
+      addContentPage,
+      editContentPage,
+      viewContentPage,
+      reportAppPage,
+      reportPage,
+    }) => {
       test.info().annotations.push({
         description: AnnotationType.TestId,
         type: 'Test-624',
       });
+
+      const addressField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+      const cityField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+      const stateField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+      const zipField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+      const geocodePrecisionFieldName = 'Geocode Precision';
+      const latitudeFieldName = 'Latitude';
+      const longitudeFieldName = 'Longitude';
+
+      await test.step('Navigate to the source app admin page', async () => {
+        await appAdminPage.goto(sourceApp.id);
+      });
+
+      await test.step('Enable geocoding for the source app', async () => {
+        await appAdminPage.enableGeocoding({
+          address: addressField,
+          city: cityField,
+          state: stateField,
+          zip: zipField,
+        });
+      });
+
+      await test.step('Wait for geocode fields to be created', async () => {
+        await appAdminPage.layoutTabButton.click();
+
+        await expect(async () => {
+          await appAdminPage.page.reload();
+
+          const geocodePrecisionRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+            name: geocodePrecisionFieldName,
+          });
+          const latitudeRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: latitudeFieldName });
+          const longitudeRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+            name: longitudeFieldName,
+          });
+
+          await expect(geocodePrecisionRow).toBeVisible({ timeout: 1_000 });
+          await expect(latitudeRow).toBeVisible({ timeout: 1_000 });
+          await expect(longitudeRow).toBeVisible({ timeout: 1_000 });
+        }).toPass({
+          intervals: [5_000],
+          timeout: 120_000,
+        });
+      });
+
+      await test.step('Place geocode fields on layout', async () => {
+        await appAdminPage.layoutTab.openLayout();
+
+        const fields = [
+          addressField.name,
+          cityField.name,
+          stateField.name,
+          zipField.name,
+          geocodePrecisionFieldName,
+          latitudeFieldName,
+          longitudeFieldName,
+        ];
+
+        for (const field of fields) {
+          await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+            tabName: 'Tab 2',
+            sectionName: 'Section 1',
+            sectionColumn: 0,
+            sectionRow: 0,
+            fieldName: field,
+          });
+        }
+
+        await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      });
+
+      let records: Record[] = [
+        {
+          id: 0,
+          fieldValues: [
+            {
+              field: addressField.name,
+              value: '10801 Mastin St #400',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: addressField.type as FieldType,
+            },
+            {
+              field: cityField.name,
+              value: 'Overland Park',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: cityField.type as FieldType,
+            },
+            {
+              field: stateField.name,
+              value: 'Kansas',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: stateField.type as FieldType,
+            },
+            {
+              field: zipField.name,
+              value: '66210',
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              type: zipField.type as FieldType,
+            },
+          ],
+        },
+      ];
+
+      await test.step('Add record to the source app', async () => {
+        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      });
+
+      await test.step('Wait for record to be geocoded', async () => {
+        await viewContentPage.goto(sourceApp.id, records[0].id);
+
+        const geocodePrecisionField = await viewContentPage.form.getField({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          fieldName: geocodePrecisionFieldName,
+          fieldType: 'Text',
+        });
+
+        await expect(async () => {
+          await viewContentPage.page.reload();
+          await expect(geocodePrecisionField).toHaveText('High', { timeout: 1_000 });
+        }).toPass({
+          intervals: [5_000],
+          timeout: 120_000,
+        });
+      });
+
+      await test.step('Navigate to the source app reports home page', async () => {
+        await reportAppPage.goto(sourceApp.id);
+      });
+
+      const report = new SavedReportAsPointMap({
+        appName: sourceApp.name,
+        name: FakeDataFactory.createFakeReportName(),
+        visibility: 'Display Map Only',
+        markerNameField: 'Record Id',
+        selectedColor: '#FF0000',
+      });
+
+      await test.step('Create the report', async () => {
+        await reportAppPage.createReport(report);
+        await reportAppPage.reportDesigner.saveChangesAndRun();
+        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await reportPage.waitUntilLoaded();
+      });
+
+      await test.step('Verify the point map displays as expected', async () => {});
 
       expect(true).toBe(true);
     }
@@ -1901,6 +2064,17 @@ async function addRecordsToApp(
           });
 
           await field.enterDate(new Date(fieldValue.value));
+          break;
+        }
+        case 'Text': {
+          const field = await addContentPage.form.getField({
+            tabName: fieldValue.tabName,
+            sectionName: fieldValue.sectionName,
+            fieldName: fieldValue.field,
+            fieldType: fieldValue.type,
+          });
+
+          await field.fill(fieldValue.value);
           break;
         }
         default:
