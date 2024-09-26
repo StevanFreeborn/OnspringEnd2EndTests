@@ -1895,9 +1895,9 @@ test.describe('report', () => {
         await reportPage.waitUntilLoaded();
       });
 
-      await test.step('Verify the point map displays as expected', async () => {});
-
-      expect(true).toBe(true);
+      await test.step('Verify the point map displays as expected', async () => {
+        await expect(reportPage.reportContents).toHaveScreenshot();
+      });
     }
   );
 });

@@ -47,6 +47,10 @@ export class ReportVisualTab {
   private readonly timeFrameDisplaySelector: Locator;
   private readonly milestoneFieldSelector: Locator;
   private readonly ganttValuesGrid: GanttValuesGrid;
+  private readonly markerDataGrid: MarkerDataGrid;
+  private readonly includeViewRecordCheckbox: Locator;
+  private readonly markerColorBasedOnSelector: Locator;
+  private readonly markerColorPicker: Locator;
 
   constructor(frame: FrameLocator) {
     this.frame = frame;
@@ -86,6 +90,15 @@ export class ReportVisualTab {
       .getByRole('listbox');
     this.milestoneFieldSelector = this.frame.locator('.label:has-text("Milestone Field") + .data').getByRole('listbox');
     this.ganttValuesGrid = new GanttValuesGrid(this.frame.locator('#GanttValues'), this.frame);
+
+    this.markerDataGrid = new MarkerDataGrid(this.frame.locator('#MarkerData'), this.frame);
+    this.includeViewRecordCheckbox = this.frame.getByLabel('Include "View Record" link in marker tooltip');
+    this.markerColorBasedOnSelector = this.frame
+      .locator('.label:has-text("Marker Color Based On") + .data')
+      .getByRole('listbox');
+    this.markerColorPicker = this.frame.locator(
+      '.label:has-text("Marker Color Based On") + .data .k-colorpicker .k-picker-wrap'
+    );
   }
 
   private async selectDisplayType(displayType: string) {
@@ -158,6 +171,30 @@ export class ReportVisualTab {
   private async selectMilestoneField(milestoneField: string) {
     await this.milestoneFieldSelector.click();
     await this.frame.getByRole('option', { name: milestoneField }).click();
+  }
+
+  async fillOutMarkerData(markerNameField: string) {
+    await this.markerDataGrid.selectMarkerNameField(markerNameField);
+  }
+
+  async selectMarkerColorBasedOn(markerColorBasedOn: string) {
+    await this.markerColorBasedOnSelector.click();
+    await this.frame.getByRole('option', { name: markerColorBasedOn }).click();
+  }
+
+  async pickMarkerColor(color: string) {
+    await this.markerColorPicker.click();
+
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.markerColorPicker.page().waitForTimeout(1000);
+
+    const colorPickerModal = this.frame.locator('div:visible[data-role="colorpicker"]');
+    const colorInput = colorPickerModal.getByPlaceholder('no color');
+
+    await colorInput.clear();
+    await colorInput.pressSequentially(color, { delay: 150 });
+
+    await this.markerColorPicker.click();
   }
 
   async fillOutForm(report: Report) {
@@ -249,7 +286,12 @@ export class ReportVisualTab {
     }
 
     if (report instanceof SavedReportAsPointMap) {
-      throw new Error('Point map is not implemented');
+      await this.selectVisibility(report.visibility);
+      await this.selectDisplayOptions(report.displayOptions);
+      await this.fillOutMarkerData(report.markerNameField);
+      await this.includeViewRecordCheckbox.setChecked(report.includeViewRecordLink);
+      await this.selectMarkerColorBasedOn(report.basedOnColor);
+      await this.pickMarkerColor(report.selectedColor);
     }
   }
 }
@@ -442,5 +484,29 @@ class GanttValuesGrid extends ValuesGrid {
         await this.selectColor(row, value.color);
       }
     }
+  }
+}
+
+class MarkerDataGrid {
+  private readonly frame: FrameLocator;
+  private readonly control: Locator;
+  private readonly addDataElementButton: Locator;
+  private readonly gridBody: Locator;
+
+  constructor(control: Locator, frame: FrameLocator) {
+    this.frame = frame;
+    this.control = control;
+    this.addDataElementButton = this.control.getByRole('button', { name: 'Add Data Element' });
+    this.gridBody = this.control.locator('.k-grid-content');
+  }
+
+  async selectMarkerNameField(markerFieldName: string) {
+    const markerNameSelector = this.gridBody
+      .getByRole('row', { name: 'Marker Title/Name' })
+      .locator('td[data-field="dataFieldConfigId"]')
+      .getByRole('listbox');
+
+    await markerNameSelector.click();
+    await this.frame.getByRole('option', { name: markerFieldName }).click();
   }
 }

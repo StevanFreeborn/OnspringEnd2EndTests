@@ -437,6 +437,7 @@ type SavedReportAsPointMapObject = Omit<SavedReportObject, 'displayType'> & {
   selectedColor?: string;
   markerClustering?: boolean;
   clusterColor?: string;
+  includeViewRecordLink?: boolean;
 };
 
 export class SavedReportAsPointMap extends SavedReport {
@@ -447,6 +448,7 @@ export class SavedReportAsPointMap extends SavedReport {
   selectedColor: string;
   markerClustering: boolean;
   clusterColor: string;
+  includeViewRecordLink: boolean;
 
   constructor({
     appName,
@@ -462,6 +464,7 @@ export class SavedReportAsPointMap extends SavedReport {
     basedOnColor = 'Selected Color',
     selectedColor = '',
     clusterColor = '',
+    includeViewRecordLink = false,
   }: SavedReportAsPointMapObject) {
     super({
       appName,
@@ -479,6 +482,7 @@ export class SavedReportAsPointMap extends SavedReport {
     this.selectedColor = selectedColor;
     this.markerClustering = markerClustering;
     this.clusterColor = clusterColor;
+    this.includeViewRecordLink = includeViewRecordLink;
     this.displayOptions = [
       {
         name: DisplayOptionLabel.markerClustering,
