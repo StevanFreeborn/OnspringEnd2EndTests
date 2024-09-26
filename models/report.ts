@@ -9,15 +9,48 @@ type ReportDisplayType =
   | 'Display as a Gantt Chart'
   | 'Display as a Map';
 
+type DisplayFieldDisplayType = 'Report & Quick Edit' | 'Report Only' | 'Quick Edit Only';
+type DisplayFieldSort =
+  | 'None'
+  | 'Primary'
+  | 'Primary (Descending)'
+  | 'Secondary'
+  | 'Secondary (Descending)'
+  | 'Tertiary'
+  | 'Tertiary (Descending)'
+  | 'Quaternary'
+  | 'Quaternary (Descending)';
+
+type DisplayFieldObject = {
+  name: string;
+  alias?: string;
+  display?: DisplayFieldDisplayType;
+  sort?: DisplayFieldSort;
+};
+
+export class DisplayField {
+  name: string;
+  alias: string;
+  display: DisplayFieldDisplayType;
+  sort: DisplayFieldSort;
+
+  constructor({ name, alias = '', display = 'Report & Quick Edit', sort = 'None' }: DisplayFieldObject) {
+    this.name = name;
+    this.alias = alias !== '' ? alias : name;
+    this.display = display;
+    this.sort = sort;
+  }
+}
+
 export type RelatedData = {
   referenceField: string;
-  displayFields: string[];
+  displayFields: DisplayField[];
 };
 
 type ReportObject = {
   appName: string;
   displayType?: ReportDisplayType;
-  displayFields?: string[];
+  displayFields?: DisplayField[];
   relatedData?: RelatedData[];
 };
 
@@ -25,7 +58,7 @@ export abstract class Report {
   id?: number;
   appName: string;
   displayType: ReportDisplayType;
-  displayFields: string[];
+  displayFields: DisplayField[];
   relatedData: RelatedData[];
 
   constructor({

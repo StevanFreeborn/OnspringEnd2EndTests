@@ -25,6 +25,7 @@ import { ListField } from '../../models/listField';
 import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
 import {
+  DisplayField,
   ReportSchedule,
   SavedReportAsCalendar,
   SavedReportAsChart,
@@ -291,7 +292,7 @@ test.describe('report', () => {
     const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
-      displayFields: Object.values(fields).map(field => field.name),
+      displayFields: Object.values(fields).map(field => new DisplayField({ name: field.name })),
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
@@ -399,7 +400,7 @@ test.describe('report', () => {
     const report = new SavedReportAsReportDataOnly({
       appName: sourceApp.name,
       name: FakeDataFactory.createFakeReportName(),
-      displayFields: Object.values(fields).map(field => field.name),
+      displayFields: Object.values(fields).map(field => new DisplayField({ name: field.name })),
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
@@ -738,7 +739,7 @@ test.describe('report', () => {
       relatedData: [
         {
           referenceField: fields.referenceField.name,
-          displayFields: ['Record Id'],
+          displayFields: [new DisplayField({ name: 'Record Id' })],
         },
       ],
     });
@@ -1900,6 +1901,101 @@ test.describe('report', () => {
       });
     }
   );
+
+  test('Add a Report Alias to a display field and verify it displays correctly when viewing the report', async ({
+    sourceApp,
+    reportHomePage,
+    reportPage,
+  }) => {
+    test.info().annotations.push({
+      description: AnnotationType.TestId,
+      type: 'Test-870',
+    });
+
+    const aliasValue = 'Alias';
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      displayFields: [new DisplayField({ name: 'Record Id', alias: aliasValue })],
+    });
+
+    await test.step('Navigate to the report home page', async () => {
+      await reportHomePage.goto();
+    });
+
+    await test.step('Create the report', async () => {
+      await reportHomePage.createReport(report);
+      await reportHomePage.reportDesigner.saveChangesAndRun();
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was created', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: new RegExp(aliasValue, 'i') });
+      await expect(recordIdColumn).toBeVisible();
+    });
+  });
+
+  test('Update a report alias on a display field and verify it updates correctly when viewing the report', async ({
+    sourceApp,
+    reportHomePage,
+    reportPage,
+  }) => {
+    test.info().annotations.push({
+      description: AnnotationType.TestId,
+      type: 'Test-871',
+    });
+
+    const aliasValue = 'Alias';
+    const updatedAliasValue = 'Updated Alias';
+
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      displayFields: [new DisplayField({ name: 'Record Id', alias: aliasValue })],
+    });
+
+    await test.step('Navigate to the report home page', async () => {
+      await reportHomePage.goto();
+    });
+
+    await test.step('Create the report', async () => {
+      await reportHomePage.createReport(report);
+      await reportHomePage.reportDesigner.saveChangesAndRun();
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    await test.step('Verify the report was created', async () => {
+      await expect(reportPage.breadcrumb).toHaveText(
+        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
+      );
+
+      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: new RegExp(aliasValue, 'i') });
+      await expect(recordIdColumn).toBeVisible();
+    });
+
+    await test.step('Update the report alias', async () => {
+      const updatedReport = new SavedReportAsReportDataOnly({
+        appName: sourceApp.name,
+        name: report.name,
+        displayFields: [new DisplayField({ name: 'Record Id', alias: updatedAliasValue })],
+      });
+
+      await reportPage.updateReport(updatedReport);
+    });
+
+    await test.step('Verify the report alias was updated', async () => {
+      const updatedRecordIdColumn = reportPage.dataGridContainer.locator('th', {
+        hasText: new RegExp(updatedAliasValue, 'i'),
+      });
+
+      await expect(updatedRecordIdColumn).toBeVisible();
+    });
+  });
 });
 
 function getFieldsForApp() {
