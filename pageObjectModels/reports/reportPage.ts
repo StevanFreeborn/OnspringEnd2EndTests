@@ -196,6 +196,7 @@ export class ReportPage extends BasePage {
 
   async exportReport() {
     await this.actionMenuButton.click();
+    await this.actionMenu.waitFor();
     await this.actionMenu.getByText('Export Report').click();
 
     await this.exportReportModal.exportButton.click();
@@ -206,6 +207,7 @@ export class ReportPage extends BasePage {
 
   async printReport() {
     await this.actionMenuButton.click();
+    await this.actionMenu.waitFor();
     await this.actionMenu.getByText('Print Report').click();
 
     await this.printReportModal.waitFor();
