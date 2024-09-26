@@ -137,7 +137,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -214,7 +213,6 @@ test.describe('report', () => {
 
     await test.step('Create the report to update', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -251,7 +249,6 @@ test.describe('report', () => {
 
     await test.step('Create the report to delete', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -301,7 +298,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -360,7 +356,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -410,7 +405,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -462,7 +456,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -513,7 +506,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -567,7 +559,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -651,7 +642,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -659,17 +649,9 @@ test.describe('report', () => {
     let pdfPath: string;
 
     await test.step('Print the report to PDF', async () => {
-      const context = reportPage.page.context();
-      const printPagePromise = context.waitForEvent('page');
-
       await reportPage.printReport();
-      const printPage = await printPagePromise;
 
-      const printPageUrl = printPage.url();
-
-      expect(printPageUrl).toMatch(/\/Report\/\d+\/Print/);
-
-      const pdfResponse = await reportPage.page.request.post(printPageUrl);
+      const pdfResponse = await reportPage.page.request.post(`/Report/${reportPage.getReportIdFromUrl()}/Print`);
       const responseHeaders = pdfResponse.headers();
       const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
 
@@ -751,7 +733,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -821,7 +802,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.page.waitForLoadState('networkidle');
     });
@@ -873,7 +853,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -918,7 +897,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -963,7 +941,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1008,7 +985,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1053,7 +1029,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1098,7 +1073,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1143,7 +1117,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1188,7 +1161,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1234,7 +1206,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1297,7 +1268,6 @@ test.describe('report', () => {
 
       await test.step('Create the line report', async () => {
         await reportAppPage.createReport(lineReport);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
       });
 
@@ -1307,7 +1277,6 @@ test.describe('report', () => {
 
       await test.step('Create the column report', async () => {
         await reportAppPage.createReport(columnReport);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1353,7 +1322,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1416,7 +1384,6 @@ test.describe('report', () => {
 
       await test.step('Create the line report', async () => {
         await reportAppPage.createReport(lineReport);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
       });
 
@@ -1426,7 +1393,6 @@ test.describe('report', () => {
 
       await test.step('Create the stacked column plus line report', async () => {
         await reportAppPage.createReport(stackedColumnReport);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1473,7 +1439,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1523,7 +1488,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1623,7 +1587,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.calendarChart.selectDate(testDate);
         await reportPage.waitUntilLoaded();
@@ -1719,7 +1682,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });
@@ -1892,7 +1854,6 @@ test.describe('report', () => {
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
-        await reportAppPage.reportDesigner.saveChangesAndRun();
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
       });

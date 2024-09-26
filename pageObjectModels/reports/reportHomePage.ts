@@ -30,6 +30,7 @@ export class ReportHomePage extends BasePage {
     await this.addReportDialog.addReport(report);
     await this.reportDesigner.waitFor();
     await this.reportDesigner.updateReport(report);
+    await this.reportDesigner.saveChangesAndRun();
   }
 
   async createCopyOfReport(reportToCopy: string, report: Report) {
@@ -38,5 +39,6 @@ export class ReportHomePage extends BasePage {
     await this.addReportDialog.addReportCopy(reportToCopy, report);
     await this.reportDesigner.waitFor();
     await this.reportDesigner.updateReport(report);
+    await this.reportDesigner.saveChangesAndRun();
   }
 }
