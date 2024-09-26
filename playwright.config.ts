@@ -159,6 +159,8 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
       },
     },
   ],
+  snapshotPathTemplate:
+    '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}{-projectName}{-snapshotSuffix}{ext}',
   outputDir: testResultsDir,
   metadata: {
     environment: TEST_ENV,
