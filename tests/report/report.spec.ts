@@ -316,6 +316,7 @@ test.describe('report', () => {
       ]);
       await reportPage.bulkEditModal.saveChanges();
       await reportPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the records were updated', async () => {
