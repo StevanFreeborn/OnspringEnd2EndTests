@@ -116,3 +116,18 @@ Some tests require the ability to verify the contents of a PDF. This is currentl
 ### Excel Testing
 
 Some tests require the ability to verify the contents of an Excel file. This is currently done using the [`node-xlsx`](https://www.npmjs.com/package/node-xlsx) package. This library is used to parse the Excel file after it has been downloaded.
+
+### Screenshot Testing
+
+Playwright supports asserting against screenshots. This is a powerful feature that can be used to verify the visual appearance of a page or part of a page. You can read about it [here](https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-screenshot-1). However when using this feature in a test you will need to generate a baseline screenshot to assert against. This screenshot will need to be committed to the repository. This screenshot by default will be generated the first time you run the test and an existing screenshot does not exist. The screenshot can be subsequently regenerated or updated by running the test with the `--update-snapshots` flag. Make sure that you have specified the exact test you want to update the snapshot for when using this flag.
+
+Screenshots are also specific to the browser and operating system you are running the tests on. So you will need to generate a screenshot for each browser and operating system you want to test against. This is important to keep in mind when attempting to add or update tests that use this feature. The CI/CD pipeline will run the tests on a Linux machine so you will need to make sure that Linux screenshots are generated and committed to the repository as part of the test development process.
+
+The easiest way to generate the screenshots for the CI/CD pipeline is to run the tests locally using Docker and the Playwright Docker image. Below is an example:
+
+```powershell
+docker run --rm --network host -v "$(pwd):/work/" -w /work/ -it mcr.microsoft.com/playwright:{INSERT PROPER IMAGE VERSION HERE} /bin/bash
+```
+
+> [!NOTE]
+> You can find the Playwright Docker image that is used by the CI/CD pipeline in the [acceptance test workflow](./.github/workflows/accept_tests.yml) and the [playwright tests workflow](./.github/workflows/playwright.yml).
