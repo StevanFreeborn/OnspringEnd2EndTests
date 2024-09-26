@@ -91,6 +91,7 @@ export class ReportPage extends BasePage {
 
   async deleteReport() {
     await this.actionMenuButton.click();
+    await this.actionMenu.waitFor();
     await this.actionMenu.getByText('Delete Report').click();
     await this.deleteReportDialog.deleteButton.click();
     await this.deleteReportDialog.waitForDialogToBeDismissed();
