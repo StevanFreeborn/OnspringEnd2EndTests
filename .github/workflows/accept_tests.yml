@@ -53,7 +53,7 @@ jobs:
           echo "Changed files in this PR:"
           BASE_HEAD_SHA=${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts' | tr '\n' ' ')
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts$' | tr '\n' ' ')
           if [ -n "$CHANGED_FILES" ]
           then
             echo "Test files changed:"
