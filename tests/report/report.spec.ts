@@ -1593,6 +1593,7 @@ test.describe('report', () => {
       });
 
       await test.step('Verify the calendar displays as expected', async () => {
+        await reportPage.page.mouse.move(0, 0);
         await expect(reportPage.reportContents).toHaveScreenshot();
       });
     }
