@@ -281,7 +281,7 @@ test.describe('User', () => {
 
       await expect(editUserAdminPage.securityTab.rolesReferenceFieldGird.searchResults).toBeVisible();
 
-      await editUserAdminPage.securityTab.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
+      await editUserAdminPage.securityTab.rolesReferenceFieldGird.searchForAndSelectRecords([roleName]);
       await editUserAdminPage.saveUser();
     });
 
@@ -331,7 +331,7 @@ test.describe('User', () => {
 
       await expect(editUserAdminPage.securityTab.groupsReferenceFieldGird.searchResults).toBeVisible();
 
-      await editUserAdminPage.securityTab.groupsReferenceFieldGird.searchForAndSelectRecord(groupName);
+      await editUserAdminPage.securityTab.groupsReferenceFieldGird.searchForAndSelectRecords([groupName]);
       await editUserAdminPage.saveUser();
     });
 

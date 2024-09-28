@@ -1,5 +1,5 @@
-import { Locator } from '@playwright/test';
-import { BaseListValue } from '../../models/listValue';
+import { FrameLocator, Locator } from '@playwright/test';
+import { BaseListValue, ListValue } from '../../models/listValue';
 
 // TODO: Might make sense
 // to create a base class for this kind of grid
@@ -8,6 +8,7 @@ import { BaseListValue } from '../../models/listValue';
 // vs. grids for list questions
 // vs. grids for matrix/likert questions
 export class ListValuesGrid {
+  private readonly frame?: FrameLocator;
   private readonly control: Locator;
   private readonly gridHeader: Locator;
   private readonly gridBody: Locator;
@@ -16,8 +17,9 @@ export class ListValuesGrid {
   readonly promoteToSharedListButton: Locator;
   readonly customSortCheckbox: Locator;
 
-  constructor(control: Locator) {
+  constructor(control: Locator, frame?: FrameLocator) {
     this.control = control;
+    this.frame = frame;
     this.gridHeader = this.control.locator('div.k-grid-header');
     this.gridBody = this.control.locator('div.k-grid-content');
     this.addValueButton = this.control.getByRole('button', { name: 'Add Value' });
@@ -39,6 +41,24 @@ export class ListValuesGrid {
     const row = this.getLastValueRow();
     await row.valueInput.fill(listValue.value);
     await row.numericValueInput.fill(listValue.numericValue.toString());
+
+    if (listValue instanceof ListValue) {
+      if (listValue.color) {
+        await row.colorPicker.click();
+
+        const popupOwner = this.frame ?? this.control.page();
+        const colorPickerPopup = popupOwner.locator('.tabbed-color-popup:visible');
+        const customTab = colorPickerPopup.getByRole('tab', { name: 'Custom' });
+
+        await customTab.click();
+
+        const colorInput = colorPickerPopup.locator('.k-color-value');
+
+        await colorInput.clear();
+        await colorInput.pressSequentially(listValue.color, { delay: 150 });
+        await colorPickerPopup.locator('.popup-close').click();
+      }
+    }
   }
 
   async clearGrid() {

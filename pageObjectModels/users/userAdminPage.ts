@@ -23,6 +23,6 @@ export class UserAdminPage extends BaseAdminFormPage {
   async assignRole(roleName: string) {
     await this.securityTabButton.click();
     await this.securityTab.rolesReferenceFieldGird.filterInput.click();
-    await this.securityTab.rolesReferenceFieldGird.searchForAndSelectRecord(roleName);
+    await this.securityTab.rolesReferenceFieldGird.searchForAndSelectRecords([roleName]);
   }
 }

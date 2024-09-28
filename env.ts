@@ -24,6 +24,7 @@ const envSchema = z
       z.literal('VNEXT'),
       z.literal('PROD'),
       z.literal('FEDSPRING_IST'),
+      z.literal('AZURE'),
     ]),
     RECORD_HAR: z.enum(['true', 'false', 'TRUE', 'FALSE']).transform(v => v.toLowerCase() === 'true'),
     ALPHA_INSTANCE_URL: z.string(),
@@ -34,6 +35,7 @@ const envSchema = z
     VNEXT_INSTANCE_URL: z.string(),
     PROD_INSTANCE_URL: z.string(),
     FEDSPRING_IST_INSTANCE_URL: z.string(),
+    AZURE_INSTANCE_URL: z.string(),
     PLAYWRIGHT_SERVICE_RUN_ID: z
       .string()
       .transform(v => (!v ? undefined : v))

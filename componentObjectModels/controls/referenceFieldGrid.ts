@@ -32,13 +32,7 @@ export class ReferenceFieldGrid {
     return rowCount === 0;
   }
 
-  /**
-   * Searches for a record in the reference field grid and selects it. This method
-   * will scroll the search results until the record is visible and then select it.
-   * @param searchTerm The search term to use to search for the record.
-   * @returns A promise that resolves when the record is selected.
-   */
-  async searchForAndSelectRecord(searchTerm: string) {
+  private async selectRecord(searchTerm: string, control: 'checkbox' | 'radio') {
     const searchResultRow = this.searchResults.getByRole('row', { name: searchTerm });
     const scrollableElement = this.searchResults.locator('.k-grid-content.k-auto-scrollable').first();
 
@@ -57,7 +51,31 @@ export class ReferenceFieldGrid {
       isVisible = await searchResultRow.isVisible();
     }
 
-    await searchResultRow.getByRole('checkbox').click();
+    await searchResultRow.getByRole(control).click();
     await this.searchResults.getByRole('button', { name: 'Select' }).click();
+  }
+
+  /**
+   * Searches for a record in a multi select reference field grid and selects it based on each
+   * search term given. This method will scroll the search results until the record
+   * is visible and then select it. Repeat this process for each search term given.
+   * @param searchTerms The search terms to use to search for the records.
+   * @returns A promise that resolves when the records are selected.
+   */
+  async searchForAndSelectRecords(searchTerms: string[]) {
+    for (const searchTerm of searchTerms) {
+      await this.selectRecord(searchTerm, 'checkbox');
+    }
+  }
+
+  /**
+   * Searches for a record in a single select reference field grid and selects it based on the
+   * search term given. This method will scroll the search results until the record
+   * is visible and then select it.
+   * @param searchTerm The search term to use to search for the record.
+   * @returns A promise that resolves when the record is selected.
+   */
+  async searchForAndSelectRecord(searchTerm: string) {
+    await this.selectRecord(searchTerm, 'radio');
   }
 }

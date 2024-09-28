@@ -13,7 +13,7 @@ export class FormulaFieldGeneralTab extends FieldGeneralTab {
     super(frame);
     this.outputTypeSelect = this.frame.getByRole('listbox', { name: 'Output Type' });
     this.formulaEditor = this.frame.locator('.CodeMirror').first();
-    this.listValuesGrid = new ListValuesGrid(this.frame.locator('.list-values').first());
+    this.listValuesGrid = new ListValuesGrid(this.frame.locator('.list-values').first(), this.frame);
   }
 
   async selectOutputType(outputType: FormulaOutputType) {

@@ -19,6 +19,7 @@ env:
   VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
   PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
   FEDSPRING_IST_INSTANCE_URL: ${{ secrets.FEDSPRING_IST_INSTANCE_URL }}
+  AZURE_INSTANCE_URL: ${{ secrets.AZURE_INSTANCE_URL }}
   RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
   RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
   BITSIGHT_API_KEY: ${{ secrets.BITSIGHT_API_KEY }}
@@ -53,7 +54,7 @@ jobs:
           echo "Changed files in this PR:"
           BASE_HEAD_SHA=${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts' | tr '\n' ' ')
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.spec\.ts$' | tr '\n' ' ')
           if [ -n "$CHANGED_FILES" ]
           then
             echo "Test files changed:"
@@ -219,7 +220,7 @@ jobs:
   add_pr_comment:
     name: 'Add PR Comment'
     needs: [run_tests, merge_reports_and_publish]
-    if: ${{ cancelled() != true }}
+    if: ${{ cancelled() != true && needs.merge_reports_and_publish.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
