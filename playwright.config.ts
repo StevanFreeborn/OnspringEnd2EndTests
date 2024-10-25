@@ -89,6 +89,7 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
         ],
       ],
   use: {
+    timezoneId: 'America/Chicago',
     viewport: { width: 1920, height: 1080 },
     actionTimeout: expectNavAndActionTimeout,
     navigationTimeout: expectNavAndActionTimeout,

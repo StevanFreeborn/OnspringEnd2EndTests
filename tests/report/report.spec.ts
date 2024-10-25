@@ -102,7 +102,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportHomePage.createReport(report);
-      await reportHomePage.reportDesigner.saveChangesAndRun();
       await reportHomePage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -172,7 +171,6 @@ test.describe('report', () => {
 
     await test.step('Create the report to copy', async () => {
       await reportHomePage.createReport(reportToCopy);
-      await reportHomePage.reportDesigner.saveChangesAndRun();
       await reportHomePage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -182,7 +180,6 @@ test.describe('report', () => {
 
     await test.step('Create a copy of the report', async () => {
       await reportHomePage.createCopyOfReport(reportToCopy.name, copy);
-      await reportHomePage.reportDesigner.saveChangesAndRun();
       await reportHomePage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -1889,7 +1886,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportHomePage.createReport(report);
-      await reportHomePage.reportDesigner.saveChangesAndRun();
       await reportHomePage.page.waitForURL(reportPage.pathRegex);
     });
 
@@ -1928,7 +1924,6 @@ test.describe('report', () => {
 
     await test.step('Create the report', async () => {
       await reportHomePage.createReport(report);
-      await reportHomePage.reportDesigner.saveChangesAndRun();
       await reportHomePage.page.waitForURL(reportPage.pathRegex);
     });
 

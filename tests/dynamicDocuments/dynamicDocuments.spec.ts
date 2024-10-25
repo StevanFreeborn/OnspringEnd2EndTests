@@ -859,7 +859,6 @@ test.describe('Dynamic Documents', () => {
     await test.step('Create report to reference in dynamic document', async () => {
       await reportAppPage.goto(app.id);
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 
