@@ -222,7 +222,7 @@ test.describe('survey responses app', () => {
 
     await test.step('Disable the survey responses app concurrent edit alert', async () => {
       await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
       await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
@@ -239,7 +239,7 @@ test.describe('survey responses app', () => {
 
     await test.step('Enable the survey responses app concurrent edit alert', async () => {
       await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.click();
+      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
       await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 

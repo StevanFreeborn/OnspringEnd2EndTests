@@ -9,8 +9,8 @@ export class AddOrEditMatrixQuestionForm extends BaseAddOrEditQuestionForm {
 
   constructor(frame: FrameLocator) {
     super(frame);
-    this.rowValuesGrid = new ListValuesGrid(frame.locator('.list-values').first());
-    this.columnValuesGrid = new ListValuesGrid(frame.locator('.list-values').last());
+    this.rowValuesGrid = new ListValuesGrid(frame.locator('.list-values').first(), frame);
+    this.columnValuesGrid = new ListValuesGrid(frame.locator('.list-values').last(), frame);
   }
 
   async fillOutForm(question: MatrixQuestion) {

@@ -315,7 +315,7 @@ test.describe('email message history report', () => {
       await testUserPage.setContent(exportEmailContent);
 
       const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link').click();
+      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
       const report = await reportDownload;
       reportPath = await downloadService.saveDownload(report);
     });

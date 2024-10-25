@@ -8,7 +8,7 @@ export class AddOrEditSingleSelectQuestionForm extends BaseAddOrEditQuestionForm
 
   constructor(frame: FrameLocator) {
     super(frame);
-    this.answerValuesGrid = new ListValuesGrid(frame.locator('.list-values').first());
+    this.answerValuesGrid = new ListValuesGrid(frame.locator('.list-values').first(), frame);
   }
 
   async fillOutForm(question: SingleSelectQuestion) {
