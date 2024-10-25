@@ -1,5 +1,6 @@
 import { Download } from '@playwright/test';
-import { writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
+import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
 
@@ -13,7 +14,13 @@ export class DownloadService {
 
   async saveBuffer(buffer: Buffer, fileName: string) {
     const downloadName = `${FakeDataFactory.createUniqueIdentifier()}-${fileName}`;
-    const downloadPath = path.join(process.cwd(), 'downloads', downloadName);
+    const downloadDirectory = path.join(process.cwd(), 'downloads');
+
+    if (existsSync(downloadDirectory) === false) {
+      await mkdir(downloadDirectory);
+    }
+
+    const downloadPath = path.join(downloadDirectory, downloadName);
     await writeFile(downloadPath, buffer);
     return downloadPath;
   }
