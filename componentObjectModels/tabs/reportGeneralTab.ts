@@ -112,7 +112,6 @@ export class ReportGeneralTab {
     await this.descriptionEditor.fill(report.description);
     await this.updateScheduleStatus(report.scheduling);
 
-    // TODO: Implement filling out scheduling
     if (report.scheduling === 'Enabled' && report.schedule !== undefined) {
       await this.selectSendFrequency(report.schedule.sendFrequency);
       await this.startingOnDateControl.enterDate(report.schedule.startingOn);
