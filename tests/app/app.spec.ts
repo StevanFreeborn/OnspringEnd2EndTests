@@ -574,13 +574,7 @@ test.describe('app', () => {
 
     await test.step("Disable the app's concurrent edit alert", async () => {
       await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
-
+      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
       await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
@@ -605,20 +599,14 @@ test.describe('app', () => {
 
     await test.step("Disable the app's concurrent edit alert", async () => {
       await appAdminPage.generalTab.editGeneralSettingsLink.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
       await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
       await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the app's concurrent edit alert", async () => {
       await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.check();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
-
+      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
       await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
@@ -787,11 +775,11 @@ test.describe('app', () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeVisible();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
 
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Verify app's administration permissions were set to private", async () => {
@@ -828,11 +816,8 @@ test.describe('app', () => {
     await test.step('Give app admin permissions to user', async () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeVisible();
-
       await appAdminPage.generalTab.editAdminSettingsModal.selectUser(newUser.fullName);
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify app admin permissions were given to user', async () => {
@@ -876,10 +861,10 @@ test.describe('app', () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
 
       await appAdminPage.generalTab.editAdminSettingsModal.selectRole(roleName);
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify app admin permissions were given to role', async () => {
@@ -923,10 +908,10 @@ test.describe('app', () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
 
       await appAdminPage.generalTab.editAdminSettingsModal.selectGroup(groupName);
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify app admin permissions were given to group', async () => {
@@ -957,18 +942,18 @@ test.describe('app', () => {
     await test.step("Change the app's administration permissions to private", async () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Change the app's administration permissions to public", async () => {
       await appAdminPage.generalTab.editAdminSettingsLink.click();
       await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Public');
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeHidden();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeHidden();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeHidden();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeHidden();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeHidden();
+      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeHidden();
 
-      await appAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await appAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Verify app's administration permissions were set to public", async () => {

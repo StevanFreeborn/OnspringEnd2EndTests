@@ -581,13 +581,7 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
-
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
       await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
@@ -612,20 +606,14 @@ test.describe('survey supporting data app', () => {
 
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.uncheck();
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
       await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
       await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
     });
 
     await test.step("Enable the survey supporting data app's concurrent edit alert", async () => {
       await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).not.toBeChecked();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox.check();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertCheckbox).toBeChecked();
-
+      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
       await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
     });
 
@@ -799,11 +787,11 @@ test.describe('survey supporting data app', () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
 
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Verify survey supporting data app's administration permissions were set to private", async () => {
@@ -841,10 +829,10 @@ test.describe('survey supporting data app', () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
 
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectUser(newUser.fullName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify survey supporting data app admin permissions were given to user', async () => {
@@ -888,10 +876,10 @@ test.describe('survey supporting data app', () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
 
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectRole(roleName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify survey supporting data app admin permissions were given to role', async () => {
@@ -935,10 +923,10 @@ test.describe('survey supporting data app', () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeVisible();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
 
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectGroup(groupName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step('Verify survey supporting data app admin permissions were given to group', async () => {
@@ -972,18 +960,18 @@ test.describe('survey supporting data app', () => {
     await test.step("Change the survey supporting data app's administration permissions to private", async () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Change the survey supporting data app's administration permissions to public", async () => {
       await surveyAdminPage.generalTab.editAdminSettingsLink.click();
       await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Public');
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersSelect).toBeHidden();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsSelect).toBeHidden();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesSelect).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeHidden();
+      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeHidden();
 
-      await surveyAdminPage.generalTab.editAdminSettingsModal.saveButton.click();
+      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
     });
 
     await test.step("Verify survey supporting data app's administration permissions were set to public", async () => {

@@ -15,6 +15,10 @@ export class DualPaneSelector {
       : this.selector.page().locator('.selector-control:visible');
   }
 
+  locator() {
+    return this.selector;
+  }
+
   async selectOption(option: string) {
     const selected = await this.selector.locator('.selector-select-list').innerText();
 

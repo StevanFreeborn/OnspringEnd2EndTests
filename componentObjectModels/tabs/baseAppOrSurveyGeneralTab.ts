@@ -4,6 +4,7 @@ import { BaseGeneralTab } from './baseGeneralTab';
 
 export abstract class BaseAppOrSurveyGeneralTab extends BaseGeneralTab {
   private readonly page: Page;
+  private readonly adminSettingsSection: Locator;
   readonly adminPermissions: Locator;
   readonly adminUsers: Locator;
   readonly adminRoles: Locator;
@@ -29,17 +30,23 @@ export abstract class BaseAppOrSurveyGeneralTab extends BaseGeneralTab {
   constructor(page: Page) {
     super(page);
     this.page = page;
-    this.adminPermissions = page.locator(this.createSettingSelector('Administration Permissions'));
-    this.adminUsers = page.locator(this.createSettingSelector('Users'));
-    this.adminRoles = page.locator(this.createSettingSelector('Roles'));
-    this.adminGroups = page.locator(this.createSettingSelector('Groups'));
-    this.geocodingStatus = page
+
+    this.adminSettingsSection = this.page.locator('.section', {
+      has: this.page.getByRole('heading', { name: 'Administration Settings' }),
+    });
+    this.adminPermissions = this.adminSettingsSection.locator(this.createSettingSelector('Administration Permissions'));
+    this.adminUsers = this.adminSettingsSection.locator(this.createSettingSelector('Users'));
+    this.adminRoles = this.adminSettingsSection.locator(this.createSettingSelector('Roles'));
+    this.adminGroups = this.adminSettingsSection.locator(this.createSettingSelector('Groups'));
+    this.geocodingStatus = this.page
       .locator('section > h1:has-text("Geocoding") + div')
       .locator(this.createSettingSelector('Status'));
 
-    this.editAdminSettingsLink = page.getByRole('heading', { name: 'Edit Administration Settings' }).getByRole('link');
-    this.editGeocodingSettingsLink = page.getByRole('heading', { name: 'Edit Geocoding' }).getByRole('link');
+    this.editAdminSettingsLink = this.page
+      .getByRole('heading', { name: 'Edit Administration Settings' })
+      .getByRole('link');
 
-    this.editGeocodingSettingsModal = new EditGeocodingSettingsModal(page);
+    this.editGeocodingSettingsLink = this.page.getByRole('heading', { name: 'Edit Geocoding' }).getByRole('link');
+    this.editGeocodingSettingsModal = new EditGeocodingSettingsModal(this.page);
   }
 }

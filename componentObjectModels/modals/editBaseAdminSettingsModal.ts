@@ -1,30 +1,28 @@
 import { Locator, Page } from '@playwright/test';
+import { DualPaneSelector } from '../controls/dualPaneSelector';
 
 export abstract class EditBaseAdminSettingsModal {
   private readonly page: Page;
+  private readonly modal: Locator;
+  private readonly saveButton: Locator;
+
   readonly adminPermissionsSelect: Locator;
-  readonly usersSelect: Locator;
-  readonly groupsSelect: Locator;
-  readonly rolesSelect: Locator;
-  readonly saveButton: Locator;
-  readonly selectorCloseButton: Locator;
+  readonly usersDualPaneSelector: DualPaneSelector;
+  readonly groupsDualPaneSelector: DualPaneSelector;
+  readonly rolesDualPaneSelector: DualPaneSelector;
 
   protected constructor(page: Page) {
     this.page = page;
-    this.adminPermissionsSelect = page.getByRole('listbox', {
+    this.modal = page.getByRole('dialog', { name: /administration settings/i });
+    this.adminPermissionsSelect = this.modal.getByRole('listbox', {
       name: 'Administration Permissions',
     });
-    this.usersSelect = page.locator('td.label:has-text("Users") + td>div').first();
-    this.groupsSelect = page.locator('td.label:has-text("Groups") + td>div').first();
-    this.rolesSelect = page.locator('td.label:has-text("Roles") + td>div').first();
-    this.saveButton = page.getByRole('button', {
+    this.usersDualPaneSelector = new DualPaneSelector(this.modal.locator('.label:has-text("Users") + .data'));
+    this.groupsDualPaneSelector = new DualPaneSelector(this.modal.locator('.label:has-text("Groups") + .data'));
+    this.rolesDualPaneSelector = new DualPaneSelector(this.modal.locator('.label:has-text("Roles") + .data'));
+    this.saveButton = this.modal.getByRole('button', {
       name: 'Save',
     });
-    this.selectorCloseButton = page.locator('.selector-control:not(.invisible)').getByTitle('Close').first();
-  }
-
-  private getUnselectedSelectorOption(field: string) {
-    return this.page.locator(`.selector-control .unselected-pane li:has-text("${field}")`);
   }
 
   async selectAdminPermissions(permission: string) {
@@ -33,20 +31,19 @@ export abstract class EditBaseAdminSettingsModal {
   }
 
   async selectUser(userFullName: string) {
-    await this.usersSelect.click();
-    await this.getUnselectedSelectorOption(userFullName).click();
-    await this.selectorCloseButton.click();
+    await this.usersDualPaneSelector.selectOption(userFullName);
   }
 
   async selectRole(roleName: string) {
-    await this.rolesSelect.click();
-    await this.getUnselectedSelectorOption(roleName).click();
-    await this.selectorCloseButton.click();
+    await this.rolesDualPaneSelector.selectOption(roleName);
   }
 
   async selectGroup(groupName: string) {
-    await this.groupsSelect.click();
-    await this.getUnselectedSelectorOption(groupName).click();
-    await this.selectorCloseButton.click();
+    await this.groupsDualPaneSelector.selectOption(groupName);
+  }
+
+  async save() {
+    await this.saveButton.click();
+    await this.modal.waitFor({ state: 'hidden' });
   }
 }
