@@ -240,11 +240,6 @@ test.describe('bitsight data connector', () => {
 
     test.slow();
 
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-398',
-    });
-
     const { alertIdField, companyIdField, ratingIdField } = getBitsightAppFields();
 
     await test.step('Setup the Bitsight apps', async () => {
