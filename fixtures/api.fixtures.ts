@@ -12,7 +12,7 @@ import { ListField } from '../models/listField';
 import { ListFormulaField } from '../models/listFormulaField';
 import { ListValue } from '../models/listValue';
 import { ReferenceField } from '../models/referenceField';
-import { Report, SavedReportAsReportDataOnly } from '../models/report';
+import { DisplayField, Report, SavedReportAsReportDataOnly } from '../models/report';
 import { AppPermission, Role } from '../models/role';
 import { TextField } from '../models/textField';
 import { ApiKeyAdminPage } from '../pageObjectModels/apiKeys/apiKeyAdminPage';
@@ -79,7 +79,7 @@ export async function performApiTestsSetup({
     new SavedReportAsReportDataOnly({
       appName: app.name,
       name: FakeDataFactory.createFakeReportName(),
-      displayFields: createdFields.map(f => f.name),
+      displayFields: createdFields.map(f => new DisplayField({ name: f.name })),
       security: 'Public',
     })
   );

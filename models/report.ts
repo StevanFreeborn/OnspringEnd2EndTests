@@ -1,4 +1,4 @@
-import { Chart } from './chart';
+import { Chart, ChartDisplayOption, DisplayOptionLabel } from './chart';
 
 export type ReportSchedulingStatus = 'Enabled' | 'Disabled';
 type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
@@ -9,15 +9,48 @@ type ReportDisplayType =
   | 'Display as a Gantt Chart'
   | 'Display as a Map';
 
+type DisplayFieldDisplayType = 'Report & Quick Edit' | 'Report Only' | 'Quick Edit Only';
+type DisplayFieldSort =
+  | 'None'
+  | 'Primary'
+  | 'Primary (Descending)'
+  | 'Secondary'
+  | 'Secondary (Descending)'
+  | 'Tertiary'
+  | 'Tertiary (Descending)'
+  | 'Quaternary'
+  | 'Quaternary (Descending)';
+
+type DisplayFieldObject = {
+  name: string;
+  alias?: string;
+  display?: DisplayFieldDisplayType;
+  sort?: DisplayFieldSort;
+};
+
+export class DisplayField {
+  name: string;
+  alias: string;
+  display: DisplayFieldDisplayType;
+  sort: DisplayFieldSort;
+
+  constructor({ name, alias = '', display = 'Report & Quick Edit', sort = 'None' }: DisplayFieldObject) {
+    this.name = name;
+    this.alias = alias !== '' ? alias : name;
+    this.display = display;
+    this.sort = sort;
+  }
+}
+
 export type RelatedData = {
   referenceField: string;
-  displayFields: string[];
+  displayFields: DisplayField[];
 };
 
 type ReportObject = {
   appName: string;
   displayType?: ReportDisplayType;
-  displayFields?: string[];
+  displayFields?: DisplayField[];
   relatedData?: RelatedData[];
 };
 
@@ -25,7 +58,7 @@ export abstract class Report {
   id?: number;
   appName: string;
   displayType: ReportDisplayType;
-  displayFields: string[];
+  displayFields: DisplayField[];
   relatedData: RelatedData[];
 
   constructor({
@@ -265,5 +298,237 @@ export class SavedReportAsChart extends SavedReport {
       schedule,
     });
     this.chart = chart;
+  }
+}
+
+type CalendarColors = 'Calendar Value Settings';
+
+type CalendarView = 'Week' | 'Day';
+
+type InitialCalendarDate = 'Today';
+
+export type CalendarValue = {
+  startDateField: string;
+  endDateField?: string;
+  color?: string;
+};
+
+type SavedReportAsCalendarObject = Omit<SavedReportObject, 'displayType'> & {
+  colorBasedOn?: CalendarColors;
+  defaultView?: CalendarView;
+  agendaFields?: string[];
+  initialDate?: InitialCalendarDate;
+  calendarValues: CalendarValue[];
+};
+
+export class SavedReportAsCalendar extends SavedReport {
+  colorBasedOn: CalendarColors;
+  defaultView: CalendarView;
+  agendaFields: string[];
+  initialDate: InitialCalendarDate;
+  calendarValues: CalendarValue[];
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    colorBasedOn = 'Calendar Value Settings',
+    defaultView = 'Week',
+    agendaFields = [],
+    initialDate = 'Today',
+    calendarValues,
+  }: SavedReportAsCalendarObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Calendar',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.colorBasedOn = colorBasedOn;
+    this.defaultView = defaultView;
+    this.agendaFields = agendaFields;
+    this.initialDate = initialDate;
+    this.calendarValues = calendarValues;
+
+    if (this.calendarValues.length === 0) {
+      throw new Error('At least one calendar value must be provided');
+    }
+  }
+}
+
+type GanttChartColorBasedOn = 'Gantt Value Settings';
+type GanttChartTimeFrameDisplay = 'Show all data without scrolling';
+type GanttChartTimeIncrements = 'Hours' | 'Days' | 'Weeks' | 'Months' | 'Quarters' | 'Years';
+export type GanttChartValue = {
+  startDateField: string;
+  endDateField: string;
+  percentCompleteField?: string;
+  dependencyField?: string;
+  labelField?: string;
+  legendText?: string;
+  color: string;
+};
+
+type SavedReportAsGanttChartObject = Omit<SavedReportObject, 'displayType'> & {
+  groupData?: string;
+  rowHeaderFields?: string[];
+  colorBasedOn?: GanttChartColorBasedOn;
+  timeIncrements: GanttChartTimeIncrements[];
+  timeFrameDisplay?: GanttChartTimeFrameDisplay;
+  ganttValues: GanttChartValue[];
+  milestoneField?: string;
+  displayVerticalLine?: boolean;
+  threeD?: boolean;
+};
+
+export class SavedReportAsGanttChart extends SavedReport {
+  groupData: string;
+  rowHeaderFields: string[];
+  colorBasedOn: string;
+  timeIncrements: string[];
+  timeFrameDisplay: string;
+  ganttValues: GanttChartValue[];
+  milestoneField: string;
+  displayOptions: ChartDisplayOption[];
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    groupData = '',
+    rowHeaderFields = [],
+    colorBasedOn = 'Gantt Value Settings',
+    timeIncrements,
+    timeFrameDisplay = 'Show all data without scrolling',
+    ganttValues,
+    milestoneField = '',
+    displayVerticalLine = false,
+    threeD = false,
+  }: SavedReportAsGanttChartObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Gantt Chart',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.groupData = groupData;
+    this.rowHeaderFields = rowHeaderFields;
+    this.colorBasedOn = colorBasedOn;
+    this.timeIncrements = timeIncrements;
+    this.timeFrameDisplay = timeFrameDisplay;
+    this.ganttValues = ganttValues;
+    this.milestoneField = milestoneField;
+    this.displayOptions = [
+      {
+        name: DisplayOptionLabel.displayVerticalLine,
+        status: displayVerticalLine,
+      },
+      {
+        name: DisplayOptionLabel.threeD,
+        status: threeD,
+      },
+    ];
+
+    if (this.timeIncrements.length === 0) {
+      throw new Error('A time increment must be provided');
+    }
+
+    if (this.ganttValues.length === 0) {
+      throw new Error('At least one gantt value must be provided');
+    }
+  }
+}
+
+type PointMapVisibility =
+  | 'Display Map and Report Data'
+  | 'Display Map and Map Data'
+  | 'Display Map Only'
+  | 'Display Map Data Only';
+
+type PointMapColorBasedOn = 'Selected Color';
+
+type SavedReportAsPointMapObject = Omit<SavedReportObject, 'displayType'> & {
+  visibility?: PointMapVisibility;
+  markerNameField: string;
+  basedOnColor?: PointMapColorBasedOn;
+  selectedColor?: string;
+  markerClustering?: boolean;
+  clusterColor?: string;
+  includeViewRecordLink?: boolean;
+};
+
+export class SavedReportAsPointMap extends SavedReport {
+  visibility: PointMapVisibility;
+  markerNameField: string;
+  displayOptions: ChartDisplayOption[];
+  basedOnColor: PointMapColorBasedOn;
+  selectedColor: string;
+  markerClustering: boolean;
+  clusterColor: string;
+  includeViewRecordLink: boolean;
+
+  constructor({
+    appName,
+    name,
+    displayFields,
+    relatedData,
+    security,
+    scheduling,
+    schedule,
+    visibility = 'Display Map and Report Data',
+    markerNameField,
+    markerClustering = false,
+    basedOnColor = 'Selected Color',
+    selectedColor = '',
+    clusterColor = '',
+    includeViewRecordLink = false,
+  }: SavedReportAsPointMapObject) {
+    super({
+      appName,
+      name,
+      displayType: 'Display as a Map',
+      displayFields,
+      relatedData,
+      security,
+      scheduling,
+      schedule,
+    });
+    this.visibility = visibility;
+    this.markerNameField = markerNameField;
+    this.basedOnColor = basedOnColor;
+    this.selectedColor = selectedColor;
+    this.markerClustering = markerClustering;
+    this.clusterColor = clusterColor;
+    this.includeViewRecordLink = includeViewRecordLink;
+    this.displayOptions = [
+      {
+        name: DisplayOptionLabel.markerClustering,
+        status: markerClustering,
+      },
+    ];
+
+    if (this.basedOnColor === 'Selected Color' && this.selectedColor === '') {
+      throw new Error('A selected color must be provided when the color is based on selected color');
+    }
+
+    if (this.markerClustering && this.clusterColor === '') {
+      throw new Error('A cluster color must be provided when marker clustering is enabled');
+    }
   }
 }

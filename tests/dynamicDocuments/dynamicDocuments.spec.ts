@@ -7,7 +7,6 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { AttachmentField } from '../../models/attachmentField';
 import { DynamicDocument } from '../../models/dynamicDocument';
-import { SavedReportAsReportDataOnly } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -17,6 +16,7 @@ import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentP
 import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
 import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
+import { SavedReportAsReportDataOnly } from './../../models/report';
 
 type DynamicDocumentTestFixtures = {
   app: App;
@@ -859,7 +859,6 @@ test.describe('Dynamic Documents', () => {
     await test.step('Create report to reference in dynamic document', async () => {
       await reportAppPage.goto(app.id);
       await reportAppPage.createReport(report);
-      await reportAppPage.reportDesigner.saveChangesAndRun();
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
     });
 

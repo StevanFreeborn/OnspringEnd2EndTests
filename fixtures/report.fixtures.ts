@@ -10,7 +10,6 @@ export async function createReport(sysAdminPage: Page, app: App, report: Report)
 
   await reportAppPage.goto(app.id);
   await reportAppPage.createReport(report);
-  await reportAppPage.reportDesigner.saveChangesAndRun();
   await reportAppPage.page.waitForURL(reportPage.pathRegex);
   report.id = reportPage.getReportIdFromUrl();
   return report;

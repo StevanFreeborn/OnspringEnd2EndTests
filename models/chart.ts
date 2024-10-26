@@ -21,9 +21,10 @@ type ChartType =
   | 'Column Plus Line'
   | 'Stacked Column'
   | 'Stacked Column Plus Line'
-  | 'Bubble';
+  | 'Bubble'
+  | 'Heat Map';
 
-const DisplayOptionLabel = {
+export const DisplayOptionLabel = {
   showValues: 'Show Values',
   threeD: '3D',
   rotateLabels: 'Rotate Labels',
@@ -36,6 +37,8 @@ const DisplayOptionLabel = {
   showStackTotals: 'Show Stack Totals',
   dualYAxis: 'Dual Y Axis',
   rotateValues: 'Rotate Values',
+  displayVerticalLine: 'Display a vertical line at the current date/time',
+  markerClustering: 'Enable marker clustering on map zoom out',
 } as const;
 
 export type ChartDisplayOption = {
@@ -558,5 +561,45 @@ export class BubbleChart extends AdvancedChart {
       ],
     });
     this.additionalGroupData = additionalGroupData;
+  }
+}
+
+export type ColorStop = { value: number; color: string };
+
+type HeatMapChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  rotateLabels?: boolean;
+  colorStops: ColorStop[];
+};
+
+export class HeatMapChart extends AdvancedChart {
+  colorStops: ColorStop[];
+
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    showValues = false,
+    rotateLabels = false,
+    colorStops,
+  }: HeatMapChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Heat Map',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.rotateLabels, status: rotateLabels },
+      ],
+    });
+    this.colorStops = colorStops;
+
+    if (this.colorStops.length < 2) {
+      throw new Error('Heat map chart must have at least 2 color stops');
+    }
   }
 }

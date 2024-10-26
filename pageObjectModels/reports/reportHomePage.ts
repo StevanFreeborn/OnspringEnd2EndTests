@@ -29,6 +29,8 @@ export class ReportHomePage extends BasePage {
     await this.createMenu.getByText(report.appName, { exact: true }).click();
     await this.addReportDialog.addReport(report);
     await this.reportDesigner.waitFor();
+    await this.reportDesigner.updateReport(report);
+    await this.reportDesigner.saveChangesAndRun();
   }
 
   async createCopyOfReport(reportToCopy: string, report: Report) {
@@ -36,5 +38,7 @@ export class ReportHomePage extends BasePage {
     await this.createMenu.getByText(report.appName, { exact: true }).click();
     await this.addReportDialog.addReportCopy(reportToCopy, report);
     await this.reportDesigner.waitFor();
+    await this.reportDesigner.updateReport(report);
+    await this.reportDesigner.saveChangesAndRun();
   }
 }
