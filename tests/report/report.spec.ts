@@ -296,6 +296,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Bulk edit records in the report', async () => {
@@ -309,7 +310,7 @@ test.describe('report', () => {
       ]);
       await reportPage.bulkEditModal.saveChanges();
       await reportPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Verify the records were updated', async () => {
@@ -354,6 +355,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Bulk delete records in the report', async () => {
@@ -361,6 +363,7 @@ test.describe('report', () => {
       await reportPage.bulkDeleteSelectedRecords();
       await reportPage.bulkDeleteDialog.confirmDelete();
       await reportPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Verify the records were deleted', async () => {
