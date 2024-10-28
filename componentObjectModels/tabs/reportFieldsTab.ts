@@ -80,6 +80,14 @@ class DisplayFieldForm {
   }
 
   private async selectSort(sort: string) {
+    const span = this.sortSelector.locator('span').first();
+    const spanClasses = await span.getAttribute('class');
+    const isDisabled = spanClasses?.includes('k-state-disabled');
+
+    if (isDisabled) {
+      return;
+    }
+
     await this.sortSelector.click();
     await this.frame.getByRole('option', { name: sort }).click();
   }
