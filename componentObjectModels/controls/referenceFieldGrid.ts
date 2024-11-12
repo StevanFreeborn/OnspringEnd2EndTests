@@ -36,11 +36,16 @@ export class ReferenceFieldGrid {
     const searchResultRow = this.searchResults.getByRole('row', { name: searchTerm });
     const scrollableElement = this.searchResults.locator('.k-grid-content.k-auto-scrollable').first();
 
+    const clickResponse = this.page.waitForLoadState('networkidle');
+    await this.filterInput.click();
+    await clickResponse;
+
     // Reference field grid search requests are debounced, so we need to simulate typing
     // in the filter input with a delay between each character to ensure that the search
     // request is sent.
+    const searchResponse = this.page.waitForResponse(this.pathRegex);
     await this.filterInput.pressSequentially(searchTerm, { delay: 125 });
-    await this.page.waitForResponse(this.pathRegex);
+    await searchResponse;
 
     let isVisible = await searchResultRow.isVisible();
 
