@@ -1,6 +1,6 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Route } from '../../fixtures';
 import { app, createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import {
@@ -1232,7 +1232,8 @@ test.describe('report', () => {
       // The name of the source app needs to be unique to avoid conflicts...but
       // it also needs to be consistent across test runs so that snapshots can be compared.
       const projectName = test.info().project.name;
-      const appName = `configure_a_column_plus_line_chart_${projectName}`;
+      const appName = FakeDataFactory.createFakeAppName();
+      const mockAppName = `configure_a_column_plus_line_chart_${projectName}`;
       const sourceApp = await createApp(sysAdminPage, appName);
       appsToDelete.push(appName);
 
@@ -1278,6 +1279,12 @@ test.describe('report', () => {
       });
 
       await test.step('Create the column report', async () => {
+        await reportPage.page.route(
+          /Report\/\d+\/GetReportDisplayConfig/,
+          async route => await mockLineChartSeriesName(route, appName, mockAppName),
+          { times: 1 }
+        );
+
         await reportAppPage.createReport(columnReport);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
@@ -1348,7 +1355,8 @@ test.describe('report', () => {
       // The name of the source app needs to be unique to avoid conflicts...but
       // it also needs to be consistent across test runs so that snapshots can be compared.
       const projectName = test.info().project.name;
-      const appName = `configure_a_column_plus_line_chart_${projectName}`;
+      const appName = FakeDataFactory.createFakeAppName();
+      const mockAppName = `configure_a_column_plus_line_chart_${projectName}`;
       const sourceApp = await createApp(sysAdminPage, appName);
       appsToDelete.push(appName);
 
@@ -1394,6 +1402,12 @@ test.describe('report', () => {
       });
 
       await test.step('Create the stacked column plus line report', async () => {
+        await reportPage.page.route(
+          /Report\/\d+\/GetReportDisplayConfig/,
+          async route => await mockLineChartSeriesName(route, appName, mockAppName),
+          { times: 1 }
+        );
+
         await reportAppPage.createReport(stackedColumnReport);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
@@ -2150,4 +2164,20 @@ async function addRecordsToApp(
   }
 
   return createdRecords;
+}
+
+async function mockLineChartSeriesName(route: Route, appName: string, mockAppName: string) {
+  const response = await route.fetch();
+  const body = await response.json();
+  const lineChartSeries = body.chartConfig.chartConfigData.dataset.find(
+    (d: { seriesName: string }) => d.seriesName === appName
+  );
+
+  if (lineChartSeries === undefined) {
+    throw new Error(`Series with name ${appName} not found in the chart config.`);
+  }
+
+  lineChartSeries.seriesName = mockAppName;
+
+  await route.fulfill({ response, json: body });
 }
