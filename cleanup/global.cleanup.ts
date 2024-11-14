@@ -61,7 +61,7 @@ teardown.describe('cleanup', () => {
     await new DataConnectorAdminPage(sysAdminPage).deleteAllTestConnectors();
   });
 
-  teardown('cleanup:delete all test dashboards', async ({ sysAdminPage }) => {
+  teardown('cleanup:dashboards delete all test dashboards created as part of tests', async ({ sysAdminPage }) => {
     await new DashboardsAdminPage(sysAdminPage).deleteAllTestDashboards();
   });
 });
