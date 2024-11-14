@@ -97,6 +97,8 @@ export class AdminHomePage extends BaseAdminPage {
     this.dashboardTileLink = this.getTileLink(4);
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
     this.dashboardCreateMenu = this.getTileCreateMenu('Dashboards');
+    this.createDashboardDialog = new CreateDashboardDialog(page);
+    this.dashboardDesigner = new DashboardDesignerModal(page);
 
     this.integrationTileLink = this.getTileLink(7);
     this.integrationTileCreateButton = this.getTileCreateButton('Integration');
@@ -116,13 +118,22 @@ export class AdminHomePage extends BaseAdminPage {
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
 
     this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
-
-    this.createDashboardDialog = new CreateDashboardDialog(page);
-    this.dashboardDesigner = new DashboardDesignerModal(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createDashboardUsingDashboardsTileButton(dashboardName: string) {
+    await this.dashboardTileLink.hover();
+    await this.dashboardTileCreateButton.waitFor();
+    await this.dashboardTileCreateButton.click();
+    await this.dashboardCreateMenu.waitFor();
+    await this.dashboardCreateMenu.getByText('Dashboard').click();
+
+    await this.createDashboardDialog.nameInput.waitFor();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
   }
 
   async createDashboardUsingHeaderCreateButton(dashboardName: string) {
