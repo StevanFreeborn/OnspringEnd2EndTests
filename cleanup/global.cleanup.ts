@@ -2,6 +2,7 @@ import { test as teardown } from '../fixtures';
 import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
 import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
 import { ContainersAdminPage } from '../pageObjectModels/containers/containersAdminPage';
+import { DashboardsAdminPage } from '../pageObjectModels/dashboards/dashboardsAdminPage';
 import { DataConnectorAdminPage } from '../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
@@ -58,5 +59,9 @@ teardown.describe('cleanup', () => {
 
   teardown('cleanup:connectors delete all data connectors created as part of tests', async ({ sysAdminPage }) => {
     await new DataConnectorAdminPage(sysAdminPage).deleteAllTestConnectors();
+  });
+
+  teardown('cleanup:delete all test dashboards', async ({ sysAdminPage }) => {
+    await new DashboardsAdminPage(sysAdminPage).deleteAllTestDashboards();
   });
 });

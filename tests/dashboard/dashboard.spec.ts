@@ -1,18 +1,54 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
 
-type DashboardTestFixtures = {};
+type DashboardTestFixtures = {
+  adminHomePage: AdminHomePage;
+  dashboardsAdminPage: DashboardsAdminPage;
+};
 
-const test = base.extend<DashboardTestFixtures>({});
+const test = base.extend<DashboardTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => {
+    const adminHomePage = new AdminHomePage(sysAdminPage);
+    await use(adminHomePage);
+  },
+  dashboardsAdminPage: async ({ sysAdminPage }, use) => {
+    const dashboardsAdminPage = new DashboardsAdminPage(sysAdminPage);
+    await use(dashboardsAdminPage);
+  },
+});
 
 test.describe('dashboard', () => {
-  test('Create a Dashboard via the create button in the header of the admin home page', () => {
+  let dashboardsToDelete: string[] = [];
+
+  test.beforeEach(async ({ adminHomePage }) => {
+    await adminHomePage.goto();
+  });
+
+  test.afterEach(async ({ dashboardsAdminPage }) => {
+    await dashboardsAdminPage.deleteDashboards(dashboardsToDelete);
+    dashboardsToDelete = [];
+  });
+
+  test('Create a Dashboard via the create button in the header of the admin home page', async ({ adminHomePage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-316',
     });
 
-    expect(true).toBeTruthy();
+    const dashboardName = FakeDataFactory.createFakeDashboardName();
+    dashboardsToDelete.push(dashboardName);
+
+    await test.step('Create the dashboard', async () => {
+      await adminHomePage.createDashboardUsingHeaderCreateButton(dashboardName);
+      await adminHomePage.dashboardDesigner.waitFor();
+    });
+
+    await test.step('Verify the dashboard was created correctly', async () => {
+      await expect(adminHomePage.dashboardDesigner.title).toHaveText(dashboardName);
+    });
   });
 
   test('Create a Dashboard via the create button on the Dashboards tile on the admin home page', () => {
