@@ -72,13 +72,29 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Create a Dashboard via the "Create Dashboard" button on the Dashboards home page', () => {
+  test('Create a Dashboard via the "Create Dashboard" button on the Dashboards home page', async ({
+    dashboardsAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-318',
     });
 
-    expect(true).toBeTruthy();
+    const dashboardName = FakeDataFactory.createFakeAppName();
+    dashboardsToDelete.push(dashboardName);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboardName);
+      await dashboardsAdminPage.dashboardDesigner.waitFor();
+    });
+
+    await test.step('Verify the dashboard was created correctly', async () => {
+      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboardName);
+    });
   });
 
   test('Create a copy of a Dashboard via the create button in the header of the admin home page', () => {

@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-
-type WaitForOptions = Parameters<Locator['waitFor']>[0];
+import { WaitForOptions } from '../../utils';
 
 export class ExportUnderwayDialog {
   private readonly dialog: Locator;

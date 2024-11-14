@@ -1,13 +1,18 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateDashboardDialog } from '../../componentObjectModels/dialogs/createDashboardDialog';
 import { DeleteDashboardDialog } from '../../componentObjectModels/dialogs/deleteDashboardDialog';
+import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
 import { TEST_DASHBOARD_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class DashboardsAdminPage extends BaseAdminPage {
+  private readonly deletePathRegex: RegExp;
+  private readonly createDashboardButton: Locator;
+  private readonly createDashboardDialog: CreateDashboardDialog;
   readonly path: string;
   readonly grid: Locator;
-  private readonly deletePathRegex: RegExp;
   readonly deleteDialog: DeleteDashboardDialog;
+  readonly dashboardDesigner: DashboardDesignerModal;
 
   constructor(page: Page) {
     super(page);
@@ -15,6 +20,9 @@ export class DashboardsAdminPage extends BaseAdminPage {
     this.grid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Dashboard\/\d+\/Delete/;
     this.deleteDialog = new DeleteDashboardDialog(page);
+    this.dashboardDesigner = new DashboardDesignerModal(page);
+    this.createDashboardButton = this.page.getByRole('button', { name: 'Create Dashboard' });
+    this.createDashboardDialog = new CreateDashboardDialog(page);
   }
 
   async goto() {
@@ -49,6 +57,13 @@ export class DashboardsAdminPage extends BaseAdminPage {
     await this.deleteDialog.deleteButton.click();
     await deleteResponse;
     await this.deleteDialog.waitForDialogToBeDismissed();
+  }
+
+  async createDashboard(dashboardName: string) {
+    await this.createDashboardButton.click();
+    await this.createDashboardDialog.nameInput.waitFor();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
   }
 
   async deleteDashboards(dashboardsToDelete: string[]) {
