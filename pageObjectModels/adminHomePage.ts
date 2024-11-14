@@ -136,6 +136,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createDashboardDialog.saveButton.click();
   }
 
+  async createDashboardCopyUsingHeaderCreateButton(dashboardToCopyName: string, dashboardName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dashboardCreateMenuOption.click();
+
+    await this.createDashboardDialog.copyFromRadioButton.waitFor();
+    await this.createDashboardDialog.copyFromRadioButton.click();
+    await this.createDashboardDialog.copyFromDropdown.click();
+    await this.createDashboardDialog.getDashboardToCopy(dashboardToCopyName).click();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
+  }
+
   async createDashboardUsingHeaderCreateButton(dashboardName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();
