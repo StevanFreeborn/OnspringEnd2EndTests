@@ -76,6 +76,21 @@ export class DashboardsAdminPage extends BaseAdminPage {
     await this.createDashboardDialog.saveButton.click();
   }
 
+  async getDashboardRow(dashboardName: string) {
+    await this.goto();
+    await this.scrollAllIntoView();
+
+    return this.grid.getByRole('row', { name: new RegExp(dashboardName, 'i') });
+  }
+
+  async openDashboardDesigner(dashboardName: string) {
+    const dashboardRow = await this.getDashboardRow(dashboardName);
+
+    await dashboardRow.hover();
+    await dashboardRow.getByTitle('Edit Dashboard').click();
+    await this.dashboardDesigner.waitFor();
+  }
+
   async deleteDashboards(dashboardsToDelete: string[]) {
     await this.goto();
 

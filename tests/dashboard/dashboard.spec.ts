@@ -1,5 +1,6 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { Dashboard } from '../../models/dashboard';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
@@ -182,13 +183,37 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Update a dashboard', () => {
+  test('Update a dashboard', async ({ dashboardsAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-322',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard.name);
+      await dashboardsAdminPage.dashboardDesigner.close();
+    });
+
+    await test.step('Update the dashboard', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+
+      dashboard.name = FakeDataFactory.createFakeDashboardName();
+      dashboardsToDelete.push(dashboard.name);
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard was updated correctly', async () => {
+      const updatedDashboard = await dashboardsAdminPage.getDashboardRow(dashboard.name);
+      await expect(updatedDashboard).toBeVisible();
+    });
   });
 
   test('Delete a dashboard', () => {
