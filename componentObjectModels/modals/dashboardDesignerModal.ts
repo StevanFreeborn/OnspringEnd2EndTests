@@ -1,5 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { Dashboard } from '../../models/dashboard';
+import { Dashboard, DashboardItem } from '../../models/dashboard';
 import { WaitForOptions } from '../../utils';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 
@@ -61,7 +61,41 @@ export class DashboardDesignerModal {
     await this.dashboardPropertiesModal.applyButton.click();
   }
 
+  private async addItemToDashboard(item: DashboardItem) {
+    // TODO: we need to place the item on the dashboard
+    // at given row and column
+    if (item.object instanceof Report) {
+      throw new Error('Not implemented');
+    }
+
+    throw new Error('Unsupported item');
+  }
+
+  private async addDashboardItems(items: DashboardItem[]) {
+    for (const item of items) {
+      await this.addItemToDashboard(item);
+    }
+  }
+
   async updateDashboard(dashboard: Dashboard) {
     await this.updateDashboardProperties(dashboard);
+    await this.addDashboardItems(dashboard.items);
+  }
+
+  async getDashboardId() {
+    await this.propertiesLink.click();
+    await this.dashboardPropertiesModal.waitFor();
+
+    const link = await this.dashboardPropertiesModal.getDashboardLink();
+
+    await this.dashboardPropertiesModal.cancelButton.click();
+
+    const id = link.split('/').pop();
+
+    if (id === undefined) {
+      throw new Error('Dashboard ID not found');
+    }
+
+    return parseInt(id);
   }
 }

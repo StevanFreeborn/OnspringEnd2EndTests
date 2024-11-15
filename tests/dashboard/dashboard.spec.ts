@@ -1,24 +1,44 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { createReportFixture } from '../../fixtures/report.fixtures';
+import { App } from '../../models/app';
+import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
+import { Report, SavedReportAsReportDataOnly } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
 
 type DashboardTestFixtures = {
   adminHomePage: AdminHomePage;
   dashboardsAdminPage: DashboardsAdminPage;
+  sourceApp: App;
+  report: Report;
+  container: Container;
+  dashboardPage: DashboardPage;
 };
 
 const test = base.extend<DashboardTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    await use(adminHomePage);
-  },
-  dashboardsAdminPage: async ({ sysAdminPage }, use) => {
-    const dashboardsAdminPage = new DashboardsAdminPage(sysAdminPage);
-    await use(dashboardsAdminPage);
-  },
+  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
+  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
+  sourceApp: app,
+  report: async ({ sysAdminPage, sourceApp }, use) =>
+    await createReportFixture(
+      {
+        sysAdminPage,
+        app: sourceApp,
+        report: new SavedReportAsReportDataOnly({
+          name: FakeDataFactory.createFakeReportName(),
+          appName: sourceApp.name,
+        }),
+      },
+      use
+    ),
+  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
 });
 
 test.describe('dashboard', () => {
@@ -81,20 +101,20 @@ test.describe('dashboard', () => {
       description: 'Test-318',
     });
 
-    const dashboardName = FakeDataFactory.createFakeAppName();
-    dashboardsToDelete.push(dashboardName);
+    const dashboard = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
+    dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboardName);
+      await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.waitFor();
     });
 
     await test.step('Verify the dashboard was created correctly', async () => {
-      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboardName);
+      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboard.name);
     });
   });
 
@@ -160,21 +180,21 @@ test.describe('dashboard', () => {
       description: 'Test-321',
     });
 
-    const dashboardToCopyName = FakeDataFactory.createFakeAppName();
+    const dashboardToCopy = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
     const dashboardCopyName = FakeDataFactory.createFakeAppName();
-    dashboardsToDelete.push(dashboardToCopyName, dashboardCopyName);
+    dashboardsToDelete.push(dashboardToCopy.name, dashboardCopyName);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
 
     await test.step('Create the dashboard to copy', async () => {
-      await dashboardsAdminPage.createDashboard(dashboardToCopyName);
+      await dashboardsAdminPage.createDashboard(dashboardToCopy);
       await dashboardsAdminPage.dashboardDesigner.close();
     });
 
     await test.step('Create the copy of the dashboard', async () => {
-      await dashboardsAdminPage.createDashboardCopy(dashboardToCopyName, dashboardCopyName);
+      await dashboardsAdminPage.createDashboardCopy(dashboardToCopy.name, dashboardCopyName);
       await dashboardsAdminPage.dashboardDesigner.waitFor();
     });
 
@@ -196,7 +216,7 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard.name);
+      await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.close();
     });
 
@@ -222,32 +242,69 @@ test.describe('dashboard', () => {
       description: 'Test-323',
     });
 
-    const dashboardName = FakeDataFactory.createFakeDashboardName();
+    const dashboard = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
 
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboardName);
+      await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.close();
     });
 
     await test.step('Delete the dashboard', async () => {
-      await dashboardsAdminPage.deleteDashboards([dashboardName]);
+      await dashboardsAdminPage.deleteDashboards([dashboard.name]);
     });
 
     await test.step('Verify the dashboard was deleted', async () => {
-      const dashboard = await dashboardsAdminPage.getDashboardRow(dashboardName);
-      await expect(dashboard).not.toBeAttached();
+      const dashboardRow = await dashboardsAdminPage.getDashboardRow(dashboard.name);
+      await expect(dashboardRow).not.toBeAttached();
     });
   });
 
-  test("Edit a dashboard's configurations from the dashboard", async () => {
+  test("Edit a dashboard's configurations from the dashboard", async ({
+    report,
+    container,
+    dashboardsAdminPage,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-324',
     });
+
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+    dashboardsToDelete.push(dashboard.name);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Open the dashboard designer', async () => {});
+
+    await test.step('Update the dashboard', async () => {});
+
+    await test.step('Verify the dashboard was updated correctly', async () => {});
 
     expect(true).toBeTruthy();
   });

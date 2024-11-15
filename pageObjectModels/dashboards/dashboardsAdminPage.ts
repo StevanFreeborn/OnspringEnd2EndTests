@@ -4,6 +4,7 @@ import { DeleteDashboardDialog } from '../../componentObjectModels/dialogs/delet
 import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
 import { TEST_DASHBOARD_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
+import { Dashboard } from '../../models/dashboard';
 
 export class DashboardsAdminPage extends BaseAdminPage {
   private readonly deletePathRegex: RegExp;
@@ -59,11 +60,14 @@ export class DashboardsAdminPage extends BaseAdminPage {
     await this.deleteDialog.waitForDialogToBeDismissed();
   }
 
-  async createDashboard(dashboardName: string) {
+  async createDashboard(dashboard: Dashboard) {
     await this.createDashboardButton.click();
     await this.createDashboardDialog.nameInput.waitFor();
-    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.nameInput.fill(dashboard.name);
     await this.createDashboardDialog.saveButton.click();
+
+    await this.dashboardDesigner.waitFor();
+    dashboard.id = await this.dashboardDesigner.getDashboardId();
   }
 
   async createDashboardCopy(dashboardToCopyName: string, dashboardCopyName: string) {
