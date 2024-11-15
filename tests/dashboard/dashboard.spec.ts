@@ -216,16 +216,34 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Delete a dashboard', () => {
+  test('Delete a dashboard', async ({ dashboardsAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-323',
     });
 
-    expect(true).toBeTruthy();
+    const dashboardName = FakeDataFactory.createFakeDashboardName();
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboardName);
+      await dashboardsAdminPage.dashboardDesigner.close();
+    });
+
+    await test.step('Delete the dashboard', async () => {
+      await dashboardsAdminPage.deleteDashboards([dashboardName]);
+    });
+
+    await test.step('Verify the dashboard was deleted', async () => {
+      const dashboard = await dashboardsAdminPage.getDashboardRow(dashboardName);
+      await expect(dashboard).not.toBeAttached();
+    });
   });
 
-  test("Edit a dashboard's configurations from the dashboard", () => {
+  test("Edit a dashboard's configurations from the dashboard", async () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-324',
