@@ -151,13 +151,35 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Create a copy of a Dashboard via the "Create Dashboard" button on the Dashboards home page', () => {
+  test('Create a copy of a Dashboard via the "Create Dashboard" button on the Dashboards home page', async ({
+    dashboardsAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-321',
     });
 
-    expect(true).toBeTruthy();
+    const dashboardToCopyName = FakeDataFactory.createFakeAppName();
+    const dashboardCopyName = FakeDataFactory.createFakeAppName();
+    dashboardsToDelete.push(dashboardToCopyName, dashboardCopyName);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard to copy', async () => {
+      await dashboardsAdminPage.createDashboard(dashboardToCopyName);
+      await dashboardsAdminPage.dashboardDesigner.close();
+    });
+
+    await test.step('Create the copy of the dashboard', async () => {
+      await dashboardsAdminPage.createDashboardCopy(dashboardToCopyName, dashboardCopyName);
+      await dashboardsAdminPage.dashboardDesigner.waitFor();
+    });
+
+    await test.step('Verify the dashboard was copied correctly', async () => {
+      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboardCopyName);
+    });
   });
 
   test('Update a dashboard', () => {

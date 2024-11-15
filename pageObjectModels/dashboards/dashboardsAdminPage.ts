@@ -66,6 +66,16 @@ export class DashboardsAdminPage extends BaseAdminPage {
     await this.createDashboardDialog.saveButton.click();
   }
 
+  async createDashboardCopy(dashboardToCopyName: string, dashboardCopyName: string) {
+    await this.createDashboardButton.click();
+    await this.createDashboardDialog.copyFromRadioButton.waitFor();
+    await this.createDashboardDialog.copyFromRadioButton.click();
+    await this.createDashboardDialog.copyFromDropdown.click();
+    await this.createDashboardDialog.getDashboardToCopy(dashboardToCopyName).click();
+    await this.createDashboardDialog.nameInput.fill(dashboardCopyName);
+    await this.createDashboardDialog.saveButton.click();
+  }
+
   async deleteDashboards(dashboardsToDelete: string[]) {
     await this.goto();
 
