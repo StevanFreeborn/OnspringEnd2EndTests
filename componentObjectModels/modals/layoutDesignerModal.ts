@@ -1,7 +1,7 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { BASE_URL } from '../../playwright.config';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
-import { CanvasSection } from '../sections/canvasSection';
+import { LayoutCanvasSection } from '../sections/layoutCanvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
 import { EditLayoutPropertiesModal } from './editLayoutPropertiesModal';
 
@@ -33,7 +33,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
   readonly editLayoutPropertiesLink: Locator;
   readonly editLayoutPropertiesModal: EditLayoutPropertiesModal;
   readonly layoutItemsSection: LayoutItemsSection;
-  readonly canvasSection: CanvasSection;
+  readonly canvasSection: LayoutCanvasSection;
   readonly saveButton: Locator;
   readonly saveAndCloseButton: Locator;
   readonly closeButton: Locator;
@@ -46,7 +46,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.editLayoutPropertiesLink = this.frame.getByRole('link', { name: 'Edit Layout Properties' });
     this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
-    this.canvasSection = new CanvasSection(this.frame);
+    this.canvasSection = new LayoutCanvasSection(this.frame);
     this.saveButton = this.designer.getByRole('button', { name: 'Save', exact: true });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });

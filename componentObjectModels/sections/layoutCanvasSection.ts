@@ -1,4 +1,6 @@
 import { FrameLocator, Locator } from '@playwright/test';
+import { BaseCanvasSection } from './baseCanvasSection';
+import { BaseLayoutSection } from './baseLayoutSection';
 
 type FieldDropzoneParams = {
   tabName: string | undefined;
@@ -12,15 +14,12 @@ type SectionDropzoneParams = {
   placementIndex?: number;
 };
 
-export class CanvasSection {
-  private readonly section: Locator;
-  readonly layoutItemDropzone: Locator;
+export class LayoutCanvasSection extends BaseCanvasSection {
   readonly sectionDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
-    this.section = frame.locator('.canvas-section').first();
-    this.layoutItemDropzone = this.section.locator('#dropLocation');
+    super(frame);
     this.sectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
   }
 
@@ -87,89 +86,16 @@ class LayoutTab {
   }
 }
 
-class LayoutSection {
-  private readonly section: Locator;
+class LayoutSection extends BaseLayoutSection {
   private readonly editSectionNameButton: Locator;
   private readonly editSectionButton: Locator;
   private readonly deleteSectionButton: Locator;
 
   constructor(section: Locator) {
-    this.section = section;
-    this.editSectionNameButton = section.getByTitle('Edit Section Name');
-    this.editSectionButton = section.getByRole('link', { name: 'Edit' });
-    this.deleteSectionButton = section.getByRole('link', { name: 'Delete' });
-  }
-
-  private getLayoutZones() {
-    return this.section.locator('.rendered-item');
-  }
-
-  private async getNumberOfColumns() {
-    const layoutZones = await this.getLayoutZones().all();
-
-    let maxColumn = -1;
-
-    for (const zone of layoutZones) {
-      const column = await zone.getAttribute('data-column');
-
-      if (column === null) {
-        continue;
-      }
-
-      const columnNumber = parseInt(column);
-
-      if (columnNumber > maxColumn) {
-        maxColumn = columnNumber;
-      }
-    }
-
-    return maxColumn;
-  }
-
-  private async getNumberOfRows(column: number) {
-    const layoutZones = await this.getLayoutZones().all();
-
-    let count = -1;
-
-    for (const zone of layoutZones) {
-      const columnAttr = await zone.getAttribute('data-column');
-      const rowAttr = await zone.getAttribute('data-row');
-
-      if (columnAttr === null) {
-        continue;
-      }
-
-      const columnNumber = parseInt(columnAttr);
-
-      if (columnNumber === column && rowAttr !== null) {
-        count += 1;
-      }
-    }
-
-    return count;
-  }
-
-  async getDropzone(column: number, row: number) {
-    const numberOfColumns = await this.getNumberOfColumns();
-    const numberOfRows = await this.getNumberOfRows(column);
-
-    if (numberOfColumns < 0) {
-      throw new Error('Invalid column number');
-    }
-
-    if (numberOfRows < 0) {
-      throw new Error('Invalid row number');
-    }
-
-    if (column > numberOfColumns) {
-      column = numberOfColumns;
-    }
-
-    if (row > numberOfRows) {
-      row = numberOfRows;
-    }
-
-    return this.section.locator(`.rendered-item[data-column="${column}"][data-row="${row}"]`).first();
+    super(section);
+    this.editSectionNameButton = this.section.getByTitle('Edit Section Name');
+    this.editSectionButton = this.section.getByRole('link', { name: 'Edit' });
+    this.deleteSectionButton = this.section.getByRole('link', { name: 'Delete' });
   }
 
   async updateName(newName: string) {

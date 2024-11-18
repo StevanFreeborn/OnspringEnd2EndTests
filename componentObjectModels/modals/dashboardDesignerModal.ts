@@ -1,6 +1,8 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { Dashboard, DashboardItem } from '../../models/dashboard';
 import { WaitForOptions } from '../../utils';
+import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
+import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 
 export class DashboardDesignerModal {
@@ -12,6 +14,8 @@ export class DashboardDesignerModal {
   private readonly savePathRegex: RegExp;
   private readonly propertiesLink: Locator;
   private readonly dashboardPropertiesModal: DashboardPropertiesModal;
+  private readonly resourcesSection: DashboardResourcesSection;
+  private readonly canvasSection: DashboardCanvasSection;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -24,6 +28,8 @@ export class DashboardDesignerModal {
     this.savePathRegex = /\/Admin\/Dashboard\/\d+\/Design/;
     this.propertiesLink = this.designer.getByRole('link', { name: 'Properties' });
     this.dashboardPropertiesModal = new DashboardPropertiesModal(this.designer);
+    this.resourcesSection = new DashboardResourcesSection(this.designer);
+    this.canvasSection = new DashboardCanvasSection(this.designer);
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -62,13 +68,25 @@ export class DashboardDesignerModal {
   }
 
   private async addItemToDashboard(item: DashboardItem) {
-    // TODO: we need to place the item on the dashboard
-    // at given row and column
-    if (item.object instanceof Report) {
-      throw new Error('Not implemented');
+    const itemToDrag = await this.resourcesSection.getItemFromTab(item);
+    const itemToDragClasses = await itemToDrag.getAttribute('class');
+
+    // TODO: If already on the dashboard we probably
+    // want to support being able to move it if
+    // the column/row is different
+    if (itemToDragClasses?.includes('ui-draggable-disabled')) {
+      return;
     }
 
-    throw new Error('Unsupported item');
+    const itemDropzone = await this.canvasSection.getItemDropzone(item.row, item.column);
+
+    await itemToDrag.hover();
+    await this.page.mouse.down();
+    await itemDropzone.hover();
+    await this.canvasSection.layoutItemDropzone.waitFor({ state: 'visible' });
+    await this.page.mouse.up();
+
+    return { itemToDrag, itemDropzone };
   }
 
   private async addDashboardItems(items: DashboardItem[]) {

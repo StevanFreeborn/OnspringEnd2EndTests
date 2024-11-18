@@ -33,6 +33,7 @@ const test = base.extend<DashboardTestFixtures>({
         report: new SavedReportAsReportDataOnly({
           name: FakeDataFactory.createFakeReportName(),
           appName: sourceApp.name,
+          security: 'Public',
         }),
       },
       use
@@ -285,7 +286,6 @@ test.describe('dashboard', () => {
         },
       ],
     });
-    dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -294,19 +294,29 @@ test.describe('dashboard', () => {
     await test.step('Create the dashboard', async () => {
       await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
     });
 
     await test.step('Navigate to the dashboard', async () => {
       await dashboardPage.goto(dashboard.id);
     });
 
-    await test.step('Open the dashboard designer', async () => {});
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardPage.openDashboardDesigner();
+    });
 
-    await test.step('Update the dashboard', async () => {});
+    await test.step('Update the dashboard', async () => {
+      dashboard.name = FakeDataFactory.createFakeDashboardName();
+      dashboardsToDelete.push(dashboard.name);
 
-    await test.step('Verify the dashboard was updated correctly', async () => {});
+      await dashboardPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardPage.dashboardDesigner.saveAndClose();
+      await dashboardPage.page.waitForLoadState('networkidle');
+    });
 
-    expect(true).toBeTruthy();
+    await test.step('Verify the dashboard was updated correctly', async () => {
+      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+    });
   });
 
   test('Print a dashboard', () => {
