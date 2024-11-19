@@ -388,13 +388,92 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Export a dashboard', () => {
+  test('Export a dashboard', async ({
+    report,
+    container,
+    dashboardsAdminPage,
+    dashboardPage,
+    sysAdminUser,
+    sysAdminEmail,
+    sysAdminPage,
+    downloadService,
+    pdfParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-326',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Export the dashboard', async () => {
+      await dashboardPage.exportDashboard();
+    });
+
+    let exportEmailContent: string;
+
+    await test.step('Verify the dashboard has been exported', async () => {
+      await expect(async () => {
+        const searchCriteria = [
+          ['TO', sysAdminUser.email],
+          ['SUBJECT', 'Onspring Dashboard Export Complete'],
+          ['TEXT', dashboard.name],
+          ['UNSEEN'],
+        ];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        exportEmailContent = email.html as string;
+      }).toPass({
+        intervals: [30_000],
+        timeout: 300_000,
+      });
+    });
+
+    let dashboardPath: string;
+
+    await test.step('Download the exported dashboard', async () => {
+      await sysAdminPage.setContent(exportEmailContent);
+
+      const dashboardDownloadPromise = sysAdminPage.waitForEvent('download');
+      await sysAdminPage.getByRole('link').click();
+      const download = await dashboardDownloadPromise;
+      dashboardPath = await downloadService.saveDownload(download);
+    });
+
+    await test.step('Verify the exported dashboard contains expected data', async () => {
+      const expectedText = [dashboard.name, report.name];
+      const foundExpectedText = await pdfParser.findTextInPDF(dashboardPath, expectedText);
+
+      expect(foundExpectedText).toBe(true);
+    });
   });
 
   test('Schedule a dashboard for export', () => {

@@ -1,6 +1,8 @@
 import { Locator, Page } from '@playwright/test';
+import { ExportUnderwayDialog } from '../../componentObjectModels/dialogs/reportExportUnderwayDialog';
 import { DashboardActionMenu } from '../../componentObjectModels/menus/dashboardActionMenu';
 import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
+import { ExportDashboardModal } from '../../componentObjectModels/modals/exportDashboardModal';
 import { PrintDashboardModal } from '../../componentObjectModels/modals/printDashboardModal';
 import { BasePage } from '../basePage';
 
@@ -10,6 +12,8 @@ export class DashboardPage extends BasePage {
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
+  readonly exportDashboardModal: ExportDashboardModal;
+  readonly exportUnderwayDialog: ExportUnderwayDialog;
   readonly dashboardTitle: Locator;
 
   constructor(page: Page) {
@@ -19,6 +23,8 @@ export class DashboardPage extends BasePage {
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
     this.printDashboardModal = new PrintDashboardModal(this.page);
+    this.exportDashboardModal = new ExportDashboardModal(this.page);
+    this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
     this.dashboardTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
   }
 
@@ -38,5 +44,15 @@ export class DashboardPage extends BasePage {
     await this.actionMenu.printDashboardLink.click();
     await this.printDashboardModal.waitFor();
     await this.printDashboardModal.okButton.click();
+  }
+
+  async exportDashboard() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.exportDashboardLink.click();
+
+    await this.exportDashboardModal.okButton.click();
+
+    await this.exportUnderwayDialog.waitFor();
+    await this.exportUnderwayDialog.close();
   }
 }
