@@ -6,7 +6,7 @@ import { createReportFixture } from '../../fixtures/report.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
-import { Report, SavedReportAsReportDataOnly } from '../../models/report';
+import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
@@ -16,7 +16,7 @@ type DashboardTestFixtures = {
   adminHomePage: AdminHomePage;
   dashboardsAdminPage: DashboardsAdminPage;
   sourceApp: App;
-  report: Report;
+  report: SavedReport;
   container: Container;
   dashboardPage: DashboardPage;
 };
@@ -319,13 +319,73 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Print a dashboard', () => {
+  test('Print a dashboard', async ({
+    report,
+    container,
+    dashboardsAdminPage,
+    dashboardPage,
+    downloadService,
+    pdfParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-325',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    let pdfPath: string;
+
+    await test.step('Print the dashboard', async () => {
+      await dashboardPage.printDashboard();
+
+      const pdfResponse = await dashboardPage.page.request.post(`/Dashboard/${dashboard.id}/Print`, {
+        form: { Orientation: 1 },
+      });
+      const responseHeaders = pdfResponse.headers();
+      const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
+
+      expect(nameMatch).not.toBeNull();
+
+      const pdfName = nameMatch![1];
+
+      expect(pdfName).toBe(`${dashboard.name}.pdf`);
+
+      const pdf = await pdfResponse.body();
+
+      pdfPath = await downloadService.saveBuffer(pdf, pdfName);
+    });
+
+    await test.step('Verify the printed dashboard contains expected text', async () => {
+      const expectedText = [dashboard.name, report.name];
+      const foundExpectedText = await pdfParser.findTextInPDF(pdfPath, expectedText);
+
+      expect(foundExpectedText).toBe(true);
+    });
   });
 
   test('Export a dashboard', () => {

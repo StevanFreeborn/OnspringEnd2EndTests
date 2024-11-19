@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { DashboardActionMenu } from '../../componentObjectModels/menus/dashboardActionMenu';
 import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
+import { PrintDashboardModal } from '../../componentObjectModels/modals/printDashboardModal';
 import { BasePage } from '../basePage';
 
 export class DashboardPage extends BasePage {
@@ -8,6 +9,7 @@ export class DashboardPage extends BasePage {
   private actionMenu: DashboardActionMenu;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
+  readonly printDashboardModal: PrintDashboardModal;
   readonly dashboardTitle: Locator;
 
   constructor(page: Page) {
@@ -16,6 +18,7 @@ export class DashboardPage extends BasePage {
     this.actionMenuButton = this.page.locator('#breadcrumb-action-menu-button');
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
+    this.printDashboardModal = new PrintDashboardModal(this.page);
     this.dashboardTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
   }
 
@@ -28,5 +31,12 @@ export class DashboardPage extends BasePage {
     await this.actionMenuButton.click();
     await this.actionMenu.editDashboardLink.click();
     await this.dashboardDesigner.waitFor();
+  }
+
+  async printDashboard() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.printDashboardLink.click();
+    await this.printDashboardModal.waitFor();
+    await this.printDashboardModal.okButton.click();
   }
 }
