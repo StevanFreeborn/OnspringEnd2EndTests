@@ -1,8 +1,8 @@
 import { Locator, Page } from '@playwright/test';
+import { Orientation } from '../../utils';
 import { BasePrintModal } from './basePrintModal';
 
 type PrintAction = 'Print to a printer' | 'Print to a PDF and download';
-type Orientation = 'Portrait' | 'Landscape';
 type ContentVisibility = 'Include content in collapsed tabs' | 'Exclude content in collapsed tabs';
 
 export class PrintContentRecordModal extends BasePrintModal {

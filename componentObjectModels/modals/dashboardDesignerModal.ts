@@ -1,9 +1,10 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { Dashboard, DashboardItem } from '../../models/dashboard';
+import { Dashboard, DashboardItem, DashboardSchedule } from '../../models/dashboard';
 import { WaitForOptions } from '../../utils';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
+import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -13,7 +14,9 @@ export class DashboardDesignerModal {
   private readonly saveAndCloseButton: Locator;
   private readonly savePathRegex: RegExp;
   private readonly propertiesLink: Locator;
+  private readonly schedulingLink: Locator;
   private readonly dashboardPropertiesModal: DashboardPropertiesModal;
+  private readonly schedulingModal: ScheduleDashboardExportModal;
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
   readonly title: Locator;
@@ -27,7 +30,9 @@ export class DashboardDesignerModal {
     this.saveAndCloseButton = this.page.getByRole('button', { name: 'Save & Close' });
     this.savePathRegex = /\/Admin\/Dashboard\/\d+\/Design/;
     this.propertiesLink = this.designer.getByRole('link', { name: 'Properties' });
+    this.schedulingLink = this.designer.getByRole('link', { name: 'Scheduling' });
     this.dashboardPropertiesModal = new DashboardPropertiesModal(this.designer);
+    this.schedulingModal = new ScheduleDashboardExportModal(this.page);
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
   }
@@ -67,6 +72,13 @@ export class DashboardDesignerModal {
     await this.dashboardPropertiesModal.applyButton.click();
   }
 
+  private async updateDashboardScheduling(schedule: DashboardSchedule) {
+    await this.schedulingLink.click();
+    await this.schedulingModal.waitFor();
+    await this.schedulingModal.fillOutForm(schedule);
+    await this.schedulingModal.save();
+  }
+
   private async addItemToDashboard(item: DashboardItem) {
     const itemToDrag = await this.resourcesSection.getItemFromTab(item);
     const itemToDragClasses = await itemToDrag.getAttribute('class');
@@ -96,6 +108,10 @@ export class DashboardDesignerModal {
   }
 
   async updateDashboard(dashboard: Dashboard) {
+    if (dashboard.schedule) {
+      await this.updateDashboardScheduling(dashboard.schedule);
+    }
+
     await this.updateDashboardProperties(dashboard);
     await this.addDashboardItems(dashboard.items);
   }

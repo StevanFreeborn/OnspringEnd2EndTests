@@ -12,3 +12,5 @@ export function escapeRegExp(text: string) {
 }
 
 export type WaitForOptions = Parameters<Locator['waitFor']>[0];
+
+export type Orientation = 'Portrait' | 'Landscape';

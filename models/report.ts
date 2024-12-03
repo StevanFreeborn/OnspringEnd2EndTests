@@ -82,13 +82,23 @@ export class TempReport extends Report {
   }
 }
 
+export type ScheduledExportFrequency =
+  | 'Every Day'
+  | 'Every Weekday'
+  | 'Every Week'
+  | 'Every Month'
+  | 'Every Year'
+  | 'Custom Schedule';
+
+export type ScheduledExportCustomSchedule = {
+  quantity: number;
+  unit: 'Day(s)' | 'Week(s)' | 'Month(s)' | 'Year(s)';
+};
+
 type ReportScheduleObject = {
-  sendFrequency: 'Every Day' | 'Every Weekday' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom Schedule';
+  sendFrequency: ScheduledExportFrequency;
   startingOn: Date;
-  customSchedule?: {
-    quantity: number;
-    unit: 'Day(s)' | 'Week(s)' | 'Month(s)' | 'Year(s)';
-  };
+  customSchedule?: ScheduledExportCustomSchedule;
   endingOn?: Date;
   sendAs?: 'Attachment' | 'Link' | 'Embedded Content';
   type?: 'Microsoft Excel' | 'PDF';
@@ -107,12 +117,9 @@ type ReportScheduleObject = {
 };
 
 export class ReportSchedule {
-  sendFrequency: 'Every Day' | 'Every Weekday' | 'Every Week' | 'Every Month' | 'Every Year' | 'Custom Schedule';
+  sendFrequency: ScheduledExportFrequency;
   startingOn: Date;
-  customSchedule?: {
-    quantity: number;
-    unit: 'Day(s)' | 'Week(s)' | 'Month(s)' | 'Year(s)';
-  };
+  customSchedule?: ScheduledExportCustomSchedule;
   endingOn?: Date;
   sendAs: 'Attachment' | 'Link' | 'Embedded Content';
   type: 'Microsoft Excel' | 'PDF';
