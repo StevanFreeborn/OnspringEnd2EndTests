@@ -39,14 +39,14 @@ export class ScheduleDashboardExportModal {
       this.modal.locator('.label:has-text("Ending On") + .data .k-datetimepicker')
     );
     this.defaultFilteringCheckbox = this.modal
-      .locator('.label:has-text("Default Filtering") + .data')
+      .locator('.label:has-text("Default Filtering") + .text')
       .getByRole('checkbox');
     this.contentSelector = this.modal.locator('.label:has-text("Content") + .data').getByRole('listbox');
     this.paperSizeSelector = this.modal.locator('.label:has-text("Paper Size") + .data').getByRole('listbox');
-    this.marginsInput = this.modal.locator('.label:has-text("Margins") + .data input');
+    this.marginsInput = this.modal.locator('.label:has-text("Margins") + .data input:visible');
     this.includeFooterCheckbox = this.modal.locator('.label:has-text("Include Footer") + .data').getByRole('checkbox');
     this.orientationSelector = this.modal.locator('.label:has-text("Orientation") + .data').getByRole('listbox');
-    this.scaleInput = this.modal.locator('.label:has-text("Scale") + .data input');
+    this.scaleInput = this.modal.locator('.label:has-text("Scale") + .data input:visible');
     this.specificUsersDualPaneSelector = new DualPaneSelector(
       this.modal.locator('.label:has-text("Specific Users") + .data .onx-selector')
     );

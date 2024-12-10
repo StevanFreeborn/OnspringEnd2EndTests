@@ -5,7 +5,8 @@ import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
-import { Dashboard } from '../../models/dashboard';
+import { Dashboard, DashboardSchedule } from '../../models/dashboard';
+import { ExportDashboardOptions } from '../../models/exportDashboardOptions';
 import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
@@ -476,13 +477,100 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Schedule a dashboard for export', () => {
+  test('Schedule a dashboard for export', async ({
+    report,
+    container,
+    dashboardsAdminPage,
+    sysAdminUser,
+    sysAdminEmail,
+    sysAdminPage,
+    downloadService,
+    pdfParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-327',
     });
 
-    expect(true).toBeTruthy();
+    test.slow();
+
+    const dashboardName = FakeDataFactory.createFakeDashboardName();
+    const emailSubject = `Scheduled Dashboard ${dashboardName}`;
+
+    const dashboard = new Dashboard({
+      name: dashboardName,
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+      schedule: new DashboardSchedule({
+        sendFrequency: 'Every Day',
+        startingOn: new Date(Date.now() + 60_000),
+        fromName: 'Automation Test',
+        fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+        subject: emailSubject,
+        body: 'This is the body of the scheduled dashboard.',
+        exportDashboardOptions: new ExportDashboardOptions({
+          orientation: 'Landscape',
+        }),
+        specificUsers: [sysAdminUser.fullName],
+      }),
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    let exportEmailContent: string;
+
+    await test.step('Verify the dashboard has been exported', async () => {
+      await expect(async () => {
+        const searchCriteria = [
+          ['TO', sysAdminUser.email],
+          ['SUBJECT', emailSubject],
+          ['TEXT', dashboard.name],
+          ['UNSEEN'],
+        ];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        exportEmailContent = email.html as string;
+      }).toPass({
+        intervals: [90_000, 30_000],
+        timeout: 300_000,
+      });
+    });
+
+    let dashboardPath: string;
+
+    await test.step('Download the exported dashboard', async () => {
+      await sysAdminPage.setContent(exportEmailContent);
+
+      const dashboardDownloadPromise = sysAdminPage.waitForEvent('download');
+      await sysAdminPage.getByRole('link').click();
+      const download = await dashboardDownloadPromise;
+      dashboardPath = await downloadService.saveDownload(download);
+    });
+
+    await test.step('Verify the exported dashboard contains expected data', async () => {
+      const expectedText = [dashboard.name, report.name];
+      const foundExpectedText = await pdfParser.findTextInPDF(dashboardPath, expectedText);
+
+      expect(foundExpectedText).toBe(true);
+    });
   });
 
   test("Get a dashboard's link", () => {
