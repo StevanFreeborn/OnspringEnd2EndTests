@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { UserMenu } from '../menus/userMenu';
 import { UserPreferencesModal } from '../modals/userPreferencesModal';
 
+// TODO: Rename as primary nav cause their are multiple navs and now this one can be left or top
 export class SidebarNav {
   readonly page: Page;
   readonly usersFullName: Locator;
