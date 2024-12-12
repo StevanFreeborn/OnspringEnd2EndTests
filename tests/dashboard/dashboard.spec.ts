@@ -661,13 +661,55 @@ test.describe('dashboard', () => {
     expect(true).toBeTruthy();
   });
 
-  test("Navigate to a dashboard via it's link", () => {
+  test("Navigate to a dashboard via it's link", async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-334',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    let dashboardLink: string;
+
+    await test.step("Get the dashboard's link", async () => {
+      dashboardLink = await dashboardPage.getDashboardLink();
+    });
+
+    await test.step('Navigate to another page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Navigate back to the dashboard via the link', async () => {
+      await dashboardPage.page.goto(dashboardLink);
+    });
+
+    await test.step('Verify the dashboard has expected title', async () => {
+      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+    });
   });
 
   test('Add a dashboard title to a dashboard', () => {
