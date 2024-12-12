@@ -1,14 +1,20 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
+import { testUserPage } from '../../fixtures/auth.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
+import { createRoleFixture } from '../../fixtures/role.fixures';
+import { activeUserWithRole } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard, DashboardSchedule } from '../../models/dashboard';
 import { ExportDashboardOptions } from '../../models/exportDashboardOptions';
 import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
+import { AppPermission, Permission, Role } from '../../models/role';
+import { User } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
@@ -17,6 +23,9 @@ type DashboardTestFixtures = {
   adminHomePage: AdminHomePage;
   dashboardsAdminPage: DashboardsAdminPage;
   sourceApp: App;
+  role: Role;
+  user: User;
+  testUserPage: Page;
   report: SavedReport;
   container: Container;
   dashboardPage: DashboardPage;
@@ -26,6 +35,22 @@ const test = base.extend<DashboardTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
   sourceApp: app,
+  role: async ({ sysAdminPage, sourceApp }, use) =>
+    await createRoleFixture(
+      {
+        sysAdminPage,
+        roleStatus: 'Active',
+        appPermissions: [
+          new AppPermission({
+            appName: sourceApp.name,
+            contentRecords: new Permission({ read: true }),
+          }),
+        ],
+      },
+      use
+    ),
+  user: activeUserWithRole,
+  testUserPage: testUserPage,
   report: async ({ sysAdminPage, sourceApp }, use) =>
     await createReportFixture(
       {
@@ -345,6 +370,8 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -416,6 +443,8 @@ test.describe('dashboard', () => {
         },
       ],
     });
+
+    dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -521,6 +550,8 @@ test.describe('dashboard', () => {
       }),
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -591,6 +622,8 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -616,13 +649,92 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Set a dashboard as your default dashboard', () => {
+  test('Set a dashboard as your default dashboard', async ({
+    report,
+    container,
+    dashboardsAdminPage,
+    testUserPage,
+    user,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-329',
     });
 
-    expect(true).toBeTruthy();
+    // this test is gonna be a little complicated...
+    // we need to create two dashboards.
+    // we need to create a user who has access to both dashboards
+    // we need to have the user set one of the dashboards as their default
+    // we need to have the user log in and verify that they land
+    // on the default dashboard
+
+    // step 1: create the dashboards
+    // step 2: create the role which has access to both dashboards
+    // step 3: create the user with the role
+    // step 4: login as user
+    // step 5: set the default dashboard
+    // step 6: log out
+    // step 7: log in as user and verify default dashboard
+
+    const dashboards = [
+      new Dashboard({
+        name: FakeDataFactory.createFakeDashboardName(),
+        containers: [container.name],
+        items: [
+          {
+            object: report,
+            row: 0,
+            column: 0,
+          },
+        ],
+      }),
+      new Dashboard({
+        name: FakeDataFactory.createFakeDashboardName(),
+        containers: [container.name],
+        items: [
+          {
+            object: report,
+            row: 0,
+            column: 0,
+          },
+        ],
+      }),
+    ];
+
+    dashboardsToDelete.push(...dashboards.map(d => d.name));
+
+    await test.step('Enable end users to set default dashboards', async () => {});
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboards', async () => {
+      for (const dashboard of dashboards) {
+        await dashboardsAdminPage.createDashboard(dashboard);
+        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      }
+    });
+
+    await test.step('Set default dashboard and logout', async () => {
+      const dashboardPage = new DashboardPage(testUserPage);
+      await dashboardPage.goto();
+      await dashboardPage.setDefaultDashboard(dashboards[1].name);
+      await dashboardPage.logout();
+    });
+
+    await test.step('Log in as user and verify default dashboard', async () => {
+      // TODO: throws error on login
+      // get working
+      const loginPage = new LoginPage(testUserPage);
+      const dashboardPage = new DashboardPage(testUserPage);
+
+      await loginPage.login(user);
+      await loginPage.page.waitForURL(dashboardPage.path);
+
+      await expect(dashboardPage.dashboardTitle).toHaveText(dashboards[1].name);
+    });
   });
 
   test('Disable a dashboard', () => {

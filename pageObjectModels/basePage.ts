@@ -11,4 +11,12 @@ export abstract class BasePage {
     this.sidebar = new SidebarNav(page);
     this.copyrightPatentInfo = this.page.getByText('U.S. Patent No. 11,507,628');
   }
+
+  async setDefaultDashboard(dashboardName: string) {
+    await this.sidebar.setDefaultDashboard(dashboardName);
+  }
+
+  async logout() {
+    await this.sidebar.logout();
+  }
 }
