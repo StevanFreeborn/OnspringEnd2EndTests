@@ -65,6 +65,14 @@ export class DashboardPage extends BasePage {
 
     await this.dashboardLinkModal.waitFor();
 
-    return this.dashboardLinkModal.getLink();
+    const linkLocator = await this.dashboardLinkModal.getLink();
+    const textWithLink = await linkLocator.textContent();
+    const link = textWithLink?.match(/https:\/\/.*\/Dashboard\/\d+/);
+
+    if (link === null || link === undefined) {
+      throw new Error('Link not found');
+    }
+
+    return link[0];
   }
 }

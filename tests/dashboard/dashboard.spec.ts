@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Locator } from '../../fixtures';
+import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
@@ -605,14 +605,14 @@ test.describe('dashboard', () => {
       await dashboardPage.goto(dashboard.id);
     });
 
-    let dashboardLink: Locator;
+    let dashboardLink: string;
 
     await test.step("Get the dashboard's link", async () => {
       dashboardLink = await dashboardPage.getDashboardLink();
     });
 
     await test.step('Verify the dashboard link has expected value', async () => {
-      await expect(dashboardLink).toHaveText(new RegExp(`/Dashboard/${dashboard.id}`));
+      expect(dashboardLink).toMatch(new RegExp(`/Dashboard/${dashboard.id}`));
     });
   });
 
