@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Locator } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
@@ -573,13 +573,47 @@ test.describe('dashboard', () => {
     });
   });
 
-  test("Get a dashboard's link", () => {
+  test("Get a dashboard's link", async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-328',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    let dashboardLink: Locator;
+
+    await test.step("Get the dashboard's link", async () => {
+      dashboardLink = await dashboardPage.getDashboardLink();
+    });
+
+    await test.step('Verify the dashboard link has expected value', async () => {
+      await expect(dashboardLink).toHaveText(new RegExp(`/Dashboard/${dashboard.id}`));
+    });
   });
 
   test('Set a dashboard as your default dashboard', () => {

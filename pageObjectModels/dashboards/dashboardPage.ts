@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { ExportUnderwayDialog } from '../../componentObjectModels/dialogs/reportExportUnderwayDialog';
 import { DashboardActionMenu } from '../../componentObjectModels/menus/dashboardActionMenu';
 import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
+import { DashboardLinkModal } from '../../componentObjectModels/modals/dashboardLinkModal';
 import { ExportDashboardModal } from '../../componentObjectModels/modals/exportDashboardModal';
 import { PrintDashboardModal } from '../../componentObjectModels/modals/printDashboardModal';
 import { BasePage } from '../basePage';
@@ -14,6 +15,7 @@ export class DashboardPage extends BasePage {
   readonly printDashboardModal: PrintDashboardModal;
   readonly exportDashboardModal: ExportDashboardModal;
   readonly exportUnderwayDialog: ExportUnderwayDialog;
+  readonly dashboardLinkModal: DashboardLinkModal;
   readonly dashboardTitle: Locator;
 
   constructor(page: Page) {
@@ -25,6 +27,7 @@ export class DashboardPage extends BasePage {
     this.printDashboardModal = new PrintDashboardModal(this.page);
     this.exportDashboardModal = new ExportDashboardModal(this.page);
     this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
+    this.dashboardLinkModal = new DashboardLinkModal(this.page);
     this.dashboardTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
   }
 
@@ -54,5 +57,14 @@ export class DashboardPage extends BasePage {
 
     await this.exportUnderwayDialog.waitFor();
     await this.exportUnderwayDialog.close();
+  }
+
+  async getDashboardLink() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.getDashboardUrlLink.click();
+
+    await this.dashboardLinkModal.waitFor();
+
+    return this.dashboardLinkModal.getLink();
   }
 }
