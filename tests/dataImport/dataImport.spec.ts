@@ -356,7 +356,7 @@ test.describe('data import', () => {
       },
       {
         field: new DateField({ name: 'Date Field' }),
-        value: `${today.getMonth()}/${today.getDate()}/${today.getFullYear()}`,
+        value: `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`,
       },
       {
         field: new NumberField({ name: 'Number Field' }),
