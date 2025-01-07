@@ -773,13 +773,60 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Enable a dashboard', () => {
+  test('Enable a dashboard', async ({ report, container, dashboardsAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-331',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      status: false,
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    dashboardsToDelete.push(dashboard.name);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard is disabled', async () => {
+      await dashboardsAdminPage.page.reload();
+      await dashboardsAdminPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeHidden();
+    });
+
+    await test.step('Enable the dashboard', async () => {
+      dashboard.status = true;
+
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard is enabled', async () => {
+      await dashboardsAdminPage.page.reload();
+      await dashboardsAdminPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeVisible();
+    });
   });
 
   test('Make a dashboard private', () => {
