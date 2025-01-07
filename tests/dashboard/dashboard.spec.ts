@@ -49,8 +49,6 @@ const test = base.extend<DashboardTestFixtures>({
       },
       use
     ),
-  user: activeUserWithRole,
-  testUserPage: testUserPage,
   report: async ({ sysAdminPage, sourceApp }, use) =>
     await createReportFixture(
       {
@@ -66,6 +64,8 @@ const test = base.extend<DashboardTestFixtures>({
     ),
   container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
   dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
+  user: activeUserWithRole,
+  testUserPage: testUserPage,
 });
 
 test.describe('dashboard', () => {
@@ -661,21 +661,6 @@ test.describe('dashboard', () => {
       description: 'Test-329',
     });
 
-    // this test is gonna be a little complicated...
-    // we need to create two dashboards.
-    // we need to create a user who has access to both dashboards
-    // we need to have the user set one of the dashboards as their default
-    // we need to have the user log in and verify that they land
-    // on the default dashboard
-
-    // step 1: create the dashboards
-    // step 2: create the role which has access to both dashboards
-    // step 3: create the user with the role
-    // step 4: login as user
-    // step 5: set the default dashboard
-    // step 6: log out
-    // step 7: log in as user and verify default dashboard
-
     const dashboards = [
       new Dashboard({
         name: FakeDataFactory.createFakeDashboardName(),
@@ -703,8 +688,6 @@ test.describe('dashboard', () => {
 
     dashboardsToDelete.push(...dashboards.map(d => d.name));
 
-    await test.step('Enable end users to set default dashboards', async () => {});
-
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -725,8 +708,6 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Log in as user and verify default dashboard', async () => {
-      // TODO: throws error on login
-      // get working
       const loginPage = new LoginPage(testUserPage);
       const dashboardPage = new DashboardPage(testUserPage);
 
