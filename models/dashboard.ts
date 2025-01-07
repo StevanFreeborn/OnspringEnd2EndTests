@@ -76,6 +76,7 @@ export class DashboardSchedule {
 type DashboardObject = {
   id?: number;
   name: string;
+  status?: boolean;
   containers?: string[];
   items?: DashboardItem[];
   schedule?: DashboardSchedule;
@@ -84,13 +85,15 @@ type DashboardObject = {
 export class Dashboard {
   id: number;
   name: string;
+  status: boolean;
   containers: string[];
   items: DashboardItem[];
   schedule?: DashboardSchedule;
 
-  constructor({ id = 0, name, containers = [], items = [], schedule }: DashboardObject) {
+  constructor({ id = 0, name, status = true, containers = [], items = [], schedule }: DashboardObject) {
     this.id = id;
     this.name = name;
+    this.status = status;
     this.containers = containers;
     this.items = items;
     this.schedule = schedule;
