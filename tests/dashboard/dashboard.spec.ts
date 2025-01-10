@@ -829,13 +829,60 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Make a dashboard private', () => {
+  test('Make a dashboard private', async ({ report, container, dashboardsAdminPage, testUserPage, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-332',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    const testUserDashboardPage = new DashboardPage(testUserPage);
+
+    await test.step('Verify the dashboard is visible', async () => {
+      await testUserDashboardPage.goto();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeVisible();
+    });
+
+    await test.step('Make the dashboard private', async () => {
+      dashboard.permissionStatus = 'Private';
+      dashboard.permissions.users.push(sysAdminUser.fullName);
+
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard is not visible', async () => {
+      await testUserDashboardPage.page.reload();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeHidden();
+    });
   });
 
   test('Make a dashboard public', () => {

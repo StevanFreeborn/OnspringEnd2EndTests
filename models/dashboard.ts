@@ -73,6 +73,12 @@ export class DashboardSchedule {
   }
 }
 
+type DashboardPermissions = {
+  users?: string[];
+  groups?: string[];
+  roles?: string[];
+};
+
 type DashboardObject = {
   id?: number;
   name: string;
@@ -80,6 +86,8 @@ type DashboardObject = {
   containers?: string[];
   items?: DashboardItem[];
   schedule?: DashboardSchedule;
+  permissionStatus?: 'Public' | 'Private';
+  permissions?: DashboardPermissions;
 };
 
 export class Dashboard {
@@ -89,13 +97,34 @@ export class Dashboard {
   containers: string[];
   items: DashboardItem[];
   schedule?: DashboardSchedule;
+  permissionStatus: 'Public' | 'Private';
+  permissions: {
+    users: string[];
+    groups: string[];
+    roles: string[];
+  };
 
-  constructor({ id = 0, name, status = true, containers = [], items = [], schedule }: DashboardObject) {
+  constructor({
+    id = 0,
+    name,
+    status = true,
+    containers = [],
+    items = [],
+    schedule,
+    permissionStatus = 'Public',
+    permissions,
+  }: DashboardObject) {
     this.id = id;
     this.name = name;
     this.status = status;
     this.containers = containers;
     this.items = items;
     this.schedule = schedule;
+    this.permissionStatus = permissionStatus;
+    this.permissions = {
+      users: permissions?.users || [],
+      groups: permissions?.groups || [],
+      roles: permissions?.roles || [],
+    };
   }
 }

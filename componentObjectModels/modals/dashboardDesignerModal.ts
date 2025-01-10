@@ -3,6 +3,7 @@ import { Dashboard, DashboardItem, DashboardSchedule } from '../../models/dashbo
 import { WaitForOptions } from '../../utils';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
+import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
 
@@ -14,8 +15,10 @@ export class DashboardDesignerModal {
   private readonly saveAndCloseButton: Locator;
   private readonly savePathRegex: RegExp;
   private readonly propertiesLink: Locator;
+  private readonly permissionsLink: Locator;
   private readonly schedulingLink: Locator;
   private readonly dashboardPropertiesModal: DashboardPropertiesModal;
+  private readonly dashboardPermissionsModal: DashboardPermissionsModal;
   private readonly schedulingModal: ScheduleDashboardExportModal;
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
@@ -30,8 +33,10 @@ export class DashboardDesignerModal {
     this.saveAndCloseButton = this.page.getByRole('button', { name: 'Save & Close' });
     this.savePathRegex = /\/Admin\/Dashboard\/\d+\/Design/;
     this.propertiesLink = this.designer.getByRole('link', { name: 'Properties' });
+    this.permissionsLink = this.designer.getByRole('link', { name: 'Permissions' });
     this.schedulingLink = this.designer.getByRole('link', { name: 'Scheduling' });
     this.dashboardPropertiesModal = new DashboardPropertiesModal(this.designer);
+    this.dashboardPermissionsModal = new DashboardPermissionsModal(this.designer);
     this.schedulingModal = new ScheduleDashboardExportModal(this.page);
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
@@ -70,6 +75,13 @@ export class DashboardDesignerModal {
     await this.dashboardPropertiesModal.waitFor();
     await this.dashboardPropertiesModal.fillOutForm(dashboard);
     await this.dashboardPropertiesModal.applyButton.click();
+  }
+
+  private async updateDashboardPermissions(dashboard: Dashboard) {
+    await this.permissionsLink.click();
+    await this.dashboardPermissionsModal.waitFor();
+    await this.dashboardPermissionsModal.fillOutForm(dashboard);
+    await this.dashboardPermissionsModal.applyButton.click();
   }
 
   private async updateDashboardScheduling(schedule: DashboardSchedule) {
@@ -113,6 +125,7 @@ export class DashboardDesignerModal {
     }
 
     await this.updateDashboardProperties(dashboard);
+    await this.updateDashboardPermissions(dashboard);
     await this.addDashboardItems(dashboard.items);
   }
 
