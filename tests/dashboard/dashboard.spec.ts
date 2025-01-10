@@ -847,6 +847,8 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -885,13 +887,65 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Make a dashboard public', () => {
+  test('Make a dashboard public', async ({ report, container, dashboardsAdminPage, testUserPage, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-333',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      permissionStatus: 'Private',
+      permissions: {
+        users: [sysAdminUser.fullName],
+      },
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    dashboardsToDelete.push(dashboard.name);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    const testUserDashboardPage = new DashboardPage(testUserPage);
+
+    await test.step('Verify the dashboard is not visible', async () => {
+      await testUserDashboardPage.goto();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeHidden();
+    });
+
+    await test.step('Make the dashboard public', async () => {
+      dashboard.permissionStatus = 'Public';
+
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard is visible', async () => {
+      await testUserDashboardPage.page.reload();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
+
+      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      await expect(containerLink).toBeVisible();
+    });
   });
 
   test("Navigate to a dashboard via it's link", async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
