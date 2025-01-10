@@ -16,6 +16,7 @@ export class DashboardPage extends BasePage {
   readonly exportDashboardModal: ExportDashboardModal;
   readonly exportUnderwayDialog: ExportUnderwayDialog;
   readonly dashboardLinkModal: DashboardLinkModal;
+  readonly dashboardBreadcrumbTitle: Locator;
   readonly dashboardTitle: Locator;
 
   constructor(page: Page) {
@@ -28,7 +29,8 @@ export class DashboardPage extends BasePage {
     this.exportDashboardModal = new ExportDashboardModal(this.page);
     this.exportUnderwayDialog = new ExportUnderwayDialog(this.page);
     this.dashboardLinkModal = new DashboardLinkModal(this.page);
-    this.dashboardTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
+    this.dashboardBreadcrumbTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
+    this.dashboardTitle = this.page.locator('#dashboard-title-container');
   }
 
   async goto(dashboardId?: number) {

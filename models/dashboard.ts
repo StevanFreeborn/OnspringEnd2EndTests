@@ -79,9 +79,41 @@ type DashboardPermissions = {
   roles?: string[];
 };
 
+type DashboardTitleObject = {
+  title?: string;
+  titleTextColor?: string;
+  titleTextFormat?: 'Normal' | 'Bold' | 'Italic';
+  titleTextAlignment?: 'Left' | 'Center' | 'Right';
+  titleBackgroundColor?: string;
+};
+
+class DashboardTitle {
+  title: string;
+  titleTextColor: string;
+  titleTextFormat: 'Normal' | 'Bold' | 'Italic';
+  titleTextAlignment: 'Left' | 'Center' | 'Right';
+  titleBackgroundColor: string;
+
+  constructor({
+    title = '',
+    titleTextColor = '#000000',
+    titleTextFormat = 'Bold',
+    titleTextAlignment = 'Center',
+    titleBackgroundColor = '#ffffff',
+  }: DashboardTitleObject) {
+    this.title = title;
+    this.titleTextColor = titleTextColor;
+    this.titleTextFormat = titleTextFormat;
+    this.titleTextAlignment = titleTextAlignment;
+    this.titleBackgroundColor = titleBackgroundColor;
+  }
+}
+
 type DashboardObject = {
   id?: number;
   name: string;
+  displayTitle?: boolean;
+  title?: DashboardTitle;
   status?: boolean;
   containers?: string[];
   items?: DashboardItem[];
@@ -93,6 +125,8 @@ type DashboardObject = {
 export class Dashboard {
   id: number;
   name: string;
+  displayTitle: boolean;
+  title: DashboardTitle;
   status: boolean;
   containers: string[];
   items: DashboardItem[];
@@ -107,6 +141,8 @@ export class Dashboard {
   constructor({
     id = 0,
     name,
+    displayTitle = true,
+    title = new DashboardTitle({ title: name }),
     status = true,
     containers = [],
     items = [],
@@ -116,6 +152,8 @@ export class Dashboard {
   }: DashboardObject) {
     this.id = id;
     this.name = name;
+    this.displayTitle = displayTitle;
+    this.title = title;
     this.status = status;
     this.containers = containers;
     this.items = items;

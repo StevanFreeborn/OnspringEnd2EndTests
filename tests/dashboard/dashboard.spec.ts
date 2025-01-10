@@ -341,7 +341,7 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Verify the dashboard was updated correctly', async () => {
-      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboard.name);
     });
   });
 
@@ -714,7 +714,7 @@ test.describe('dashboard', () => {
       await loginPage.login(user);
       await loginPage.page.waitForURL(dashboardPage.path);
 
-      await expect(dashboardPage.dashboardTitle).toHaveText(dashboards[1].name);
+      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboards[1].name);
     });
   });
 
@@ -995,16 +995,54 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Verify the dashboard has expected title', async () => {
-      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboard.name);
     });
   });
 
-  test('Add a dashboard title to a dashboard', () => {
+  test('Add a dashboard title to a dashboard', async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-869',
     });
 
-    expect(true).toBeTruthy();
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      displayTitle: false,
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard has no title', async () => {
+      await dashboardPage.goto(dashboard.id);
+      await expect(dashboardPage.dashboardTitle).toBeHidden();
+    });
+
+    await test.step('Add a title to the dashboard', async () => {
+      dashboard.displayTitle = true;
+
+      await dashboardPage.openDashboardDesigner();
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the dashboard has the expected title', async () => {
+      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+    });
   });
 });
