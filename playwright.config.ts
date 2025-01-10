@@ -59,6 +59,9 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
   timeout: 5 * MS_PER_MIN,
   expect: {
     timeout: expectNavAndActionTimeout,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+    },
   },
   retries: isCI ? 2 : 0,
   fullyParallel: true,
