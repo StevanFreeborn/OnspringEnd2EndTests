@@ -1,10 +1,9 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
 import { Report, SavedReport } from '../../models/report';
+import { WaitForOptions } from '../../utils';
 import { ReportFieldsTab } from '../tabs/reportFieldsTab';
 import { ReportGeneralTab } from '../tabs/reportGeneralTab';
 import { ReportVisualTab } from '../tabs/reportVisualTab';
-
-type WaitForOptions = Parameters<Locator['waitFor']>[0];
 
 export class ReportDesignerModal {
   private readonly modal: Locator;

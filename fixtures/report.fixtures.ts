@@ -1,10 +1,26 @@
 import { Page } from '@playwright/test';
 import { App } from '../models/app';
-import { Report } from '../models/report';
+import { SavedReport } from '../models/report';
 import { ReportAppPage } from '../pageObjectModels/reports/reportAppPage';
 import { ReportPage } from '../pageObjectModels/reports/reportPage';
 
-export async function createReport(sysAdminPage: Page, app: App, report: Report) {
+export async function createReportFixture(
+  {
+    sysAdminPage,
+    app,
+    report,
+  }: {
+    sysAdminPage: Page;
+    app: App;
+    report: SavedReport;
+  },
+  use: (r: SavedReport) => Promise<void>
+) {
+  const createdReport = await createReport(sysAdminPage, app, report);
+  await use(createdReport);
+}
+
+export async function createReport(sysAdminPage: Page, app: App, report: SavedReport) {
   const reportAppPage = new ReportAppPage(sysAdminPage);
   const reportPage = new ReportPage(sysAdminPage);
 

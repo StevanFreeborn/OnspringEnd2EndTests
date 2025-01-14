@@ -14,12 +14,18 @@ export const DEFAULT_EMAIL_SENDING_DOMAIN = env.TEST_ENV === 'FEDSPRING_IST' ? '
 export const TEST_LIST_NAME = 'list-test';
 export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
 export const TEST_CONNECTOR_NAME = 'connector-test';
+export const TEST_DASHBOARD_NAME = 'dashboard-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeDashboardName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_DASHBOARD_NAME}`;
   }
 
   static createFakeConnectorName() {

@@ -19,13 +19,13 @@ export class ReportFieldsTab {
   private async addFieldToDisplay(field: DisplayField) {
     const draggable = this.fieldsBank.locator(`.draggable:visible:has-text("${field.name}")`);
     const dropzone = this.displayFields.locator('[data-column]').last();
-    const isDisabled = await draggable.getAttribute('class');
+    const draggableClasses = await draggable.getAttribute('class');
     const form = this.displayFields
       .locator('.display-field', { has: this.frame.locator(`[data-field-id]:has-text("${field.name}")`) })
       .last();
     const displayFieldForm = new DisplayFieldForm(form, this.frame);
 
-    if (isDisabled?.includes('ui-draggable-disabled')) {
+    if (draggableClasses?.includes('ui-draggable-disabled')) {
       await displayFieldForm.fillOutForm(field);
       return;
     }

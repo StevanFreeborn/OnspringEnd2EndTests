@@ -1,6 +1,8 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateApiKeyDialog } from '../componentObjectModels/dialogs/createApiKeyDialog';
 import { CreateAppDialog } from '../componentObjectModels/dialogs/createAppDialog';
+import { CreateDashboardDialog } from '../componentObjectModels/dialogs/createDashboardDialog';
+import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
@@ -8,10 +10,10 @@ import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurve
 import { CreateTextMessageDialogForApp } from '../componentObjectModels/dialogs/createTextMessageDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
 import { CreateSurveyModal } from '../componentObjectModels/modals/createSurveyModal';
+import { DashboardDesignerModal } from '../componentObjectModels/modals/dashboardDesignerModal';
+import { DataConnectorType } from '../models/dataConnector';
 import { CreateListDialog } from './../componentObjectModels/dialogs/createListDialog';
 import { BaseAdminPage } from './baseAdminPage';
-import { DataConnectorType } from '../models/dataConnector';
-import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 
 export class AdminHomePage extends BaseAdminPage {
   readonly path: string;
@@ -55,6 +57,9 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createDataConnectorDialog: CreateDataConnectorDialog;
 
+  readonly createDashboardDialog: CreateDashboardDialog;
+  readonly dashboardDesigner: DashboardDesignerModal;
+
   private getTileLink(tilePosition: number) {
     return this.page.locator(
       `div.landing-list-item-container:nth-child(${tilePosition}) > div:nth-child(1) > a:nth-child(1)`
@@ -92,6 +97,8 @@ export class AdminHomePage extends BaseAdminPage {
     this.dashboardTileLink = this.getTileLink(4);
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
     this.dashboardCreateMenu = this.getTileCreateMenu('Dashboards');
+    this.createDashboardDialog = new CreateDashboardDialog(page);
+    this.dashboardDesigner = new DashboardDesignerModal(page);
 
     this.integrationTileLink = this.getTileLink(7);
     this.integrationTileCreateButton = this.getTileCreateButton('Integration');
@@ -115,6 +122,56 @@ export class AdminHomePage extends BaseAdminPage {
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createDashboardCopyUsingDashboardsTileButton(dashboardToCopyName: string, dashboardCopyName: string) {
+    await this.dashboardTileLink.hover();
+    await this.dashboardTileCreateButton.waitFor();
+    await this.dashboardTileCreateButton.click();
+    await this.dashboardCreateMenu.waitFor();
+    await this.dashboardCreateMenu.getByText('Dashboard').click();
+
+    await this.createDashboardDialog.copyFromRadioButton.waitFor();
+    await this.createDashboardDialog.copyFromRadioButton.click();
+    await this.createDashboardDialog.copyFromDropdown.click();
+    await this.createDashboardDialog.getDashboardToCopy(dashboardToCopyName).click();
+    await this.createDashboardDialog.nameInput.fill(dashboardCopyName);
+    await this.createDashboardDialog.saveButton.click();
+  }
+
+  async createDashboardUsingDashboardsTileButton(dashboardName: string) {
+    await this.dashboardTileLink.hover();
+    await this.dashboardTileCreateButton.waitFor();
+    await this.dashboardTileCreateButton.click();
+    await this.dashboardCreateMenu.waitFor();
+    await this.dashboardCreateMenu.getByText('Dashboard').click();
+
+    await this.createDashboardDialog.nameInput.waitFor();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
+  }
+
+  async createDashboardCopyUsingHeaderCreateButton(dashboardToCopyName: string, dashboardName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dashboardCreateMenuOption.click();
+
+    await this.createDashboardDialog.copyFromRadioButton.waitFor();
+    await this.createDashboardDialog.copyFromRadioButton.click();
+    await this.createDashboardDialog.copyFromDropdown.click();
+    await this.createDashboardDialog.getDashboardToCopy(dashboardToCopyName).click();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
+  }
+
+  async createDashboardUsingHeaderCreateButton(dashboardName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.dashboardCreateMenuOption.click();
+
+    await this.createDashboardDialog.nameInput.waitFor();
+    await this.createDashboardDialog.nameInput.fill(dashboardName);
+    await this.createDashboardDialog.saveButton.click();
   }
 
   async createConnectorCopyUsingHeaderCreateButton(

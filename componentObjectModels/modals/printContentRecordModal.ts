@@ -1,23 +1,21 @@
 import { Locator, Page } from '@playwright/test';
+import { Orientation } from '../../utils';
+import { BasePrintModal } from './basePrintModal';
 
 type PrintAction = 'Print to a printer' | 'Print to a PDF and download';
-type Orientation = 'Portrait' | 'Landscape';
 type ContentVisibility = 'Include content in collapsed tabs' | 'Exclude content in collapsed tabs';
 
-export class PrintContentRecordModal {
-  private readonly modal: Locator;
+export class PrintContentRecordModal extends BasePrintModal {
   private readonly printActionSelect: Locator;
   private readonly orientationSelect: Locator;
   private readonly contentVisibilitySelect: Locator;
-  readonly okButton: Locator;
   readonly cancelButton: Locator;
 
   constructor(page: Page) {
-    this.modal = page.locator('[role="dialog"]', { has: page.getByText('Print Content Record') });
+    super(page, 'Print Content Record');
     this.printActionSelect = this.modal.getByRole('listbox', { name: 'Print Action' });
     this.orientationSelect = this.modal.getByRole('listbox', { name: 'Orientation' });
     this.contentVisibilitySelect = this.modal.getByRole('listbox', { name: 'Content Visibility' });
-    this.okButton = this.modal.getByRole('button', { name: 'OK' });
     this.cancelButton = this.modal.getByRole('button', { name: 'Cancel' });
   }
 

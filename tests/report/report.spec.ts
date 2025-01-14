@@ -651,9 +651,7 @@ test.describe('report', () => {
     await test.step('Print the report to PDF', async () => {
       await reportPage.printReport();
 
-      const pdfResponse = await reportPage.page.request.post(`/Report/${reportPage.getReportIdFromUrl()}/Print`, {
-        form: { pageOrientation: 1 },
-      });
+      const pdfResponse = await reportPage.page.request.post(`/Report/${reportPage.getReportIdFromUrl()}/Print`);
       const responseHeaders = pdfResponse.headers();
       const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
 
