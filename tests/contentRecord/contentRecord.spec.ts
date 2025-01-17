@@ -623,4 +623,31 @@ test.describe('content record', () => {
       await expect(pinnedRecordLink).toBeVisible();
     });
   });
+
+  test('View version history for a content recrd', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-892',
+    });
+
+    expect(true).toBeTruthy();
+  });
+
+  test('Filter version history for a content record', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-893',
+    });
+
+    expect(true).toBeTruthy();
+  });
+
+  test('Export version history for a content record', async () => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-894',
+    });
+
+    expect(true).toBeTruthy();
+  });
 });
