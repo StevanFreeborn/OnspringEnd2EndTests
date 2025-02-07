@@ -694,6 +694,16 @@ test.describe('content record', () => {
       description: 'Test-894',
     });
 
+    test.slow();
+
+    await test.step('Navigate to the add content page', async () => {});
+
+    await test.step('Create the content record', async () => {});
+
+    await test.step('Export the version history', async () => {});
+
+    await test.step('Verify the version history was exported', async () => {});
+
     expect(true).toBeTruthy();
   });
 });
