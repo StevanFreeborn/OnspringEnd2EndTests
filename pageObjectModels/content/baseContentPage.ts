@@ -4,6 +4,7 @@ import { ContentRecordActionMenu } from '../../componentObjectModels/menus/conte
 import { GenerateDynamicDocumentModal } from '../../componentObjectModels/modals/generateDynamicDocumentModal';
 import { PrintContentRecordModal } from '../../componentObjectModels/modals/printContentRecordModal';
 import { BaseFormPage } from '../baseFormPage';
+import { ViewVersionHistoryModal } from '../../componentObjectModels/modals/viewVersionHistoryModal';
 
 export class BaseContentPage extends BaseFormPage {
   protected readonly contentContainer: Locator;
@@ -13,6 +14,7 @@ export class BaseContentPage extends BaseFormPage {
   readonly deleteRecordDialog: DeleteRecordDialog;
   readonly printRecordModal: PrintContentRecordModal;
   readonly generateDocumentModal: GenerateDynamicDocumentModal;
+  readonly viewVersionHistoryModal: ViewVersionHistoryModal;
 
   protected constructor(page: Page) {
     super(page);
@@ -23,5 +25,6 @@ export class BaseContentPage extends BaseFormPage {
     this.deleteRecordDialog = new DeleteRecordDialog(page);
     this.printRecordModal = new PrintContentRecordModal(page);
     this.generateDocumentModal = new GenerateDynamicDocumentModal(page);
+    this.viewVersionHistoryModal = new ViewVersionHistoryModal(page);
   }
 }

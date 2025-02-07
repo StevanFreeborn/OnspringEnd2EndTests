@@ -624,13 +624,36 @@ test.describe('content record', () => {
     });
   });
 
-  test('View version history for a content recrd', async () => {
+  test('View version history for a content recrd', async ({
+    targetApp,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-892',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the add content page', async () => {
+      await addContentPage.goto(targetApp.id);
+    });
+
+    await test.step('Create the content record', async () => {
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    });
+
+    await test.step('View the version history', async () => {
+      await editContentPage.actionMenuButton.click();
+      await editContentPage.actionMenu.waitFor();
+
+      await editContentPage.actionMenu.viewVersionHistoryLink.click();
+      await editContentPage.viewVersionHistoryModal.waitFor();
+    });
+    
+    await test.step('Verify the version history is displayed', async () => {
+      await expect(editContentPage.viewVersionHistoryModal.modal()).toBeVisible();
+    });
   });
 
   test('Filter version history for a content record', async () => {

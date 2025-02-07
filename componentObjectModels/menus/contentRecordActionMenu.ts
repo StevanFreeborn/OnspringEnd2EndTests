@@ -1,4 +1,5 @@
 import { Locator } from '@playwright/test';
+import { WaitForOptions } from '../../utils';
 
 export class ContentRecordActionMenu {
   private readonly menu: Locator;
@@ -17,5 +18,9 @@ export class ContentRecordActionMenu {
     this.viewVersionHistoryLink = this.menu.getByText('View Version History');
     this.deleteRecordLink = this.menu.getByText('Delete Record');
     this.editLayoutLink = this.menu.getByText('Edit Layout');
+  }
+
+  async waitFor(options?: WaitForOptions) {
+    await this.menu.waitFor(options);
   }
 }
