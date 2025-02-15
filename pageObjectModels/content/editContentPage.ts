@@ -3,16 +3,28 @@ import { BASE_URL } from '../../playwright.config';
 import { EditableContentPage } from './editableContentPage';
 
 export class EditContentPage extends EditableContentPage {
+  private readonly getVersionHistoryPathRegex: RegExp;
+  private readonly concurrentEditAlertModal: Locator;
   readonly pathRegex: RegExp;
   readonly viewRecordButton: Locator;
 
   constructor(page: Page) {
     super(page);
+    this.getVersionHistoryPathRegex = /\/Content\/\d+\/\d+\/GetRecordVersionsPaged/;
+    this.concurrentEditAlertModal = this.page.getByRole('dialog', { name: 'Concurrent Editing Alert' });
     this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/Edit`);
-    this.viewRecordButton = page.getByRole('link', { name: 'View Record' });
+    this.viewRecordButton = this.page.getByRole('link', { name: 'View Record' });
   }
 
   async goto(appId: number, recordId: number) {
+    await this.page.addLocatorHandler(
+      this.concurrentEditAlertModal,
+      async locator => {
+        await locator.getByRole('button', { name: 'Close' }).click();
+      },
+      { times: 1 }
+    );
+
     await this.page.goto(`/Content/${appId}/${recordId}/Edit`);
   }
 
@@ -34,5 +46,15 @@ export class EditContentPage extends EditableContentPage {
 
     await this.saveRecordButton.click();
     await saveResponse;
+  }
+
+  async openVersionHistory() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.waitFor();
+
+    const viewVersionHistoryResponse = this.page.waitForResponse(this.getVersionHistoryPathRegex);
+    await this.actionMenu.viewVersionHistoryLink.click();
+    await this.viewVersionHistoryModal.waitFor();
+    await viewVersionHistoryResponse;
   }
 }
