@@ -100,5 +100,6 @@ export class DateFieldControl {
   async enterDate(date: Date) {
     const formattedDate = this.formatDate(date);
     await this.input.fill(formattedDate);
+    await this.input.blur();
   }
 }
