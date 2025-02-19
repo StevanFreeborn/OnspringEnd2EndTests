@@ -1903,4 +1903,13 @@ test.describe('Outcomes', () => {
       });
     });
   });
+
+  test('Configure a REST outcome', async ({}) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-891',
+    });
+
+    expect(true).toBe(true);
+  });
 });
