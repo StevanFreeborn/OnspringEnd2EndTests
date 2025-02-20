@@ -1,5 +1,5 @@
-import { Locator } from "@playwright/test";
-import { RestApiOutcome } from "../../models/restApiOutcome";
+import { Locator } from '@playwright/test';
+import { RestApiOutcome } from '../../models/restApiOutcome';
 
 export class RestApiSettingsTab {
   private readonly httpMethodSelector: Locator;
@@ -9,7 +9,9 @@ export class RestApiSettingsTab {
   constructor(modal: Locator) {
     this.httpMethodSelector = modal.locator('.label:has-text("HTTP Method") + .data').getByRole('listbox');
     this.restURLInput = modal.locator('.label:has-text("REST URL") + .data').getByRole('textbox');
-    this.authorizationTypeSelector = modal.locator('.label:has-text("Authorization Type") + .data').getByRole('listbox');
+    this.authorizationTypeSelector = modal
+      .locator('.label:has-text("Authorization Type") + .data')
+      .getByRole('listbox');
   }
 
   private async selectHttpMethod(httpMethod: string) {
@@ -28,4 +30,3 @@ export class RestApiSettingsTab {
     await this.selectAuthorizationType(outcome.authorization);
   }
 }
-
