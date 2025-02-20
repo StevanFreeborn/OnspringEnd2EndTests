@@ -10,7 +10,8 @@ export type OutcomeType =
   | 'Set Date'
   | 'Set List Value'
   | 'Set Reference'
-  | 'Stop Calculation';
+  | 'Stop Calculation'
+  | 'REST API';
 
 export type OutcomeObject = {
   type: OutcomeType;

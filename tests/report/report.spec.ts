@@ -87,8 +87,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-594',
+      type: AnnotationType.TestId,
+      description: 'Test-594',
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -121,8 +121,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-595',
+      type: AnnotationType.TestId,
+      description: 'Test-595',
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -151,8 +151,8 @@ test.describe('report', () => {
 
   test('Create a copy of a report', async ({ sourceApp, reportHomePage, reportPage }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-596',
+      type: AnnotationType.TestId,
+      description: 'Test-596',
     });
 
     const reportToCopy = new SavedReportAsReportDataOnly({
@@ -195,8 +195,8 @@ test.describe('report', () => {
 
   test('Update a report', async ({ sourceApp, reportAppPage, reportPage }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-597',
+      type: AnnotationType.TestId,
+      description: 'Test-597',
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -231,8 +231,8 @@ test.describe('report', () => {
 
   test('Delete a report', async ({ sourceApp, reportAppPage, reportPage }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-598',
+      type: AnnotationType.TestId,
+      description: 'Test-598',
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -271,8 +271,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-599',
+      type: AnnotationType.TestId,
+      description: 'Test-599',
     });
 
     const fields = getFieldsForApp();
@@ -331,8 +331,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-600',
+      type: AnnotationType.TestId,
+      description: 'Test-600',
     });
 
     const fields = getFieldsForApp();
@@ -381,8 +381,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-601',
+      type: AnnotationType.TestId,
+      description: 'Test-601',
     });
 
     const fields = getFieldsForApp();
@@ -433,8 +433,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-602',
+      type: AnnotationType.TestId,
+      description: 'Test-602',
     });
 
     const fields = getFieldsForApp();
@@ -483,8 +483,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-603',
+      type: AnnotationType.TestId,
+      description: 'Test-603',
     });
 
     const fields = getFieldsForApp();
@@ -536,8 +536,8 @@ test.describe('report', () => {
     sheetParser,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-604',
+      type: AnnotationType.TestId,
+      description: 'Test-604',
     });
 
     const fields = getFieldsForApp();
@@ -619,8 +619,8 @@ test.describe('report', () => {
     pdfParser,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-605',
+      type: AnnotationType.TestId,
+      description: 'Test-605',
     });
 
     const fields = getFieldsForApp();
@@ -684,8 +684,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-606',
+      type: AnnotationType.TestId,
+      description: 'Test-606',
     });
 
     const initialFields = getFieldsForApp();
@@ -768,8 +768,8 @@ test.describe('report', () => {
     sysAdminEmail,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-607',
+      type: AnnotationType.TestId,
+      description: 'Test-607',
     });
 
     test.slow();
@@ -826,8 +826,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-608',
+        type: AnnotationType.TestId,
+        description: 'Test-608',
       });
 
       const fields = getFieldsForApp();
@@ -870,8 +870,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-609',
+        type: AnnotationType.TestId,
+        description: 'Test-609',
       });
 
       const fields = getFieldsForApp();
@@ -914,8 +914,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-610',
+        type: AnnotationType.TestId,
+        description: 'Test-610',
       });
 
       const fields = getFieldsForApp();
@@ -958,8 +958,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-611',
+        type: AnnotationType.TestId,
+        description: 'Test-611',
       });
 
       const fields = getFieldsForApp();
@@ -1002,8 +1002,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-612',
+        type: AnnotationType.TestId,
+        description: 'Test-612',
       });
 
       const fields = getFieldsForApp();
@@ -1046,8 +1046,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-613',
+        type: AnnotationType.TestId,
+        description: 'Test-613',
       });
 
       const fields = getFieldsForApp();
@@ -1090,8 +1090,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-614',
+        type: AnnotationType.TestId,
+        description: 'Test-614',
       });
 
       const fields = getFieldsForApp();
@@ -1134,8 +1134,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-615',
+        type: AnnotationType.TestId,
+        description: 'Test-615',
       });
 
       const fields = getFieldsForApp();
@@ -1178,8 +1178,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-616',
+        type: AnnotationType.TestId,
+        description: 'Test-616',
       });
 
       const fields = getFieldsForApp();
@@ -1223,8 +1223,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-617',
+        type: AnnotationType.TestId,
+        description: 'Test-617',
       });
 
       // The name of the source app needs to be unique to avoid conflicts...but
@@ -1301,8 +1301,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-618',
+        type: AnnotationType.TestId,
+        description: 'Test-618',
       });
 
       const fields = getFieldsForApp();
@@ -1346,8 +1346,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-619',
+        type: AnnotationType.TestId,
+        description: 'Test-619',
       });
 
       // The name of the source app needs to be unique to avoid conflicts...but
@@ -1424,8 +1424,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-620',
+        type: AnnotationType.TestId,
+        description: 'Test-620',
       });
 
       const fields = getFieldsForApp();
@@ -1470,8 +1470,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-621',
+        type: AnnotationType.TestId,
+        description: 'Test-621',
       });
 
       const fields = getFieldsForApp();
@@ -1519,8 +1519,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-622',
+        type: AnnotationType.TestId,
+        description: 'Test-622',
       });
 
       const millisecondsInHour = 60 * 60 * 1000;
@@ -1620,8 +1620,8 @@ test.describe('report', () => {
     },
     async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-623',
+        type: AnnotationType.TestId,
+        description: 'Test-623',
       });
 
       const startDate = new DateField({
@@ -1722,8 +1722,8 @@ test.describe('report', () => {
       reportPage,
     }) => {
       test.info().annotations.push({
-        description: AnnotationType.TestId,
-        type: 'Test-624',
+        type: AnnotationType.TestId,
+        description: 'Test-624',
       });
 
       const addressField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
@@ -1885,8 +1885,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-870',
+      type: AnnotationType.TestId,
+      description: 'Test-870',
     });
 
     const aliasValue = 'Alias';
@@ -1922,8 +1922,8 @@ test.describe('report', () => {
     reportPage,
   }) => {
     test.info().annotations.push({
-      description: AnnotationType.TestId,
-      type: 'Test-871',
+      type: AnnotationType.TestId,
+      description: 'Test-871',
     });
 
     const aliasValue = 'Alias';

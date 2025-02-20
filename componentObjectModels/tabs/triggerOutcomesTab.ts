@@ -23,6 +23,8 @@ import { EditSetDateOutcomeModal } from '../modals/editSetDateOutcomeModal';
 import { EditSetListValueOutcomeModal } from '../modals/editSetListValueOutcomeModal';
 import { EditSetReferenceOutcomeModal } from '../modals/editSetReferenceOutcomeModal';
 import { EditStopCalculationOutcomeModal } from '../modals/editStopCalculationOutcomeModal';
+import { RestApiOutcome } from '../../models/restApiOutcome';
+import { EditRestApiOutcomeModal } from '../modals/editRestApiOutcomeModal';
 
 export class TriggerOutcomesTab {
   private readonly page: Page;
@@ -44,6 +46,7 @@ export class TriggerOutcomesTab {
   private getEditOutcomeModal(outcomeType: 'Set Date'): EditSetDateOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Stop Calculation'): EditStopCalculationOutcomeModal;
   private getEditOutcomeModal(outcomeType: 'Object Visibility'): EditObjectVisibilityOutcomeModal;
+  private getEditOutcomeModal(outcomeType: 'REST API'): EditRestApiOutcomeModal;
   private getEditOutcomeModal(outcomeType: OutcomeType): BaseEditOutcomeModal;
   private getEditOutcomeModal(outcomeType: OutcomeType): BaseEditOutcomeModal {
     switch (outcomeType) {
@@ -69,6 +72,8 @@ export class TriggerOutcomesTab {
         return new EditCreateMultipleRecordsOutcomeModal(this.page);
       case 'Generate Document':
         return new EditGenerateDocumentOutcomeModal(this.page);
+      case 'REST API':
+        return new EditRestApiOutcomeModal(this.page);
       default:
         throw new Error(`Unsupported outcome type: ${outcomeType}`);
     }
@@ -131,6 +136,11 @@ export class TriggerOutcomesTab {
       case 'Generate Document': {
         const modal = this.getEditOutcomeModal('Generate Document');
         await modal.fillOutForm(outcome as GenerateDocumentOutcome);
+        break;
+      }
+      case 'REST API': {
+        const modal = this.getEditOutcomeModal('REST API');
+        await modal.fillOutForm(outcome as RestApiOutcome);
         break;
       }
       default:
