@@ -25,6 +25,7 @@ import { ParallelReferenceField } from '../../models/parallelReferenceField';
 import { PrintContentRecordOutcome } from '../../models/printContentRecordOutcome';
 import { ReferenceField } from '../../models/referenceField';
 import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
+import { RestApiOutcome } from '../../models/restApiOutcome';
 import { AutoNumberRuleWithValue, ListRuleWithValues } from '../../models/rule';
 import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
@@ -1904,12 +1905,101 @@ test.describe('Outcomes', () => {
     });
   });
 
-  test('Configure a REST outcome', async ({}) => {
+  test('Configure a REST outcome', async ({
+    triggerApp: app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    sysAdminUser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-891',
     });
 
-    expect(true).toBe(true);
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    const textField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const triggerWithRestOutcome = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      status: true,
+      ruleSet: new SimpleRuleLogic({
+        rules: [],
+      }),
+      outcomes: [
+        new RestApiOutcome({
+          status: true,
+          restURL: 'https://jsonplaceholder.typicode.com/posts/{:Record Id}',
+          authorization: 'No Authorization Required',
+          dataMappings: {
+            id: textField.name,
+          },
+          notificationUsers: [sysAdminUser.fullName],
+        }),
+      ],
+    });
+
+    await test.step("Navigate to the app's layout tab", async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Create a text field', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Add the text field to the app layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: textField.name,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step("Navigate to the app's trigger tab", async () => {
+      await appAdminPage.triggersTabButton.click();
+    });
+
+    await test.step('Add a trigger with REST outcome', async () => {
+      await appAdminPage.triggersTab.addTrigger(triggerWithRestOutcome);
+    });
+
+    let recordId: number;
+
+    await test.step('Create a record in the app', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+      recordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Verify the REST outcome is triggered', async () => {
+      await expect(async () => {
+        await editContentPage.page.reload();
+
+        const field = await editContentPage.form.getField({
+          fieldName: textField.name,
+          fieldType: textField.type as FieldType,
+          tabName: tabName,
+          sectionName: sectionName,
+        });
+
+        await expect(field).toHaveValue(recordId.toString(), { timeout: 5_000 });
+      }).toPass({
+        intervals: [5_000],
+        timeout: 300_000,
+      });
+    });
   });
 });
