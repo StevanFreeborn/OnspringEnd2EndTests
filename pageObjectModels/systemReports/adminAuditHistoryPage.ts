@@ -50,6 +50,8 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
   private readonly itemTypeSelector: Locator;
   private readonly appOrSurveySelector: Locator;
   private readonly historyGridBody: Locator;
+  private readonly exportReportButton: Locator;
+  private readonly exportReportDialog: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -60,6 +62,8 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
     this.itemTypeSelector = this.page.locator('.label:has-text("Item Type") + .data').getByRole('listbox');
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.historyGridBody = page.locator('#grid .k-grid-content');
+    this.exportReportButton = page.getByRole('link', { name: 'Export Report' });
+    this.exportReportDialog = page.getByRole('dialog', { name: 'Export Report' });
   }
 
   async goto() {
@@ -108,5 +112,12 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
 
   async getRows() {
     return this.historyGridBody.locator('tr').all();
+  }
+
+  async exportReport() {
+    await this.exportReportButton.click();
+    await this.exportReportDialog.waitFor();
+    await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
+    await this.exportReportDialog.getByRole('button', { name: 'Close' }).click();
   }
 }
