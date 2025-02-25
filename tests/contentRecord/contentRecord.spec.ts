@@ -4,7 +4,6 @@ import { app } from '../../fixtures/app.fixtures';
 import { testUserPage } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
-import { Role } from '../../models/role';
 import { TextField } from '../../models/textField';
 import { User, UserStatus } from '../../models/user';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -25,7 +24,6 @@ type ContentRecordTestFixtures = {
   editContentPage: EditContentPage;
   viewContentPage: ViewContentPage;
   copyContentPage: CopyContentPage;
-  role: Role;
   testUser: User;
   testUserPage: Page;
 };
