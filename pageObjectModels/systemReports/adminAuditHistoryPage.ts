@@ -1,39 +1,39 @@
-import { Locator, Page } from "@playwright/test";
-import { BaseAdminPage } from "../baseAdminPage";
+import { Locator, Page } from '@playwright/test';
+import { BaseAdminPage } from '../baseAdminPage';
 
-type ItemType= 
+type ItemType =
   | 'All Item Types'
-  | "API Key"
-  | "App"
-  | "Dashboard"
-  | "Dashboard Container"
-  | "Dashboard Filter Config"
-  | "Dashboard Object"
-  | "Data Connector"
-  | "Document"
-  | "Email Body"
-  | "Email Sending Domain"
-  | "Email Sync"
-  | "Email Template"
-  | "Field"
-  | "Import"
-  | "Instance Configuration"
-  | "Layout"
-  | "Layout Object"
-  | "List"
-  | "Messaging Task"
-  | "Package"
-  | "Portal"
-  | "Record Retention"
-  | "Role"
-  | "SMS Sending Number"
-  | "Survey"
-  | "Survey Campaign"
-  | "Survey Page"
-  | "Text Message"
-  | "Trigger"
-  | "User"
-  | "Workflow Step";
+  | 'API Key'
+  | 'App'
+  | 'Dashboard'
+  | 'Dashboard Container'
+  | 'Dashboard Filter Config'
+  | 'Dashboard Object'
+  | 'Data Connector'
+  | 'Document'
+  | 'Email Body'
+  | 'Email Sending Domain'
+  | 'Email Sync'
+  | 'Email Template'
+  | 'Field'
+  | 'Import'
+  | 'Instance Configuration'
+  | 'Layout'
+  | 'Layout Object'
+  | 'List'
+  | 'Messaging Task'
+  | 'Package'
+  | 'Portal'
+  | 'Record Retention'
+  | 'Role'
+  | 'SMS Sending Number'
+  | 'Survey'
+  | 'Survey Campaign'
+  | 'Survey Page'
+  | 'Text Message'
+  | 'Trigger'
+  | 'User'
+  | 'Workflow Step';
 
 type AuditHistoryFilter = {
   user?: string | 'All Users';
@@ -92,7 +92,12 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
     await this.page.getByRole('option', { name: appOrSurvey }).click();
   }
 
-  async applyFilter({ user = 'All Users', saveType = 'All Save Types', itemType = 'All Item Types', appOrSurvey = 'All (or Not Applicable)' }: AuditHistoryFilter) {
+  async applyFilter({
+    user = 'All Users',
+    saveType = 'All Save Types',
+    itemType = 'All Item Types',
+    appOrSurvey = 'All (or Not Applicable)',
+  }: AuditHistoryFilter) {
     const userFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
     await this.selectUser(user);
     await userFilterResponse;
