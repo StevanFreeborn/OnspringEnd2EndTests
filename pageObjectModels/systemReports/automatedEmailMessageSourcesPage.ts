@@ -1,24 +1,24 @@
-import { Locator, Page } from "@playwright/test";
-import { BaseAdminPage } from "../baseAdminPage";
+import { Locator, Page } from '@playwright/test';
+import { BaseAdminPage } from '../baseAdminPage';
 
 type EmailType =
-  | "Data Connector"
-  | "Email Body"
-  | "Record Retention"
-  | "Scheduled Report"
-  | "Unlaunched Survey"
-  | "Workflow Finish"
-  | "Workflow Step";
+  | 'Data Connector'
+  | 'Email Body'
+  | 'Record Retention'
+  | 'Scheduled Report'
+  | 'Unlaunched Survey'
+  | 'Workflow Finish'
+  | 'Workflow Step';
 
 type AutomatedEmailMessageSourceFilter = {
   emailType?: EmailType;
-  appOrSurvey?: string | "All Apps & Surveys";
-  group?: string | "All Groups";
-  user?: string | "All Users";
+  appOrSurvey?: string | 'All Apps & Surveys';
+  group?: string | 'All Groups';
+  user?: string | 'All Users';
 };
 
-type SortableGridColumn = "App/Survey Name" | "Item Name";
-type SortDirection = "ascending" | "descending";
+type SortableGridColumn = 'App/Survey Name' | 'Item Name';
+type SortDirection = 'ascending' | 'descending';
 
 export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
   private readonly path: string;
@@ -29,7 +29,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
   private readonly userSelector: Locator;
   private readonly sourcesGridHeader: Locator;
   private readonly sourcesGridBody: Locator;
-  
+
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Reporting/Messaging/AutomatedSources';
@@ -39,7 +39,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     this.groupSelector = this.page.locator('.label:has-text("Group") + .data').getByRole('listbox');
     this.userSelector = this.page.locator('.label:has-text("User") + .data').getByRole('listbox');
     this.sourcesGridHeader = this.page.locator('#grid .k-grid-header');
-    this.sourcesGridBody = this.page.locator('#grid .k-grid-content');  
+    this.sourcesGridBody = this.page.locator('#grid .k-grid-content');
   }
 
   async goto() {
@@ -69,10 +69,10 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
   }
 
   async applyFilter({
-    emailType = "Email Body",
-    appOrSurvey = "All Apps & Surveys",
-    group = "All Groups",
-    user = "All Users",
+    emailType = 'Email Body',
+    appOrSurvey = 'All Apps & Surveys',
+    group = 'All Groups',
+    user = 'All Users',
   }: AutomatedEmailMessageSourceFilter) {
     const existingEmailTypeFilter = await this.emailTypeSelector.innerText();
 
@@ -89,7 +89,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
       await this.selectAppOrSurvey(appOrSurvey);
       await appOrSurveyFilterResponse;
     }
-    
+
     const existingGroupFilter = await this.groupSelector.innerText();
 
     if (existingGroupFilter.trim() !== group) {

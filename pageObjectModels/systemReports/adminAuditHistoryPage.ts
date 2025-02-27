@@ -99,7 +99,7 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
     appOrSurvey = 'All (or Not Applicable)',
   }: AuditHistoryFilter) {
     const existingUserFilter = await this.userSelector.innerText();
-    
+
     if (existingUserFilter.trim() !== user) {
       const userFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
       await this.selectUser(user);
@@ -113,7 +113,7 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
       await this.selectSaveType(saveType);
       await saveTypeFilterResponse;
     }
-    
+
     const existingItemTypeFilter = await this.itemTypeSelector.innerText();
 
     if (existingItemTypeFilter.trim() !== itemType) {
@@ -121,7 +121,7 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
       await this.selectItemType(itemType);
       await itemTypeFilterResponse;
     }
-    
+
     const existingAppOrSurveyFilter = await this.appOrSurveySelector.innerText();
 
     if (existingAppOrSurveyFilter.trim() !== appOrSurvey) {

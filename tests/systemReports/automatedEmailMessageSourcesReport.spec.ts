@@ -22,16 +22,22 @@ const test = base.extend<AutomatedEmailMessageSourcesReportTestFixtures>({
   app: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => await use(new EditEmailBodyPage(sysAdminPage)),
-  automatedMessageSourcesPage: async ({ sysAdminPage }, use) => await use(new AutomatedEmailMessageSourcesPage(sysAdminPage)),
+  automatedMessageSourcesPage: async ({ sysAdminPage }, use) =>
+    await use(new AutomatedEmailMessageSourcesPage(sysAdminPage)),
 });
 
 test.describe('automated email message sources report', () => {
-  test('Filter the Automated Email Message Sources Report', async ({ app, appAdminPage, editEmailBodyPage, automatedMessageSourcesPage }) => {
+  test('Filter the Automated Email Message Sources Report', async ({
+    app,
+    appAdminPage,
+    editEmailBodyPage,
+    automatedMessageSourcesPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-282',
     });
-    
+
     const textField = new TextField({ name: 'Send Email?' });
     const emailBody = buildEmailBody(app, textField);
 
@@ -58,13 +64,13 @@ test.describe('automated email message sources report', () => {
     app,
     appAdminPage,
     editEmailBodyPage,
-    automatedMessageSourcesPage
+    automatedMessageSourcesPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-284',
     });
-    
+
     const updatedEmailBodyName = FakeDataFactory.createFakeEmailBodyName();
     const textField = new TextField({ name: 'Send Email?' });
     const emailBody = buildEmailBody(app, textField);
@@ -113,7 +119,7 @@ test.describe('automated email message sources report', () => {
     const textField = new TextField({ name: 'Send Email?' });
     const firstEmailBody = buildEmailBody(app, textField, `1-${FakeDataFactory.createFakeEmailBodyName()}`);
     const secondEmailBody = buildEmailBody(app, textField, `2-${FakeDataFactory.createFakeEmailBodyName()}`);
-    
+
     await test.step('Create two email bodies', async () => {
       await createTextField(appAdminPage, app, textField);
       await createEmailBody(appAdminPage, app, editEmailBodyPage, firstEmailBody);
@@ -166,7 +172,12 @@ async function createTextField(appAdminPage: AppAdminPage, app: App, textField: 
   await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
 }
 
-async function createEmailBody(appAdminPage: AppAdminPage, app: App, editEmailBodyPage: EditEmailBodyPage, emailBody: EmailBody) {
+async function createEmailBody(
+  appAdminPage: AppAdminPage,
+  app: App,
+  editEmailBodyPage: EditEmailBodyPage,
+  emailBody: EmailBody
+) {
   await appAdminPage.goto(app.id);
   await appAdminPage.messagingTabButton.click();
   await appAdminPage.messagingTab.createEmailBody(emailBody.name);
