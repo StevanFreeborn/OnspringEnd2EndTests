@@ -8,21 +8,21 @@ import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
-import { AutomatedMessageSourcesPage } from '../../pageObjectModels/systemReports/automatedMessageSourcesPage';
+import { AutomatedEmailMessageSourcesPage } from '../../pageObjectModels/systemReports/automatedEmailMessageSourcesPage';
 import { AnnotationType } from '../annotations';
 
 type AutomatedEmailMessageSourcesReportTestFixtures = {
   app: App;
   appAdminPage: AppAdminPage;
   editEmailBodyPage: EditEmailBodyPage;
-  automatedMessageSourcesPage: AutomatedMessageSourcesPage;
+  automatedMessageSourcesPage: AutomatedEmailMessageSourcesPage;
 };
 
 const test = base.extend<AutomatedEmailMessageSourcesReportTestFixtures>({
   app: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   editEmailBodyPage: async ({ sysAdminPage }, use) => await use(new EditEmailBodyPage(sysAdminPage)),
-  automatedMessageSourcesPage: async ({ sysAdminPage }, use) => await use(new AutomatedMessageSourcesPage(sysAdminPage)),
+  automatedMessageSourcesPage: async ({ sysAdminPage }, use) => await use(new AutomatedEmailMessageSourcesPage(sysAdminPage)),
 });
 
 test.describe('automated email message sources report', () => {

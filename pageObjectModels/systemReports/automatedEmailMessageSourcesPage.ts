@@ -10,14 +10,14 @@ type EmailType =
   | "Workflow Finish"
   | "Workflow Step";
 
-type AutomatedMessageSourceFilter = {
+type AutomatedEmailMessageSourceFilter = {
   emailType?: EmailType;
   appOrSurvey?: string | "All Apps & Surveys";
   group?: string | "All Groups";
   user?: string | "All Users";
 };
 
-export class AutomatedMessageSourcesPage extends BaseAdminPage {
+export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
   private readonly path: string;
   private readonly getAuditHistoryPath: string;
   private readonly emailTypeSelector: Locator;
@@ -68,7 +68,7 @@ export class AutomatedMessageSourcesPage extends BaseAdminPage {
     appOrSurvey = "All Apps & Surveys",
     group = "All Groups",
     user = "All Users",
-  }: AutomatedMessageSourceFilter) {
+  }: AutomatedEmailMessageSourceFilter) {
     const existingEmailTypeFilter = await this.emailTypeSelector.innerText();
 
     if (existingEmailTypeFilter.trim() !== emailType) {
