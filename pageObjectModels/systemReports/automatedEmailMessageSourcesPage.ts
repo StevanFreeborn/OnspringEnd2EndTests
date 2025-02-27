@@ -17,30 +17,35 @@ type AutomatedEmailMessageSourceFilter = {
   user?: string | "All Users";
 };
 
+type SortableGridColumn = "App/Survey Name" | "Item Name";
+type SortDirection = "ascending" | "descending";
+
 export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
   private readonly path: string;
-  private readonly getAuditHistoryPath: string;
+  private readonly getAutomatedSourcesPath: string;
   private readonly emailTypeSelector: Locator;
   private readonly appOrSurveySelector: Locator;
   private readonly groupSelector: Locator;
   private readonly userSelector: Locator;
+  private readonly sourcesGridHeader: Locator;
   private readonly sourcesGridBody: Locator;
   
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Reporting/Messaging/AutomatedSources';
-    this.getAuditHistoryPath = '/Admin/Reporting/Messaging/GetAutomatedSourcesPage';
+    this.getAutomatedSourcesPath = '/Admin/Reporting/Messaging/GetAutomatedSourcesPage';
     this.emailTypeSelector = this.page.locator('.label:has-text("Email Type") + .data').getByRole('listbox');
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.groupSelector = this.page.locator('.label:has-text("Group") + .data').getByRole('listbox');
     this.userSelector = this.page.locator('.label:has-text("User") + .data').getByRole('listbox');
+    this.sourcesGridHeader = this.page.locator('#grid .k-grid-header');
     this.sourcesGridBody = this.page.locator('#grid .k-grid-content');  
   }
 
   async goto() {
-    const getAuditHistoryResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+    const getAutomatedSourcesResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
     await this.page.goto(this.path);
-    await getAuditHistoryResponse;
+    await getAutomatedSourcesResponse;
   }
 
   private async selectEmailType(emailType: string) {
@@ -72,7 +77,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     const existingEmailTypeFilter = await this.emailTypeSelector.innerText();
 
     if (existingEmailTypeFilter.trim() !== emailType) {
-      const emailTypeFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      const emailTypeFilterResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
       await this.selectEmailType(emailType);
       await emailTypeFilterResponse;
     }
@@ -80,7 +85,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     const existingAppOrSurveyFilter = await this.appOrSurveySelector.innerText();
 
     if (existingAppOrSurveyFilter.trim() !== appOrSurvey) {
-      const appOrSurveyFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      const appOrSurveyFilterResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
       await this.selectAppOrSurvey(appOrSurvey);
       await appOrSurveyFilterResponse;
     }
@@ -88,7 +93,7 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     const existingGroupFilter = await this.groupSelector.innerText();
 
     if (existingGroupFilter.trim() !== group) {
-      const groupFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      const groupFilterResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
       await this.selectGroup(group);
       await groupFilterResponse;
     }
@@ -96,9 +101,22 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     const existingUserFilter = await this.userSelector.innerText();
 
     if (existingUserFilter.trim() !== user) {
-      const userFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      const userFilterResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
       await this.selectUser(user);
       await userFilterResponse;
+    }
+  }
+
+  async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
+    const columnHeader = this.sourcesGridHeader.getByRole('columnheader', { name: column });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getAutomatedSourcesPath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
     }
   }
 

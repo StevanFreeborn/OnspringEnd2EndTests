@@ -32,30 +32,12 @@ test.describe('automated email message sources report', () => {
       description: 'Test-282',
     });
     
-    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
-    const textField = new TextField({ name: 'Send Email?'});
-    const rule = new TextRuleWithValue({
-      fieldName: textField.name,
-      operator: 'Contains',
-      value: 'Yes',
-    });
-
-    const emailBody = new EmailBody({
-      name: emailBodyName,
-      appName: app.name,
-      status: true,
-      subject: `Test Subject - ${emailBodyName}`,
-      body: 'This is a test email body.',
-      fromName: 'Automation Test',
-      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
-      recipientsBasedOnFields: ['Created By'],
-      sendLogic: new SimpleRuleLogic({
-        rules: [rule],
-      }),
-    });
+    const textField = new TextField({ name: 'Send Email?' });
+    const emailBody = buildEmailBody(app, textField);
 
     await test.step('Create an email body', async () => {
-      await createEmailBody(appAdminPage, editEmailBodyPage, app, emailBody);
+      await createTextField(appAdminPage, app, textField);
+      await createEmailBody(appAdminPage, app, editEmailBodyPage, emailBody);
     });
 
     await test.step('Navigate to the automated email message sources report', async () => {
@@ -82,33 +64,14 @@ test.describe('automated email message sources report', () => {
       type: AnnotationType.TestId,
       description: 'Test-284',
     });
-
-    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    
     const updatedEmailBodyName = FakeDataFactory.createFakeEmailBodyName();
-
-    const textField = new TextField({ name: 'Send Email?'});
-    const rule = new TextRuleWithValue({
-      fieldName: textField.name,
-      operator: 'Contains',
-      value: 'Yes',
-    });
-
-    const emailBody = new EmailBody({
-      name: emailBodyName,
-      appName: app.name,
-      status: true,
-      subject: `Test Subject - ${emailBodyName}`,
-      body: 'This is a test email body.',
-      fromName: 'Automation Test',
-      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
-      recipientsBasedOnFields: ['Created By'],
-      sendLogic: new SimpleRuleLogic({
-        rules: [rule],
-      }),
-    });
+    const textField = new TextField({ name: 'Send Email?' });
+    const emailBody = buildEmailBody(app, textField);
 
     await test.step('Create an email body', async () => {
-      await createEmailBody(appAdminPage, editEmailBodyPage, app, emailBody);
+      await createTextField(appAdminPage, app, textField);
+      await createEmailBody(appAdminPage, app, editEmailBodyPage, emailBody);
     });
 
     await test.step('Navigate to the automated email message sources report', async () => {
@@ -136,29 +99,75 @@ test.describe('automated email message sources report', () => {
     });
   });
 
-  test('Sort the Automated Email Message Sources Report', async () => {
+  test('Sort the Automated Email Message Sources Report', async ({
+    app,
+    appAdminPage,
+    editEmailBodyPage,
+    automatedMessageSourcesPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-313',
     });
 
-    await test.step('Create two email bodies', async () => {});
+    const textField = new TextField({ name: 'Send Email?' });
+    const firstEmailBody = buildEmailBody(app, textField, `1-${FakeDataFactory.createFakeEmailBodyName()}`);
+    const secondEmailBody = buildEmailBody(app, textField, `2-${FakeDataFactory.createFakeEmailBodyName()}`);
+    
+    await test.step('Create two email bodies', async () => {
+      await createTextField(appAdminPage, app, textField);
+      await createEmailBody(appAdminPage, app, editEmailBodyPage, firstEmailBody);
+      await createEmailBody(appAdminPage, app, editEmailBodyPage, secondEmailBody);
+    });
 
-    await test.step('Navigate to the automated email message sources report', async () => {});
+    await test.step('Navigate to the automated email message sources report', async () => {
+      await automatedMessageSourcesPage.goto();
+    });
 
-    await test.step('Sort the automated email message sources report', async () => {});
+    await test.step('Sort the automated email message sources report', async () => {
+      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
+      await automatedMessageSourcesPage.sortGridBy('Item Name', 'ascending');
+    });
 
-    await test.step('Verify the automated email message sources report is sorted', async () => {});
-
-    expect(true).toBeTruthy();
+    await test.step('Verify the automated email message sources report is sorted', async () => {
+      const rows = await automatedMessageSourcesPage.getRows();
+      await expect(rows[0]).toHaveText(new RegExp(firstEmailBody.name));
+      await expect(rows[1]).toHaveText(new RegExp(secondEmailBody.name));
+    });
   });
 });
 
-async function createEmailBody(appAdminPage: AppAdminPage, editEmailBodyPage: EditEmailBodyPage, app: App, emailBody: EmailBody) {
+function buildEmailBody(app: App, textField: TextField, emailBodyName?: string) {
+  const name = emailBodyName || FakeDataFactory.createFakeEmailBodyName();
+  const rule = new TextRuleWithValue({
+    fieldName: textField.name,
+    operator: 'Contains',
+    value: 'Yes',
+  });
+
+  return new EmailBody({
+    name: name,
+    appName: app.name,
+    status: true,
+    subject: `Test Subject - ${name}`,
+    body: 'This is a test email body.',
+    fromName: 'Automation Test',
+    fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+    recipientsBasedOnFields: ['Created By'],
+    sendLogic: new SimpleRuleLogic({
+      rules: [rule],
+    }),
+  });
+}
+
+async function createTextField(appAdminPage: AppAdminPage, app: App, textField: TextField) {
   await appAdminPage.goto(app.id);
   await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: 'Send Email?'}));
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+}
 
+async function createEmailBody(appAdminPage: AppAdminPage, app: App, editEmailBodyPage: EditEmailBodyPage, emailBody: EmailBody) {
+  await appAdminPage.goto(app.id);
   await appAdminPage.messagingTabButton.click();
   await appAdminPage.messagingTab.createEmailBody(emailBody.name);
   await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
