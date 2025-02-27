@@ -72,21 +72,68 @@ test.describe('automated email message sources report', () => {
     });
   });
 
-  test('Edit an item in the Automated Email Message Sources Report', async () => {
+  test('Edit an item in the Automated Email Message Sources Report', async ({
+    app,
+    appAdminPage,
+    editEmailBodyPage,
+    automatedMessageSourcesPage
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-284',
     });
 
-    await test.step('Create an email body', async () => {});
+    const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
+    const updatedEmailBodyName = FakeDataFactory.createFakeEmailBodyName();
 
-    await test.step('Navigate to the automated email message sources report', async () => {});
+    const textField = new TextField({ name: 'Send Email?'});
+    const rule = new TextRuleWithValue({
+      fieldName: textField.name,
+      operator: 'Contains',
+      value: 'Yes',
+    });
 
-    await test.step('Edit the email body from the automated email message sources report', async () => {});
+    const emailBody = new EmailBody({
+      name: emailBodyName,
+      appName: app.name,
+      status: true,
+      subject: `Test Subject - ${emailBodyName}`,
+      body: 'This is a test email body.',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+      sendLogic: new SimpleRuleLogic({
+        rules: [rule],
+      }),
+    });
 
-    await test.step('Verify the email body was edited', async () => {});
+    await test.step('Create an email body', async () => {
+      await createEmailBody(appAdminPage, editEmailBodyPage, app, emailBody);
+    });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the automated email message sources report', async () => {
+      await automatedMessageSourcesPage.goto();
+    });
+
+    await test.step('Edit the email body from the automated email message sources report', async () => {
+      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
+
+      const rows = await automatedMessageSourcesPage.getRows();
+      await rows[0].click();
+      await automatedMessageSourcesPage.page.waitForURL(editEmailBodyPage.pathRegex);
+
+      emailBody.name = updatedEmailBodyName;
+      await editEmailBodyPage.updateEmailBody(emailBody);
+      await editEmailBodyPage.save();
+    });
+
+    await test.step('Verify the email body was edited', async () => {
+      await automatedMessageSourcesPage.goto();
+      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
+
+      const rows = await automatedMessageSourcesPage.getRows();
+      await expect(rows[0]).toHaveText(new RegExp(updatedEmailBodyName));
+    });
   });
 
   test('Sort the Automated Email Message Sources Report', async () => {
