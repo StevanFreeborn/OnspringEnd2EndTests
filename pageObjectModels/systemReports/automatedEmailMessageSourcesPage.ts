@@ -74,6 +74,10 @@ export class AutomatedEmailMessageSourcesPage extends BaseAdminPage {
     group = 'All Groups',
     user = 'All Users',
   }: AutomatedEmailMessageSourceFilter) {
+    // Wait for the grid filters to be applied before applying new filters
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(1000);
+
     const existingEmailTypeFilter = await this.emailTypeSelector.innerText();
 
     if (existingEmailTypeFilter.trim() !== emailType) {
