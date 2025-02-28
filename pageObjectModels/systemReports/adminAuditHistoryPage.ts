@@ -61,9 +61,9 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
     this.saveTypeSelector = this.page.locator('.label:has-text("Save Type") + .data').getByRole('listbox');
     this.itemTypeSelector = this.page.locator('.label:has-text("Item Type") + .data').getByRole('listbox');
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
-    this.historyGridBody = page.locator('#grid .k-grid-content');
-    this.exportReportButton = page.getByRole('link', { name: 'Export Report' });
-    this.exportReportDialog = page.getByRole('dialog', { name: 'Export Report' });
+    this.historyGridBody = this.page.locator('#grid .k-grid-content');
+    this.exportReportButton = this.page.getByRole('link', { name: 'Export Report' });
+    this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
   }
 
   async goto() {
@@ -98,21 +98,37 @@ export class AdminAuditHistoryPage extends BaseAdminPage {
     itemType = 'All Item Types',
     appOrSurvey = 'All (or Not Applicable)',
   }: AuditHistoryFilter) {
-    const userFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
-    await this.selectUser(user);
-    await userFilterResponse;
+    const existingUserFilter = await this.userSelector.innerText();
 
-    const saveTypeFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
-    await this.selectSaveType(saveType);
-    await saveTypeFilterResponse;
+    if (existingUserFilter.trim() !== user) {
+      const userFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      await this.selectUser(user);
+      await userFilterResponse;
+    }
 
-    const itemTypeFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
-    await this.selectItemType(itemType);
-    await itemTypeFilterResponse;
+    const existingSaveTypeFilter = await this.saveTypeSelector.innerText();
 
-    const appOrSurveyFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
-    await this.selectAppOrSurvey(appOrSurvey);
-    await appOrSurveyFilterResponse;
+    if (existingSaveTypeFilter.trim() !== saveType) {
+      const saveTypeFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      await this.selectSaveType(saveType);
+      await saveTypeFilterResponse;
+    }
+
+    const existingItemTypeFilter = await this.itemTypeSelector.innerText();
+
+    if (existingItemTypeFilter.trim() !== itemType) {
+      const itemTypeFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      await this.selectItemType(itemType);
+      await itemTypeFilterResponse;
+    }
+
+    const existingAppOrSurveyFilter = await this.appOrSurveySelector.innerText();
+
+    if (existingAppOrSurveyFilter.trim() !== appOrSurvey) {
+      const appOrSurveyFilterResponse = this.page.waitForResponse(this.getAuditHistoryPath);
+      await this.selectAppOrSurvey(appOrSurvey);
+      await appOrSurveyFilterResponse;
+    }
   }
 
   async getRows() {
