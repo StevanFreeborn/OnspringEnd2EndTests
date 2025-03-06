@@ -4,6 +4,7 @@ import { BaseAdminPage } from '../baseAdminPage';
 import { DeleteDocumentDialog } from '../../componentObjectModels/dialogs/deleteDocumentDialog';
 
 export class DocumentAdminPage extends BaseAdminPage {
+  private readonly getDocumentsListPath: string;
   readonly path: string;
   readonly documentsGrid: Locator;
   private readonly createDocumentButton: Locator;
@@ -12,6 +13,7 @@ export class DocumentAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getDocumentsListPath = '/Admin/Document/GetListPage';
     this.path = '/Admin/Document';
     this.documentsGrid = page.locator('#grid');
     this.createDocumentButton = page.getByRole('button', { name: 'Create Document' });
@@ -20,7 +22,9 @@ export class DocumentAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getDocumentsResponse = this.page.waitForResponse(this.getDocumentsListPath);
+    await this.page.goto(this.path);
+    await getDocumentsResponse;
   }
 
   async createDocument(appName: string, documentName: string) {

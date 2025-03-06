@@ -5,6 +5,7 @@ import { TEST_API_KEY_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class ApiKeysAdminPage extends BaseAdminPage {
+  private readonly getApiKeysPath: string;
   readonly path: string;
   private readonly deleteApiKeyPathRegex: RegExp;
   readonly createApiKeyButton: Locator;
@@ -16,6 +17,7 @@ export class ApiKeysAdminPage extends BaseAdminPage {
     super(page);
     this.path = '/Admin/Security/ApiKey';
     this.deleteApiKeyPathRegex = /\/Admin\/Security\/ApiKey\/\d+\/Delete/;
+    this.getApiKeysPath = '/Admin/Security/ApiKey/GetListPage';
     this.createApiKeyButton = page.getByRole('button', { name: 'Create API Key' });
     this.apiKeyGrid = page.locator('#grid');
     this.createApiKeyDialog = new CreateApiKeyDialog(page);
@@ -23,7 +25,9 @@ export class ApiKeysAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getApiKeysResponse = this.page.waitForResponse(this.getApiKeysPath);
+    await this.page.goto(this.path);
+    await getApiKeysResponse;
   }
 
   async createApiKey(apiKeyName: string) {
