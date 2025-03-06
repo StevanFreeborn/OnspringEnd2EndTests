@@ -57,19 +57,20 @@ test.describe('formatted text block', () => {
 
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
 
+      await addTextBlockModal.generalTab.nameInput.waitFor();
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
       await addTextBlockModal.save();
     });
 
     await test.step('Verify the text block was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedTextBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedTextBlockName,
       });
+
+      await copiedTextBlockRow.waitFor();
       await expect(copiedTextBlockRow).toBeVisible();
     });
   });
@@ -99,10 +100,10 @@ test.describe('formatted text block', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(textBlock.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
 
+      await addTextBlockModal.generalTab.nameInput.waitFor();
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
 
       await addTextBlockModal.save();
@@ -180,13 +181,13 @@ test.describe('formatted text block', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(textBlock.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextBlockModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal(
         'Formatted Text Block',
         1
       );
 
+      await addTextBlockModal.generalTab.nameInput.waitFor();
       await expect(addTextBlockModal.generalTab.nameInput).toHaveValue(copiedTextBlockName);
 
       await addTextBlockModal.save();
@@ -337,9 +338,9 @@ test.describe('formatted text block', () => {
       const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
+      await editTextBlockModal.generalTab.nameInput.waitFor();
       await editTextBlockModal.generalTab.nameInput.fill(updatedTextBlockName);
       await editTextBlockModal.save();
     });
@@ -372,8 +373,9 @@ test.describe('formatted text block', () => {
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the text block was deleted', async () => {
@@ -571,9 +573,9 @@ test.describe('formatted text block', () => {
       const textBlockRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: textBlock.name });
       await textBlockRow.hover();
       await textBlockRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextBlockModal = appAdminPage.layoutTab.getLayoutItemModal('Formatted Text Block');
+      await editTextBlockModal.securityTabButton.waitFor();
       await editTextBlockModal.securityTabButton.click();
       await editTextBlockModal.securityTab.setPermissions([]);
       await editTextBlockModal.save();

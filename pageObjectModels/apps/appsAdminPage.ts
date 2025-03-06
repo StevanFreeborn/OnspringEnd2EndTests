@@ -6,8 +6,9 @@ import { TEST_APP_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class AppsAdminPage extends BaseAdminPage {
+  private readonly getAppsListPath: string;
   readonly path: string;
-  private readonly deleteAppPathRegex: RegExp;
+  readonly deleteAppPathRegex: RegExp;
   readonly createAppButton: Locator;
   readonly appGrid: Locator;
   readonly createAppDialog: CreateAppDialog;
@@ -16,6 +17,7 @@ export class AppsAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getAppsListPath = '/Admin/App/AppsListRead';
     this.path = '/Admin/App';
     this.deleteAppPathRegex = /\/Admin\/App\/\d+\/Delete/;
     this.createAppButton = page.locator('.create-button');
@@ -26,7 +28,9 @@ export class AppsAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getAppsListResponse = this.page.waitForResponse(this.getAppsListPath);
+    await this.page.goto(this.path);
+    await getAppsListResponse;
   }
 
   async createApp(appName: string) {
@@ -35,7 +39,6 @@ export class AppsAdminPage extends BaseAdminPage {
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();
 
-    await this.page.waitForLoadState('networkidle');
     await this.createAppModal.nameInput.waitFor();
 
     await this.createAppModal.nameInput.fill(appName);
@@ -54,8 +57,9 @@ export class AppsAdminPage extends BaseAdminPage {
     let appRowsCount = await appRows.count();
 
     while (appRowsCount < totalNumOfApps) {
+      const scrollResponse = this.page.waitForResponse(this.getAppsListPath);
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-      await this.page.waitForLoadState('networkidle');
+      await scrollResponse;
       appRowsCount = await appRows.count();
     }
 

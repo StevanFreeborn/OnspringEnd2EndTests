@@ -62,13 +62,13 @@ export class ReportPage extends BasePage {
     this.calendarChart = new CalendarChart(this.reportContents.locator('#calendar'));
   }
 
-  async goto(reportId: number) {
-    await this.page.goto(`/Report/${reportId}/Display`, { waitUntil: 'networkidle' });
+  async waitUntilLoaded() {
+    await this.copyrightPatentInfo.waitFor({ state: 'hidden' });
   }
 
-  async waitUntilLoaded() {
-    await this.page.waitForLoadState('networkidle');
-    await this.copyrightPatentInfo.waitFor({ state: 'hidden' });
+  async goto(reportId: number) {
+    await this.page.goto(`/Report/${reportId}/Display`);
+    await this.waitUntilLoaded();
   }
 
   getReportIdFromUrl() {

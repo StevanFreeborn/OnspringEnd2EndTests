@@ -242,12 +242,16 @@ test.describe('Group', () => {
       await expect(groupRow).toBeAttached();
     });
 
-    await test.step('Delete the role', async () => {
+    await test.step('Delete the group', async () => {
       await groupRow.hover();
       await groupRow.getByTitle('Delete Group').click();
+
+      const deleteGroupsResponse = groupsSecurityAdminPage.page.waitForResponse(
+        groupsSecurityAdminPage.deleteGroupPathRegex
+      );
       await groupsSecurityAdminPage.deleteGroupDialog.deleteButton.click();
+      await deleteGroupsResponse;
       await groupsSecurityAdminPage.deleteGroupDialog.waitForDialogToBeDismissed();
-      await groupsSecurityAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the group is deleted', async () => {

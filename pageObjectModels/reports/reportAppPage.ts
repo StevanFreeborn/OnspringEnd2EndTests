@@ -24,7 +24,7 @@ export class ReportAppPage extends BasePage {
 
   async goto(appId: number) {
     const getReportsResponse = this.page.waitForResponse(this.getReportsPathRegex);
-    await this.page.goto(`/Report/App/${appId}`, { waitUntil: 'networkidle' });
+    await this.page.goto(`/Report/App/${appId}`);
     await getReportsResponse;
   }
 

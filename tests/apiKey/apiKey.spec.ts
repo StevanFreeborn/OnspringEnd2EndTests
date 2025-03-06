@@ -423,9 +423,11 @@ test.describe('API Key', () => {
       await apiKeyDeleteButton.click();
 
       await expect(apiKeysAdminPage.deleteApiKeyDialog.deleteButton).toBeVisible();
+
+      const deleteResponse = apiKeysAdminPage.page.waitForResponse(apiKeysAdminPage.deleteApiKeyPathRegex);
       await apiKeysAdminPage.deleteApiKeyDialog.deleteButton.click();
+      await deleteResponse;
       await apiKeysAdminPage.deleteApiKeyDialog.waitForDialogToBeDismissed();
-      await apiKeysAdminPage.page.waitForLoadState('networkidle');
     });
     await test.step('Verify the api key was deleted correctly', async () => {
       await expect(apiKeyRow).not.toBeAttached();

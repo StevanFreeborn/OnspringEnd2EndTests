@@ -147,7 +147,7 @@ export class SurveyDesignerModal {
     const previewPagePromise = context.waitForEvent('page');
     await this.previewButton.click();
     const page = await previewPagePromise;
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     return new SurveyPreviewPage(page);
   }
 

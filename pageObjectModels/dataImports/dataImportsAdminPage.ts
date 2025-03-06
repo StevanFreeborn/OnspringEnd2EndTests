@@ -5,6 +5,7 @@ import { TEST_DATA_IMPORT_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class DataImportsAdminPage extends BaseAdminPage {
+  private readonly getImportsPath: string;
   private readonly path: string;
   private readonly deleteImportPathRegex: RegExp;
   readonly dataImportGrid: Locator;
@@ -14,6 +15,7 @@ export class DataImportsAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getImportsPath = '/Admin/Integration/Import/ImportList';
     this.path = '/Admin/Integration/Import';
     this.dataImportGrid = page.locator('#grid');
     this.deleteDataImportsDialog = new DeleteDataImportDialog(page);
@@ -23,7 +25,9 @@ export class DataImportsAdminPage extends BaseAdminPage {
   }
 
   async goto() {
+    const getImportsResponse = this.page.waitForResponse(this.getImportsPath);
     await this.page.goto(this.path);
+    await getImportsResponse;
   }
 
   async deleteAllTestImports() {
@@ -40,8 +44,9 @@ export class DataImportsAdminPage extends BaseAdminPage {
       let importRowsCount = await importRows.count();
 
       while (importRowsCount < totalNumOfImports) {
+        const scrollResponse = this.page.waitForResponse(this.getImportsPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await scrollResponse;
         importRowsCount = await importRows.count();
       }
     }

@@ -1195,9 +1195,10 @@ test.describe('survey supporting data app', () => {
       await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toHaveValue('OK');
       await expect(surveysAdminPage.deleteSurveyDialog.deleteButton).toBeEnabled();
 
+      const deleteSurveyResponse = surveysAdminPage.page.waitForResponse(surveysAdminPage.deleteSurveyPathRegex);
       await surveysAdminPage.deleteSurveyDialog.deleteButton.click();
+      await deleteSurveyResponse;
       await surveysAdminPage.deleteSurveyDialog.waitForDialogToBeDismissed();
-      await surveysAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the survey supporting data app was deleted', async () => {

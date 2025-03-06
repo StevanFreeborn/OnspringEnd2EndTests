@@ -4,6 +4,7 @@ import { TEST_SENDING_NUMBER_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class SendingNumberAdminPage extends BaseAdminPage {
+  private readonly getSendingNumbersPath: string;
   readonly path: string;
   readonly deleteNumberPath: string;
   readonly sendingNumberGrid: Locator;
@@ -11,6 +12,7 @@ export class SendingNumberAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getSendingNumbersPath = '/Admin/TextSendingNumber/GetListPage';
     this.path = '/Admin/TextSendingNumber';
     this.deleteNumberPath = '/Admin/TextSendingNumber/Delete';
     this.sendingNumberGrid = page.locator('#grid');
@@ -18,7 +20,9 @@ export class SendingNumberAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getSendingNumbersResponse = this.page.waitForResponse(this.getSendingNumbersPath);
+    await this.page.goto(this.path);
+    await getSendingNumbersResponse;
   }
 
   async deleteAllTestNumbers() {
@@ -35,8 +39,9 @@ export class SendingNumberAdminPage extends BaseAdminPage {
       let numberRowsCount = await numberRows.count();
 
       while (numberRowsCount < totalNumOfSendingNumbers) {
+        const getResponse = this.page.waitForResponse(this.getSendingNumbersPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await getResponse;
         numberRowsCount = await numberRows.count();
       }
     }

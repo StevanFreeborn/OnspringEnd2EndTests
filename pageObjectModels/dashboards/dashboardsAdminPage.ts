@@ -3,10 +3,11 @@ import { CreateDashboardDialog } from '../../componentObjectModels/dialogs/creat
 import { DeleteDashboardDialog } from '../../componentObjectModels/dialogs/deleteDashboardDialog';
 import { DashboardDesignerModal } from '../../componentObjectModels/modals/dashboardDesignerModal';
 import { TEST_DASHBOARD_NAME } from '../../factories/fakeDataFactory';
-import { BaseAdminPage } from '../baseAdminPage';
 import { Dashboard } from '../../models/dashboard';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class DashboardsAdminPage extends BaseAdminPage {
+  private readonly getDashboardsPath: string;
   private readonly deletePathRegex: RegExp;
   private readonly createDashboardButton: Locator;
   private readonly createDashboardDialog: CreateDashboardDialog;
@@ -17,6 +18,7 @@ export class DashboardsAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getDashboardsPath = '/Admin/Dashboard/GetListPage';
     this.path = '/Admin/Dashboard';
     this.grid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Dashboard\/\d+\/Delete/;
@@ -27,8 +29,9 @@ export class DashboardsAdminPage extends BaseAdminPage {
   }
 
   async goto() {
+    const getDashboardsResponse = this.page.waitForResponse(this.getDashboardsPath);
     await this.page.goto(this.path);
-    await this.page.waitForLoadState('networkidle');
+    await getDashboardsResponse;
   }
 
   private async scrollAllIntoView() {
@@ -43,8 +46,9 @@ export class DashboardsAdminPage extends BaseAdminPage {
       let itemRowsCount = await itemRows.count();
 
       while (itemRowsCount < totalNumOfItems) {
+        const scrollResponse = this.page.waitForResponse(this.getDashboardsPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await scrollResponse;
         itemRowsCount = await itemRows.count();
       }
     }

@@ -267,9 +267,13 @@ test.describe('Role', () => {
     await test.step('Delete the role', async () => {
       await roleRow.hover();
       await roleRow.getByTitle('Delete Role').click();
+
+      const deleteRoleResponse = rolesSecurityAdminPage.page.waitForResponse(
+        rolesSecurityAdminPage.deleteRolePathRegex
+      );
       await rolesSecurityAdminPage.deleteRoleDialog.deleteButton.click();
+      await deleteRoleResponse;
       await rolesSecurityAdminPage.deleteRoleDialog.waitForDialogToBeDismissed();
-      await rolesSecurityAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the role is deleted', async () => {

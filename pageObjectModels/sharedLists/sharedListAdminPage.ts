@@ -5,8 +5,9 @@ import { TEST_LIST_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class SharedListAdminPage extends BaseAdminPage {
+  private readonly getSharedListPath: string;
   readonly pathRegex: RegExp;
-  private readonly deleteListPathRegex: RegExp;
+  readonly deleteListPathRegex: RegExp;
   private readonly createListButton: Locator;
   readonly listsGrid: Locator;
   private readonly createListDialog: CreateListDialog;
@@ -14,6 +15,7 @@ export class SharedListAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getSharedListPath = '/Admin/SharedList/GetListPage';
     this.pathRegex = /\/Admin\/SharedList/;
     this.deleteListPathRegex = /\/Admin\/SharedList\/\d+\/Delete/;
     this.createListButton = page.getByRole('button', { name: 'Create List' });
@@ -23,7 +25,9 @@ export class SharedListAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto('/Admin/SharedList', { waitUntil: 'networkidle' });
+    const getSharedListsResponse = this.page.waitForResponse(this.getSharedListPath);
+    await this.page.goto('/Admin/SharedList');
+    await getSharedListsResponse;
   }
 
   async createListCopy(listToCopy: string, listName: string) {
@@ -78,8 +82,9 @@ export class SharedListAdminPage extends BaseAdminPage {
       let listRowsCount = await listRows.count();
 
       while (listRowsCount < totalNumOfLists) {
+        const getSharedListsResponse = this.page.waitForResponse(this.getSharedListPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await getSharedListsResponse;
         listRowsCount = await listRows.count();
       }
     }

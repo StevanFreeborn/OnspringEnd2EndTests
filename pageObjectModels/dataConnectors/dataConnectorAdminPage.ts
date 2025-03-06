@@ -4,6 +4,7 @@ import { TEST_CONNECTOR_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class DataConnectorAdminPage extends BaseAdminPage {
+  private readonly getConnectorsPath: string;
   readonly path: string;
   readonly connectorsGrid: Locator;
   private readonly deletePathRegex: RegExp;
@@ -11,6 +12,7 @@ export class DataConnectorAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getConnectorsPath = '/Admin/Integration/DataConnector/DataConnectorList';
     this.path = '/Admin/Integration/DataConnector';
     this.connectorsGrid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Delete/;
@@ -18,7 +20,9 @@ export class DataConnectorAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getConnectorsResponse = this.page.waitForResponse(this.getConnectorsPath);
+    await this.page.goto(this.path);
+    await getConnectorsResponse;
   }
 
   async deleteConnectors(connectorsToDelete: string[]) {
@@ -54,8 +58,9 @@ export class DataConnectorAdminPage extends BaseAdminPage {
       let connectorRowsCount = await connectorRows.count();
 
       while (connectorRowsCount < totalNumOfConnectors) {
+        const scrollResponse = this.page.waitForResponse(this.getConnectorsPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await scrollResponse;
         connectorRowsCount = await connectorRows.count();
       }
     }

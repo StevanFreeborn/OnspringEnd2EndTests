@@ -24,7 +24,7 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-console": "warn",
-    "playwright/no-networkidle": "off",
+    "playwright/no-networkidle": "error",
     "@typescript-eslint/no-floating-promises": "error",
     "no-fallthrough": "error"
   }

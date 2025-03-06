@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
-import { BASE_URL } from '../../playwright.config';
 
 export class ReferenceFieldGrid {
   private readonly page: Page;
-  private readonly pathRegex: RegExp;
+  private readonly popupPathRegex: RegExp;
+  private readonly editReferenceSearchListPathRegex: RegExp;
   readonly control: Locator;
   readonly filterInput: Locator;
   readonly searchResults: Locator;
@@ -13,7 +13,8 @@ export class ReferenceFieldGrid {
 
   constructor(control: Locator) {
     this.page = control.page();
-    this.pathRegex = new RegExp(`${BASE_URL}/Content/[0-9]+/[0-9]+/EditReferenceSearchList`);
+    this.popupPathRegex = /\/Content\/\d+\/PopupAdd/;
+    this.editReferenceSearchListPathRegex = /\/Content\/[0-9]+\/[0-9]+\/EditReferenceSearchList/;
     this.control = control;
     this.filterInput = this.control.getByPlaceholder('Select Related');
     this.searchResults = this.page.locator('div.grid-search-results:visible');
@@ -23,8 +24,9 @@ export class ReferenceFieldGrid {
   }
 
   async openCreateNewRecordModal() {
+    const popupResponse = this.page.waitForResponse(this.popupPathRegex);
     await this.createNewButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await popupResponse;
   }
 
   async isGridEmpty() {
@@ -36,14 +38,14 @@ export class ReferenceFieldGrid {
     const searchResultRow = this.searchResults.getByRole('row', { name: searchTerm });
     const scrollableElement = this.searchResults.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const clickResponse = this.page.waitForLoadState('networkidle');
+    const clickResponse = this.page.waitForResponse(this.editReferenceSearchListPathRegex);
     await this.filterInput.click();
     await clickResponse;
 
     // Reference field grid search requests are debounced, so we need to simulate typing
     // in the filter input with a delay between each character to ensure that the search
     // request is sent.
-    const searchResponse = this.page.waitForResponse(this.pathRegex);
+    const searchResponse = this.page.waitForResponse(this.editReferenceSearchListPathRegex);
     await this.filterInput.pressSequentially(searchTerm, { delay: 125 });
     await searchResponse;
 

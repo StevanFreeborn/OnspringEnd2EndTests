@@ -372,9 +372,13 @@ test.describe('User', () => {
     await test.step('Delete user', async () => {
       await userRow.hover();
       await userRow.getByTitle('Delete User').click();
+
+      const deleteUserResponse = usersSecurityAdminPage.page.waitForResponse(
+        usersSecurityAdminPage.deleteUserPathRegex
+      );
       await usersSecurityAdminPage.deleteUserDialog.deleteButton.click();
+      await deleteUserResponse;
       await usersSecurityAdminPage.deleteUserDialog.waitForDialogToBeDismissed();
-      await usersSecurityAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify user is deleted', async () => {

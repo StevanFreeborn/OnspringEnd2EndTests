@@ -51,19 +51,20 @@ test.describe('text field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
+      await addTextFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addTextFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });
+
+      await copiedFieldRow.waitFor();
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -90,10 +91,10 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
 
+      await addTextFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTextFieldModal.save();
@@ -164,10 +165,10 @@ test.describe('text field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTextFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Text', 1);
 
+      await addTextFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTextFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTextFieldModal.save();
@@ -307,9 +308,10 @@ test.describe('text field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
+
+      await editTextFieldModal.generalTab.fieldInput.waitFor();
       await editTextFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editTextFieldModal.save();
     });
@@ -339,8 +341,9 @@ test.describe('text field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the field was deleted', async () => {
@@ -558,9 +561,10 @@ test.describe('text field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTextFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
+
+      await editTextFieldModal.securityTabButton.waitFor();
       await editTextFieldModal.securityTabButton.click();
       await editTextFieldModal.securityTab.setPermissions([]);
       await editTextFieldModal.save();

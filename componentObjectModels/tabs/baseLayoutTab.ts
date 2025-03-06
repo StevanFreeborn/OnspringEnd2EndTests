@@ -17,6 +17,7 @@ import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
+  private readonly getLayoutDesignPathRegex: RegExp;
   private readonly addItemPathRegex: RegExp;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
@@ -28,6 +29,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
 
   constructor(page: Page) {
     super(page);
+    this.getLayoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
     this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
     this.layoutsGrid = page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(page);
@@ -107,8 +109,9 @@ export class BaseLayoutTab extends LayoutItemCreator {
    * @returns A promise that resolves when the layout is opened.
    */
   async openLayout(layoutName: string = 'Default Layout') {
+    const getLayoutDesignResponse = this.page.waitForResponse(this.getLayoutDesignPathRegex);
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
-    await this.page.waitForLoadState('networkidle');
+    await getLayoutDesignResponse;
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {

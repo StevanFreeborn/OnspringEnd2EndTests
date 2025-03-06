@@ -23,7 +23,6 @@ export class ContainersAdminPage extends BaseAdminPage {
 
   async goto() {
     const getListPagePromise = this.page.waitForResponse(this.getListPagePath);
-
     await this.page.goto(this.path);
     await getListPagePromise;
   }
@@ -42,8 +41,9 @@ export class ContainersAdminPage extends BaseAdminPage {
       let containerRowsCount = await containerRows.count();
 
       while (containerRowsCount < totalNumOfContainers) {
+        const scrollResponse = this.page.waitForResponse(this.getListPagePath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await scrollResponse;
         containerRowsCount = await containerRows.count();
       }
     }

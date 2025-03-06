@@ -50,18 +50,20 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
+
+      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addAttachmentFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });
+
+      await copiedFieldRow.waitFor();
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -88,10 +90,10 @@ test.describe('attachment field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
 
+      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addAttachmentFieldModal.save();
@@ -164,10 +166,10 @@ test.describe('attachment field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addAttachmentFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Attachment', 1);
 
+      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
       await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addAttachmentFieldModal.save();
@@ -307,9 +309,10 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
+
+      await editAttachmentFieldModal.generalTab.fieldInput.waitFor();
       await editAttachmentFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editAttachmentFieldModal.save();
     });
@@ -339,8 +342,9 @@ test.describe('attachment field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the field was deleted', async () => {
@@ -565,9 +569,10 @@ test.describe('attachment field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
+
+      await editAttachmentFieldModal.securityTabButton.waitFor();
       await editAttachmentFieldModal.securityTabButton.click();
       await editAttachmentFieldModal.securityTab.setPermissions([]);
       await editAttachmentFieldModal.save();

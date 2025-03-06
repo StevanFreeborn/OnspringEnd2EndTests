@@ -7,7 +7,7 @@ import { BaseAdminPage } from '../baseAdminPage';
 export class ApiKeysAdminPage extends BaseAdminPage {
   private readonly getApiKeysPath: string;
   readonly path: string;
-  private readonly deleteApiKeyPathRegex: RegExp;
+  readonly deleteApiKeyPathRegex: RegExp;
   readonly createApiKeyButton: Locator;
   readonly apiKeyGrid: Locator;
   readonly createApiKeyDialog: CreateApiKeyDialog;

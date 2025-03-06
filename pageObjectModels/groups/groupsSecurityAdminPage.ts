@@ -4,14 +4,16 @@ import { TEST_GROUP_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class GroupsSecurityAdminPage extends BaseAdminPage {
+  private readonly getGroupsPath: string;
   readonly path: string;
-  private readonly deleteGroupPathRegex: RegExp;
+  readonly deleteGroupPathRegex: RegExp;
   readonly createGroupButton: Locator;
   readonly groupsGrid: Locator;
   readonly deleteGroupDialog: DeleteGroupDialog;
 
   constructor(page: Page) {
     super(page);
+    this.getGroupsPath = '/Admin/Security/Group/GroupList';
     this.path = '/Admin/Security/Group';
     this.deleteGroupPathRegex = /\/Admin\/Security\/Group\/\d+\/Delete/;
     this.createGroupButton = page.getByRole('button', { name: 'Create Group' });
@@ -20,7 +22,9 @@ export class GroupsSecurityAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getGroupsResponse = this.page.waitForResponse(this.getGroupsPath);
+    await this.page.goto(this.path);
+    await getGroupsResponse;
   }
 
   async deleteAllTestGroups() {

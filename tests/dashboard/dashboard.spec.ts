@@ -337,7 +337,6 @@ test.describe('dashboard', () => {
 
       await dashboardPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardPage.dashboardDesigner.saveAndClose();
-      await dashboardPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the dashboard was updated correctly', async () => {

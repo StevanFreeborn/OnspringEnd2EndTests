@@ -57,19 +57,20 @@ test.describe('date formula field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
+      await addDateFormulaFieldModal.generalTab.fieldInput.waitFor();
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addDateFormulaFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });
+
+      await copiedFieldRow.waitFor();
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -99,10 +100,10 @@ test.describe('date formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
 
+      await addDateFormulaFieldModal.generalTab.fieldInput.waitFor();
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addDateFormulaFieldModal.save();
@@ -179,10 +180,10 @@ test.describe('date formula field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addDateFormulaFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Formula', 1);
 
+      await addDateFormulaFieldModal.generalTab.fieldInput.waitFor();
       await expect(addDateFormulaFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addDateFormulaFieldModal.save();
@@ -331,9 +332,10 @@ test.describe('date formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await editDateFormulaFieldModal.generalTab.fieldInput.waitFor();
       await editDateFormulaFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editDateFormulaFieldModal.save();
     });
@@ -366,8 +368,9 @@ test.describe('date formula field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the field was deleted', async () => {
@@ -569,9 +572,10 @@ test.describe('date formula field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editDateFormulaFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Formula');
+
+      await editDateFormulaFieldModal.securityTabButton.waitFor();
       await editDateFormulaFieldModal.securityTabButton.click();
       await editDateFormulaFieldModal.securityTab.setPermissions([]);
       await editDateFormulaFieldModal.save();
