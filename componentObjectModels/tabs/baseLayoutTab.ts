@@ -134,18 +134,24 @@ export class BaseLayoutTab extends LayoutItemCreator {
 
     switch (item.type) {
       case 'Formatted Text Block': {
-        if ((await objectTab.addObjectButton.isVisible()) === false) {
+        const isVisible = await fieldTab.addFieldButton.isVisible();
+
+        if (isVisible) {
           await this.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
         }
+
         await objectTab.addObjectButton.waitFor();
         await objectTab.addObjectButton.click();
         await objectTab.addObjectMenu.selectItem(item.type);
         break;
       }
       default: {
-        if ((await fieldTab.addFieldButton.isVisible()) === false) {
+        const isVisible = await objectTab.addObjectButton.isVisible();
+
+        if (isVisible) {
           await this.layoutDesignerModal.layoutItemsSection.fieldsTabButton.click();
         }
+
         await fieldTab.addFieldButton.waitFor();
         await fieldTab.addFieldButton.click();
         await fieldTab.addFieldMenu.selectItem(item.type as FieldType);
