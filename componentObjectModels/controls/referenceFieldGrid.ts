@@ -57,8 +57,10 @@ export class ReferenceFieldGrid {
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
       isVisible = await searchResultRow.isVisible();
     }
-
-    await searchResultRow.getByRole(control).click();
+    
+    const controlLocator = searchResultRow.getByRole(control);
+    await controlLocator.waitFor();
+    await controlLocator.click();
     await this.searchResults.getByRole('button', { name: 'Select' }).click();
   }
 
