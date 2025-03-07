@@ -537,7 +537,7 @@ test.describe('dashboard', () => {
       ],
       schedule: new DashboardSchedule({
         sendFrequency: 'Every Day',
-        startingOn: new Date(Date.now() + 60_000),
+        startingOn: new Date(Date.now() + 120_000),
         fromName: 'Automation Test',
         fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
         subject: emailSubject,
@@ -579,7 +579,7 @@ test.describe('dashboard', () => {
 
         exportEmailContent = email.html as string;
       }).toPass({
-        intervals: [90_000, 30_000],
+        intervals: [150_000, 30_000],
         timeout: 300_000,
       });
     });
