@@ -312,7 +312,7 @@ test.describe('date/time field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
-      const deleteResponse = await appAdminPage.waitForLayoutItemDeleteResponse();
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
       await deleteResponse;
     });
