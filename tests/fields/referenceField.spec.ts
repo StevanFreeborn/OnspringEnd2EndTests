@@ -51,7 +51,8 @@ const test = base.extend<ReferenceFieldTestFixtures>({
 
     await addRoleAdminPage.addRole(role);
     await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-    await editRoleAdminPage.page.waitForLoadState();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await editRoleAdminPage.page.waitForTimeout(1000);
 
     role.id = editRoleAdminPage.getRoleIdFromUrl();
 
@@ -519,7 +520,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 
@@ -594,7 +596,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 
@@ -672,7 +675,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 

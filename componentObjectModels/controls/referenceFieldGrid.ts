@@ -41,6 +41,8 @@ export class ReferenceFieldGrid {
     const clickResponse = this.page.waitForResponse(this.editReferenceSearchListPathRegex);
     await this.filterInput.click();
     await clickResponse;
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2000);
 
     // Reference field grid search requests are debounced, so we need to simulate typing
     // in the filter input with a delay between each character to ensure that the search
@@ -59,6 +61,8 @@ export class ReferenceFieldGrid {
     }
     
     const controlLocator = searchResultRow.getByRole(control);
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2000);
     await controlLocator.waitFor();
     await controlLocator.click();
     await this.searchResults.getByRole('button', { name: 'Select' }).click();

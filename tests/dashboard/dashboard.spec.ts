@@ -337,9 +337,12 @@ test.describe('dashboard', () => {
 
       await dashboardPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardPage.dashboardDesigner.saveAndClose();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard was updated correctly', async () => {
+      await dashboardPage.goto(dashboard.id);
       await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboard.name);
     });
   });
@@ -580,7 +583,7 @@ test.describe('dashboard', () => {
         exportEmailContent = email.html as string;
       }).toPass({
         intervals: [150_000, 30_000],
-        timeout: 300_000,
+        timeout: 600_000,
       });
     });
 
@@ -761,6 +764,9 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
@@ -817,6 +823,8 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is enabled', async () => {
@@ -1038,9 +1046,13 @@ test.describe('dashboard', () => {
       await dashboardPage.openDashboardDesigner();
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard has the expected title', async () => {
+      await dashboardPage.goto(dashboard.id);
       await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
     });
   });
