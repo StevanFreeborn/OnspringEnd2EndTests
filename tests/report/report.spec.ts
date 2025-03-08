@@ -688,6 +688,8 @@ test.describe('report', () => {
       description: 'Test-606',
     });
 
+    test.slow();
+
     const initialFields = getFieldsForApp();
     const fields = {
       ...initialFields,

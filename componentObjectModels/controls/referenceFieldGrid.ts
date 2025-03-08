@@ -42,7 +42,7 @@ export class ReferenceFieldGrid {
     await this.filterInput.click();
     await clickResponse;
     // eslint-disable-next-line playwright/no-wait-for-timeout
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(1000);
 
     // Reference field grid search requests are debounced, so we need to simulate typing
     // in the filter input with a delay between each character to ensure that the search
@@ -57,6 +57,8 @@ export class ReferenceFieldGrid {
     // search results. We need to scroll the search results until the row is visible.
     while (isVisible === false) {
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await this.page.waitForTimeout(1000);
       isVisible = await searchResultRow.isVisible();
     }
     
@@ -64,7 +66,7 @@ export class ReferenceFieldGrid {
     const loadingIndicator = this.searchResults.locator('div').filter({ hasText: /^Loading\.\.\.$/ });
     
     // eslint-disable-next-line playwright/no-wait-for-timeout
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(1000);
     await loadingIndicator.waitFor({ state: 'hidden' });
     await controlLocator.waitFor();
     await controlLocator.click();

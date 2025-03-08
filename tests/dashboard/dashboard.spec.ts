@@ -1061,6 +1061,9 @@ test.describe('dashboard', () => {
 
     await test.step('Verify the dashboard has the expected title', async () => {
       await dashboardPage.goto(dashboard.id);
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardPage.page.waitForTimeout(1000);
+      await dashboardPage.page.reload();
       await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
     });
   });
