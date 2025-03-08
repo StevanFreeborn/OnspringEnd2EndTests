@@ -729,6 +729,7 @@ test.describe('dashboard', () => {
 
     const dashboard = new Dashboard({
       name: FakeDataFactory.createFakeDashboardName(),
+      status: true,
       containers: [container.name],
       items: [
         {
@@ -759,12 +760,12 @@ test.describe('dashboard', () => {
 
       const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Disable the dashboard', async () => {
       dashboard.status = false;
-      
+
+      await dashboardsAdminPage.goto();
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
@@ -824,7 +825,7 @@ test.describe('dashboard', () => {
 
     await test.step('Enable the dashboard', async () => {
       dashboard.status = true;
-      
+
       await dashboardsAdminPage.goto();
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);

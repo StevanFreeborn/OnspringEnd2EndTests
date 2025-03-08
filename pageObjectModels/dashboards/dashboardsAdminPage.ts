@@ -104,6 +104,8 @@ export class DashboardsAdminPage extends BaseAdminPage {
     for (const dashboard of dashboardsToDelete) {
       const deleteConnectorRow = this.grid.getByRole('row', { name: new RegExp(dashboard, 'i') });
       await this.delete(deleteConnectorRow);
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await this.page.waitForTimeout(1000);
     }
   }
 
