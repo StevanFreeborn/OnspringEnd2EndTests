@@ -76,6 +76,7 @@ test.describe('dashboard', () => {
   });
 
   test.afterEach(async ({ dashboardsAdminPage }) => {
+    await dashboardsAdminPage.goto();
     await dashboardsAdminPage.deleteDashboards(dashboardsToDelete);
     dashboardsToDelete = [];
   });
@@ -748,6 +749,8 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is enabled', async () => {
@@ -756,16 +759,17 @@ test.describe('dashboard', () => {
 
       const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
+      await dashboardsAdminPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Disable the dashboard', async () => {
       dashboard.status = false;
-
+      
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
       // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(5000);
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
@@ -806,6 +810,8 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
@@ -814,6 +820,7 @@ test.describe('dashboard', () => {
 
       const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
+      await dashboardsAdminPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Enable the dashboard', async () => {
@@ -823,7 +830,7 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
       // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(5000);
+      await dashboardsAdminPage.page.waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is enabled', async () => {
@@ -873,6 +880,7 @@ test.describe('dashboard', () => {
 
       const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Make the dashboard private', async () => {
@@ -935,6 +943,7 @@ test.describe('dashboard', () => {
 
       const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
+      await testUserDashboardPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Make the dashboard public', async () => {

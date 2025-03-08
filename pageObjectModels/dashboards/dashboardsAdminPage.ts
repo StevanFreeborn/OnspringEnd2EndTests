@@ -85,7 +85,6 @@ export class DashboardsAdminPage extends BaseAdminPage {
   }
 
   async getDashboardRow(dashboardName: string) {
-    await this.goto();
     await this.scrollAllIntoView();
 
     return this.grid.getByRole('row', { name: new RegExp(dashboardName, 'i') });
@@ -100,8 +99,6 @@ export class DashboardsAdminPage extends BaseAdminPage {
   }
 
   async deleteDashboards(dashboardsToDelete: string[]) {
-    await this.goto();
-
     await this.scrollAllIntoView();
 
     for (const dashboard of dashboardsToDelete) {
