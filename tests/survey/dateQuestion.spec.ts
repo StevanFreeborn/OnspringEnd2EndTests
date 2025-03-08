@@ -303,6 +303,8 @@ test.describe('date/time question', () => {
 
     await test.step('Preview the survey and confirm the date question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      
+      await previewPage.nextButton.waitFor();
       await previewPage.nextButton.click();
 
       const question = previewPage.getQuestion(surveyItemId, dateQuestion.questionText);

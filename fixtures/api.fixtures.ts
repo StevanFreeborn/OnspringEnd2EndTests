@@ -149,6 +149,8 @@ async function createApiKey(sysAdminPage: Page, key: ApiKey) {
   await apiKeysAdminPage.goto();
   await apiKeysAdminPage.createApiKey(key.name);
   await apiKeysAdminPage.page.waitForURL(apiKeyAdminPage.pathRegex);
+  // eslint-disable-next-line playwright/no-wait-for-timeout
+  await apiKeyAdminPage.page.waitForTimeout(5000);
 
   await apiKeyAdminPage.updateApiKey(key);
   await apiKeyAdminPage.save();

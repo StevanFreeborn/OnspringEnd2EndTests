@@ -764,9 +764,8 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-
       // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
+      await dashboardsAdminPage.page.waitForTimeout(5000);
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
@@ -824,7 +823,7 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
       // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
+      await dashboardsAdminPage.page.waitForTimeout(5000);
     });
 
     await test.step('Verify the dashboard is enabled', async () => {

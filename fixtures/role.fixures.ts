@@ -60,7 +60,8 @@ export async function createRole(sysAdminPage: Page, roleStatus: RoleStatus, app
 
   await addRoleAdminPage.addRole(role);
   await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-  await editRoleAdminPage.page.waitForLoadState();
+  // eslint-disable-next-line playwright/no-wait-for-timeout
+  await editRoleAdminPage.page.waitForTimeout(5000);
 
   role.id = editRoleAdminPage.getRoleIdFromUrl();
 
