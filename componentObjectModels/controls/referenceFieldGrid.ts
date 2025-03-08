@@ -61,7 +61,7 @@ export class ReferenceFieldGrid {
     }
     
     const controlLocator = searchResultRow.getByRole(control);
-    const loadingIndicator = this.searchResults.locator('div').filter({ hasText: /Loading\.\.\./ });
+    const loadingIndicator = this.searchResults.locator('div').filter({ hasText: /^Loading\.\.\.$/ });
     
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(2000);

@@ -757,7 +757,7 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
     });
@@ -776,7 +776,7 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
     });
   });
@@ -818,14 +818,14 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
     });
 
     await test.step('Enable the dashboard', async () => {
       dashboard.status = true;
-
+      
+      await dashboardsAdminPage.goto();
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
@@ -837,7 +837,7 @@ test.describe('dashboard', () => {
       await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
     });
   });
@@ -878,7 +878,7 @@ test.describe('dashboard', () => {
       await testUserDashboardPage.goto();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
     });
@@ -896,7 +896,7 @@ test.describe('dashboard', () => {
       await testUserDashboardPage.page.reload();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
     });
   });
@@ -941,7 +941,7 @@ test.describe('dashboard', () => {
       await testUserDashboardPage.goto();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
     });
@@ -958,7 +958,7 @@ test.describe('dashboard', () => {
       await testUserDashboardPage.page.reload();
       await testUserDashboardPage.sidebar.dashboardsTab.click();
 
-      const containerLink = await testUserDashboardPage.sidebar.getContainerLink(container.name);
+      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeVisible();
     });
   });
