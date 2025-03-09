@@ -729,67 +729,6 @@ test.describe('dashboard', () => {
 
     const dashboard = new Dashboard({
       name: FakeDataFactory.createFakeDashboardName(),
-      status: true,
-      containers: [container.name],
-      items: [
-        {
-          object: report,
-          row: 0,
-          column: 0,
-        },
-      ],
-    });
-
-    dashboardsToDelete.push(dashboard.name);
-
-    await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
-    });
-
-    await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
-    });
-
-    await test.step('Verify the dashboard is enabled', async () => {
-      await dashboardsAdminPage.page.reload();
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
-
-      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeVisible();
-    });
-
-    await test.step('Disable the dashboard', async () => {
-      dashboard.status = false;
-
-      await dashboardsAdminPage.goto();
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
-    });
-
-    await test.step('Verify the dashboard is disabled', async () => {
-      await dashboardsAdminPage.page.reload();
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
-
-      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeHidden();
-    });
-  });
-
-  test('Enable a dashboard', async ({ report, container, dashboardsAdminPage }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-331',
-    });
-
-    const dashboard = new Dashboard({
-      name: FakeDataFactory.createFakeDashboardName(),
       status: false,
       containers: [container.name],
       items: [
@@ -816,18 +755,40 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
-      await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
       const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
     });
+  });
 
-    await test.step('Enable the dashboard', async () => {
-      dashboard.status = true;
+  test('Enable a dashboard', async ({ report, container, dashboardsAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-331',
+    });
 
+    const dashboard = new Dashboard({
+      name: FakeDataFactory.createFakeDashboardName(),
+      status: true,
+      containers: [container.name],
+      items: [
+        {
+          object: report,
+          row: 0,
+          column: 0,
+        },
+      ],
+    });
+
+    dashboardsToDelete.push(dashboard.name);
+
+    await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Create the dashboard', async () => {
+      await dashboardsAdminPage.createDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
       // eslint-disable-next-line playwright/no-wait-for-timeout
@@ -835,7 +796,6 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Verify the dashboard is enabled', async () => {
-      await dashboardsAdminPage.page.reload();
       await dashboardsAdminPage.sidebar.dashboardsTab.click();
 
       const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
