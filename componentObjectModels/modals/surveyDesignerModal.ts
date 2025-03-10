@@ -46,6 +46,7 @@ export class SurveyDesignerModal {
 
   private readonly savePageSortPathRegex: RegExp;
   private readonly saveItemSortPathRegex: RegExp;
+  private readonly movePageItemPathRegex
 
   readonly attachmentButton: Locator;
   readonly dateButton: Locator;
@@ -76,6 +77,7 @@ export class SurveyDesignerModal {
 
     this.savePageSortPathRegex = /\/Admin\/App\/\d+\/SurveyPage\/\d+\/SavePageSort/;
     this.saveItemSortPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/SaveItemSort/;
+    this.movePageItemPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/Move/
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
     this.dateButton = this.frame.getByRole('button', { name: 'Date/Time' });
@@ -147,7 +149,7 @@ export class SurveyDesignerModal {
     const previewPagePromise = context.waitForEvent('page');
     await this.previewButton.click();
     const page = await previewPagePromise;
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     return new SurveyPreviewPage(page);
   }
 
@@ -470,7 +472,7 @@ export class SurveyDesignerModal {
   }
 
   async goToPage(pageName: string) {
-    const page = await this.getPageLocator(pageName);
+    const page = this.getPageLocator(pageName);
     await page.click();
   }
 
@@ -511,7 +513,10 @@ export class SurveyDesignerModal {
     await surveyItem.getByTitle('Move Question').click();
 
     const moveToPageMenu = this.frame.locator('#move-to-page-menu');
+
+    const moveToPageResponse = this.designer.page().waitForResponse(this.movePageItemPathRegex);
     await moveToPageMenu.getByText(pageName).click();
+    await moveToPageResponse;
     await this.saveIndicator.waitFor({ state: 'hidden' });
   }
 

@@ -53,19 +53,20 @@ test.describe('time span field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
 
+      await addTimeSpanFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTimeSpanFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await addTimeSpanFieldModal.save();
     });
 
     await test.step('Verify the field was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });
+
+      await copiedFieldRow.waitFor();
       await expect(copiedFieldRow).toBeVisible();
     });
   });
@@ -92,10 +93,10 @@ test.describe('time span field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
 
+      await addTimeSpanFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTimeSpanFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTimeSpanFieldModal.save();
@@ -168,10 +169,10 @@ test.describe('time span field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addTimeSpanFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Time Span', 1);
 
+      await addTimeSpanFieldModal.generalTab.fieldInput.waitFor();
       await expect(addTimeSpanFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
 
       await addTimeSpanFieldModal.save();
@@ -311,9 +312,9 @@ test.describe('time span field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
+      await editTimeSpanFieldModal.generalTab.fieldInput.waitFor();
       await editTimeSpanFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editTimeSpanFieldModal.save();
     });
@@ -343,8 +344,9 @@ test.describe('time span field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the field was deleted', async () => {
@@ -569,9 +571,9 @@ test.describe('time span field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editTimeSpanFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Time Span');
+      await editTimeSpanFieldModal.securityTabButton.waitFor();
       await editTimeSpanFieldModal.securityTabButton.click();
       await editTimeSpanFieldModal.securityTab.setPermissions([]);
       await editTimeSpanFieldModal.save();

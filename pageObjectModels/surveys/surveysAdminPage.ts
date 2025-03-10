@@ -7,7 +7,7 @@ import { TEST_SURVEY_NAME } from './../../factories/fakeDataFactory';
 
 export class SurveysAdminPage extends BaseAdminPage {
   readonly path: string;
-  private readonly deleteSurveyPathRegex: RegExp;
+  readonly deleteSurveyPathRegex: RegExp;
   private readonly readSurveyListPathRegex: RegExp;
   readonly createSurveyButton: Locator;
   readonly surveyGrid: Locator;
@@ -28,7 +28,9 @@ export class SurveysAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getSurveysResponse = this.page.waitForResponse(this.readSurveyListPathRegex);
+    await this.page.goto(this.path);
+    await getSurveysResponse;
   }
 
   async createSurvey(surveyName: string) {
@@ -37,7 +39,6 @@ export class SurveysAdminPage extends BaseAdminPage {
     await this.createSurveyDialog.continueButton.waitFor();
     await this.createSurveyDialog.continueButton.click();
 
-    await this.page.waitForLoadState('networkidle');
     await this.createSurveyModal.nameInput.waitFor();
 
     await this.createSurveyModal.nameInput.fill(surveyName);

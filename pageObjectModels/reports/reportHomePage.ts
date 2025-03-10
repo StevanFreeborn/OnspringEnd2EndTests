@@ -5,6 +5,7 @@ import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
 
 export class ReportHomePage extends BasePage {
+  private readonly getAppsListPath: string;
   readonly pathRegex: RegExp;
   private readonly createReportButton: Locator;
   private readonly createMenu: Locator;
@@ -13,6 +14,7 @@ export class ReportHomePage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    this.getAppsListPath = '/Report/AppsListRead';
     this.pathRegex = /\/Report/;
     this.createReportButton = page.getByRole('button', { name: 'Create Report' });
     this.createMenu = page.locator('#create-menu');
@@ -21,7 +23,9 @@ export class ReportHomePage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto('/Report', { waitUntil: 'networkidle' });
+    const getAppsListResponse = this.page.waitForResponse(this.getAppsListPath);
+    await this.page.goto('/Report');
+    await getAppsListResponse;
   }
 
   async createReport(report: Report) {

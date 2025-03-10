@@ -313,6 +313,8 @@ test.describe('likert question', () => {
 
     await test.step('Preview the survey and confirm the likert question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      
+      await previewPage.nextButton.waitFor();
       await previewPage.nextButton.click();
 
       const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);

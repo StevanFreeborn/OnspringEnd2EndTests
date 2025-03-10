@@ -5,8 +5,9 @@ import { TEST_USER_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class UsersSecurityAdminPage extends BaseAdminPage {
+  private readonly getUsersPath: string;
   readonly path: string;
-  private readonly deleteUserPathRegex: RegExp;
+  readonly deleteUserPathRegex: RegExp;
   readonly pillNav: SecurityAdminPillNav;
   readonly createUserButton: Locator;
   readonly userGrid: Locator;
@@ -14,6 +15,7 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.getUsersPath = '/Admin/Security/User/UserList';
     this.path = '/Admin/Security/User';
     this.deleteUserPathRegex = /\/Admin\/Security\/User\/\d+\/Delete/;
     this.pillNav = new SecurityAdminPillNav(page);
@@ -23,7 +25,9 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getUsersResponse = this.page.waitForResponse(this.getUsersPath);
+    await this.page.goto(this.path);
+    await getUsersResponse;
   }
 
   async deleteAllTestUsers() {
@@ -40,8 +44,9 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
       let userRowsCount = await userRows.count();
 
       while (userRowsCount < totalNumOfUsers) {
+        const getUsersResponse = this.page.waitForResponse(this.getUsersPath);
         await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await this.page.waitForLoadState('networkidle');
+        await getUsersResponse;
         userRowsCount = await userRows.count();
       }
     }

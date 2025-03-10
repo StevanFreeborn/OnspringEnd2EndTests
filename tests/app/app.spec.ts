@@ -1171,9 +1171,10 @@ test.describe('app', () => {
       await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue('OK');
       await expect(appsAdminPage.deleteAppDialog.deleteButton).toBeEnabled();
 
+      const deleteResponse = appsAdminPage.page.waitForResponse(appsAdminPage.deleteAppPathRegex);
       await appsAdminPage.deleteAppDialog.deleteButton.click();
+      await deleteResponse;
       await appsAdminPage.deleteAppDialog.waitForDialogToBeDismissed();
-      await appsAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify app was deleted correctly', async () => {

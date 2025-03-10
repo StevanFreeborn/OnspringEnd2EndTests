@@ -5,6 +5,7 @@ import { Report } from '../../models/report';
 import { BasePage } from '../basePage';
 
 export class ReportAppPage extends BasePage {
+  private readonly getReportsPathRegex: RegExp;
   readonly pathRegex: RegExp;
   private readonly createReportButton: Locator;
   private readonly addReportDialog: AddReportDialog;
@@ -13,6 +14,7 @@ export class ReportAppPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    this.getReportsPathRegex = /\/Report\/ReportList\/\d+/;
     this.pathRegex = /\/Report\/App\/\d+/;
     this.createReportButton = page.getByRole('button', { name: 'Create Report' });
     this.addReportDialog = new AddReportDialog(page);
@@ -21,7 +23,9 @@ export class ReportAppPage extends BasePage {
   }
 
   async goto(appId: number) {
-    await this.page.goto(`/Report/App/${appId}`, { waitUntil: 'networkidle' });
+    const getReportsResponse = this.page.waitForResponse(this.getReportsPathRegex);
+    await this.page.goto(`/Report/App/${appId}`);
+    await getReportsResponse;
   }
 
   async createReport(report: Report) {

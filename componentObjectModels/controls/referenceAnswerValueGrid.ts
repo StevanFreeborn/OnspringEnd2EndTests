@@ -1,12 +1,14 @@
 import { Locator } from '@playwright/test';
 
 export class ReferenceAnswerValueGrid {
+  private readonly getSurveyAnswerValuesPathRegex: RegExp;
   private readonly control: Locator;
   private readonly gridBody: Locator;
   readonly addValuesButton: Locator;
   readonly addAllValuesButton: Locator;
 
   constructor(control: Locator) {
+    this.getSurveyAnswerValuesPathRegex = /\/Admin\/App\/\d+\/SurveyReference\/GetListPage/
     this.control = control;
     this.gridBody = this.control.locator('.k-grid-content');
     this.addValuesButton = this.control.getByRole('button', { name: 'Add Values' });
@@ -19,7 +21,10 @@ export class ReferenceAnswerValueGrid {
 
     await this.addAllValuesButton.click();
     await addAllValuesModal.waitFor();
+
+    const addAllValuesResponse = page.waitForResponse(this.getSurveyAnswerValuesPathRegex);
     await addAllValuesModal.getByRole('button', { name: 'Ok' }).click();
+    await addAllValuesResponse;
   }
 
   // TODO: Need to implement this method

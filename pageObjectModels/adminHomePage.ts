@@ -395,8 +395,6 @@ export class AdminHomePage extends BaseAdminPage {
     await this.securityTileCreateButton.click();
     await this.securityCreateMenu.getByText('API Key').click();
 
-    await this.page.waitForLoadState('networkidle');
-
     await this.createApiKeyDialog.nameInput.waitFor();
     await this.createApiKeyDialog.nameInput.fill(apiKeyName);
     await this.createApiKeyDialog.saveButton.click();
@@ -440,8 +438,6 @@ export class AdminHomePage extends BaseAdminPage {
     await this.surveyTileCreateButton.waitFor();
     await this.surveyTileCreateButton.click();
 
-    await this.page.waitForLoadState('networkidle');
-
     await this.createSurveyDialog.continueButton.waitFor();
     await this.createSurveyDialog.continueButton.click();
 
@@ -459,8 +455,6 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createSurveyDialog.continueButton.waitFor();
     await this.createSurveyDialog.continueButton.click();
 
-    await this.page.waitForLoadState('networkidle');
-
     await this.createSurveyModal.nameInput.waitFor();
     await this.createSurveyModal.nameInput.fill(surveyName);
     await this.createSurveyModal.saveButton.click();
@@ -474,8 +468,6 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();
 
-    await this.page.waitForLoadState('networkidle');
-
     await this.createAppModal.nameInput.waitFor();
     await this.createAppModal.nameInput.fill(appName);
     await this.createAppModal.saveButton.click();
@@ -485,8 +477,6 @@ export class AdminHomePage extends BaseAdminPage {
     await this.appTileLink.hover();
     await this.appTileCreateButton.waitFor();
     await this.appTileCreateButton.click();
-
-    await this.page.waitForLoadState('networkidle');
 
     await this.createAppDialog.continueButton.waitFor();
     await this.createAppDialog.continueButton.click();

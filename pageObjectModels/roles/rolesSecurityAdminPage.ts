@@ -4,14 +4,16 @@ import { TEST_ROLE_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class RolesSecurityAdminPage extends BaseAdminPage {
+  private readonly getRolesPath: string;
   readonly path: string;
-  private readonly deleteRolePathRegex: RegExp;
+  readonly deleteRolePathRegex: RegExp;
   readonly createRoleButton: Locator;
   readonly roleGrid: Locator;
   readonly deleteRoleDialog: DeleteRoleDialog;
 
   constructor(page: Page) {
     super(page);
+    this.getRolesPath = '/Admin/Security/Role/RoleList';
     this.path = '/Admin/Security/Role';
     this.deleteRolePathRegex = /\/Admin\/Security\/Role\/\d+\/Delete/;
     this.createRoleButton = page.getByRole('button', { name: 'Create Role' });
@@ -20,7 +22,9 @@ export class RolesSecurityAdminPage extends BaseAdminPage {
   }
 
   async goto() {
-    await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    const getRolesResponse = this.page.waitForResponse(this.getRolesPath);
+    await this.page.goto(this.path);
+    await getRolesResponse;
   }
 
   async deleteAllTestRoles() {

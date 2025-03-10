@@ -39,10 +39,10 @@ export class SidebarNav {
     await this.userImage.hover();
     await this.userMenu.waitFor();
     await this.userMenu.logoutLink.click();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForURL(/Public\/Login/);
   }
 
-  async getContainerLink(containerName: string) {
+  getContainerLink(containerName: string) {
     return this.containerList.getByRole('link', { name: containerName });
   }
 }

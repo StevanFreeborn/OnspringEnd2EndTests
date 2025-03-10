@@ -51,7 +51,8 @@ const test = base.extend<ReferenceFieldTestFixtures>({
 
     await addRoleAdminPage.addRole(role);
     await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-    await editRoleAdminPage.page.waitForLoadState();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await editRoleAdminPage.page.waitForTimeout(1000);
 
     role.id = editRoleAdminPage.getRoleIdFromUrl();
 
@@ -118,10 +119,10 @@ test.describe('reference field', () => {
 
       await fieldRow.hover();
       await fieldRow.getByTitle('Copy').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
@@ -129,10 +130,11 @@ test.describe('reference field', () => {
     });
 
     await test.step('Verify the field was copied', async () => {
-      await appAdminPage.page.waitForLoadState('networkidle');
       const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
         name: copiedFieldName,
       });
+
+      await copiedFieldRow.waitFor();
       await expect(copiedFieldRow).toBeVisible();
 
       await appAdminPage.goto(referencedApp.id);
@@ -171,10 +173,10 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
 
+      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
@@ -261,10 +263,10 @@ test.describe('reference field', () => {
       await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
       await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
       await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const addReferenceFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Reference', 1);
 
+      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
       await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
       await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
@@ -414,9 +416,10 @@ test.describe('reference field', () => {
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
       await fieldRow.hover();
       await fieldRow.getByTitle('Edit').click();
-      await appAdminPage.page.waitForLoadState('networkidle');
 
       const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
+
+      await editReferenceFieldModal.generalTab.fieldInput.waitFor();
       await editReferenceFieldModal.generalTab.fieldInput.fill(updatedFieldName);
       await editReferenceFieldModal.save();
     });
@@ -448,8 +451,9 @@ test.describe('reference field', () => {
       await fieldRow.hover();
       await fieldRow.getByTitle('Delete').click();
 
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
       await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await appAdminPage.page.waitForLoadState('networkidle');
+      await deleteResponse;
     });
 
     await test.step('Verify the field was deleted', async () => {
@@ -516,7 +520,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 
@@ -591,7 +596,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 
@@ -669,7 +675,8 @@ test.describe('reference field', () => {
 
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await editContentPage.page.waitForTimeout(1000);
       recordId = editContentPage.getRecordIdFromUrl();
     });
 

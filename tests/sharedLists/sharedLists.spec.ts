@@ -279,9 +279,12 @@ test.describe('shared lists', () => {
 
       await listDeleteButton.click();
 
+      const deleteSharedListResponse = sharedListAdminPage.page.waitForResponse(
+        sharedListAdminPage.deleteListPathRegex
+      );
       await sharedListAdminPage.deleteListDialog.deleteButton.click();
+      await deleteSharedListResponse;
       await sharedListAdminPage.deleteListDialog.waitForDialogToBeDismissed();
-      await sharedListAdminPage.page.waitForLoadState('networkidle');
     });
 
     await test.step('Verify the list was deleted', async () => {

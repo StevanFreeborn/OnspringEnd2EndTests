@@ -252,7 +252,7 @@ test.describe('report', () => {
     await test.step('Delete the report', async () => {
       await reportPage.deleteReport();
       await reportPage.page.waitForURL(reportAppPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('networkidle');
+      await reportAppPage.page.waitForLoadState('load');
     });
 
     await test.step('Verify the report was deleted', async () => {
@@ -406,7 +406,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Apply live filter to the report', async () => {
@@ -457,7 +457,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Sort the report', async () => {
@@ -507,7 +507,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Filter the report', async () => {
@@ -560,7 +560,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Export the report', async () => {
@@ -643,7 +643,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     let pdfPath: string;
@@ -687,6 +687,8 @@ test.describe('report', () => {
       type: AnnotationType.TestId,
       description: 'Test-606',
     });
+
+    test.slow();
 
     const initialFields = getFieldsForApp();
     const fields = {
@@ -734,7 +736,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Verify the report was created', async () => {
@@ -803,7 +805,7 @@ test.describe('report', () => {
     await test.step('Create the report', async () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.page.waitForLoadState('networkidle');
+      await reportPage.waitUntilLoaded();
     });
 
     await test.step('Verify the report is exported', async () => {
