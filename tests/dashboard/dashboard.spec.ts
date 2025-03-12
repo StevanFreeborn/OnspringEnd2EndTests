@@ -740,8 +740,6 @@ test.describe('dashboard', () => {
       ],
     });
 
-    dashboardsToDelete.push(dashboard.name);
-
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
