@@ -721,7 +721,7 @@ test.describe('dashboard', () => {
     });
   });
 
-  test('Disable a dashboard', async ({ report, container, dashboardsAdminPage }) => {
+  test('Disable a dashboard', async ({ report, container, dashboardsAdminPage, testUserPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-330',
@@ -740,8 +740,6 @@ test.describe('dashboard', () => {
       ],
     });
 
-    dashboardsToDelete.push(dashboard.name);
-
     await test.step('Navigate to the Dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -755,9 +753,13 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
+      const dashboardPage = new DashboardPage(testUserPage);
 
-      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
+      await dashboardPage.goto();
+      await dashboardPage.sidebar.dashboardsTab.click();
+      await dashboardPage.page.waitForURL(dashboardPage.path);
+
+      const containerLink = dashboardPage.sidebar.getContainerLink(container.name);
       await expect(containerLink).toBeHidden();
     });
   });

@@ -33,7 +33,7 @@ async function createContainer(sysAdminPage: Page, containerName: string) {
   const id = editContainerPage.getIdFromUrl();
   const container = new Container({ id, name: containerName });
 
-  const cleanup = () => containersAdminPage.deleteContainers([containerName]);
+  const cleanup = async () => await containersAdminPage.deleteContainers([containerName]);
 
   return { container, cleanup };
 }

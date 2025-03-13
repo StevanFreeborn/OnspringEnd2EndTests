@@ -10,6 +10,8 @@ const setup = setupBase.extend<ApiTestOptions>({
 });
 
 setup('Setup before API tests', async ({ page, useCachedApiSetup }) => {
+  setup.slow();
+
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
   const sysAdminUser = UserFactory.createSysAdminUser();
