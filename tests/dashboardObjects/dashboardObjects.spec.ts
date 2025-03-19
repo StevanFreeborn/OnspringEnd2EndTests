@@ -1,14 +1,76 @@
-import { test, expect } from '../../fixtures';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
+import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
+import { App } from '../../models/app';
+import { AppSearch } from '../../models/appSearch';
+import { Container } from '../../models/container';
+import { Dashboard } from '../../models/dashboard';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
+import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
 
+type DashboardObjectTestFixtures = {
+  dashboardsAdminPage: DashboardsAdminPage;
+  sourceApp: App;
+  container: Container;
+  dashboard: Dashboard;
+  dashboardPage: DashboardPage;
+};
+
+const test = base.extend<DashboardObjectTestFixtures>({
+  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
+  sourceApp: app,
+  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  dashboard: async ({ sysAdminPage, container }, use) =>
+    await createDashboardFixture(
+      {
+        sysAdminPage,
+        dashboard: new Dashboard({ name: FakeDataFactory.createFakeDashboardName(), containers: [container.name] }),
+      },
+      use
+    ),
+  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
+});
+
 test.describe('dashboard objects', () => {
-  test('Add an App Search object', async () => {
+  test('Add an App Search object', async ({ dashboardsAdminPage, sourceApp, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-758',
     });
 
-    expect(true).toBeTruthy();
+    const appSearchObject = new AppSearch({
+      name: FakeDataFactory.createFakeObjectName(),
+      apps: [sourceApp.name],
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add an app search object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addAppSearchObject(appSearchObject);
+
+      dashboard.items.push({ row: 0, column: 0, object: appSearchObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the app search object displays', async () => {
+      const item = dashboardPage.getDashboardItem(appSearchObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Add a Create Content Links object', async () => {
@@ -28,7 +90,6 @@ test.describe('dashboard objects', () => {
 
     expect(true).toBeTruthy();
   });
-
 
   test('Add a Web Page object', async () => {
     test.info().annotations.push({

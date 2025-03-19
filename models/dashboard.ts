@@ -1,8 +1,9 @@
+import { AppSearch } from './appSearch';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 
 export type DashboardItem = {
-  object: Report;
+  object: Report | AppSearch;
   row: number;
   column: number;
 };

@@ -6,6 +6,9 @@ import { DashboardResourcesSection } from '../sections/dashboardResourcesSection
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
+import { AppSearch } from '../../models/appSearch';
+import { AddObjectDialog } from '../dialogs/addObjectDialog';
+import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -22,6 +25,8 @@ export class DashboardDesignerModal {
   private readonly schedulingModal: ScheduleDashboardExportModal;
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
+  private readonly addObjectDialog: AddObjectDialog;
+  private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -40,6 +45,8 @@ export class DashboardDesignerModal {
     this.schedulingModal = new ScheduleDashboardExportModal(this.page);
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
+    this.addObjectDialog = new AddObjectDialog(this.page);
+    this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -144,5 +151,14 @@ export class DashboardDesignerModal {
     }
 
     return parseInt(id);
+  }
+
+  async addAppSearchObject(appSearchObject: AppSearch) {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.clickAddObjectButton('App Search');
+    await this.addObjectDialog.continueButton.waitFor();
+    await this.addObjectDialog.continueButton.click();
+    await this.appSearchObjectModal.fillOutForm(appSearchObject);
+    await this.appSearchObjectModal.save();
   }
 }

@@ -23,6 +23,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeObjectName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-object`;
+  }
+
   static createFakeDashboardName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_DASHBOARD_NAME}`;
