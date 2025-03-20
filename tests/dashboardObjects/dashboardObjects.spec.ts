@@ -73,13 +73,41 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Add a Create Content Links object', async () => {
+  test('Add a Create Content Links object', async ({ dashboardsAdminPage, sourceApp, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-759',
     });
 
-    expect(true).toBeTruthy();
+    const createContentLinksObject = new CreateContentLinks({
+      name: FakeDataFactory.createFakeObjectName(),
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a create content links object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addCreateContentLinksObject(createContentLinksObject);
+
+      dashboard.items.push({ row: 0, column: 1, object: createContentLinksObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the create content links object displays', async () => {
+      const item = dashboardPage.getDashboardItem(createContentLinksObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Add a Formatted Text Block object', async () => {
