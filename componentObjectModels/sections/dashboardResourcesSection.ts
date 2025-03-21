@@ -5,6 +5,7 @@ import { DashboardDesignerReportsTab } from '../tabs/dashboardDesignerReportsTab
 import { BaseLayoutItemsSection } from './baseLayoutItemsSection';
 import { AppSearch } from '../../models/appSearch';
 import { DashboardDesignerObjectsTab } from '../tabs/dashboardDesignerObjectsTab';
+import { CreateContentLinks } from '../../models/createContentLinks';
 
 type ObjectName = 'App Search' | 'Create Content Links' | 'Formatted Text Block' | 'Web Page';
 
@@ -56,6 +57,11 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
     }
 
     if (item.object instanceof AppSearch) {
+      await this.ensureItemTabSelected(this.objectsTabButton);
+      return this.objectsTab.getObjectFromBank(item.object.name);
+    }
+
+    if (item.object instanceof CreateContentLinks) {
       await this.ensureItemTabSelected(this.objectsTabButton);
       return this.objectsTab.getObjectFromBank(item.object.name);
     }

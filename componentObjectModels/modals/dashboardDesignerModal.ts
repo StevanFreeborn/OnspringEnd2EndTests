@@ -9,6 +9,8 @@ import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
 import { AppSearch } from '../../models/appSearch';
 import { AddObjectDialog } from '../dialogs/addObjectDialog';
 import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
+import { CreateContentLinks } from '../../models/createContentLinks';
+import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -27,6 +29,7 @@ export class DashboardDesignerModal {
   private readonly canvasSection: DashboardCanvasSection;
   private readonly addObjectDialog: AddObjectDialog;
   private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
+  private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -47,7 +50,9 @@ export class DashboardDesignerModal {
     this.canvasSection = new DashboardCanvasSection(this.designer);
     this.addObjectDialog = new AddObjectDialog(this.page);
     this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
+    this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
   }
+
 
   async waitFor(options?: WaitForOptions) {
     await this.designer.owner().waitFor(options);
@@ -160,5 +165,14 @@ export class DashboardDesignerModal {
     await this.addObjectDialog.continueButton.click();
     await this.appSearchObjectModal.fillOutForm(appSearchObject);
     await this.appSearchObjectModal.save();
+  }
+
+  async addCreateContentLinksObject(createContentLinksObject: CreateContentLinks) {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.clickAddObjectButton('Create Content Links');
+    await this.addObjectDialog.continueButton.waitFor();
+    await this.addObjectDialog.continueButton.click();
+    await this.createContentLinksObjectModal.fillOutForm(createContentLinksObject);
+    await this.createContentLinksObjectModal.save();
   }
 }

@@ -1,9 +1,10 @@
 import { AppSearch } from './appSearch';
+import { CreateContentLinks } from './createContentLinks';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 
 export type DashboardItem = {
-  object: Report | AppSearch;
+  object: Report | AppSearch | CreateContentLinks;
   row: number;
   column: number;
 };

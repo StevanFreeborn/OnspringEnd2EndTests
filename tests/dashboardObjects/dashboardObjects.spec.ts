@@ -6,6 +6,7 @@ import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { App } from '../../models/app';
 import { AppSearch } from '../../models/appSearch';
 import { Container } from '../../models/container';
+import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard } from '../../models/dashboard';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
@@ -81,6 +82,7 @@ test.describe('dashboard objects', () => {
 
     const createContentLinksObject = new CreateContentLinks({
       name: FakeDataFactory.createFakeObjectName(),
+      links: [{ app: sourceApp.name, imageSource: { src: 'App' }, linkText: 'Test Link' }],
     });
 
     await test.step('Navigate to the dashboards admin page', async () => {
