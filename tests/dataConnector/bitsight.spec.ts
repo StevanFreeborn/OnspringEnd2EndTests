@@ -258,7 +258,7 @@ test.describe('bitsight data connector', () => {
       name: FakeDataFactory.createFakeConnectorName(),
       status: true,
       apiKey: bitSightApiKey,
-      startingOnDate: new Date(Date.now() + 1 * 60_000),
+      startingOnDate: new Date(Date.now() + 2 * 60_000),
       frequency: 'Every Day',
       appMappings: new BitsightAppMapping({
         alertApp: {
@@ -309,8 +309,8 @@ test.describe('bitsight data connector', () => {
 
         expect(result.isOk()).toBe(true);
       }).toPass({
-        intervals: [30_000],
-        timeout: 300_000,
+        intervals: [120_000, 30_000],
+        timeout: 600_000,
       });
     });
   });

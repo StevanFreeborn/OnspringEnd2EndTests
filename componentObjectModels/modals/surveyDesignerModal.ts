@@ -46,7 +46,7 @@ export class SurveyDesignerModal {
 
   private readonly savePageSortPathRegex: RegExp;
   private readonly saveItemSortPathRegex: RegExp;
-  private readonly movePageItemPathRegex
+  private readonly movePageItemPathRegex;
 
   readonly attachmentButton: Locator;
   readonly dateButton: Locator;
@@ -77,7 +77,7 @@ export class SurveyDesignerModal {
 
     this.savePageSortPathRegex = /\/Admin\/App\/\d+\/SurveyPage\/\d+\/SavePageSort/;
     this.saveItemSortPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/SaveItemSort/;
-    this.movePageItemPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/Move/
+    this.movePageItemPathRegex = /\/Admin\/App\/\d+\/SurveyPageItem\/Move/;
 
     this.attachmentButton = this.frame.getByRole('button', { name: 'Attachment' });
     this.dateButton = this.frame.getByRole('button', { name: 'Date/Time' });
