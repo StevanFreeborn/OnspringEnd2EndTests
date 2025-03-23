@@ -288,7 +288,7 @@ test.describe('attachment question', () => {
 
     await test.step('Preview the survey and confirm the attachment question is on the new page', async () => {
       const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      
+
       await previewPage.nextButton.waitFor();
       await previewPage.nextButton.click();
 

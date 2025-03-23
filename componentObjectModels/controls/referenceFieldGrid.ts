@@ -61,10 +61,10 @@ export class ReferenceFieldGrid {
       await this.page.waitForTimeout(1000);
       isVisible = await searchResultRow.isVisible();
     }
-    
+
     const controlLocator = searchResultRow.getByRole(control);
     const loadingIndicator = this.searchResults.locator('div').filter({ hasText: /^Loading\.\.\.$/ });
-    
+
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(1000);
     await loadingIndicator.waitFor({ state: 'hidden' });
