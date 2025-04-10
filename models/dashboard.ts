@@ -1,10 +1,11 @@
 import { AppSearch } from './appSearch';
 import { CreateContentLinks } from './createContentLinks';
+import { DashboardFormattedTextBlock } from './dashboardFormattedTextBlock';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 
 export type DashboardItem = {
-  object: Report | AppSearch | CreateContentLinks;
+  object: Report | AppSearch | CreateContentLinks | DashboardFormattedTextBlock;
   row: number;
   column: number;
 };

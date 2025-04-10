@@ -8,6 +8,7 @@ import { AppSearch } from '../../models/appSearch';
 import { Container } from '../../models/container';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard } from '../../models/dashboard';
+import { DashboardFormattedTextBlock as FormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
@@ -112,11 +113,40 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Add a Formatted Text Block object', async () => {
+  test('Add a Formatted Text Block object', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-760',
     });
+
+    const formattedTextBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeObjectName(),
+    })
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a formatted text block object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addFormattedTextBlockObject(formattedTextBlock);
+
+      dashboard.items.push({ row: 0, column: 0, object: formattedTextBlock });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {});
+
+    await test.step('Verify the formatted text block object displays', async () => {});
 
     expect(true).toBeTruthy();
   });

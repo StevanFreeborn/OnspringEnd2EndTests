@@ -11,6 +11,7 @@ import { AddObjectDialog } from '../dialogs/addObjectDialog';
 import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
+import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -51,6 +52,7 @@ export class DashboardDesignerModal {
     this.addObjectDialog = new AddObjectDialog(this.page);
     this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
     this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
+    this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
   }
 
 
@@ -174,5 +176,13 @@ export class DashboardDesignerModal {
     await this.addObjectDialog.continueButton.click();
     await this.createContentLinksObjectModal.fillOutForm(createContentLinksObject);
     await this.createContentLinksObjectModal.save();
+  }
+
+  async addFormattedTextBlockObject(formattedTextBlock: DashboardFormattedTextBlock) {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.clickAddObjectButton('Formatted Text Block');
+    await this.addObjectDialog.continueButton.waitFor();
+    await this.addObjectDialog.continueButton.click();
+
   }
 }
