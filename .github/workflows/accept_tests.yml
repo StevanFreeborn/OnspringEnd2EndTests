@@ -197,6 +197,14 @@ jobs:
       - name: Rename reports
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
+      - name: Upload HTML report
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: ${{ steps.report_directory_name.outputs.value }}
+          target: 'onspringqareports.stevanfreeborn.com/reports'
       - name: Commit report to report site
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: cpina/github-action-push-to-another-repository@v1.7.2
