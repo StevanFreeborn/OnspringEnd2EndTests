@@ -475,6 +475,7 @@ test.describe('date/time field', () => {
         fieldName: field.name,
         fieldType: 'Date/Time',
       });
+
       await dateTimePicker.selectDateUsingCalendar(year, month, day);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
