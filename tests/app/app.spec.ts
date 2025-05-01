@@ -18,6 +18,7 @@ import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPag
 import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
 import { AnnotationType } from '../annotations';
 
+
 type AppTestFixtures = {
   adminHomePage: AdminHomePage;
   appsAdminPage: AppsAdminPage;
