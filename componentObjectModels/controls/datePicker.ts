@@ -130,7 +130,7 @@ export class DatePicker {
     let currentMonth = await this.getMonth();
 
     while (currentMonth !== monthName || currentYear !== year) {
-      if (currentYear >= year) {
+      if (currentYear > year) {
         await this.previousMonthButton.click();
       } else {
         await this.nextMonthButton.click();
