@@ -148,7 +148,7 @@ export class DatePicker {
       } else {
         await this.nextMonthButton.click();
       }
-    
+
       currentYear = await this.getYear();
       currentMonth = await this.getMonth();
       currentValue = currentYear * 12 + this.getMonthNumber(currentMonth);
