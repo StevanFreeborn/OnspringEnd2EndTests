@@ -122,6 +122,16 @@ export class DatePicker {
       .click();
   }
 
+  private getMonthNumber(month: string) {
+    for (const [key, value] of monthMap) {
+      if (value === month) {
+        return key;
+      }
+    }
+
+    throw new Error('Invalid month name.');
+  }
+
   async selectDate(year: number, month: number, day: number) {
     const monthName = monthMap.get(month);
     this.validateDate(year, monthName, day);
@@ -129,8 +139,11 @@ export class DatePicker {
     let currentYear = await this.getYear();
     let currentMonth = await this.getMonth();
 
-    while (currentMonth !== monthName || currentYear !== year) {
-      if (currentYear > year) {
+    const targetValue = year * 12 + month;
+    let currentValue = currentYear * 12 + this.getMonthNumber(currentMonth);
+
+    while (currentValue !== targetValue) {
+      if (currentValue > targetValue) {
         await this.previousMonthButton.click();
       } else {
         await this.nextMonthButton.click();
@@ -138,6 +151,7 @@ export class DatePicker {
 
       currentYear = await this.getYear();
       currentMonth = await this.getMonth();
+      currentValue = currentYear * 12 + this.getMonthNumber(currentMonth);
     }
 
     await this.selectDay(day);

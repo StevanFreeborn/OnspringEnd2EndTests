@@ -198,6 +198,7 @@ jobs:
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
       - name: Upload HTML report
+        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
