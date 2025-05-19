@@ -13,6 +13,8 @@ import { CreateContentLinks } from '../../models/createContentLinks';
 import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
 import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
+import { WebPage } from '../../models/webPage';
+import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -33,6 +35,7 @@ export class DashboardDesignerModal {
   private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
   private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
   private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
+  private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -55,6 +58,7 @@ export class DashboardDesignerModal {
     this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
     this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
     this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
+    this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
   }
 
 
@@ -187,6 +191,14 @@ export class DashboardDesignerModal {
     await this.addObjectDialog.continueButton.click();
     await this.formattedTextBlockObjectModal.fillOutForm(formattedTextBlock);
     await this.formattedTextBlockObjectModal.save();
+  }
 
+  async addWebPageObject(webPageObject: WebPage) {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.clickAddObjectButton('Web Page');
+    await this.addObjectDialog.continueButton.waitFor();
+    await this.addObjectDialog.continueButton.click();
+    await this.webPageObjectModal.fillOutForm(webPageObject);
+    await this.webPageObjectModal.save();
   }
 }

@@ -3,9 +3,10 @@ import { CreateContentLinks } from './createContentLinks';
 import { DashboardFormattedTextBlock } from './dashboardFormattedTextBlock';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
+import { WebPage } from './webPage';
 
 export type DashboardItem = {
-  object: Report | AppSearch | CreateContentLinks | DashboardFormattedTextBlock;
+  object: Report | AppSearch | CreateContentLinks | DashboardFormattedTextBlock | WebPage;
   row: number;
   column: number;
 };

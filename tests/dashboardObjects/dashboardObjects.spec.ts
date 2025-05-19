@@ -9,6 +9,7 @@ import { Container } from '../../models/container';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard } from '../../models/dashboard';
 import { DashboardFormattedTextBlock as FormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { WebPage } from '../../models/webPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
@@ -154,13 +155,46 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Add a Web Page object', async () => {
+  test('Add a Web Page object', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-761',
     });
 
-    expect(true).toBeTruthy();
+    const webPageObject = new WebPage({
+      name: FakeDataFactory.createFakeObjectName(),
+      url: 'https://stevanfreeborn.com',
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a web page object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addWebPageObject(webPageObject);
+
+      dashboard.items.push({ row: 0, column: 0, object: webPageObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the web page object displays', async () => {
+      const item = dashboardPage.getDashboardItem(webPageObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Modify an App Search object', async () => {
