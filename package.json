@@ -18,7 +18,8 @@
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
     "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/ ./dynamic-documents/ ./apiSetupResults/",
-    "generate-example-env": "node ./scripts/generateExampleEnv.js"
+    "generate-example-env": "node ./scripts/generateExampleEnv.js",
+    "count-lines": "node ./scripts/countLines.mjs"
   },
   "keywords": [
     "onspring",
