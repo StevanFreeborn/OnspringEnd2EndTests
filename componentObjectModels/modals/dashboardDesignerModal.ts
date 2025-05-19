@@ -142,6 +142,29 @@ export class DashboardDesignerModal {
     }
   }
 
+  private async enterAndSaveDashboardObject(dashboardObject: DashboardObjectItem) {
+    switch (dashboardObject.type) {
+      case 'App Search':
+        await this.appSearchObjectModal.fillOutForm(dashboardObject as AppSearch);
+        await this.appSearchObjectModal.save();
+        break;
+      case 'Create Content Links':
+        await this.createContentLinksObjectModal.fillOutForm(dashboardObject as CreateContentLinks);
+        await this.createContentLinksObjectModal.save();
+        break;
+      case 'Formatted Text Block':
+        await this.formattedTextBlockObjectModal.fillOutForm(dashboardObject as DashboardFormattedTextBlock);
+        await this.formattedTextBlockObjectModal.save();
+        break;
+      case 'Web Page':
+        await this.webPageObjectModal.fillOutForm(dashboardObject as WebPage);
+        await this.webPageObjectModal.save();
+        break;
+      default:
+        throw new Error(`Unknown dashboard object type: ${dashboardObject.type}`);
+    }
+  }
+
   async updateDashboard(dashboard: Dashboard) {
     if (dashboard.schedule) {
       await this.updateDashboardScheduling(dashboard.schedule);
@@ -174,27 +197,20 @@ export class DashboardDesignerModal {
     await this.resourcesSection.clickAddObjectButton(dashboardObject.type);
     await this.addObjectDialog.continueButton.waitFor();
     await this.addObjectDialog.continueButton.click();
+    await this.enterAndSaveDashboardObject(dashboardObject);
+  }
 
-    switch (dashboardObject.type) {
-      case 'App Search':
-        await this.appSearchObjectModal.fillOutForm(dashboardObject as AppSearch);
-        await this.appSearchObjectModal.save();
-        break;
-      case 'Create Content Links':
-        await this.createContentLinksObjectModal.fillOutForm(dashboardObject as CreateContentLinks);
-        await this.createContentLinksObjectModal.save();
-        break;
-      case 'Formatted Text Block':
-        await this.formattedTextBlockObjectModal.fillOutForm(dashboardObject as DashboardFormattedTextBlock);
-        await this.formattedTextBlockObjectModal.save();
-        break;
-      case 'Web Page':
-        await this.webPageObjectModal.fillOutForm(dashboardObject as WebPage);
-        await this.webPageObjectModal.save();
-        break;
-      default:
-        throw new Error(`Unknown dashboard object type: ${dashboardObject.type}`);
-    }
+  async updateDashboardObject(
+    existingDashboardObject: DashboardObjectItem,
+    updatedDashboardObject: DashboardObjectItem
+  ) {
+    await this.resourcesSection.selectObjectsTab();
+
+    const item = await this.resourcesSection.getItemFromTab(existingDashboardObject);
+    await item.hover();
+    await item.getByTitle('Edit Object Properties').click();
+
+    await this.enterAndSaveDashboardObject(updatedDashboardObject);
   }
 
   async deleteDashboardObject(dashboardObject: DashboardObjectItem) {

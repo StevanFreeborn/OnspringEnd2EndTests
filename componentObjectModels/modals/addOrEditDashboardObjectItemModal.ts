@@ -14,7 +14,7 @@ export abstract class AddOrEditDashboardObjectItemModal {
   protected readonly rolesSelector: DualPaneSelector;
 
   constructor(page: Page) {
-    this.modal = page.getByRole('dialog', { name: /Add.*Object/ });
+    this.modal = page.getByRole('dialog', { name: /Object/ });
     this.generalTabButton = this.modal.getByRole('tab', { name: 'General' });
     this.nameInput = this.modal.locator('.label:has-text("Name") + .data').getByRole('textbox');
     this.hideHeaderCheckbox = this.modal.getByRole('checkbox', { name: 'Hide object header' });

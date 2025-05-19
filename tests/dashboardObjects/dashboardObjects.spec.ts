@@ -215,13 +215,63 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify an App Search object', async () => {
+  test('Modify an App Search object', async ({
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-762',
     });
 
-    expect(true).toBeTruthy();
+    const appSearchObject = new AppSearch({
+      name: FakeDataFactory.createFakeObjectName(),
+      apps: [sourceApp.name],
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add an app search object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(appSearchObject);
+
+      dashboard.items.push({ row: 0, column: 0, item: appSearchObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the app search object displays', async () => {
+      const item = dashboardPage.getDashboardItem(appSearchObject.name);
+      await expect(item).toBeVisible();
+    });
+    
+    const updatedAppSearchObject = structuredClone(appSearchObject);
+    updatedAppSearchObject.name = FakeDataFactory.createFakeObjectName();
+
+    await test.step('Modify the app search object', async () => {
+      await dashboardPage.openDashboardDesigner();
+      await dashboardPage.dashboardDesigner.updateDashboardObject(appSearchObject, updatedAppSearchObject);
+      await dashboardPage.dashboardDesigner.close();
+    });
+
+    await test.step('Verify the app search object is modified', async () => {
+      await dashboardPage.page.reload();
+
+      const item = dashboardPage.getDashboardItem(updatedAppSearchObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Modify a Create Content Links object', async () => {
