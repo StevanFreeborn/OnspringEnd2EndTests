@@ -1,23 +1,13 @@
-type ViewSecurity = 'Public' | 'Private by Role';
+import { DashboardObjectItem, DashboardObjectItemObject } from "./dashboardObjectItem";
 
-type WebPageObject = {
-  name: string;
+type WebPageObject = Omit<DashboardObjectItemObject, 'type'> & {
   url: string;
   forceRefresh?: boolean;
-  hideHeader?: boolean;
-  hideContainer?: boolean;
-  view?: ViewSecurity;
-  roles?: string[];
 };
 
-export class WebPage {
-  name: string;
+export class WebPage extends DashboardObjectItem {
   url: string;
   forceRefresh: boolean;
-  hideHeader: boolean;
-  hideContainer: boolean;
-  view: ViewSecurity;
-  roles: string[];
 
   constructor({
     name,
@@ -28,12 +18,9 @@ export class WebPage {
     view = 'Public',
     roles = [],
   }: WebPageObject) {
-    this.name = name;
+    super({ name, type: 'Web Page', hideHeader, hideContainer, view, roles });
+
     this.url = url;
     this.forceRefresh = forceRefresh;
-    this.hideHeader = hideHeader;
-    this.hideContainer = hideContainer;
-    this.view = view;
-    this.roles = roles;
   }
 }

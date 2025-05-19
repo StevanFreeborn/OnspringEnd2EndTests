@@ -1,21 +1,22 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { Dashboard, DashboardItemObject, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
+import { AppSearch } from '../../models/appSearch';
+import { CreateContentLinks } from '../../models/createContentLinks';
+import { Dashboard, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
+import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { WebPage } from '../../models/webPage';
 import { WaitForOptions } from '../../utils';
+import { AddObjectDialog } from '../dialogs/addObjectDialog';
+import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
+import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
+import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
+import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
+import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
-import { AppSearch } from '../../models/appSearch';
-import { AddObjectDialog } from '../dialogs/addObjectDialog';
-import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
-import { CreateContentLinks } from '../../models/createContentLinks';
-import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
-import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
-import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
-import { WebPage } from '../../models/webPage';
-import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
-import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -63,7 +64,6 @@ export class DashboardDesignerModal {
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
   }
-
 
   async waitFor(options?: WaitForOptions) {
     await this.designer.owner().waitFor(options);
@@ -169,43 +169,35 @@ export class DashboardDesignerModal {
     return parseInt(id);
   }
 
-  async addAppSearchObject(appSearchObject: AppSearch) {
+  async addDashboardObject(dashboardObject: DashboardObjectItem) {
     await this.resourcesSection.selectObjectsTab();
-    await this.resourcesSection.clickAddObjectButton('App Search');
+    await this.resourcesSection.clickAddObjectButton(dashboardObject.type);
     await this.addObjectDialog.continueButton.waitFor();
     await this.addObjectDialog.continueButton.click();
-    await this.appSearchObjectModal.fillOutForm(appSearchObject);
-    await this.appSearchObjectModal.save();
+
+    switch (dashboardObject.type) {
+      case 'App Search':
+        await this.appSearchObjectModal.fillOutForm(dashboardObject as AppSearch);
+        await this.appSearchObjectModal.save();
+        break;
+      case 'Create Content Links':
+        await this.createContentLinksObjectModal.fillOutForm(dashboardObject as CreateContentLinks);
+        await this.createContentLinksObjectModal.save();
+        break;
+      case 'Formatted Text Block':
+        await this.formattedTextBlockObjectModal.fillOutForm(dashboardObject as DashboardFormattedTextBlock);
+        await this.formattedTextBlockObjectModal.save();
+        break;
+      case 'Web Page':
+        await this.webPageObjectModal.fillOutForm(dashboardObject as WebPage);
+        await this.webPageObjectModal.save();
+        break;
+      default:
+        throw new Error(`Unknown dashboard object type: ${dashboardObject.type}`);
+    }
   }
 
-  async addCreateContentLinksObject(createContentLinksObject: CreateContentLinks) {
-    await this.resourcesSection.selectObjectsTab();
-    await this.resourcesSection.clickAddObjectButton('Create Content Links');
-    await this.addObjectDialog.continueButton.waitFor();
-    await this.addObjectDialog.continueButton.click();
-    await this.createContentLinksObjectModal.fillOutForm(createContentLinksObject);
-    await this.createContentLinksObjectModal.save();
-  }
-
-  async addFormattedTextBlockObject(formattedTextBlock: DashboardFormattedTextBlock) {
-    await this.resourcesSection.selectObjectsTab();
-    await this.resourcesSection.clickAddObjectButton('Formatted Text Block');
-    await this.addObjectDialog.continueButton.waitFor();
-    await this.addObjectDialog.continueButton.click();
-    await this.formattedTextBlockObjectModal.fillOutForm(formattedTextBlock);
-    await this.formattedTextBlockObjectModal.save();
-  }
-
-  async addWebPageObject(webPageObject: WebPage) {
-    await this.resourcesSection.selectObjectsTab();
-    await this.resourcesSection.clickAddObjectButton('Web Page');
-    await this.addObjectDialog.continueButton.waitFor();
-    await this.addObjectDialog.continueButton.click();
-    await this.webPageObjectModal.fillOutForm(webPageObject);
-    await this.webPageObjectModal.save();
-  }
-
-  async deleteDashboardObject(dashboardObject: DashboardItemObject) {
+  async deleteDashboardObject(dashboardObject: DashboardObjectItem) {
     await this.resourcesSection.selectObjectsTab();
     const item = await this.resourcesSection.getItemFromTab(dashboardObject);
 

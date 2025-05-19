@@ -1,13 +1,8 @@
-import { AppSearch } from './appSearch';
-import { CreateContentLinks } from './createContentLinks';
-import { DashboardFormattedTextBlock } from './dashboardFormattedTextBlock';
+import { DashboardObjectItem } from './dashboardObjectItem';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
-import { WebPage } from './webPage';
 
-export type DashboardItemObject = AppSearch | CreateContentLinks | DashboardFormattedTextBlock | WebPage;
-
-export type DashboardItem = Report | DashboardObject;
+export type DashboardItem = Report | DashboardObjectItem;
 
 export type DashboardItemWithLocation = {
   item: DashboardItem;

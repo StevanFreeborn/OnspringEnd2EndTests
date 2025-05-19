@@ -1,21 +1,11 @@
-type ViewSecurity = 'Public' | 'Private by Role';
+import { DashboardObjectItem, DashboardObjectItemObject } from './dashboardObjectItem';
 
-type DashboardFormattedTextBlockObject = {
-  name: string;
+type DashboardFormattedTextBlockObject = Omit<DashboardObjectItemObject, 'type'> & {
   formattedText?: string;
-  hideHeader?: boolean;
-  hideContainer?: boolean;
-  view?: ViewSecurity;
-  roles?: string[];
 };
 
-export class DashboardFormattedTextBlock {
-  name: string;
+export class DashboardFormattedTextBlock extends DashboardObjectItem {
   formattedText: string;
-  hideHeader: boolean;
-  hideContainer: boolean;
-  view: ViewSecurity;
-  roles: string[];
 
   constructor({
     name,
@@ -25,11 +15,15 @@ export class DashboardFormattedTextBlock {
     view = 'Public',
     roles = [],
   }: DashboardFormattedTextBlockObject) {
-    this.name = name;
+    super({
+      name,
+      type: 'Formatted Text Block',
+      hideHeader,
+      hideContainer,
+      view,
+      roles,
+    });
+
     this.formattedText = formattedText;
-    this.hideHeader = hideHeader;
-    this.hideContainer = hideContainer;
-    this.view = view;
-    this.roles = roles;
   }
 }

@@ -1,27 +1,18 @@
+import { DashboardObjectItem, DashboardObjectItemObject } from "./dashboardObjectItem";
+
 type Link = {
   app: string;
   imageSource: { src: 'None' } | { src: 'App' } | { src: 'Library'; imageName: string };
   linkText: string;
 };
 
-type ViewSecurity = 'Public' | 'Private by Role';
 
-type CreateContentLinksObject = {
-  name: string;
+type CreateContentLinksObject = Omit<DashboardObjectItemObject, 'type'> & {
   links: Link[];
-  hideHeader?: boolean;
-  hideContainer?: boolean;
-  view?: ViewSecurity;
-  roles?: string[];
 };
 
-export class CreateContentLinks {
-  name: string;
+export class CreateContentLinks extends DashboardObjectItem {
   links: Link[];
-  hideHeader: boolean;
-  hideContainer: boolean;
-  view: ViewSecurity;
-  roles: string[];
 
   constructor({
     name,
@@ -31,12 +22,9 @@ export class CreateContentLinks {
     view = 'Public',
     roles = [],
   }: CreateContentLinksObject) {
-    this.name = name;
+    super({ name, type: 'Create Content Links', hideHeader, hideContainer, view, roles });
+
     this.links = links;
-    this.hideHeader = hideHeader;
-    this.hideContainer = hideContainer;
-    this.view = view;
-    this.roles = roles;
 
     if (this.links.length === 0) {
       throw new Error('Links must not be empty');
