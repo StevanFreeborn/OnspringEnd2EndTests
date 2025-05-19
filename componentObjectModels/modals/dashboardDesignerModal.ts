@@ -12,6 +12,7 @@ import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
 import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -31,6 +32,7 @@ export class DashboardDesignerModal {
   private readonly addObjectDialog: AddObjectDialog;
   private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
   private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
+  private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -183,6 +185,8 @@ export class DashboardDesignerModal {
     await this.resourcesSection.clickAddObjectButton('Formatted Text Block');
     await this.addObjectDialog.continueButton.waitFor();
     await this.addObjectDialog.continueButton.click();
+    await this.formattedTextBlockObjectModal.fillOutForm(formattedTextBlock);
+    await this.formattedTextBlockObjectModal.save();
 
   }
 }

@@ -144,11 +144,14 @@ test.describe('dashboard objects', () => {
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
     });
 
-    await test.step('Navigate to the dashboard page', async () => {});
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
 
-    await test.step('Verify the formatted text block object displays', async () => {});
-
-    expect(true).toBeTruthy();
+    await test.step('Verify the formatted text block object displays', async () => {
+      const item = dashboardPage.getDashboardItem(formattedTextBlock.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Add a Web Page object', async () => {
