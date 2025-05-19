@@ -8,7 +8,7 @@ export class ReferenceAnswerValueGrid {
   readonly addAllValuesButton: Locator;
 
   constructor(control: Locator) {
-    this.getSurveyAnswerValuesPathRegex = /\/Admin\/App\/\d+\/SurveyReference\/GetListPage/
+    this.getSurveyAnswerValuesPathRegex = /\/Admin\/App\/\d+\/SurveyReference\/GetListPage/;
     this.control = control;
     this.gridBody = this.control.locator('.k-grid-content');
     this.addValuesButton = this.control.getByRole('button', { name: 'Add Values' });

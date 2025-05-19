@@ -183,20 +183,14 @@ jobs:
         run: echo "value=${{ steps.date.outputs.value }}-${{ env.TEST_ENV }}-${{ needs.run_tests.result }}-${{ github.workflow }}-${{ github.run_number }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
       - name: Rename reports
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
-      - name: Commit report to report site
-        uses: cpina/github-action-push-to-another-repository@v1.7.2
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      - name: Upload HTML report
+        uses: appleboy/scp-action@v1
         with:
-          source-directory: ${{ steps.report_directory_name.outputs.value }}
-          destination-github-username: 'StevanFreeborn'
-          user-email: '65925598+StevanFreeborn@users.noreply.github.com'
-          destination-repository-name: 'onspring-qa-playwright-reports'
-          target-branch: 'main'
-          commit-message: 'chore: add new report [skip deploy]'
-          target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
-      - name: Deploy report site
-        run: node ./scripts/deployReportSite.mjs
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: ${{ steps.report_directory_name.outputs.value }}
+          target: 'onspringqareports.stevanfreeborn.com/reports'
       - name: Display report URL
         id: display_report_url
         run: |

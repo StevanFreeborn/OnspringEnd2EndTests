@@ -1,0 +1,62 @@
+name: Cleanup
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Environment to cleanup'
+        options:
+          - ALPHA
+          - BETA
+          - QA
+          - IST
+          - VPRIOR
+          - VNEXT
+          - PROD
+          - FEDSPRING_IST
+          - AZURE
+        required: true
+        default: ALPHA
+env:
+  CI: true
+  SYS_ADMIN_USERNAME: ${{ secrets.SYS_ADMIN_USERNAME }}
+  SYS_ADMIN_PASSWORD: ${{ secrets.SYS_ADMIN_PASSWORD }}
+  SYS_ADMIN_FIRST_NAME: ${{ secrets.SYS_ADMIN_FIRST_NAME }}
+  SYS_ADMIN_LAST_NAME: ${{ secrets.SYS_ADMIN_LAST_NAME }}
+  SYS_ADMIN_EMAIL: ${{ secrets.SYS_ADMIN_EMAIL }}
+  SYS_ADMIN_EMAIL_PASSWORD: ${{ secrets.SYS_ADMIN_EMAIL_PASSWORD }}
+  SYS_ADMIN_EMAIL_HOST: ${{ secrets.SYS_ADMIN_EMAIL_HOST }}
+  SYS_ADMIN_EMAIL_PORT: ${{ secrets.SYS_ADMIN_EMAIL_PORT }}
+  TEST_ENV: ${{ github.event.inputs.environment }}
+  RECORD_HAR: 'false'
+  ALPHA_INSTANCE_URL: ${{ secrets.ALPHA_INSTANCE_URL }}
+  BETA_INSTANCE_URL: ${{ secrets.BETA_INSTANCE_URL }}
+  QA_INSTANCE_URL: ${{ secrets.QA_INSTANCE_URL }}
+  IST_INSTANCE_URL: ${{ secrets.IST_INSTANCE_URL }}
+  VPRIOR_INSTANCE_URL: ${{ secrets.VPRIOR_INSTANCE_URL }}
+  VNEXT_INSTANCE_URL: ${{ secrets.VNEXT_INSTANCE_URL }}
+  PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
+  FEDSPRING_IST_INSTANCE_URL: ${{ secrets.FEDSPRING_IST_INSTANCE_URL }}
+  AZURE_INSTANCE_URL: ${{ secrets.AZURE_INSTANCE_URL }}
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
+  BITSIGHT_API_KEY: ${{ secrets.BITSIGHT_API_KEY }}
+jobs:
+  cleanup:
+    name: 'Cleanup test artifacts'
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.1-jammy
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Run your tests
+        run: npm run cleanup

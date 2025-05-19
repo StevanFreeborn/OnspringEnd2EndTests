@@ -197,22 +197,15 @@ jobs:
       - name: Rename reports
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         run: mv playwright-report ${{ steps.report_directory_name.outputs.value }}
-      - name: Commit report to report site
+      - name: Upload HTML report
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
-        uses: cpina/github-action-push-to-another-repository@v1.7.2
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        uses: appleboy/scp-action@v1
         with:
-          source-directory: ${{ steps.report_directory_name.outputs.value }}
-          destination-github-username: 'StevanFreeborn'
-          user-email: '65925598+StevanFreeborn@users.noreply.github.com'
-          destination-repository-name: 'onspring-qa-playwright-reports'
-          target-branch: 'main'
-          commit-message: 'chore: add new report for PR [skip deploy]'
-          target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
-      - name: Deploy report site
-        if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
-        run: node ./scripts/deployReportSite.mjs
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: ${{ steps.report_directory_name.outputs.value }}
+          target: 'onspringqareports.stevanfreeborn.com/reports'
       - name: Output report url
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         id: report_url
