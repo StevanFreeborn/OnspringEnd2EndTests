@@ -1,5 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { Dashboard, DashboardItem, DashboardSchedule } from '../../models/dashboard';
+import { Dashboard, DashboardItemObject, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
 import { WaitForOptions } from '../../utils';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
@@ -15,6 +15,7 @@ import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedText
 import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
 import { WebPage } from '../../models/webPage';
 import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
+import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -36,6 +37,7 @@ export class DashboardDesignerModal {
   private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
   private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
   private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
+  private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -59,6 +61,7 @@ export class DashboardDesignerModal {
     this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
     this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
+    this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
   }
 
 
@@ -111,8 +114,8 @@ export class DashboardDesignerModal {
     await this.schedulingModal.save();
   }
 
-  private async addItemToDashboard(item: DashboardItem) {
-    const itemToDrag = await this.resourcesSection.getItemFromTab(item);
+  private async addItemToDashboard(item: DashboardItemWithLocation) {
+    const itemToDrag = await this.resourcesSection.getItemFromTab(item.item);
     const itemToDragClasses = await itemToDrag.getAttribute('class');
 
     // TODO: If already on the dashboard we probably
@@ -133,7 +136,7 @@ export class DashboardDesignerModal {
     return { itemToDrag, itemDropzone };
   }
 
-  private async addDashboardItems(items: DashboardItem[]) {
+  private async addDashboardItems(items: DashboardItemWithLocation[]) {
     for (const item of items) {
       await this.addItemToDashboard(item);
     }
@@ -200,5 +203,17 @@ export class DashboardDesignerModal {
     await this.addObjectDialog.continueButton.click();
     await this.webPageObjectModal.fillOutForm(webPageObject);
     await this.webPageObjectModal.save();
+  }
+
+  async deleteDashboardObject(dashboardObject: DashboardItemObject) {
+    await this.resourcesSection.selectObjectsTab();
+    const item = await this.resourcesSection.getItemFromTab(dashboardObject);
+
+    await item.hover();
+    await item.getByTitle('Delete Object').click();
+    await this.deleteDashboardObjectDialog.dialog.waitFor();
+    await this.deleteDashboardObjectDialog.deleteButton.click();
+    await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
+    await item.waitFor({ state: 'hidden' });
   }
 }

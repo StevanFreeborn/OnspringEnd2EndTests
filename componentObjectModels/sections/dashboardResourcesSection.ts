@@ -1,5 +1,4 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { DashboardItem } from '../../models/dashboard';
 import { SavedReport } from '../../models/report';
 import { DashboardDesignerReportsTab } from '../tabs/dashboardDesignerReportsTab';
 import { BaseLayoutItemsSection } from './baseLayoutItemsSection';
@@ -8,6 +7,7 @@ import { DashboardDesignerObjectsTab } from '../tabs/dashboardDesignerObjectsTab
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 import { WebPage } from '../../models/webPage';
+import { DashboardItem } from '../../models/dashboard';
 
 type ObjectName = 'App Search' | 'Create Content Links' | 'Formatted Text Block' | 'Web Page';
 
@@ -53,31 +53,31 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
   }
 
   async getItemFromTab(item: DashboardItem) {
-    if (item.object instanceof SavedReport) {
+    if (item instanceof SavedReport) {
       await this.ensureItemTabSelected(this.reportTabButton);
-      return this.reportsTab.getReportFromBank(item.object.name);
+      return this.reportsTab.getReportFromBank(item.name);
     }
 
-    if (item.object instanceof AppSearch) {
+    if (item instanceof AppSearch) {
       await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.object.name);
+      return this.objectsTab.getObjectFromBank(item.name);
     }
 
-    if (item.object instanceof CreateContentLinks) {
+    if (item instanceof CreateContentLinks) {
       await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.object.name);
+      return this.objectsTab.getObjectFromBank(item.name);
     }
 
-    if (item.object instanceof DashboardFormattedTextBlock) {
+    if (item instanceof DashboardFormattedTextBlock) {
       await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.object.name);
+      return this.objectsTab.getObjectFromBank(item.name);
     }
 
-    if (item.object instanceof WebPage) {
+    if (item instanceof WebPage) {
       await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.object.name);
+      return this.objectsTab.getObjectFromBank(item.name);
     }
 
-    throw new Error(`Item type not supported: ${item.object.constructor.name}`);
+    throw new Error(`Item type not supported: ${item.constructor.name}`);
   }
 }

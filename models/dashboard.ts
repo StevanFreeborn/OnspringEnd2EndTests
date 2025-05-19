@@ -5,8 +5,12 @@ import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 import { WebPage } from './webPage';
 
-export type DashboardItem = {
-  object: Report | AppSearch | CreateContentLinks | DashboardFormattedTextBlock | WebPage;
+export type DashboardItemObject = AppSearch | CreateContentLinks | DashboardFormattedTextBlock | WebPage;
+
+export type DashboardItem = Report | DashboardObject;
+
+export type DashboardItemWithLocation = {
+  item: DashboardItem;
   row: number;
   column: number;
 };
@@ -120,7 +124,7 @@ type DashboardObject = {
   title?: DashboardTitle;
   status?: boolean;
   containers?: string[];
-  items?: DashboardItem[];
+  items?: DashboardItemWithLocation[];
   schedule?: DashboardSchedule;
   permissionStatus?: 'Public' | 'Private';
   permissions?: DashboardPermissions;
@@ -133,7 +137,7 @@ export class Dashboard {
   title: DashboardTitle;
   status: boolean;
   containers: string[];
-  items: DashboardItem[];
+  items: DashboardItemWithLocation[];
   schedule?: DashboardSchedule;
   permissionStatus: 'Public' | 'Private';
   permissions: {
