@@ -191,20 +191,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: ${{ steps.report_directory_name.outputs.value }}
           target: 'onspringqareports.stevanfreeborn.com/reports'
-      - name: Commit report to report site
-        uses: cpina/github-action-push-to-another-repository@v1.7.2
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        with:
-          source-directory: ${{ steps.report_directory_name.outputs.value }}
-          destination-github-username: 'StevanFreeborn'
-          user-email: '65925598+StevanFreeborn@users.noreply.github.com'
-          destination-repository-name: 'onspring-qa-playwright-reports'
-          target-branch: 'main'
-          commit-message: 'chore: add new report [skip deploy]'
-          target-directory: 'reports/${{ steps.report_directory_name.outputs.value }}/'
-      - name: Deploy report site
-        run: node ./scripts/deployReportSite.mjs
       - name: Display report URL
         id: display_report_url
         run: |
