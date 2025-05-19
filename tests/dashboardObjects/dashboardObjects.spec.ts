@@ -407,13 +407,59 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Delete a Web Page object', async () => {
+  test('Delete a Web Page object', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-769',
     });
 
-    expect(true).toBeTruthy();
+    const webPageObject = new WebPage({
+      name: FakeDataFactory.createFakeObjectName(),
+      url: 'https://stevanfreeborn.com',
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a web page object to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(webPageObject);
+
+      dashboard.items.push({ row: 0, column: 0, item: webPageObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the web page object displays', async () => {
+      const item = dashboardPage.getDashboardItem(webPageObject.name);
+      await expect(item).toBeVisible();
+    });
+
+    await test.step('Delete the web page object', async () => {
+      await dashboardPage.openDashboardDesigner();
+      await dashboardPage.dashboardDesigner.deleteDashboardObject(webPageObject);
+      await dashboardPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Verify the web page object is deleted', async () => {
+      await dashboardPage.page.reload();
+
+      const item = dashboardPage.getDashboardItem(webPageObject.name);
+      await expect(item).toBeHidden();
+    });
   });
 
   test('Verify an App Search object displays and functions as expected', async () => {
