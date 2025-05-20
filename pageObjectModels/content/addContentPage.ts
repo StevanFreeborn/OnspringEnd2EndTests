@@ -13,4 +13,17 @@ export class AddContentPage extends EditableContentPage {
   async goto(appId: number) {
     await this.page.goto(`/Content/${appId}/Add`);
   }
+
+  getAppIdFromUrl() {
+    const url = this.page.url();
+    const match = url.match(this.pathRegex);
+
+    if (match === null) {
+      throw new Error('The current page is not an add content page.');
+    }
+
+    const urlParts = url.split('/');
+    const appId = urlParts[urlParts.length - 2];
+    return parseInt(appId);
+  }
 }

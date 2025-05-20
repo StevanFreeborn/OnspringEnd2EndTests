@@ -723,13 +723,56 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Verify a Create Content Links object displays and functions as expected', async () => {
+  test('Verify a Create Content Links object displays and functions as expected', async ({
+    sysAdminPage,
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-771',
     });
 
-    expect(true).toBeTruthy();
+    const createContentLinksObject = new CreateContentLinks({
+      name: FakeDataFactory.createFakeObjectName(),
+      links: [{ app: sourceApp.name, imageSource: { src: 'App' }, linkText: 'Test Link' }],
+    });
+    
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a create content links object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(createContentLinksObject);
+
+      dashboard.items.push({ row: 0, column: 1, item: createContentLinksObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify create content link takes you to add content page for the app', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      const item = dashboardPage.getDashboardItem(createContentLinksObject.name);
+      const link = item.getByRole('link', { name: 'Test Link' });
+
+      await link.click();
+
+      await dashboardPage.page.waitForURL(addContentPage.pathRegex);
+
+      const appId = addContentPage.getAppIdFromUrl();
+      expect(appId).toBe(sourceApp.id);
+    });
   });
 
   test('Verify a Formatted Text Block object displays and functions as expected', async () => {
