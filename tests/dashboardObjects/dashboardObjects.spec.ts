@@ -822,10 +822,49 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Verify a Web Page object displays and functions as expected', async () => {
+  test('Verify a Web Page object displays and functions as expected', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-773',
+    });
+
+    const webPageObject = new WebPage({
+      name: FakeDataFactory.createFakeObjectName(),
+      url: 'https://stevanfreeborn.com',
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a web page object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(webPageObject);
+
+      dashboard.items.push({ row: 0, column: 0, item: webPageObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the web page object displays as expected', async () => {
+      const item = dashboardPage.getDashboardItem(webPageObject.name);
+      const iframe = item.locator('iframe');
+
+      await expect(item).toBeVisible();
+      await expect(iframe).toBeVisible();
+      await expect(iframe).toHaveAttribute('src', webPageObject.url);
     });
 
     expect(true).toBeTruthy();
