@@ -14,6 +14,10 @@ import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
 import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
 
 type DashboardObjectTestFixtures = {
   dashboardsAdminPage: DashboardsAdminPage;
@@ -215,12 +219,7 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify an App Search object', async ({
-    sourceApp,
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Modify an App Search object', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-762',
@@ -256,7 +255,7 @@ test.describe('dashboard objects', () => {
       const item = dashboardPage.getDashboardItem(appSearchObject.name);
       await expect(item).toBeVisible();
     });
-    
+
     const updatedAppSearchObject = structuredClone(appSearchObject);
     updatedAppSearchObject.name = FakeDataFactory.createFakeObjectName();
 
@@ -276,17 +275,12 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify a Create Content Links object', async ({
-    sourceApp,
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Modify a Create Content Links object', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-763',
     });
-    
+
     const createContentLinksObject = new CreateContentLinks({
       name: FakeDataFactory.createFakeObjectName(),
       links: [{ app: sourceApp.name, imageSource: { src: 'App' }, linkText: 'Test Link' }],
@@ -320,12 +314,15 @@ test.describe('dashboard objects', () => {
 
     const updatedCreateContentLinksObject = structuredClone(createContentLinksObject);
     updatedCreateContentLinksObject.name = FakeDataFactory.createFakeObjectName();
-    
+
     dashboardObjectsToDelete.push(updatedCreateContentLinksObject);
 
     await test.step('Modify the create content links object', async () => {
       await dashboardPage.openDashboardDesigner();
-      await dashboardPage.dashboardDesigner.updateDashboardObject(createContentLinksObject, updatedCreateContentLinksObject);
+      await dashboardPage.dashboardDesigner.updateDashboardObject(
+        createContentLinksObject,
+        updatedCreateContentLinksObject
+      );
       await dashboardPage.dashboardDesigner.close();
     });
 
@@ -337,11 +334,7 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify a Formatted Text Block object', async ({
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Modify a Formatted Text Block object', async ({ dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-764',
@@ -396,11 +389,7 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify a Web Page object', async ({
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Modify a Web Page object', async ({ dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-765',
@@ -558,11 +547,7 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Delete a Formatted Text Block object', async ({
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Delete a Formatted Text Block object', async ({ dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-768',
@@ -571,7 +556,7 @@ test.describe('dashboard objects', () => {
     const formattedTextBlock = new FormattedTextBlock({
       name: FakeDataFactory.createFakeObjectName(),
     });
-  
+
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });
@@ -612,11 +597,7 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Delete a Web Page object', async ({
-    dashboardsAdminPage,
-    dashboard,
-    dashboardPage,
-  }) => {
+  test('Delete a Web Page object', async ({ dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-769',
@@ -667,13 +648,79 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Verify an App Search object displays and functions as expected', async () => {
+  test('Verify an App Search object displays and functions as expected', async ({
+    sysAdminPage,
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-770',
     });
 
-    expect(true).toBeTruthy();
+    let createdRecordId: number;
+
+    const appSearchObject = new AppSearch({
+      name: FakeDataFactory.createFakeObjectName(),
+      apps: [sourceApp.name],
+    });
+
+    dashboardObjectsToDelete.push(appSearchObject);
+
+    await test.step('Create a content record in the source app', async () => {
+      const contentHomePage = new ContentHomePage(sysAdminPage);
+      const addContentPage = new AddContentPage(sysAdminPage);
+      const editContentPage = new EditContentPage(sysAdminPage);
+
+      await contentHomePage.goto();
+      await contentHomePage.toolbar.createRecord(sourceApp.name);
+      await contentHomePage.page.waitForURL(addContentPage.pathRegex);
+
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      createdRecordId = editContentPage.getRecordIdFromUrl();
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add an app search object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(appSearchObject);
+
+      dashboard.items.push({ row: 0, column: 0, item: appSearchObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    const appContentPage = new AppContentPage(sysAdminPage);
+
+    await test.step('Search for the created record', async () => {
+      const item = dashboardPage.getDashboardItem(appSearchObject.name);
+      const searchBox = item.getByPlaceholder(`Search ${sourceApp.name}`);
+      const searchButton = item.getByRole('button');
+
+      await searchBox.fill(createdRecordId.toString());
+      await searchButton.click();
+      await dashboardPage.page.waitForURL(appContentPage.pathRegex);
+    });
+
+    await test.step('Verify the created record is displayed in search results', async () => {
+      const searchResult = appContentPage.getSearchResultByRecordId(createdRecordId);
+
+      await expect(searchResult).toBeVisible();
+    });
   });
 
   test('Verify a Create Content Links object displays and functions as expected', async () => {
