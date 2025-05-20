@@ -260,6 +260,8 @@ test.describe('dashboard objects', () => {
     const updatedAppSearchObject = structuredClone(appSearchObject);
     updatedAppSearchObject.name = FakeDataFactory.createFakeObjectName();
 
+    dashboardObjectsToDelete.push(updatedAppSearchObject);
+
     await test.step('Modify the app search object', async () => {
       await dashboardPage.openDashboardDesigner();
       await dashboardPage.dashboardDesigner.updateDashboardObject(appSearchObject, updatedAppSearchObject);
@@ -318,6 +320,8 @@ test.describe('dashboard objects', () => {
 
     const updatedCreateContentLinksObject = structuredClone(createContentLinksObject);
     updatedCreateContentLinksObject.name = FakeDataFactory.createFakeObjectName();
+    
+    dashboardObjectsToDelete.push(updatedCreateContentLinksObject);
 
     await test.step('Modify the create content links object', async () => {
       await dashboardPage.openDashboardDesigner();
@@ -376,6 +380,8 @@ test.describe('dashboard objects', () => {
     const updatedFormattedTextBlock = structuredClone(formattedTextBlock);
     updatedFormattedTextBlock.name = FakeDataFactory.createFakeObjectName();
 
+    dashboardObjectsToDelete.push(updatedFormattedTextBlock);
+
     await test.step('Modify the formatted text block object', async () => {
       await dashboardPage.openDashboardDesigner();
       await dashboardPage.dashboardDesigner.updateDashboardObject(formattedTextBlock, updatedFormattedTextBlock);
@@ -433,6 +439,8 @@ test.describe('dashboard objects', () => {
 
     const updatedWebPageObject = structuredClone(webPageObject);
     updatedWebPageObject.name = FakeDataFactory.createFakeObjectName();
+
+    dashboardObjectsToDelete.push(updatedWebPageObject);
 
     await test.step('Modify the web page object', async () => {
       await dashboardPage.openDashboardDesigner();

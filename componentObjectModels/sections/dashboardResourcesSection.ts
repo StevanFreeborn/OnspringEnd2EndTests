@@ -34,6 +34,8 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
   }
 
   private async ensureItemTabSelected(tabButton: Locator) {
+    await tabButton.waitFor();
+
     const tabSelected = await tabButton.getAttribute('aria-selected');
     const isTabSelected = tabSelected === 'true';
 

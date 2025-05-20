@@ -15,6 +15,7 @@ export const TEST_LIST_NAME = 'list-test';
 export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
 export const TEST_CONNECTOR_NAME = 'connector-test';
 export const TEST_DASHBOARD_NAME = 'dashboard-test';
+export const TEST_DASHBOARD_OBJECT_NAME = 'object-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -25,7 +26,7 @@ export class FakeDataFactory {
 
   static createFakeObjectName() {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-object`;
+    return `${uniqueId}-${TEST_DASHBOARD_OBJECT_NAME}`;
   }
 
   static createFakeDashboardName() {
