@@ -13,6 +13,18 @@ export class AddOrEditCreateContentLinksObjectModal extends AddOrEditDashboardOb
     this.linksGridBody = this.modal.locator('.label:has-text("Links") + .data').locator('.k-grid-content');
   }
 
+  private async clearLinkGrid() {
+    const rows = this.linksGridBody.locator('tr');
+    const count = await rows.count();
+
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(0);
+      await row.hover();
+      await row.getByTitle('Delete').click();
+      await row.waitFor({ state: 'hidden' });
+    }
+  }
+
   private async addLinks(createContentLinks: CreateContentLinks) {
     for (const link of createContentLinks.links) {
       await this.addLinkButton.click();
@@ -37,6 +49,7 @@ export class AddOrEditCreateContentLinksObjectModal extends AddOrEditDashboardOb
 
   async fillOutForm(createContentLinks: CreateContentLinks) {
     await this.fillOutGeneralTab(createContentLinks);
+    await this.clearLinkGrid();
     await this.addLinks(createContentLinks);
 
     await this.fillOutSecurityTab(createContentLinks);

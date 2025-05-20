@@ -274,31 +274,178 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Modify a Create Content Links object', async () => {
+  test('Modify a Create Content Links object', async ({
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-763',
     });
+    
+    const createContentLinksObject = new CreateContentLinks({
+      name: FakeDataFactory.createFakeObjectName(),
+      links: [{ app: sourceApp.name, imageSource: { src: 'App' }, linkText: 'Test Link' }],
+    });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a create content links object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(createContentLinksObject);
+
+      dashboard.items.push({ row: 0, column: 1, item: createContentLinksObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the create content links object displays', async () => {
+      const item = dashboardPage.getDashboardItem(createContentLinksObject.name);
+      await expect(item).toBeVisible();
+    });
+
+    const updatedCreateContentLinksObject = structuredClone(createContentLinksObject);
+    updatedCreateContentLinksObject.name = FakeDataFactory.createFakeObjectName();
+
+    await test.step('Modify the create content links object', async () => {
+      await dashboardPage.openDashboardDesigner();
+      await dashboardPage.dashboardDesigner.updateDashboardObject(createContentLinksObject, updatedCreateContentLinksObject);
+      await dashboardPage.dashboardDesigner.close();
+    });
+
+    await test.step('Verify the create content links object is modified', async () => {
+      await dashboardPage.page.reload();
+
+      const item = dashboardPage.getDashboardItem(updatedCreateContentLinksObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
-  test('Modify a Formatted Text Block object', async () => {
+  test('Modify a Formatted Text Block object', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-764',
     });
 
-    expect(true).toBeTruthy();
+    const formattedTextBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeObjectName(),
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a formatted text block object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(formattedTextBlock);
+
+      dashboard.items.push({ row: 0, column: 0, item: formattedTextBlock });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the formatted text block object displays', async () => {
+      const item = dashboardPage.getDashboardItem(formattedTextBlock.name);
+      await expect(item).toBeVisible();
+    });
+
+    const updatedFormattedTextBlock = structuredClone(formattedTextBlock);
+    updatedFormattedTextBlock.name = FakeDataFactory.createFakeObjectName();
+
+    await test.step('Modify the formatted text block object', async () => {
+      await dashboardPage.openDashboardDesigner();
+      await dashboardPage.dashboardDesigner.updateDashboardObject(formattedTextBlock, updatedFormattedTextBlock);
+      await dashboardPage.dashboardDesigner.close();
+    });
+
+    await test.step('Verify the formatted text block object is modified', async () => {
+      await dashboardPage.page.reload();
+
+      const item = dashboardPage.getDashboardItem(updatedFormattedTextBlock.name);
+      await expect(item).toBeVisible();
+    });
   });
 
-  test('Modify a Web Page object', async () => {
+  test('Modify a Web Page object', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-765',
     });
 
-    expect(true).toBeTruthy();
+    const webPageObject = new WebPage({
+      name: FakeDataFactory.createFakeObjectName(),
+      url: 'https://stevanfreeborn.com',
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a web page object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(webPageObject);
+
+      dashboard.items.push({ row: 0, column: 0, item: webPageObject });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the web page object displays', async () => {
+      const item = dashboardPage.getDashboardItem(webPageObject.name);
+      await expect(item).toBeVisible();
+    });
+
+    const updatedWebPageObject = structuredClone(webPageObject);
+    updatedWebPageObject.name = FakeDataFactory.createFakeObjectName();
+
+    await test.step('Modify the web page object', async () => {
+      await dashboardPage.openDashboardDesigner();
+      await dashboardPage.dashboardDesigner.updateDashboardObject(webPageObject, updatedWebPageObject);
+      await dashboardPage.dashboardDesigner.close();
+    });
+
+    await test.step('Verify the web page object is modified', async () => {
+      await dashboardPage.page.reload();
+
+      const item = dashboardPage.getDashboardItem(updatedWebPageObject.name);
+      await expect(item).toBeVisible();
+    });
   });
 
   test('Delete an App Search object', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
