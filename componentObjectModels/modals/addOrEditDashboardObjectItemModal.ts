@@ -1,6 +1,6 @@
-import { Locator, Page } from "@playwright/test";
-import { DualPaneSelector } from "../controls/dualPaneSelector";
-import { DashboardObjectItem } from "../../models/dashboardObjectItem";
+import { Locator, Page } from '@playwright/test';
+import { DualPaneSelector } from '../controls/dualPaneSelector';
+import { DashboardObjectItem } from '../../models/dashboardObjectItem';
 
 export abstract class AddOrEditDashboardObjectItemModal {
   private readonly viewSelector: Locator;

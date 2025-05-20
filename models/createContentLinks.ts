@@ -1,11 +1,10 @@
-import { DashboardObjectItem, DashboardObjectItemObject } from "./dashboardObjectItem";
+import { DashboardObjectItem, DashboardObjectItemObject } from './dashboardObjectItem';
 
 type Link = {
   app: string;
   imageSource: { src: 'None' } | { src: 'App' } | { src: 'Library'; imageName: string };
   linkText: string;
 };
-
 
 type CreateContentLinksObject = Omit<DashboardObjectItemObject, 'type'> & {
   links: Link[];

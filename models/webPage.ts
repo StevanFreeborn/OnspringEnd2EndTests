@@ -1,4 +1,4 @@
-import { DashboardObjectItem, DashboardObjectItemObject } from "./dashboardObjectItem";
+import { DashboardObjectItem, DashboardObjectItemObject } from './dashboardObjectItem';
 
 type WebPageObject = Omit<DashboardObjectItemObject, 'type'> & {
   url: string;

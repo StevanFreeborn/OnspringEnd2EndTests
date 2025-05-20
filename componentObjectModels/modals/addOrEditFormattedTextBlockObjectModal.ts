@@ -1,13 +1,13 @@
-import { Locator, Page } from "@playwright/test";
-import { DashboardFormattedTextBlock } from "../../models/dashboardFormattedTextBlock";
-import { AddOrEditDashboardObjectItemModal } from "./addOrEditDashboardObjectItemModal";
+import { Locator, Page } from '@playwright/test';
+import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { AddOrEditDashboardObjectItemModal } from './addOrEditDashboardObjectItemModal';
 
 export class AddOrEditFormattedTextBlockObjectModal extends AddOrEditDashboardObjectItemModal {
   private readonly formattedTextEditor: Locator;
 
   constructor(page: Page) {
     super(page);
-    
+
     this.formattedTextEditor = this.modal.locator('.content-area.mce-content-body');
   }
 
@@ -18,5 +18,3 @@ export class AddOrEditFormattedTextBlockObjectModal extends AddOrEditDashboardOb
     await this.fillOutSecurityTab(formattedTextBlock);
   }
 }
-
-

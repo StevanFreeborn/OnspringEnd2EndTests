@@ -739,7 +739,7 @@ test.describe('dashboard objects', () => {
       name: FakeDataFactory.createFakeObjectName(),
       links: [{ app: sourceApp.name, imageSource: { src: 'App' }, linkText: 'Test Link' }],
     });
-    
+
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
     });

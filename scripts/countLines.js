@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import ignore from 'ignore';
 
-try{
+try {
   await countLines();
 } catch (error) {
   console.error('Error:', error);
@@ -39,7 +39,7 @@ async function countLines() {
   }
 
   console.log('Counting lines in TypeScript files...');
-  
+
   await walkDir(repoRoot);
 
   console.log(`--- Summary ---`);
@@ -56,7 +56,6 @@ async function countLinesInFile(filePath) {
     return 0;
   }
 }
-
 
 async function getGitignorePatterns(repoRoot) {
   const gitignorePath = path.join(repoRoot, '.gitignore');

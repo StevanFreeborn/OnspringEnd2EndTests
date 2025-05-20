@@ -25,7 +25,7 @@ export class AppContentPage extends BasePage {
   getAppIdFromUrl() {
     const url = this.page.url();
     const match = url.match(this.pathRegex);
-   
+
     if (match === null) {
       throw new Error('The current page is not an app content page.');
     }
