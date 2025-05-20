@@ -775,13 +775,51 @@ test.describe('dashboard objects', () => {
     });
   });
 
-  test('Verify a Formatted Text Block object displays and functions as expected', async () => {
+  test('Verify a Formatted Text Block object displays and functions as expected', async ({
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-772',
     });
 
-    expect(true).toBeTruthy();
+    const formattedTextBlock = new FormattedTextBlock({
+      name: FakeDataFactory.createFakeObjectName(),
+      formattedText: 'Test formatted text block',
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add a formatted text block object', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addDashboardObject(formattedTextBlock);
+
+      dashboard.items.push({ row: 0, column: 0, item: formattedTextBlock });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the formatted text block object displays as expected', async () => {
+      const item = dashboardPage.getDashboardItem(formattedTextBlock.name);
+      const heading = item.getByRole('heading', { name: formattedTextBlock.name });
+      const textBlock = item.getByText(formattedTextBlock.formattedText);
+
+      await expect(item).toBeVisible();
+      await expect(heading).toBeVisible();
+      await expect(textBlock).toBeVisible();
+    });
   });
 
   test('Verify a Web Page object displays and functions as expected', async () => {
