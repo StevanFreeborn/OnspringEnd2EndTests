@@ -2,12 +2,9 @@ import { FrameLocator, Locator } from '@playwright/test';
 import { SavedReport } from '../../models/report';
 import { DashboardDesignerReportsTab } from '../tabs/dashboardDesignerReportsTab';
 import { BaseLayoutItemsSection } from './baseLayoutItemsSection';
-import { AppSearch } from '../../models/appSearch';
 import { DashboardDesignerObjectsTab } from '../tabs/dashboardDesignerObjectsTab';
-import { CreateContentLinks } from '../../models/createContentLinks';
-import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
-import { WebPage } from '../../models/webPage';
 import { DashboardItem } from '../../models/dashboard';
+import { DashboardObjectItem } from '../../models/dashboardObjectItem';
 
 type ObjectName = 'App Search' | 'Create Content Links' | 'Formatted Text Block' | 'Web Page';
 
@@ -60,26 +57,22 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
       return this.reportsTab.getReportFromBank(item.name);
     }
 
-    if (item instanceof AppSearch) {
+    if (item instanceof DashboardObjectItem) {
       await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.name);
-    }
-
-    if (item instanceof CreateContentLinks) {
-      await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.name);
-    }
-
-    if (item instanceof DashboardFormattedTextBlock) {
-      await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.name);
-    }
-
-    if (item instanceof WebPage) {
-      await this.ensureItemTabSelected(this.objectsTabButton);
-      return this.objectsTab.getObjectFromBank(item.name);
+      const object = await this.objectsTab.getObjectFromBank(item.name);
+      return object;
     }
 
     throw new Error(`Item type not supported: ${item.constructor.name}`);
+  }
+
+
+  async getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME: string) {
+    await this.ensureItemTabSelected(this.objectsTabButton);
+    return await this.objectsTab.getObjectFromBank(TEST_DASHBOARD_OBJECT_NAME);
+  }
+
+  async scrollAllObjectsIntoView() {
+    return this.objectsTab.scrollAllItemsIntoView();
   }
 }

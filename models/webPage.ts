@@ -23,4 +23,16 @@ export class WebPage extends DashboardObjectItem {
     this.url = url;
     this.forceRefresh = forceRefresh;
   }
+
+  clone() {
+    return new WebPage({
+      name: this.name,
+      url: this.url,
+      forceRefresh: this.forceRefresh,
+      hideHeader: this.hideHeader,
+      hideContainer: this.hideContainer,
+      view: this.view,
+      roles: [...this.roles],
+    });
+  }
 }

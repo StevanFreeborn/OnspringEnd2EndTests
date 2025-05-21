@@ -29,4 +29,15 @@ export class CreateContentLinks extends DashboardObjectItem {
       throw new Error('Links must not be empty');
     }
   }
+
+  clone() {
+    return new CreateContentLinks({
+      name: this.name,
+      links: [...this.links],
+      hideHeader: this.hideHeader,
+      hideContainer: this.hideContainer,
+      view: this.view,
+      roles: [...this.roles],
+    });
+  }
 }

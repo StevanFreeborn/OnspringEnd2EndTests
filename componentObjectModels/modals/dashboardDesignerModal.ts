@@ -17,6 +17,7 @@ import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
+import { TEST_DASHBOARD_OBJECT_NAME } from '../../factories/fakeDataFactory';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -39,6 +40,8 @@ export class DashboardDesignerModal {
   private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
   private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
   private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
+  private readonly deleteDashboardObjectPathRegex: RegExp;
+  private readonly getMoreObjetsPathRegex: RegExp;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -63,6 +66,8 @@ export class DashboardDesignerModal {
     this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
+    this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
+    this.getMoreObjetsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -223,5 +228,31 @@ export class DashboardDesignerModal {
     await this.deleteDashboardObjectDialog.deleteButton.click();
     await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
     await item.waitFor({ state: 'hidden' });
+  }
+
+  async deleteAllDashboardObjects() {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.scrollAllObjectsIntoView();
+
+    const item = await this.resourcesSection.getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME);
+    const object = item.last()
+
+    let isVisible = await object.isVisible();
+
+    while (isVisible) {
+      await object.hover();
+      await object.getByTitle('Delete Object').click();
+      await this.deleteDashboardObjectDialog.dialog.waitFor();
+
+      const deleteResponse = this.page.waitForResponse(this.deleteDashboardObjectPathRegex);
+      const getMoreObjectsResponse = this.page.waitForResponse(this.getMoreObjetsPathRegex);
+
+      await this.deleteDashboardObjectDialog.deleteButton.click();
+      await deleteResponse;
+      await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
+      await getMoreObjectsResponse;
+      
+      isVisible = await object.isVisible();
+    }
   }
 }

@@ -26,4 +26,15 @@ export class DashboardFormattedTextBlock extends DashboardObjectItem {
 
     this.formattedText = formattedText;
   }
+
+  clone() {
+    return new DashboardFormattedTextBlock({
+      name: this.name,
+      formattedText: this.formattedText,
+      hideHeader: this.hideHeader,
+      hideContainer: this.hideContainer,
+      view: this.view,
+      roles: [...this.roles],
+    });
+  }
 }

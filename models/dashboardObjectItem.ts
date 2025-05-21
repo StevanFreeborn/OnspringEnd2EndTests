@@ -34,4 +34,6 @@ export abstract class DashboardObjectItem {
     this.view = view;
     this.roles = roles;
   }
+
+  abstract clone(): DashboardObjectItem;
 }

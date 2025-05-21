@@ -16,4 +16,15 @@ export class AppSearch extends DashboardObjectItem {
       throw new Error('App Search object must have at least one app');
     }
   }
+
+  clone() {
+    return new AppSearch({
+      name: this.name,
+      apps: [...this.apps],
+      hideHeader: this.hideHeader,
+      hideContainer: this.hideContainer,
+      view: this.view,
+      roles: [...this.roles],
+    });
+  }
 }

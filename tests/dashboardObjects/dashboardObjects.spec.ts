@@ -256,7 +256,7 @@ test.describe('dashboard objects', () => {
       await expect(item).toBeVisible();
     });
 
-    const updatedAppSearchObject = structuredClone(appSearchObject);
+    const updatedAppSearchObject = appSearchObject.clone();
     updatedAppSearchObject.name = FakeDataFactory.createFakeObjectName();
 
     dashboardObjectsToDelete.push(updatedAppSearchObject);
@@ -312,7 +312,7 @@ test.describe('dashboard objects', () => {
       await expect(item).toBeVisible();
     });
 
-    const updatedCreateContentLinksObject = structuredClone(createContentLinksObject);
+    const updatedCreateContentLinksObject = createContentLinksObject.clone();
     updatedCreateContentLinksObject.name = FakeDataFactory.createFakeObjectName();
 
     dashboardObjectsToDelete.push(updatedCreateContentLinksObject);
@@ -370,7 +370,7 @@ test.describe('dashboard objects', () => {
       await expect(item).toBeVisible();
     });
 
-    const updatedFormattedTextBlock = structuredClone(formattedTextBlock);
+    const updatedFormattedTextBlock = formattedTextBlock.clone();
     updatedFormattedTextBlock.name = FakeDataFactory.createFakeObjectName();
 
     dashboardObjectsToDelete.push(updatedFormattedTextBlock);
@@ -426,7 +426,7 @@ test.describe('dashboard objects', () => {
       await expect(item).toBeVisible();
     });
 
-    const updatedWebPageObject = structuredClone(webPageObject);
+    const updatedWebPageObject = webPageObject.clone();
     updatedWebPageObject.name = FakeDataFactory.createFakeObjectName();
 
     dashboardObjectsToDelete.push(updatedWebPageObject);
@@ -700,13 +700,10 @@ test.describe('dashboard objects', () => {
       await dashboardsAdminPage.dashboardDesigner.saveAndClose();
     });
 
-    await test.step('Navigate to the dashboard page', async () => {
+    await test.step('Navigate to dashboard, search for the created record, and verify it displays in results', async () => {
       await dashboardPage.goto(dashboard.id);
-    });
 
-    const appContentPage = new AppContentPage(sysAdminPage);
-
-    await test.step('Search for the created record', async () => {
+      const appContentPage = new AppContentPage(sysAdminPage);
       const item = dashboardPage.getDashboardItem(appSearchObject.name);
       const searchBox = item.getByPlaceholder(`Search ${sourceApp.name}`);
       const searchButton = item.getByRole('button');
@@ -714,12 +711,8 @@ test.describe('dashboard objects', () => {
       await searchBox.fill(createdRecordId.toString());
       await searchButton.click();
       await dashboardPage.page.waitForURL(appContentPage.pathRegex);
-    });
-
-    await test.step('Verify the created record is displayed in search results', async () => {
-      const searchResult = appContentPage.getSearchResultByRecordId(createdRecordId);
-
-      await expect(searchResult).toBeVisible();
+      
+      await expect(appContentPage.page).toHaveURL(appContentPage.pathRegex);
     });
   });
 

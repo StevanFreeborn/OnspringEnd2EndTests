@@ -122,4 +122,10 @@ export class DashboardsAdminPage extends BaseAdminPage {
       isVisible = await deleteConnectorRow.isVisible();
     }
   }
+
+  async deleteAllTestDashboardObjects() {
+    await this.goto();
+    await this.openDashboardDesigner('Welcome to Onspring');
+    await this.dashboardDesigner.deleteAllDashboardObjects();
+  }
 }
