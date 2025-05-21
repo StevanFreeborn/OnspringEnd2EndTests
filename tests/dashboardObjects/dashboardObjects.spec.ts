@@ -711,7 +711,7 @@ test.describe('dashboard objects', () => {
       await searchBox.fill(createdRecordId.toString());
       await searchButton.click();
       await dashboardPage.page.waitForURL(appContentPage.pathRegex);
-      
+
       await expect(appContentPage.page).toHaveURL(appContentPage.pathRegex);
     });
   });

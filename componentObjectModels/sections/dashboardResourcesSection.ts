@@ -66,7 +66,6 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
     throw new Error(`Item type not supported: ${item.constructor.name}`);
   }
 
-
   async getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME: string) {
     await this.ensureItemTabSelected(this.objectsTabButton);
     return await this.objectsTab.getObjectFromBank(TEST_DASHBOARD_OBJECT_NAME);

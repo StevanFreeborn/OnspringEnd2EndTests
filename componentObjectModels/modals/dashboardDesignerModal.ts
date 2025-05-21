@@ -235,7 +235,7 @@ export class DashboardDesignerModal {
     await this.resourcesSection.scrollAllObjectsIntoView();
 
     const item = await this.resourcesSection.getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME);
-    const object = item.last()
+    const object = item.last();
 
     let isVisible = await object.isVisible();
 
@@ -251,7 +251,7 @@ export class DashboardDesignerModal {
       await deleteResponse;
       await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
       await getMoreObjectsResponse;
-      
+
       isVisible = await object.isVisible();
     }
   }
