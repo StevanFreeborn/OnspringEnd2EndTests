@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-const REPORT_SITE = "https://onspringqareports.stevanfreeborn.com"
+const REPORT_SITE = 'https://onspringqareports.stevanfreeborn.com';
 const API_KEY = process.env.ONSPRING_CORP_API_KEY ?? process.argv[2];
 const RELEASE_RECORD_ID = process.env.RELEASE_RECORD_ID ?? process.argv[3];
 const ENVIRONMENT = process.env.ENVIRONMENT ?? process.argv[4];
