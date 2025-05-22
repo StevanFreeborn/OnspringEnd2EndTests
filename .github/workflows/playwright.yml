@@ -149,7 +149,7 @@ jobs:
     needs: [run_tests]
     runs-on: ubuntu-latest
     outputs:
-      reportUrl: ${{ steps.display_report_url.outputs.reportUrl }}
+      reportName: ${{ steps.report_directory_name.outputs.value }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -191,12 +191,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: ${{ steps.report_directory_name.outputs.value }}
           target: 'onspringqareports.stevanfreeborn.com/reports'
-      - name: Display report URL
-        id: display_report_url
-        run: |
-          reportUrl="https://onspringqareports.stevanfreeborn.com/reports/${{ steps.report_directory_name.outputs.value }}/"
-          echo "Report available at URL: $reportUrl"
-          echo "reportUrl=$reportUrl" >> $GITHUB_OUTPUT
   add_result_to_corp:
     name: 'Add Test Run Result to Corp'
     if: ${{ github.event.inputs.add_result_to_corp == 'true' && cancelled() != true  }}
@@ -217,7 +211,7 @@ jobs:
           RELEASE_RECORD_ID: ${{ github.event.inputs.release_record_id }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           RUN_RESULT: ${{ needs.run_tests.result }}
-          REPORT_URL: ${{ needs.merge_reports_and_publish.outputs.reportUrl }}
+          REPORT_NAME: ${{ needs.merge_reports_and_publish.outputs.reportName }}
           WORKFLOW_NUMBER: ${{ github.run_number }}
           WORKFLOW_ATTEMPT: ${{ github.run_attempt }}
         run: node ./scripts/createTestRunResult.mjs
