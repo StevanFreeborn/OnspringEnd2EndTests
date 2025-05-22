@@ -1,11 +1,23 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
-import { Dashboard, DashboardItem, DashboardSchedule } from '../../models/dashboard';
+import { AppSearch } from '../../models/appSearch';
+import { CreateContentLinks } from '../../models/createContentLinks';
+import { Dashboard, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
+import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { WebPage } from '../../models/webPage';
 import { WaitForOptions } from '../../utils';
+import { AddObjectDialog } from '../dialogs/addObjectDialog';
+import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
+import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
+import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
+import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
+import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
+import { TEST_DASHBOARD_OBJECT_NAME } from '../../factories/fakeDataFactory';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -22,6 +34,14 @@ export class DashboardDesignerModal {
   private readonly schedulingModal: ScheduleDashboardExportModal;
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
+  private readonly addObjectDialog: AddObjectDialog;
+  private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
+  private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
+  private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
+  private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
+  private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
+  private readonly deleteDashboardObjectPathRegex: RegExp;
+  private readonly getMoreObjetsPathRegex: RegExp;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -40,6 +60,14 @@ export class DashboardDesignerModal {
     this.schedulingModal = new ScheduleDashboardExportModal(this.page);
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
+    this.addObjectDialog = new AddObjectDialog(this.page);
+    this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
+    this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
+    this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
+    this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
+    this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
+    this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
+    this.getMoreObjetsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -91,8 +119,8 @@ export class DashboardDesignerModal {
     await this.schedulingModal.save();
   }
 
-  private async addItemToDashboard(item: DashboardItem) {
-    const itemToDrag = await this.resourcesSection.getItemFromTab(item);
+  private async addItemToDashboard(item: DashboardItemWithLocation) {
+    const itemToDrag = await this.resourcesSection.getItemFromTab(item.item);
     const itemToDragClasses = await itemToDrag.getAttribute('class');
 
     // TODO: If already on the dashboard we probably
@@ -113,9 +141,32 @@ export class DashboardDesignerModal {
     return { itemToDrag, itemDropzone };
   }
 
-  private async addDashboardItems(items: DashboardItem[]) {
+  private async addDashboardItems(items: DashboardItemWithLocation[]) {
     for (const item of items) {
       await this.addItemToDashboard(item);
+    }
+  }
+
+  private async enterAndSaveDashboardObject(dashboardObject: DashboardObjectItem) {
+    switch (dashboardObject.type) {
+      case 'App Search':
+        await this.appSearchObjectModal.fillOutForm(dashboardObject as AppSearch);
+        await this.appSearchObjectModal.save();
+        break;
+      case 'Create Content Links':
+        await this.createContentLinksObjectModal.fillOutForm(dashboardObject as CreateContentLinks);
+        await this.createContentLinksObjectModal.save();
+        break;
+      case 'Formatted Text Block':
+        await this.formattedTextBlockObjectModal.fillOutForm(dashboardObject as DashboardFormattedTextBlock);
+        await this.formattedTextBlockObjectModal.save();
+        break;
+      case 'Web Page':
+        await this.webPageObjectModal.fillOutForm(dashboardObject as WebPage);
+        await this.webPageObjectModal.save();
+        break;
+      default:
+        throw new Error(`Unknown dashboard object type: ${dashboardObject.type}`);
     }
   }
 
@@ -144,5 +195,64 @@ export class DashboardDesignerModal {
     }
 
     return parseInt(id);
+  }
+
+  async addDashboardObject(dashboardObject: DashboardObjectItem) {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.clickAddObjectButton(dashboardObject.type);
+    await this.addObjectDialog.continueButton.waitFor();
+    await this.addObjectDialog.continueButton.click();
+    await this.enterAndSaveDashboardObject(dashboardObject);
+  }
+
+  async updateDashboardObject(
+    existingDashboardObject: DashboardObjectItem,
+    updatedDashboardObject: DashboardObjectItem
+  ) {
+    await this.resourcesSection.selectObjectsTab();
+
+    const item = await this.resourcesSection.getItemFromTab(existingDashboardObject);
+    await item.hover();
+    await item.getByTitle('Edit Object Properties').click();
+
+    await this.enterAndSaveDashboardObject(updatedDashboardObject);
+  }
+
+  async deleteDashboardObject(dashboardObject: DashboardObjectItem) {
+    await this.resourcesSection.selectObjectsTab();
+    const item = await this.resourcesSection.getItemFromTab(dashboardObject);
+
+    await item.hover();
+    await item.getByTitle('Delete Object').click();
+    await this.deleteDashboardObjectDialog.dialog.waitFor();
+    await this.deleteDashboardObjectDialog.deleteButton.click();
+    await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
+    await item.waitFor({ state: 'hidden' });
+  }
+
+  async deleteAllDashboardObjects() {
+    await this.resourcesSection.selectObjectsTab();
+    await this.resourcesSection.scrollAllObjectsIntoView();
+
+    const item = await this.resourcesSection.getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME);
+    const object = item.last();
+
+    let isVisible = await object.isVisible();
+
+    while (isVisible) {
+      await object.hover();
+      await object.getByTitle('Delete Object').click();
+      await this.deleteDashboardObjectDialog.dialog.waitFor();
+
+      const deleteResponse = this.page.waitForResponse(this.deleteDashboardObjectPathRegex);
+      const getMoreObjectsResponse = this.page.waitForResponse(this.getMoreObjetsPathRegex);
+
+      await this.deleteDashboardObjectDialog.deleteButton.click();
+      await deleteResponse;
+      await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
+      await getMoreObjectsResponse;
+
+      isVisible = await object.isVisible();
+    }
   }
 }

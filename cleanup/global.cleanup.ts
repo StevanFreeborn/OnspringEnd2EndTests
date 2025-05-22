@@ -64,4 +64,11 @@ teardown.describe('cleanup', () => {
   teardown('cleanup:dashboards delete all test dashboards created as part of tests', async ({ sysAdminPage }) => {
     await new DashboardsAdminPage(sysAdminPage).deleteAllTestDashboards();
   });
+
+  teardown(
+    'cleanup:dashboardObjects delete all test dashboard objects created as part of tests',
+    async ({ sysAdminPage }) => {
+      await new DashboardsAdminPage(sysAdminPage).deleteAllTestDashboardObjects();
+    }
+  );
 });

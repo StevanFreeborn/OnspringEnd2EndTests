@@ -1,8 +1,11 @@
+import { DashboardObjectItem } from './dashboardObjectItem';
 import { ExportDashboardOptions } from './exportDashboardOptions';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 
-export type DashboardItem = {
-  object: Report;
+export type DashboardItem = Report | DashboardObjectItem;
+
+export type DashboardItemWithLocation = {
+  item: DashboardItem;
   row: number;
   column: number;
 };
@@ -116,7 +119,7 @@ type DashboardObject = {
   title?: DashboardTitle;
   status?: boolean;
   containers?: string[];
-  items?: DashboardItem[];
+  items?: DashboardItemWithLocation[];
   schedule?: DashboardSchedule;
   permissionStatus?: 'Public' | 'Private';
   permissions?: DashboardPermissions;
@@ -129,7 +132,7 @@ export class Dashboard {
   title: DashboardTitle;
   status: boolean;
   containers: string[];
-  items: DashboardItem[];
+  items: DashboardItemWithLocation[];
   schedule?: DashboardSchedule;
   permissionStatus: 'Public' | 'Private';
   permissions: {

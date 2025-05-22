@@ -307,7 +307,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -366,7 +366,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -440,7 +440,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -534,7 +534,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -618,7 +618,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -670,7 +670,7 @@ test.describe('dashboard', () => {
         containers: [container.name],
         items: [
           {
-            object: report,
+            item: report,
             row: 0,
             column: 0,
           },
@@ -681,7 +681,7 @@ test.describe('dashboard', () => {
         containers: [container.name],
         items: [
           {
-            object: report,
+            item: report,
             row: 0,
             column: 0,
           },
@@ -733,7 +733,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -776,7 +776,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -816,7 +816,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -879,7 +879,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -937,7 +937,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },
@@ -989,7 +989,7 @@ test.describe('dashboard', () => {
       containers: [container.name],
       items: [
         {
-          object: report,
+          item: report,
           row: 0,
           column: 0,
         },

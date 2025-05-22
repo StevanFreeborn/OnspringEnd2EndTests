@@ -10,6 +10,7 @@ import { BasePage } from '../basePage';
 export class DashboardPage extends BasePage {
   private actionMenuButton: Locator;
   private actionMenu: DashboardActionMenu;
+  private dashboardContents: Locator;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -31,6 +32,7 @@ export class DashboardPage extends BasePage {
     this.dashboardLinkModal = new DashboardLinkModal(this.page);
     this.dashboardBreadcrumbTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
     this.dashboardTitle = this.page.locator('#dashboard-title-container');
+    this.dashboardContents = this.page.locator('#dashboard-contents');
   }
 
   async goto(dashboardId?: number) {
@@ -76,5 +78,9 @@ export class DashboardPage extends BasePage {
     }
 
     return link[0];
+  }
+
+  getDashboardItem(name: string) {
+    return this.dashboardContents.locator('.dashboard-item', { has: this.page.locator(`.title:has-text("${name}")`) });
   }
 }
