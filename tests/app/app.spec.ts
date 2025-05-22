@@ -985,8 +985,8 @@ test.describe('app', () => {
     await test.step('Create fields for geocoding mapping', async () => {
       await appAdminPage.layoutTabButton.click();
 
-      for (const fieldName of fieldNames) {
-        await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+      for (const name of fieldNames) {
+        await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: name }));
       }
     });
 
