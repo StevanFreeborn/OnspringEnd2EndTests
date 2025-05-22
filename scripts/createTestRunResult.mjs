@@ -1,10 +1,11 @@
 import 'dotenv/config';
 
+const REPORT_SITE = "https://onspringqareports.stevanfreeborn.com"
 const API_KEY = process.env.ONSPRING_CORP_API_KEY ?? process.argv[2];
 const RELEASE_RECORD_ID = process.env.RELEASE_RECORD_ID ?? process.argv[3];
 const ENVIRONMENT = process.env.ENVIRONMENT ?? process.argv[4];
 const RESULT = process.env.RUN_RESULT ?? process.argv[5];
-const REPORT_URL = process.env.REPORT_URL ?? process.argv[6];
+const REPORT_NAME = process.env.REPORT_NAME ?? process.argv[6];
 const WORKFLOW_NUMBER = process.env.WORKFLOW_NUMBER ?? process.argv[7];
 const WORKFLOW_ATTEMPT = process.env.WORKFLOW_ATTEMPT ?? process.argv[8];
 
@@ -59,7 +60,7 @@ const res = await fetch('https://api.onspring.ist/records', {
       44337: RELEASE_RECORD_ID,
       44339: envListValue,
       44340: resultListValue,
-      44341: REPORT_URL,
+      44341: `${REPORT_SITE}/reports/${REPORT_NAME}`,
       44342: WORKFLOW_NUMBER,
       44343: WORKFLOW_ATTEMPT,
     },
