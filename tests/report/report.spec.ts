@@ -776,8 +776,6 @@ test.describe('report', () => {
 
     test.slow();
 
-    test.fail();
-
     await test.step('Create record in source app', async () => {
       await addContentPage.goto(sourceApp.id);
       await addContentPage.saveRecordButton.click();
