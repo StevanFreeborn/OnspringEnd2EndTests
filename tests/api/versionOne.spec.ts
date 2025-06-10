@@ -369,7 +369,11 @@ test.describe('API v1', () => {
       });
     });
 
-    test('it should return expected status code and data structure when uploading large file', async ({ setup, request, large45mbTxtFile }) => {
+    test('it should return expected status code and data structure when uploading large file', async ({
+      setup,
+      request,
+      large45mbTxtFile,
+    }) => {
       let createdRecordId = 0;
 
       await test.step('Create a record', async () => {
@@ -419,7 +423,11 @@ test.describe('API v1', () => {
       });
     });
 
-    test('it should return expected status code and data structure when uploading file that exceeds max size', async ({ setup, request, large51mbTxtFile }) => {
+    test('it should return expected status code and data structure when uploading file that exceeds max size', async ({
+      setup,
+      request,
+      large51mbTxtFile,
+    }) => {
       let createdRecordId = 0;
 
       await test.step('Create a record', async () => {

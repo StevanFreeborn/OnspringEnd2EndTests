@@ -48,7 +48,7 @@ export class AttachmentFieldControl {
   async addFileWithoutWaitingForResponse(filePath: string) {
     const fileChooserPromise = this.page.waitForEvent('filechooser');
     await this.uploadButton.click();
-    
+
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(filePath);
   }

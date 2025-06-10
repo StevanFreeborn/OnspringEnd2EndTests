@@ -13,7 +13,7 @@ async function getTestFileWithExtension(extension: FileExtension) {
   const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');
   const testFiles = fs.readdirSync(testFilesDir);
   const testFile = testFiles.find(file => file.endsWith(extension));
-  
+
   if (!testFile) {
     throw new Error(`No test file found with extension ${extension}`);
   }
@@ -31,13 +31,13 @@ async function getTestFileWithName(name: string) {
   const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');
   const testFiles = fs.readdirSync(testFilesDir);
   const testFile = testFiles.find(file => file === name);
-  
+
   if (!testFile) {
     throw new Error(`No test file found with name ${name}`);
   }
 
   const testFilePath = path.join(testFilesDir, testFile);
-  
+
   return {
     name: testFile,
     path: testFilePath,
