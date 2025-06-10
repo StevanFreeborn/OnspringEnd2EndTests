@@ -50,7 +50,7 @@ export async function jpgFile({}, use: (r: TestFile) => Promise<void>) {
 }
 
 export async function txtFile({}, use: (r: TestFile) => Promise<void>) {
-  const testFile = await getTestFileWithExtension('.txt');
+  const testFile = await getTestFileWithName('test-attachment.txt');
   await use(testFile);
 }
 
