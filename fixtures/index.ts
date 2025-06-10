@@ -14,7 +14,7 @@ import { SheetParser } from '../services/sheetParser';
 import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
 import { sysAdminPage, testUserPage } from './auth.fixtures';
-import { TestFile, jpgFile, txtFile } from './file.fixtures';
+import { TestFile, jpgFile, large45mbTxtFile, large51mbTxtFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
 import {
   downloadService,
@@ -47,6 +47,8 @@ type Fixtures = {
   dynamicDocumentService: DynamicDocumentService;
   jpgFile: TestFile;
   txtFile: TestFile;
+  large45mbTxtFile: TestFile;
+  large51mbTxtFile: TestFile;
   apiURL: string;
   useCachedApiSetup: boolean;
 };
@@ -79,6 +81,8 @@ export const test = base.extend<Fixtures>({
   dynamicDocumentService: dynamicDocumentService,
   jpgFile: jpgFile,
   txtFile: txtFile,
+  large45mbTxtFile: large45mbTxtFile,
+  large51mbTxtFile: large51mbTxtFile,
   apiURL: ['', { option: true }],
 });
 
