@@ -13,14 +13,33 @@ async function getTestFileWithExtension(extension: FileExtension) {
   const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');
   const testFiles = fs.readdirSync(testFilesDir);
   const testFile = testFiles.find(file => file.endsWith(extension));
+
   if (!testFile) {
     throw new Error(`No test file found with extension ${extension}`);
   }
+
   const testFilePath = path.join(testFilesDir, testFile);
   const testFileName = path.basename(testFilePath);
 
   return {
     name: testFileName,
+    path: testFilePath,
+  };
+}
+
+async function getTestFileWithName(name: string) {
+  const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');
+  const testFiles = fs.readdirSync(testFilesDir);
+  const testFile = testFiles.find(file => file === name);
+
+  if (!testFile) {
+    throw new Error(`No test file found with name ${name}`);
+  }
+
+  const testFilePath = path.join(testFilesDir, testFile);
+
+  return {
+    name: testFile,
     path: testFilePath,
   };
 }
@@ -31,7 +50,17 @@ export async function jpgFile({}, use: (r: TestFile) => Promise<void>) {
 }
 
 export async function txtFile({}, use: (r: TestFile) => Promise<void>) {
-  const testFile = await getTestFileWithExtension('.txt');
+  const testFile = await getTestFileWithName('test-attachment.txt');
+  await use(testFile);
+}
+
+export async function large45mbTxtFile({}, use: (r: TestFile) => Promise<void>) {
+  const testFile = await getTestFileWithName('45mb.txt');
+  await use(testFile);
+}
+
+export async function large51mbTxtFile({}, use: (r: TestFile) => Promise<void>) {
+  const testFile = await getTestFileWithName('51mb.txt');
   await use(testFile);
 }
 

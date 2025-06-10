@@ -922,6 +922,104 @@ test.describe('API v2', () => {
         await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
       });
     });
+
+    test('it should return expected status code and data structure when uploading a large file', async ({
+      setup,
+      request,
+      large45mbTxtFile,
+    }) => {
+      const file = createReadStream(large45mbTxtFile.path);
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Update the record with a large attachment', async () => {
+        const response = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.attachmentsField.id,
+            modifiedDate: new Date().toISOString(),
+            notes: 'Large Test Attachment',
+            file: file,
+          },
+        });
+
+        expect(response.status()).toBe(201);
+
+        const body = await response.json();
+
+        expect(body).toHaveProperty('id', expect.any(Number));
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
+
+    test('it should return expected status code when updating a record with an attachment that exceeds the size limit', async ({
+      setup,
+      request,
+      large51mbTxtFile,
+    }) => {
+      const file = createReadStream(large51mbTxtFile.path);
+      let createdRecordId = 0;
+
+      await test.step('Create a record', async () => {
+        const response = await request.put(`records`, {
+          data: {
+            appId: setup.app.id,
+            fields: {
+              [setup.fields.nameField.id]: 'Test Record',
+            },
+          },
+        });
+
+        if (response.status() !== 201) {
+          throw new Error('Failed to create record');
+        }
+
+        const body = await response.json();
+        createdRecordId = parseInt(body.id);
+
+        expect(createdRecordId).toBeGreaterThan(0);
+      });
+
+      await test.step('Attempt to update the record with an oversized attachment', async () => {
+        const response = await request.post('files', {
+          multipart: {
+            recordId: createdRecordId,
+            fieldId: setup.fields.attachmentsField.id,
+            modifiedDate: new Date().toISOString(),
+            notes: 'Oversized Test Attachment',
+            file: file,
+          },
+        });
+
+        expect(response.status()).toBe(413);
+      });
+
+      await test.step('Delete the record', async () => {
+        await request.delete(`records/appId/${setup.app.id}/recordId/${createdRecordId}`);
+      });
+    });
   });
 
   test.describe('Delete A Record', () => {
