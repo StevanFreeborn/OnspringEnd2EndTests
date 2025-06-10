@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, expect, layoutItemTest, } from '../../fixtures';
+import { Locator, expect, layoutItemTest } from '../../fixtures';
 import { AttachmentField } from '../../models/attachmentField';
 import { LayoutItemPermission } from '../../models/layoutItem';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -668,18 +668,54 @@ test.describe('attachment field', () => {
     });
   });
 
-  test('Upload a file that exceeds the max file size limit to an attachment Field', async ({ }) => {
+  test('Upload a file that exceeds the max file size limit to an attachment Field', async ({
+    appAdminPage,
+    app,
+    addContentPage,
+    large51mbTxtFile,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-919',
     });
 
-    await test.step('Add the attachment field', async () => { });
+    const field = new AttachmentField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
 
-    await test.step('Create a record and attempt to upload the large file to the attachment field', async () => { });
+    await test.step('Add the attachment field', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: field.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
 
-    await test.step('Verify the file upload fails', async () => { });
+    await test.step('Create a record and attempt to upload the large file to the attachment field', async () => {
+      await addContentPage.goto(app.id);
+      const attachmentField = await addContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: field.name,
+        fieldType: 'Attachment',
+      });
 
-    expect(true).toBeTruthy();
+      await attachmentField.addFileWithoutWaitingForResponse(large51mbTxtFile.path);
+    });
+
+    await test.step('Verify the file upload fails', async () => {
+      const fileUploadErrorModal = addContentPage.page.getByRole('dialog', { name: 'File Upload Error' });
+
+      await expect(fileUploadErrorModal).toBeVisible();
+    });
   });
 });
