@@ -49,7 +49,7 @@ export class ReportGeneralTab {
       .locator('.label:has-text("Number/Date Format") + .data')
       .getByRole('listbox');
 
-    this.includeAllLevelsCheckbox = this.frame.getByLabel('Include All Levels');
+    this.includeAllLevelsCheckbox = this.frame.getByRole('checkbox', { name: 'Include All Levels' });
 
     this.specificGroupsDualPaneSelector = new DualPaneSelector(
       this.frame.locator('.label:has-text("Specific Groups") + .data')
