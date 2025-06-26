@@ -162,13 +162,73 @@ test.describe('billing report', () => {
     });
   });
 
-  test('Export the Detailed File Storage By App Statistics report', async () => {
+  test('Export the Detailed File Storage By App Statistics report', async ({
+    testUser,
+    testUserPage,
+    sysAdminEmail,
+    downloadService,
+    sheetParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-883',
     });
 
-    expect(true).toBeTruthy();
+    const testUserBillingReportPage = new BillingReportPage(testUserPage);
+
+    await test.step('Navigate to the billing report', async () => {
+      await testUserBillingReportPage.goto();
+    });
+
+    await test.step('Export the Detailed File Storage By App Statistics report', async () => {
+      await testUserBillingReportPage.exportDetailedFileStorageByAppStatisticsReport();
+    });
+
+    let exportEmailContent: string;
+
+    await test.step('Verify the export is successful', async () => {
+      await expect(async () => {
+        const searchCriteria = [['TO', testUser.email], ['TEXT', 'Detailed File Storage By App Report'], ['UNSEEN']];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        exportEmailContent = email.html as string;
+      }).toPass({
+        intervals: [30_000],
+        timeout: 300_000,
+      });
+    });
+
+    let reportPath: string;
+
+    await test.step('Download the exported Detailed File Storage By App Statistics report', async () => {
+      await testUserPage.setContent(exportEmailContent);
+
+      const reportDownload = testUserPage.waitForEvent('download');
+      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
+
+      const report = await reportDownload;
+      reportPath = await downloadService.saveDownload(report);
+    });
+
+    await test.step('Verify report contains expected data', async () => {
+      const reportData = sheetParser.parseFile(reportPath);
+      expect(reportData).toHaveLength(1);
+
+      const sheet = reportData[0];
+      expect(sheet.name).toEqual('Report Data');
+      expect(sheet.data.length).toBeGreaterThanOrEqual(3);
+
+      const headers = Object.keys(sheet.data[0]);
+      expect(headers).toEqual(expect.arrayContaining(['App ID', 'App/Survey Name', 'Total Files', 'File Size (GB)']));
+
+      const expectedApps = ['Users', 'Roles', 'Groups', 'Unused Files', 'Miscellaneous'];
+      const appNames = sheet.data.map(row => row['App/Survey Name']);
+      expect(appNames).toEqual(expect.arrayContaining(expectedApps));
+    });
   });
 
   test('Sort the Detailed File Storage By App Statistics report', async () => {

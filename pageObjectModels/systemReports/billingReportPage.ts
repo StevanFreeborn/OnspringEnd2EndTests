@@ -39,6 +39,9 @@ export class BillingReportPage extends BaseAdminPage {
   private readonly detailedDataUsageByAppStatisticsSection: Locator;
   private readonly detailedDataUsageByAppStatisticsReportGridHeader: Locator;
   private readonly detailedDataUsageByAppStatisticsReportGridBody: Locator;
+  private readonly detailedFileStorageByAppStatisticsSection: Locator;
+  private readonly detailedFileStorageByAppStatisticsReportGridHeader: Locator;
+  private readonly detailedFileStorageByAppStatisticsReportGridBody: Locator;
   private readonly exportReportDialog: Locator;
 
   constructor(page: Page) {
@@ -61,6 +64,15 @@ export class BillingReportPage extends BaseAdminPage {
     );
     this.detailedDataUsageByAppStatisticsReportGridBody = this.detailedDataUsageByAppStatisticsSection.locator(
       '#data-usage-grid .k-grid-content'
+    );
+    this.detailedFileStorageByAppStatisticsSection = this.page.locator('section', {
+      has: this.page.getByRole('heading', { name: 'Detailed File Storage By App Statistics' }),
+    });
+    this.detailedFileStorageByAppStatisticsReportGridHeader = this.detailedFileStorageByAppStatisticsSection.locator(
+      '#file-storage-grid .k-grid-header'
+    );
+    this.detailedFileStorageByAppStatisticsReportGridBody = this.detailedFileStorageByAppStatisticsSection.locator(
+      '#file-storage-grid .k-grid-content'
     );
     this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
   }
@@ -166,5 +178,11 @@ export class BillingReportPage extends BaseAdminPage {
 
   async getDetailedDataUsageByAppStatisticsReportRows() {
     return this.detailedDataUsageByAppStatisticsReportGridBody.locator('tr').all();
+  }
+
+  async exportDetailedFileStorageByAppStatisticsReport() {
+    await this.detailedFileStorageByAppStatisticsSection.getByRole('link', { name: 'Export Report' }).click();
+    await this.exportReportDialog.waitFor();
+    await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
   }
 }
