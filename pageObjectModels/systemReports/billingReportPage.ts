@@ -24,6 +24,8 @@ export class BillingReportPage extends BaseAdminPage {
   private readonly fromDateControl: DateFieldControl;
   private readonly toDateControl: DateFieldControl;
   private readonly incrementSelector: Locator;
+  private readonly detailedDataUsageByAppStatisticsSection: Locator;
+  private readonly exportReportDialog: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -36,6 +38,10 @@ export class BillingReportPage extends BaseAdminPage {
     this.fromDateControl = new DateFieldControl(this.usageHistorySection.locator('.k-datetimepicker').first());
     this.toDateControl = new DateFieldControl(this.usageHistorySection.locator('.k-datetimepicker').last());
     this.incrementSelector = this.usageHistorySection.getByRole('listbox').last();
+    this.detailedDataUsageByAppStatisticsSection = this.page.locator('section', {
+      has: this.page.getByRole('heading', { name: 'Detailed Data Usage By App Statistics' }),
+    });
+    this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
   }
 
   async goto() {
@@ -90,5 +96,11 @@ export class BillingReportPage extends BaseAdminPage {
       await this.enterUsageHistoryFromDate(filter.startDate);
       await this.enterUsageHistoryToDate(filter.endDate);
     }
+  }
+
+  async exportDetailedDataUsageByAppStatisticsReport() {
+    await this.detailedDataUsageByAppStatisticsSection.getByRole('link', { name: 'Export Report' }).click();
+    await this.exportReportDialog.waitFor();
+    await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
   }
 }
