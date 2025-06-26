@@ -102,4 +102,9 @@ export class DateFieldControl {
     await this.input.fill(formattedDate);
     await this.input.blur();
   }
+
+  async clearDate() {
+    await this.input.fill('');
+    await this.input.blur();
+  }
 }
