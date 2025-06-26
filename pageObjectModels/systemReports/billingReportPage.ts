@@ -16,21 +16,36 @@ type UsageHistoryFilter =
       increment: UsageHistoryFilterIncrement;
     };
 
+const DETAILED_DATA_USAGE_BY_APP_STATISTICS_COLUMNS = [
+  'App ID',
+  'App Name',
+  'Total Records',
+  'Total Size (GB)',
+] as const;
+
+type DetailedDataUsageByAppStatisticsColumn = (typeof DETAILED_DATA_USAGE_BY_APP_STATISTICS_COLUMNS)[number];
+type SortableDetailedDataUsageByAppStatisticsColumn = DetailedDataUsageByAppStatisticsColumn;
+type SortDirection = 'ascending' | 'descending';
+
 export class BillingReportPage extends BaseAdminPage {
   private readonly path: string;
   private readonly chartDataPath: string;
+  private readonly getDataUsagePath: string;
   private readonly usageHistorySection: Locator;
   private readonly dateSelector: Locator;
   private readonly fromDateControl: DateFieldControl;
   private readonly toDateControl: DateFieldControl;
   private readonly incrementSelector: Locator;
   private readonly detailedDataUsageByAppStatisticsSection: Locator;
+  private readonly detailedDataUsageByAppStatisticsReportGridHeader: Locator;
+  private readonly detailedDataUsageByAppStatisticsReportGridBody: Locator;
   private readonly exportReportDialog: Locator;
 
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Reporting/Billing/Usage';
     this.chartDataPath = '/Admin/Reporting/Billing/UsageChartData';
+    this.getDataUsagePath = '/Admin/Reporting/Billing/GetBillingDataUsagePage';
     this.usageHistorySection = this.page.locator('section', {
       has: this.page.getByRole('heading', { name: 'Usage History' }),
     });
@@ -41,6 +56,12 @@ export class BillingReportPage extends BaseAdminPage {
     this.detailedDataUsageByAppStatisticsSection = this.page.locator('section', {
       has: this.page.getByRole('heading', { name: 'Detailed Data Usage By App Statistics' }),
     });
+    this.detailedDataUsageByAppStatisticsReportGridHeader = this.detailedDataUsageByAppStatisticsSection.locator(
+      '#data-usage-grid .k-grid-header'
+    );
+    this.detailedDataUsageByAppStatisticsReportGridBody = this.detailedDataUsageByAppStatisticsSection.locator(
+      '#data-usage-grid .k-grid-content'
+    );
     this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
   }
 
@@ -102,5 +123,48 @@ export class BillingReportPage extends BaseAdminPage {
     await this.detailedDataUsageByAppStatisticsSection.getByRole('link', { name: 'Export Report' }).click();
     await this.exportReportDialog.waitFor();
     await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
+  }
+
+  async clearDetailedDataUsageByAppStatisticsReportSorting() {
+    const numOfSortableHeaders = await this.detailedDataUsageByAppStatisticsReportGridHeader
+      .locator('[data-role="columnsorter"]')
+      .count();
+
+    for (let i = 0; i < numOfSortableHeaders; i++) {
+      const currentHeader = this.detailedDataUsageByAppStatisticsReportGridHeader
+        .locator('[data-role="columnsorter"]')
+        .nth(i);
+      let isSorted = await currentHeader.getAttribute('aria-sort');
+
+      while (isSorted) {
+        const sortResponse = this.page.waitForResponse(this.getDataUsagePath);
+        await currentHeader.getByRole('link').click();
+        await sortResponse;
+
+        isSorted = await currentHeader.getAttribute('aria-sort');
+      }
+    }
+  }
+
+  async sortDetailedDataUsageByAppStatisticsReport(
+    column: SortableDetailedDataUsageByAppStatisticsColumn,
+    direction: SortDirection
+  ) {
+    const columnHeader = this.detailedDataUsageByAppStatisticsReportGridHeader.getByRole('columnheader', {
+      name: column,
+    });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getDataUsagePath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
+    }
+  }
+
+  async getDetailedDataUsageByAppStatisticsReportRows() {
+    return this.detailedDataUsageByAppStatisticsReportGridBody.locator('tr').all();
   }
 }

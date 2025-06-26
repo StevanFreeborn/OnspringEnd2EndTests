@@ -133,13 +133,33 @@ test.describe('billing report', () => {
     });
   });
 
-  test('Sort the Detailed Data usage By App Statistics report', async () => {
+  test('Sort the Detailed Data usage By App Statistics report', async ({ billingReportPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-883',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the billing report', async () => {
+      await billingReportPage.goto();
+    });
+
+    await test.step('Sort the Detailed Data usage By App Statistics report', async () => {
+      await billingReportPage.clearDetailedDataUsageByAppStatisticsReportSorting();
+      await billingReportPage.sortDetailedDataUsageByAppStatisticsReport('App ID', 'ascending');
+    });
+
+    await test.step('Verify the report is sorted', async () => {
+      const rows = await billingReportPage.getDetailedDataUsageByAppStatisticsReportRows();
+
+      for (let i = 0; i < rows.length - 1; i++) {
+        const currentAppId = await rows[i].locator('td').first().textContent();
+        const nextAppId = await rows[i + 1].locator('td').first().textContent();
+        const currentAppIdNumber = parseInt(currentAppId || '0');
+        const nextAppIdNumber = parseInt(nextAppId || '0');
+
+        expect(currentAppIdNumber).toBeLessThanOrEqual(nextAppIdNumber);
+      }
+    });
   });
 
   test('Export the Detailed File Storage By App Statistics report', async () => {
