@@ -22,7 +22,8 @@ export type FieldType =
   | 'Reference'
   | 'Time Span'
   | 'Formula'
-  | 'Parallel Reference';
+  | 'Parallel Reference'
+  | 'AutoNumber';
 
 export class AddFieldTypeMenu {
   private readonly menu: Locator;
