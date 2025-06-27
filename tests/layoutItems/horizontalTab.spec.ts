@@ -130,12 +130,43 @@ test.describe('horizontal tab', () => {
     });
   });
 
-  test("Rearrange the horizontal tabs on an app's layout", async () => {
+  test("Rearrange the horizontal tabs on an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-45',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Rearrange the horizontal tabs on the layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Last Saved By',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragTab({
+        tabName: 'Tab 2',
+        index: 0,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the horizontal tabs are rearranged', async () => {
+      await addContentPage.goto(app.id);
+
+      const firstTab = addContentPage.page.getByRole('tab', { name: 'Tab 2' });
+      const secondTab = addContentPage.page.getByRole('tab', { name: 'About' });
+
+      await expect(firstTab).toBeLeftOf(secondTab);
+    });
   });
 });

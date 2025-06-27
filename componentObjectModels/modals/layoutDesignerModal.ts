@@ -187,7 +187,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
 
     if (orientation === 'horizontal') {
       const newTabItem = this.layoutItemsSection.objectsTab.getObjectFromBank('New Tab');
-      const tabDropzone = await this.canvasSection.getVerticalTabDropzone(params.index);
+      const tabDropzone = await this.canvasSection.getHorizontalTabDropzone(params.index);
       const tabNameEditor = this.frame.locator('#name-editor input');
       const tabNameApplyButton = this.frame.locator('#name-editor').getByTitle('Apply');
 
@@ -211,5 +211,24 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await tab.locator('[title="Edit Tab Name"]').click();
     await this.frame.locator('#name-editor input').fill(newName);
     await this.frame.locator('#name-editor').getByTitle('Apply').click();
+  }
+
+  async dragTab({ tabName, index }: { tabName: string; index: number }) {
+    const orientation = await this.getTabOrientation();
+
+    if (orientation === 'horizontal') {
+      const tab = this.canvasSection.getTabButton(tabName);
+
+      await tab.hover();
+      await this.page.mouse.down();
+      await this.page.mouse.move(0, 0);
+      const tabDropzone = await this.canvasSection.getHorizontalTabDropzone(index);
+      await tabDropzone.hover();
+      await this.canvasSection.tabDropzone.waitFor({ state: 'visible' });
+      await this.page.mouse.up();
+      return;
+    }
+
+    throw new Error('Support for vertical tabs is not implemented yet');
   }
 }

@@ -103,4 +103,6 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
   targetSurvey: survey,
 });
 
+export { expect } from './matchers.fixtures';
+
 export * from '@playwright/test';
