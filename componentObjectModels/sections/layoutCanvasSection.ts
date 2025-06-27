@@ -39,7 +39,7 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     return dropzone;
   }
 
-  async getTabDropzone(index?: number) {
+  async getVerticalTabDropzone(index?: number) {
     if (index === undefined) {
       return this.section.locator('.k-tabstrip-items').locator('.tabDropArea').last();
     }

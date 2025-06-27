@@ -182,7 +182,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
 
     if (orientation === 'horizontal') {
       const newTabItem = this.layoutItemsSection.objectsTab.getObjectFromBank('New Tab');
-      const tabDropzone = await this.canvasSection.getTabDropzone(params.index);
+      const tabDropzone = await this.canvasSection.getVerticalTabDropzone(params.index);
       const tabNameEditor = this.frame.locator('#name-editor input');
       const tabNameApplyButton = this.frame.locator('#name-editor').getByTitle('Apply');
 
@@ -197,5 +197,14 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     }
 
     throw new Error('Support for vertical tabs is not implemented yet');
+  }
+
+  async updateTabName({ currentName, newName }: { currentName: string; newName: string }) {
+    const tab = this.canvasSection.getTabButton(currentName);
+
+    await tab.hover();
+    await tab.locator('[title="Edit Tab Name"]').click();
+    await this.frame.locator('#name-editor input').fill(newName);
+    await this.frame.locator('#name-editor').getByTitle('Apply').click();
   }
 }

@@ -58,13 +58,45 @@ test.describe('horizontal tab', () => {
     });
   });
 
-  test("Update a horizontal tab on an app's layout", async () => {
+  test("Update a horizontal tab on an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-43',
     });
 
-    expect(true).toBeTruthy();
+    const tabName = 'Updated Tab Name';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Update a horizontal tab on the layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Last Saved By',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.updateTabName({
+        currentName: 'Tab 2',
+        newName: tabName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the horizontal tab is updated', async () => {
+      await addContentPage.goto(app.id);
+
+      const tab = addContentPage.page.getByRole('tab', { name: tabName });
+
+      await expect(tab).toBeVisible();
+    });
   });
 
   test("Delete a horizontal tab on an app's layout", async () => {
