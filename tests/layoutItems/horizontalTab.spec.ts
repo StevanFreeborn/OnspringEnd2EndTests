@@ -99,13 +99,35 @@ test.describe('horizontal tab', () => {
     });
   });
 
-  test("Delete a horizontal tab on an app's layout", async () => {
+  test("Delete a horizontal tab on an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-44',
     });
 
-    expect(true).toBeTruthy();
+    const tabName = 'Tab 2';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Delete a horizontal tab on the layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.configureTabSetLink.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.configureTabSetModal.deleteTab(tabName);
+      await appAdminPage.layoutTab.layoutDesignerModal.configureTabSetModal.applyButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the horizontal tab is deleted', async () => {
+      await addContentPage.goto(app.id);
+
+      const tab = addContentPage.page.getByRole('tab', { name: tabName });
+
+      await expect(tab).toBeHidden();
+    });
   });
 
   test("Rearrange the horizontal tabs on an app's layout", async () => {

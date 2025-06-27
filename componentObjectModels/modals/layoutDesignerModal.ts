@@ -4,6 +4,7 @@ import { LayoutItemCreator } from '../creators/layoutItemCreator';
 import { LayoutCanvasSection } from '../sections/layoutCanvasSection';
 import { LayoutItemsSection } from '../sections/layoutItemsSection';
 import { EditLayoutPropertiesModal } from './editLayoutPropertiesModal';
+import { EditTabSetModal } from './editTabSetModal';
 
 type DragItemsParams = {
   tabName: string | undefined;
@@ -38,6 +39,8 @@ export class LayoutDesignerModal extends LayoutItemCreator {
   private readonly tabOrientationContainer: Locator;
   readonly editLayoutPropertiesLink: Locator;
   readonly editLayoutPropertiesModal: EditLayoutPropertiesModal;
+  readonly configureTabSetLink: Locator;
+  readonly configureTabSetModal: EditTabSetModal;
   readonly layoutItemsSection: LayoutItemsSection;
   readonly canvasSection: LayoutCanvasSection;
   readonly saveButton: Locator;
@@ -54,6 +57,8 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.tabOrientationContainer = this.frame.locator('#canvas-orientation');
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new LayoutCanvasSection(this.frame);
+    this.configureTabSetLink = this.frame.getByRole('link', { name: 'Configure Tab Set' });
+    this.configureTabSetModal = new EditTabSetModal(this.frame);
     this.saveButton = this.designer.getByRole('button', { name: 'Save', exact: true });
     this.saveAndCloseButton = this.designer.getByRole('button', { name: 'Save & Close' });
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
