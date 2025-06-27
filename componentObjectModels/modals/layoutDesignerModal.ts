@@ -26,10 +26,16 @@ type AddSectionParams = {
   placementIndex?: number;
 };
 
+type AddTabParams = {
+  name: string;
+  index?: number;
+};
+
 export class LayoutDesignerModal extends LayoutItemCreator {
   private readonly designer: Locator;
   private readonly frame: FrameLocator;
   private readonly saveLayoutPathRegex: RegExp;
+  private readonly tabOrientationContainer: Locator;
   readonly editLayoutPropertiesLink: Locator;
   readonly editLayoutPropertiesModal: EditLayoutPropertiesModal;
   readonly layoutItemsSection: LayoutItemsSection;
@@ -45,6 +51,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.editLayoutPropertiesModal = new EditLayoutPropertiesModal(this.frame);
     this.editLayoutPropertiesLink = this.frame.getByRole('link', { name: 'Edit Layout Properties' });
     this.saveLayoutPathRegex = new RegExp(`${BASE_URL}/Admin/App/[0-9]+/Layout/[0-9]+/Save`);
+    this.tabOrientationContainer = this.frame.locator('#canvas-orientation');
     this.layoutItemsSection = new LayoutItemsSection(this.frame);
     this.canvasSection = new LayoutCanvasSection(this.frame);
     this.saveButton = this.designer.getByRole('button', { name: 'Save', exact: true });
@@ -83,6 +90,10 @@ export class LayoutDesignerModal extends LayoutItemCreator {
 
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
+
+    if (tabName !== undefined) {
+      await this.canvasSection.ensureTabSelected(tabName);
+    }
 
     const dropzone = await this.canvasSection.getItemDropzone({
       tabName: tabName,
@@ -150,5 +161,41 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     const section = tab.getSection(initialSectionName);
 
     await section.updateName(sectionName);
+  }
+
+  private async getTabOrientation() {
+    const selected = this.tabOrientationContainer.locator('.selected');
+    const orientation = await selected.textContent();
+
+    if (orientation === null) {
+      throw new Error('Tab orientation not found');
+    }
+
+    const normalizedOrientation = orientation.trim().toLowerCase();
+    return normalizedOrientation === 'horizontal' ? 'horizontal' : 'vertical';
+  }
+
+  async addTab(params: AddTabParams) {
+    const orientation = await this.getTabOrientation();
+
+    await this.ensureObjectTabSelected();
+
+    if (orientation === 'horizontal') {
+      const newTabItem = this.layoutItemsSection.objectsTab.getObjectFromBank('New Tab');
+      const tabDropzone = await this.canvasSection.getTabDropzone(params.index);
+      const tabNameEditor = this.frame.locator('#name-editor input');
+      const tabNameApplyButton = this.frame.locator('#name-editor').getByTitle('Apply');
+
+      await newTabItem.hover();
+      await this.page.mouse.down();
+      await tabDropzone.hover();
+      await this.canvasSection.tabDropzone.waitFor({ state: 'visible' });
+      await this.page.mouse.up();
+      await tabNameEditor.fill(params.name);
+      await tabNameApplyButton.click();
+      return;
+    }
+
+    throw new Error('Support for vertical tabs is not implemented yet');
   }
 }

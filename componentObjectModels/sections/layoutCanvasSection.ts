@@ -16,11 +16,13 @@ type SectionDropzoneParams = {
 
 export class LayoutCanvasSection extends BaseCanvasSection {
   readonly sectionDropzone: Locator;
+  readonly tabDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
     super(frame);
     this.sectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
+    this.tabDropzone = this.section.locator('.tabDropArea.ui-droppable-hover');
   }
 
   async getItemDropzone(params: FieldDropzoneParams) {
@@ -35,6 +37,21 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     const tab = await this.getTab(tabName);
     const dropzone = await tab.getSectionDropzone(placementIndex);
     return dropzone;
+  }
+
+  async getTabDropzone(index?: number) {
+    if (index === undefined) {
+      return this.section.locator('.k-tabstrip-items').locator('.tabDropArea').last();
+    }
+
+    const numOfAreas = await this.section.locator('.k-tabstrip-items').locator('.tabDropArea').count();
+    const maxIndex = numOfAreas - 1;
+
+    if (index > maxIndex) {
+      index = maxIndex;
+    }
+
+    return this.section.locator('.k-tabstrip-items').locator('.tabDropArea').nth(index);
   }
 
   async getActiveTabName() {
@@ -55,6 +72,11 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     const tabId = await tabButton.getAttribute('data-canvas-tab');
     const tab = this.section.locator(`[data-tab-body="${tabId}"]`).first();
     return new LayoutTab(tab);
+  }
+
+  async ensureTabSelected(tabName: string) {
+    const tab = this.section.locator('.k-tabstrip-items').getByText(tabName).first();
+    await tab.click();
   }
 }
 
