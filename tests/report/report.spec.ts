@@ -14,6 +14,7 @@ import {
   LineChart,
   PieChart,
   PyramidChart,
+  RadarChart,
   SplineChart,
   StackedBarChart,
   StackedColumnChart,
@@ -1972,6 +1973,53 @@ test.describe('report', () => {
 
       await expect(updatedRecordIdColumn).toBeVisible();
     });
+  });
+
+  test('Configure a radar chart', async ({
+    appAdminPage,
+    sourceApp,
+    addContentPage,
+    editContentPage,
+    reportAppPage,
+    reportPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-906',
+    });
+
+    const fields = getFieldsForApp();
+    let records = buildRecords(fields.groupField, fields.seriesField);
+
+    await test.step('Setup source app with fields and records', async () => {
+      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+    });
+
+    const report = new SavedReportAsChart({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      chart: new RadarChart({
+        visibility: 'Display Chart Only',
+        groupData: fields.groupField.name,
+        seriesData: fields.seriesField.name,
+      }),
+    });
+
+    await test.step("Navigate to the app's reports home page", async () => {
+      await reportAppPage.goto(sourceApp.id);
+    });
+
+    await test.step('Create the report', async () => {
+      await reportAppPage.createReport(report);
+      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await reportPage.waitUntilLoaded();
+    });
+
+    await test.step('Verify the heat map chart displays as expected', async () => {
+      await expect(reportPage.reportContents).toHaveScreenshot();
+    });
+    expect(true).toBeTruthy();
   });
 });
 

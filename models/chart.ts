@@ -22,7 +22,8 @@ type ChartType =
   | 'Stacked Column'
   | 'Stacked Column Plus Line'
   | 'Bubble'
-  | 'Heat Map';
+  | 'Heat Map'
+  | 'Radar';
 
 export const DisplayOptionLabel = {
   showValues: 'Show Values',
@@ -39,6 +40,9 @@ export const DisplayOptionLabel = {
   rotateValues: 'Rotate Values',
   displayVerticalLine: 'Display a vertical line at the current date/time',
   markerClustering: 'Enable marker clustering on map zoom out',
+  showAnchorPoints: 'Show Anchor Points',
+  showAxisValues: 'Show Axis Values',
+  customOpacity: 'Custom Opacity',
 } as const;
 
 export type ChartDisplayOption = {
@@ -601,5 +605,46 @@ export class HeatMapChart extends AdvancedChart {
     if (this.colorStops.length < 2) {
       throw new Error('Heat map chart must have at least 2 color stops');
     }
+  }
+}
+
+export type RadarChartObject = Omit<AdvancedChartObject, 'type' | 'mode'> & {
+  showValues?: boolean;
+  showAnchorPoints?: boolean;
+  showAxisValues?: boolean;
+  showLegend?: boolean;
+  singlePlotColor?: boolean;
+  customOpacity?: boolean;
+};
+
+export class RadarChart extends AdvancedChart {
+  constructor({
+    visibility,
+    groupData,
+    summaryData,
+    seriesData,
+    showValues = false,
+    showAnchorPoints = false,
+    showAxisValues = false,
+    showLegend = false,
+    singlePlotColor = false,
+    customOpacity = false,
+  }: RadarChartObject) {
+    super({
+      visibility,
+      groupData,
+      summaryData,
+      seriesData,
+      type: 'Radar',
+      mode: 'Advanced',
+      displayOptions: [
+        { name: DisplayOptionLabel.showValues, status: showValues },
+        { name: DisplayOptionLabel.showAnchorPoints, status: showAnchorPoints },
+        { name: DisplayOptionLabel.showAxisValues, status: showAxisValues },
+        { name: DisplayOptionLabel.showLegend, status: showLegend },
+        { name: DisplayOptionLabel.singlePlotColor, status: singlePlotColor },
+        { name: DisplayOptionLabel.customOpacity, status: customOpacity },
+      ],
+    });
   }
 }
