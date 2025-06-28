@@ -139,4 +139,17 @@ class LayoutSection extends BaseLayoutSection {
     await input.fill(newName);
     await applyButton.click();
   }
+
+  async updateColumnCount(columnCount: number) {
+    if (columnCount < 1 || columnCount > 12) {
+      throw new Error('Column count must be between 1 and 12');
+    }
+
+    const page = this.section.page();
+    const frame = page.frameLocator('iframe').first();
+    const columnSelector = this.section.locator('#columns-container').getByRole('listbox');
+
+    await columnSelector.click();
+    await frame.getByRole('option', { name: columnCount.toString() }).click();
+  }
 }

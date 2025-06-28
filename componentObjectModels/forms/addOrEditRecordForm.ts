@@ -85,7 +85,9 @@ export class AddOrEditRecordForm extends BaseForm {
           .first();
         return new DateFieldControl(dateTimePicker);
       }
+      case 'AutoNumber':
       case 'Formula':
+      case 'System':
         locator = this.createFormControlSelector(params.fieldName, 'div.data-text-only');
         break;
       case 'Number':
