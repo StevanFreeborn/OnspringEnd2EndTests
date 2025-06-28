@@ -15,10 +15,16 @@ import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
+import {
+  ExportFieldsAndObjectsReportModal,
+  ExportFieldsAndObjectsReportOptions,
+} from './../modals/exportFieldsAndObjectsReportModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
   private readonly getLayoutDesignPathRegex: RegExp;
   private readonly addItemPathRegex: RegExp;
+  private readonly getLayoutItemPathRegex: RegExp;
+  private readonly filterFieldsInput: Locator;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -26,18 +32,24 @@ export class BaseLayoutTab extends LayoutItemCreator {
   readonly addLayoutItemDialog: AddLayoutItemDialog;
   readonly deleteLayoutItemDialog: DeleteLayoutItemDialog;
   readonly fieldsAndObjectsGrid: Locator;
+  readonly exportFieldsAndObjectsReportButton: Locator;
+  readonly exportFieldsAndObjectsReportModal: ExportFieldsAndObjectsReportModal;
 
   constructor(page: Page) {
     super(page);
     this.getLayoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
     this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
-    this.layoutsGrid = page.locator('#grid-layouts').first();
-    this.layoutDesignerModal = new LayoutDesignerModal(page);
-    this.addFieldButton = page.getByText('Add Field');
-    this.addLayoutItemMenu = new AddLayoutItemMenu(page);
-    this.addLayoutItemDialog = new AddLayoutItemDialog(page);
-    this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(page);
-    this.fieldsAndObjectsGrid = page.locator('#grid-layout-items').first();
+    this.getLayoutItemPathRegex = /Admin\/App\/\d+\/Layout\/ItemListPage/;
+    this.filterFieldsInput = this.page.getByPlaceholder('Filter Fields');
+    this.layoutsGrid = this.page.locator('#grid-layouts').first();
+    this.layoutDesignerModal = new LayoutDesignerModal(this.page);
+    this.addFieldButton = this.page.getByText('Add Field');
+    this.addLayoutItemMenu = new AddLayoutItemMenu(this.page);
+    this.addLayoutItemDialog = new AddLayoutItemDialog(this.page);
+    this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(this.page);
+    this.fieldsAndObjectsGrid = this.page.locator('#grid-layout-items').first();
+    this.exportFieldsAndObjectsReportButton = this.page.locator('#export-layout-items');
+    this.exportFieldsAndObjectsReportModal = new ExportFieldsAndObjectsReportModal(this.page);
   }
 
   private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
@@ -197,5 +209,16 @@ export class BaseLayoutTab extends LayoutItemCreator {
     const fieldIdNumber = parseInt(fieldId);
 
     return fieldIdNumber;
+  }
+
+  async searchFieldsAndObjectsReport(searchTerm: string) {
+    const searchResponse = this.page.waitForResponse(this.getLayoutItemPathRegex);
+    await this.filterFieldsInput.fill(searchTerm);
+    await searchResponse;
+  }
+
+  async exportFieldsAndObjectsReport(options: ExportFieldsAndObjectsReportOptions) {
+    await this.exportFieldsAndObjectsReportButton.click();
+    await this.exportFieldsAndObjectsReportModal.exportReport(options);
   }
 }

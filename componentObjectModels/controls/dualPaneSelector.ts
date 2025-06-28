@@ -52,4 +52,13 @@ export class DualPaneSelector {
     await selectorControl.locator('.selected-pane').getByText(option).getByTitle('Remove').click();
     await selectorControl.getByTitle('Close').click();
   }
+
+  async removalAllOptions() {
+    await this.selector.click();
+
+    const selectorControl = this.getSelectorControl();
+    const removeAllLink = selectorControl.getByRole('link', { name: 'Remove All' });
+    await removeAllLink.click();
+    await selectorControl.getByTitle('Close').click();
+  }
 }
