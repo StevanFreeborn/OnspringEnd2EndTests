@@ -87,6 +87,7 @@ export class AddOrEditRecordForm extends BaseForm {
       }
       case 'AutoNumber':
       case 'Formula':
+      case 'System':
         locator = this.createFormControlSelector(params.fieldName, 'div.data-text-only');
         break;
       case 'Number':

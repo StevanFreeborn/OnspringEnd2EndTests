@@ -55,17 +55,19 @@ export class DateFieldControl {
   private readonly page: Page;
   private readonly timeSelect: Locator;
   private readonly datePicker: DatePicker;
+  readonly control: Locator;
   readonly input: Locator;
   readonly calendarButton: Locator;
   readonly clockButton: Locator;
 
   constructor(control: Locator) {
-    this.page = control.page();
+    this.control = control;
+    this.page = this.control.page();
     this.timeSelect = this.page.locator('div.timepicker-list-container:visible').first();
     this.datePicker = new DatePicker(this.page);
-    this.input = control.locator('input');
-    this.calendarButton = control.locator('.k-link-date');
-    this.clockButton = control.locator('.k-link-time');
+    this.input = this.control.locator('input');
+    this.calendarButton = this.control.locator('.k-link-date');
+    this.clockButton = this.control.locator('.k-link-time');
   }
 
   private async selectTime(time: TimeOption) {

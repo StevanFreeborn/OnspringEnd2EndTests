@@ -10,6 +10,9 @@ export enum FieldTypeEnum {
   Reference = 'Reference',
   TimeSpan = 'Time Span',
   Formula = 'Formula',
+  ParallelReference = 'Parallel Reference',
+  AutoNumber = 'AutoNumber',
+  System = 'System',
 }
 
 export type FieldType =
@@ -23,7 +26,8 @@ export type FieldType =
   | 'Time Span'
   | 'Formula'
   | 'Parallel Reference'
-  | 'AutoNumber';
+  | 'AutoNumber'
+  | 'System';
 
 export class AddFieldTypeMenu {
   private readonly menu: Locator;
