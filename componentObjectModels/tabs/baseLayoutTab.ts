@@ -15,6 +15,10 @@ import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
 import { LayoutDesignerModal } from '../modals/layoutDesignerModal';
+import {
+  ExportFieldsAndObjectsReportModal,
+  ExportFieldsAndObjectsReportOptions,
+} from './../modals/exportFieldsAndObjectsReportModal';
 
 export class BaseLayoutTab extends LayoutItemCreator {
   private readonly getLayoutDesignPathRegex: RegExp;
@@ -28,6 +32,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
   readonly addLayoutItemDialog: AddLayoutItemDialog;
   readonly deleteLayoutItemDialog: DeleteLayoutItemDialog;
   readonly fieldsAndObjectsGrid: Locator;
+  readonly exportFieldsAndObjectsReportButton: Locator;
+  readonly exportFieldsAndObjectsReportModal: ExportFieldsAndObjectsReportModal;
 
   constructor(page: Page) {
     super(page);
@@ -42,6 +48,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
     this.addLayoutItemDialog = new AddLayoutItemDialog(this.page);
     this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(this.page);
     this.fieldsAndObjectsGrid = this.page.locator('#grid-layout-items').first();
+    this.exportFieldsAndObjectsReportButton = this.page.locator('#export-layout-items');
+    this.exportFieldsAndObjectsReportModal = new ExportFieldsAndObjectsReportModal(this.page);
   }
 
   private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
@@ -207,5 +215,10 @@ export class BaseLayoutTab extends LayoutItemCreator {
     const searchResponse = this.page.waitForResponse(this.getLayoutItemPathRegex);
     await this.filterFieldsInput.fill(searchTerm);
     await searchResponse;
+  }
+
+  async exportFieldsAndObjectsReport(options: ExportFieldsAndObjectsReportOptions) {
+    await this.exportFieldsAndObjectsReportButton.click();
+    await this.exportFieldsAndObjectsReportModal.exportReport(options);
   }
 }
