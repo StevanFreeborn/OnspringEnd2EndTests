@@ -15,8 +15,8 @@ export class SendingNumberAdminPage extends BaseAdminPage {
     this.getSendingNumbersPath = '/Admin/TextSendingNumber/GetListPage';
     this.path = '/Admin/TextSendingNumber';
     this.deleteNumberPath = '/Admin/TextSendingNumber/Delete';
-    this.sendingNumberGrid = page.locator('#grid');
-    this.deleteNumberDialog = new DeleteSendingNumberDialog(page);
+    this.sendingNumberGrid = this.page.locator('#grid');
+    this.deleteNumberDialog = new DeleteSendingNumberDialog(this.page);
   }
 
   async goto() {

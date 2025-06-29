@@ -2,19 +2,29 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditEmailTemplatePage } from '../../pageObjectModels/messaging/editEmailTemplatePage';
+import { EmailTemplateAdminPage } from '../../pageObjectModels/messaging/emailTemplateAdminPage';
 import { AnnotationType } from '../annotations';
 
 type EmailTemplateTestFixtures = {
   adminHomePage: AdminHomePage;
   editEmailTemplatePage: EditEmailTemplatePage;
+  emailTemplateAdminPage: EmailTemplateAdminPage;
 };
 
 const test = base.extend<EmailTemplateTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editEmailTemplatePage: async ({ sysAdminPage }, use) => await use(new EditEmailTemplatePage(sysAdminPage)),
+  emailTemplateAdminPage: async ({ sysAdminPage }, use) => await use(new EmailTemplateAdminPage(sysAdminPage)),
 });
 
 test.describe('email template', () => {
+  let emailTemplatesToDelete: string[] = [];
+
+  test.afterEach(async ({ emailTemplateAdminPage }) => {
+    await emailTemplateAdminPage.deleteEmailTemplates(emailTemplatesToDelete);
+    emailTemplatesToDelete = [];
+  });
+
   test('Create an Email Template via the create button in the header of the admin home page', async ({
     adminHomePage,
     editEmailTemplatePage,
@@ -25,6 +35,7 @@ test.describe('email template', () => {
     });
 
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+    emailTemplatesToDelete.push(emailTemplateName);
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
