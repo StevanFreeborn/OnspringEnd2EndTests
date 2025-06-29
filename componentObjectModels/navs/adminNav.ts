@@ -19,6 +19,7 @@ export class AdminNav {
   readonly dynamicDocumentCreateMenuOption: Locator;
   readonly dataConnectorCreateMenuOption: Locator;
   readonly dashboardCreateMenuOption: Locator;
+  readonly emailTemplateCreateMenuOption: Locator;
 
   private getMenuOption(menuOptionText: string) {
     return this.adminCreateMenu.getByText(menuOptionText);
@@ -43,5 +44,6 @@ export class AdminNav {
     this.dynamicDocumentCreateMenuOption = this.getMenuOption('Document');
     this.dataConnectorCreateMenuOption = this.getMenuOption('Data Connector');
     this.dashboardCreateMenuOption = this.getMenuOption('Dashboard');
+    this.emailTemplateCreateMenuOption = this.getMenuOption('Email Template');
   }
 }

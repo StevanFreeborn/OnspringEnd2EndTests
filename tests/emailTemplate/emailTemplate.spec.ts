@@ -1,14 +1,43 @@
-import { expect, test } from '../../fixtures';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
+import { test as base, expect } from '../../fixtures';
+import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { EditEmailTemplatePage } from '../../pageObjectModels/messaging/editEmailTemplatePage';
 import { AnnotationType } from '../annotations';
 
+type EmailTemplateTestFixtures = {
+  adminHomePage: AdminHomePage;
+  editEmailTemplatePage: EditEmailTemplatePage;
+};
+
+const test = base.extend<EmailTemplateTestFixtures>({
+  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
+  editEmailTemplatePage: async ({ sysAdminPage }, use) => await use(new EditEmailTemplatePage(sysAdminPage)),
+});
+
 test.describe('email template', () => {
-  test('Create an Email Template via the create button in the header of the admin home page', async () => {
+  test('Create an Email Template via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    editEmailTemplatePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-380',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email template', async () => {
+      await adminHomePage.createEmailTemplateUsingHeaderCreateButton(emailTemplateName);
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Verify the email template is created', async () => {
+      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateName);
+    });
   });
 
   test('Create an Email Template via the create button on the Messaging tile on the admin home page', async () => {

@@ -5,6 +5,7 @@ import { CreateDashboardDialog } from '../componentObjectModels/dialogs/createDa
 import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
+import { CreateEmailTemplateDialog } from '../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateTextMessageDialogForApp } from '../componentObjectModels/dialogs/createTextMessageDialog';
@@ -59,6 +60,8 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createDashboardDialog: CreateDashboardDialog;
   readonly dashboardDesigner: DashboardDesignerModal;
+
+  readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
   private getTileLink(tilePosition: number) {
     return this.page.locator(
@@ -118,6 +121,8 @@ export class AdminHomePage extends BaseAdminPage {
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
 
     this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
+
+    this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);
   }
 
   async goto() {
@@ -485,6 +490,16 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createAppModal.nameInput.fill(appName);
     await this.createAppModal.saveButton.click();
+  }
+
+  async createEmailTemplateUsingHeaderCreateButton(emailTemplateName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailTemplateCreateMenuOption.click();
+
+    await this.createEmailTemplateDialog.nameInput.waitFor();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
   }
 
   async createApp(appName: string) {

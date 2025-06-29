@@ -31,21 +31,21 @@ export class EditEmailBodyPage extends BaseAdminPage {
     super(page);
     this.pathRegex = /\/Admin\/Messaging\/EmailBody\/\d+\/Edit/;
 
-    this.saveButton = page.getByRole('link', { name: 'Save Changes' });
+    this.saveButton = this.page.getByRole('link', { name: 'Save Changes' });
 
-    this.generalTabButton = page.getByRole('tab', { name: 'General' });
-    this.contentsTabButton = page.getByRole('tab', { name: 'Contents' });
-    this.recipientsTabButton = page.getByRole('tab', { name: 'Recipients' });
-    this.senderTabButton = page.getByRole('tab', { name: 'Sender' });
-    this.frequencyTabButton = page.getByRole('tab', { name: 'Frequency' });
-    this.rulesTabButton = page.getByRole('tab', { name: 'Rules' });
+    this.generalTabButton = this.page.getByRole('tab', { name: 'General' });
+    this.contentsTabButton = this.page.getByRole('tab', { name: 'Contents' });
+    this.recipientsTabButton = this.page.getByRole('tab', { name: 'Recipients' });
+    this.senderTabButton = this.page.getByRole('tab', { name: 'Sender' });
+    this.frequencyTabButton = this.page.getByRole('tab', { name: 'Frequency' });
+    this.rulesTabButton = this.page.getByRole('tab', { name: 'Rules' });
 
-    this.generalTab = new EmailGeneralTab(page);
-    this.contentsTab = new EmailContentsTab(page);
-    this.recipientsTab = new EmailRecipientsTab(page);
-    this.senderTab = new EmailSenderTab(page);
-    this.frequencyTab = new EmailFrequencyTab(page);
-    this.rulesTab = new EmailRulesTab(page);
+    this.generalTab = new EmailGeneralTab(this.page);
+    this.contentsTab = new EmailContentsTab(this.page);
+    this.recipientsTab = new EmailRecipientsTab(this.page);
+    this.senderTab = new EmailSenderTab(this.page);
+    this.frequencyTab = new EmailFrequencyTab(this.page);
+    this.rulesTab = new EmailRulesTab(this.page);
   }
 
   private async fillOutGeneralTab(emailBody: EmailBody) {

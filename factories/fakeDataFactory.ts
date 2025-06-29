@@ -24,6 +24,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeEmailTemplateName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-email-template-test`;
+  }
+
   static createFakeObjectName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_DASHBOARD_OBJECT_NAME}`;
