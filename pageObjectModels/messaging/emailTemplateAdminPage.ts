@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateEmailTemplateDialog } from '../../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { DeleteEmailTemplateDialog } from '../../componentObjectModels/dialogs/deleteEmailTemplateDialog';
 import { BaseAdminPage } from '../baseAdminPage';
 
@@ -7,6 +8,8 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
   private readonly deleteTemplatePathRegex: RegExp;
   private readonly emailTemplatesGrid: Locator;
   private readonly deleteEmailTemplateDialog: DeleteEmailTemplateDialog;
+  private readonly createEmailTemplateButton: Locator;
+  private readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
   readonly path: string;
 
   constructor(page: Page) {
@@ -15,11 +18,15 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
     this.deleteTemplatePathRegex = /\/Admin\/Messaging\/Template\/\d+\/Delete\//;
     this.emailTemplatesGrid = this.page.locator('#grid');
     this.deleteEmailTemplateDialog = new DeleteEmailTemplateDialog(this.page);
+    this.createEmailTemplateButton = this.page.getByRole('button', { name: 'Create Email Template' });
+    this.createEmailTemplateDialog = new CreateEmailTemplateDialog(this.page);
     this.path = '/Admin/Messaging/Template';
   }
 
   async goto() {
+    const getTemplatesResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
     await this.page.goto(this.path);
+    await getTemplatesResponse;
   }
 
   async deleteEmailTemplates(emailTemplatesToDelete: string[]) {
@@ -39,5 +46,11 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
       await this.deleteEmailTemplateDialog.waitForDialogToBeDismissed();
       await rowElement.waitForElementState('hidden');
     }
+  }
+
+  async createTemplate(emailTemplateName: string) {
+    await this.createEmailTemplateButton.click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
   }
 }
