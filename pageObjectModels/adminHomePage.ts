@@ -508,6 +508,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createEmailTemplateDialog.saveButton.click();
   }
 
+  async createEmailTemplateCopyUsingHeaderCreateButton(emailTemplateName: string, emailTemplateCopyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailTemplateCreateMenuOption.click();
+
+    await this.createEmailTemplateDialog.copyFromRadioButton.waitFor();
+    await this.createEmailTemplateDialog.copyFromRadioButton.click();
+    await this.createEmailTemplateDialog.copyFromDropdown.click();
+    await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
   async createEmailTemplateUsingMessagingTile(emailTemplateName: string) {
     await this.messagingTileLink.hover();
     await this.messagingTileCreateButton.waitFor();
@@ -516,6 +529,20 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createEmailTemplateDialog.nameInput.waitFor();
     await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  async createEmailTemplateCopyUsingMessagingTile(emailTemplateName: string, emailTemplateCopyName: string) {
+    await this.messagingTileLink.hover();
+    await this.messagingTileCreateButton.waitFor();
+    await this.messagingTileCreateButton.click();
+    await this.messagingCreateMenu.getByText('Email Template').click();
+
+    await this.createEmailTemplateDialog.copyFromRadioButton.waitFor();
+    await this.createEmailTemplateDialog.copyFromRadioButton.click();
+    await this.createEmailTemplateDialog.copyFromDropdown.click();
+    await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
     await this.createEmailTemplateDialog.saveButton.click();
   }
 

@@ -103,22 +103,76 @@ test.describe('email template', () => {
     });
   });
 
-  test('Create a copy of an Email Template via the create button in the header of the admin home page', async () => {
+  test('Create a copy of an Email Template via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    editEmailTemplatePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-383',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+    const emailTemplateCopyName = `${emailTemplateName} Copy`;
+    emailTemplatesToDelete.push(emailTemplateName);
+    emailTemplatesToDelete.push(emailTemplateCopyName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email template to copy', async () => {
+      await adminHomePage.createEmailTemplateUsingHeaderCreateButton(emailTemplateName);
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the email template', async () => {
+      await adminHomePage.createEmailTemplateCopyUsingHeaderCreateButton(emailTemplateName, emailTemplateCopyName);
+    });
+
+    await test.step('Verify the email template is copied', async () => {
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateCopyName);
+    });
   });
 
-  test('Create a copy of an Email Template via the create button on the Messaging tile on the admin home page', async () => {
+  test('Create a copy of an Email Template via the create button on the Messaging tile on the admin home page', async ({
+    adminHomePage,
+    editEmailTemplatePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-384',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+    const emailTemplateCopyName = `${emailTemplateName} Copy`;
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email template to copy', async () => {
+      await adminHomePage.createEmailTemplateUsingMessagingTile(emailTemplateName);
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create a copy of the email template using the Messaging tile', async () => {
+      await adminHomePage.createEmailTemplateCopyUsingMessagingTile(emailTemplateName, emailTemplateCopyName);
+    });
+
+    await test.step('Verify the email template is copied', async () => {
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateCopyName);
+    });
   });
 
   test('Create a copy of an Email Template via the "Create Email Template" button on the email templates home page.', async () => {
