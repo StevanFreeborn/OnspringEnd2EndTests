@@ -61,6 +61,9 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createDashboardDialog: CreateDashboardDialog;
   readonly dashboardDesigner: DashboardDesignerModal;
 
+  readonly messagingTileLink: Locator;
+  readonly messagingTileCreateButton: Locator;
+  readonly messagingCreateMenu: Locator;
   readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
   private getTileLink(tilePosition: number) {
@@ -122,6 +125,9 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
 
+    this.messagingTileLink = this.getTileLink(8);
+    this.messagingTileCreateButton = this.getTileCreateButton('Messaging');
+    this.messagingCreateMenu = this.getTileCreateMenu('Messaging');
     this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);
   }
 
@@ -496,6 +502,17 @@ export class AdminHomePage extends BaseAdminPage {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();
     await this.adminNav.emailTemplateCreateMenuOption.click();
+
+    await this.createEmailTemplateDialog.nameInput.waitFor();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  async createEmailTemplateUsingMessagingTile(emailTemplateName: string) {
+    await this.messagingTileLink.hover();
+    await this.messagingTileCreateButton.waitFor();
+    await this.messagingTileCreateButton.click();
+    await this.messagingCreateMenu.getByText('Email Template').click();
 
     await this.createEmailTemplateDialog.nameInput.waitFor();
     await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);

@@ -51,13 +51,30 @@ test.describe('email template', () => {
     });
   });
 
-  test('Create an Email Template via the create button on the Messaging tile on the admin home page', async () => {
+  test('Create an Email Template via the create button on the Messaging tile on the admin home page', async ({
+    adminHomePage,
+    editEmailTemplatePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-381',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+    emailTemplatesToDelete.push(emailTemplateName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email template using the Messaging tile', async () => {
+      await adminHomePage.createEmailTemplateUsingMessagingTile(emailTemplateName);
+      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Verify the email template is created', async () => {
+      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateName);
+    });
   });
 
   test('Create an Email Template via the "Create Email Template" button on the email template home page', async () => {
