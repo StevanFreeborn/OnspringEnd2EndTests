@@ -53,4 +53,14 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
     await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
     await this.createEmailTemplateDialog.saveButton.click();
   }
+
+  async createTemplateCopy(emailTemplateName: string, emailTemplateCopyName: string) {
+    await this.createEmailTemplateButton.click();
+    await this.createEmailTemplateDialog.copyFromRadioButton.waitFor();
+    await this.createEmailTemplateDialog.copyFromRadioButton.click();
+    await this.createEmailTemplateDialog.copyFromDropdown.click();
+    await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
 }
