@@ -114,7 +114,7 @@ test.describe('email template', () => {
     });
 
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
-    const emailTemplateCopyName = `${emailTemplateName} Copy`;
+    const emailTemplateCopyName = FakeDataFactory.createFakeEmailTemplateName();
     emailTemplatesToDelete.push(emailTemplateName);
     emailTemplatesToDelete.push(emailTemplateCopyName);
 
@@ -151,7 +151,7 @@ test.describe('email template', () => {
     });
 
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
-    const emailTemplateCopyName = `${emailTemplateName} Copy`;
+    const emailTemplateCopyName = FakeDataFactory.createFakeEmailTemplateName();
 
     await test.step('Navigate to the admin home page', async () => {
       await adminHomePage.goto();
@@ -186,7 +186,7 @@ test.describe('email template', () => {
     });
 
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
-    const emailTemplateCopyName = `${emailTemplateName} Copy`;
+    const emailTemplateCopyName = FakeDataFactory.createFakeEmailTemplateName();
     emailTemplatesToDelete.push(emailTemplateName);
     emailTemplatesToDelete.push(emailTemplateCopyName);
 
