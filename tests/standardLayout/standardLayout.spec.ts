@@ -110,13 +110,47 @@ test.describe('standard layout', () => {
     });
   });
 
-  test('Enable a standard layout of an app', async () => {
+  test('Enable a standard layout of an app', async ({
+    app,
+    appAdminPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-36',
     });
 
-    expect(true).toBeTruthy();
+    const layoutName = 'Standard Layout';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Add a standard layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayout(layoutName);
+    });
+
+    await test.step('Disable a standard layout', async () => {
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Enable a standard layout', async () => {
+      await appAdminPage.layoutTab.openLayout(layoutName);
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the standard layout is enabled', async () => {
+      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
+
+      await expect(layoutRow).not.toHaveText(/Disabled/);
+      await expect(layoutRow).toHaveText(/Enabled/);
+    });
   });
 
   test('Delete a standard layout of an app', async () => {
