@@ -16,12 +16,18 @@ export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
 export const TEST_CONNECTOR_NAME = 'connector-test';
 export const TEST_DASHBOARD_NAME = 'dashboard-test';
 export const TEST_DASHBOARD_OBJECT_NAME = 'object-test';
+export const TEST_EMAIL_TEMPLATE_NAME = 'email-template-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeEmailTemplateName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_EMAIL_TEMPLATE_NAME}`;
   }
 
   static createFakeObjectName() {

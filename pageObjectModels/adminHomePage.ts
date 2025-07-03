@@ -5,6 +5,7 @@ import { CreateDashboardDialog } from '../componentObjectModels/dialogs/createDa
 import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
+import { CreateEmailTemplateDialog } from '../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateTextMessageDialogForApp } from '../componentObjectModels/dialogs/createTextMessageDialog';
@@ -59,6 +60,11 @@ export class AdminHomePage extends BaseAdminPage {
 
   readonly createDashboardDialog: CreateDashboardDialog;
   readonly dashboardDesigner: DashboardDesignerModal;
+
+  readonly messagingTileLink: Locator;
+  readonly messagingTileCreateButton: Locator;
+  readonly messagingCreateMenu: Locator;
+  readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
   private getTileLink(tileName: string) {
     return this.page.locator('.landing-list-item-container', {
@@ -118,6 +124,11 @@ export class AdminHomePage extends BaseAdminPage {
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
 
     this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
+
+    this.messagingTileLink = this.getTileLink('Messaging');
+    this.messagingTileCreateButton = this.getTileCreateButton('Messaging');
+    this.messagingCreateMenu = this.getTileCreateMenu('Messaging');
+    this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);
   }
 
   async goto() {
@@ -485,6 +496,54 @@ export class AdminHomePage extends BaseAdminPage {
 
     await this.createAppModal.nameInput.fill(appName);
     await this.createAppModal.saveButton.click();
+  }
+
+  async createEmailTemplateUsingHeaderCreateButton(emailTemplateName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailTemplateCreateMenuOption.click();
+
+    await this.createEmailTemplateDialog.nameInput.waitFor();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  async createEmailTemplateCopyUsingHeaderCreateButton(emailTemplateName: string, emailTemplateCopyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailTemplateCreateMenuOption.click();
+
+    await this.createEmailTemplateDialog.copyFromRadioButton.waitFor();
+    await this.createEmailTemplateDialog.copyFromRadioButton.click();
+    await this.createEmailTemplateDialog.copyFromDropdown.click();
+    await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  async createEmailTemplateUsingMessagingTile(emailTemplateName: string) {
+    await this.messagingTileLink.hover();
+    await this.messagingTileCreateButton.waitFor();
+    await this.messagingTileCreateButton.click();
+    await this.messagingCreateMenu.getByText('Email Template').click();
+
+    await this.createEmailTemplateDialog.nameInput.waitFor();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateName);
+    await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  async createEmailTemplateCopyUsingMessagingTile(emailTemplateName: string, emailTemplateCopyName: string) {
+    await this.messagingTileLink.hover();
+    await this.messagingTileCreateButton.waitFor();
+    await this.messagingTileCreateButton.click();
+    await this.messagingCreateMenu.getByText('Email Template').click();
+
+    await this.createEmailTemplateDialog.copyFromRadioButton.waitFor();
+    await this.createEmailTemplateDialog.copyFromRadioButton.click();
+    await this.createEmailTemplateDialog.copyFromDropdown.click();
+    await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
+    await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
+    await this.createEmailTemplateDialog.saveButton.click();
   }
 
   async createApp(appName: string) {
