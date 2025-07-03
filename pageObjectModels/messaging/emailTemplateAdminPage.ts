@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateEmailTemplateDialog } from '../../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { DeleteEmailTemplateDialog } from '../../componentObjectModels/dialogs/deleteEmailTemplateDialog';
+import { TEST_EMAIL_TEMPLATE_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class EmailTemplateAdminPage extends BaseAdminPage {
@@ -15,7 +16,7 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.getEmailTemplatesPath = '/Admin/Messaging/Template/GetListPage';
-    this.deleteTemplatePathRegex = /\/Admin\/Messaging\/Template\/\d+\/Delete\//;
+    this.deleteTemplatePathRegex = /\/Admin\/Messaging\/Template\/\d+\/Delete/;
     this.emailTemplatesGrid = this.page.locator('#grid');
     this.deleteEmailTemplateDialog = new DeleteEmailTemplateDialog(this.page);
     this.createEmailTemplateButton = this.page.getByRole('button', { name: 'Create Email Template' });
@@ -27,25 +28,6 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
     const getTemplatesResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
     await this.page.goto(this.path);
     await getTemplatesResponse;
-  }
-
-  async deleteEmailTemplates(emailTemplatesToDelete: string[]) {
-    await this.goto();
-
-    for (const emailTemplateName of emailTemplatesToDelete) {
-      const emailTemplateRow = this.emailTemplatesGrid.getByRole('row', { name: emailTemplateName }).first();
-      const rowElement = await emailTemplateRow.elementHandle();
-
-      if (rowElement === null) {
-        continue;
-      }
-
-      await emailTemplateRow.hover();
-      await emailTemplateRow.getByTitle('Delete Email Template').click();
-      await this.deleteEmailTemplateDialog.deleteButton.click();
-      await this.deleteEmailTemplateDialog.waitForDialogToBeDismissed();
-      await rowElement.waitForElementState('hidden');
-    }
   }
 
   async createTemplate(emailTemplateName: string) {
@@ -62,5 +44,76 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
     await this.createEmailTemplateDialog.getEmailTemplateToCopy(emailTemplateName).click();
     await this.createEmailTemplateDialog.nameInput.fill(emailTemplateCopyName);
     await this.createEmailTemplateDialog.saveButton.click();
+  }
+
+  getRowByName(emailTemplateName: string) {
+    return this.emailTemplatesGrid.getByRole('row', { name: emailTemplateName });
+  }
+
+  async deleteTemplate(emailTemplateName: string) {
+    const emailTemplateRow = this.getRowByName(emailTemplateName);
+    const rowElement = await emailTemplateRow.elementHandle();
+
+    if (rowElement === null) {
+      return;
+    }
+
+    await emailTemplateRow.hover();
+    await emailTemplateRow.getByTitle('Delete Email Template').click();
+    await this.deleteEmailTemplateDialog.deleteButton.click();
+    await this.deleteEmailTemplateDialog.waitForDialogToBeDismissed();
+    await rowElement.waitForElementState('hidden');
+  }
+
+  async deleteTemplates(emailTemplatesToDelete: string[]) {
+    await this.goto();
+
+    for (const emailTemplateName of emailTemplatesToDelete) {
+      await this.deleteTemplate(emailTemplateName);
+    }
+  }
+
+  async deleteAllTestTemplates() {
+    await this.goto();
+
+    const scrollableElement = this.emailTemplatesGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.emailTemplatesGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfEmailTemplates = parseInt(pagerText.trim().split(' ')[0]);
+
+    if (Number.isNaN(totalNumOfEmailTemplates) === false) {
+      const emailTemplateRows = this.emailTemplatesGrid.getByRole('row');
+      let emailTemplateRowsCount = await emailTemplateRows.count();
+
+      while (emailTemplateRowsCount < totalNumOfEmailTemplates) {
+        const scrollResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        await scrollResponse;
+        emailTemplateRowsCount = await emailTemplateRows.count();
+      }
+    }
+
+    const emailTemplateRow = this.emailTemplatesGrid
+      .getByRole('row', { name: new RegExp(TEST_EMAIL_TEMPLATE_NAME, 'i') })
+      .last();
+
+    let isVisible = await emailTemplateRow.isVisible();
+
+    while (isVisible) {
+      const rowElement = await emailTemplateRow.elementHandle();
+
+      if (rowElement === null) {
+        return;
+      }
+
+      await emailTemplateRow.hover();
+      await emailTemplateRow.getByTitle('Delete Email Template').click();
+      await this.deleteEmailTemplateDialog.deleteButton.click();
+      await this.deleteEmailTemplateDialog.waitForDialogToBeDismissed();
+      await rowElement.waitForElementState('hidden');
+
+      isVisible = await emailTemplateRow.isVisible();
+    }
   }
 }

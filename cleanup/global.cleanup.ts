@@ -6,6 +6,7 @@ import { DashboardsAdminPage } from '../pageObjectModels/dashboards/dashboardsAd
 import { DataConnectorAdminPage } from '../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
+import { EmailTemplateAdminPage } from '../pageObjectModels/messaging/emailTemplateAdminPage';
 import { SendingNumberAdminPage } from '../pageObjectModels/messaging/sendingNumberAdminPage';
 import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityAdminPage';
 import { SharedListAdminPage } from '../pageObjectModels/sharedLists/sharedListAdminPage';
@@ -71,4 +72,8 @@ teardown.describe('cleanup', () => {
       await new DashboardsAdminPage(sysAdminPage).deleteAllTestDashboardObjects();
     }
   );
+
+  teardown('cleanup:emailTemplates delete all email templates created as part of tests', async ({ sysAdminPage }) => {
+    await new EmailTemplateAdminPage(sysAdminPage).deleteAllTestTemplates();
+  });
 });

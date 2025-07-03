@@ -22,7 +22,7 @@ test.describe('email template', () => {
   let emailTemplatesToDelete: string[] = [];
 
   test.afterEach(async ({ emailTemplateAdminPage }) => {
-    await emailTemplateAdminPage.deleteEmailTemplates(emailTemplatesToDelete);
+    await emailTemplateAdminPage.deleteTemplates(emailTemplatesToDelete);
     emailTemplatesToDelete = [];
   });
 
@@ -244,12 +244,35 @@ test.describe('email template', () => {
     });
   });
 
-  test('Delete an email template', async () => {
+  test('Delete an email template', async ({ emailTemplateAdminPage, editEmailTemplatePage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-387',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+
+    await test.step('Navigate to the email template admin page', async () => {
+      await emailTemplateAdminPage.goto();
+    });
+
+    await test.step('Create an email template to delete', async () => {
+      await emailTemplateAdminPage.createTemplate(emailTemplateName);
+      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Navigate back to the email template admin page', async () => {
+      await emailTemplateAdminPage.goto();
+    });
+
+    await test.step('Delete the email template', async () => {
+      await emailTemplateAdminPage.deleteTemplate(emailTemplateName);
+    });
+
+    await test.step('Verify the email template is deleted', async () => {
+      const row = emailTemplateAdminPage.getRowByName(emailTemplateName);
+
+      await expect(row).toBeHidden();
+    });
   });
 });
