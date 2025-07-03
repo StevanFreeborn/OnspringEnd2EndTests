@@ -1,19 +1,44 @@
-import { expect } from "@playwright/test";
-import { test as base } from "../../fixtures"
-import { AnnotationType } from "../annotations";
+import { expect } from '@playwright/test';
+import { test as base } from '../../fixtures';
+import { AnnotationType } from '../annotations';
+import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { app } from '../../fixtures/app.fixtures';
 
-type StandardLayoutTestFixtures = {};
+type StandardLayoutTestFixtures = {
+  app: App;
+  appAdminPage: AppAdminPage;
+};
 
-const test = base.extend<StandardLayoutTestFixtures>({});
+const test = base.extend<StandardLayoutTestFixtures>({
+  app: app,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+});
 
-test.describe("standard layout", () => {
-  test('Add a standard layout to an app', async () => {
+test.describe('standard layout', () => {
+  test('Add a standard layout to an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-32',
     });
 
-    expect(true).toBeTruthy();
+    const layoutName = 'Standard Layout';
+
+    await test.step('Navigate to app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Add a standard layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayout(layoutName);
+      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+    });
+
+    await test.step('Verify the standard layout is added', async () => {
+      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
+
+      await expect(layoutRow).toBeVisible();
+    });
   });
 
   test('Update a standard layout of an app', async () => {

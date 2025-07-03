@@ -19,12 +19,15 @@ import {
   ExportFieldsAndObjectsReportModal,
   ExportFieldsAndObjectsReportOptions,
 } from './../modals/exportFieldsAndObjectsReportModal';
+import { AddLayoutDialog } from '../dialogs/addLayoutDialog';
 
 export class BaseLayoutTab extends LayoutItemCreator {
   private readonly getLayoutDesignPathRegex: RegExp;
   private readonly addItemPathRegex: RegExp;
   private readonly getLayoutItemPathRegex: RegExp;
   private readonly filterFieldsInput: Locator;
+  private readonly addLayoutLink: Locator;
+  private readonly addLayoutDialog: AddLayoutDialog;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
@@ -41,6 +44,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
     this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
     this.getLayoutItemPathRegex = /Admin\/App\/\d+\/Layout\/ItemListPage/;
     this.filterFieldsInput = this.page.getByPlaceholder('Filter Fields');
+    this.addLayoutLink = this.page.getByRole('link', { name: 'Add Layout' });
+    this.addLayoutDialog = new AddLayoutDialog(this.page);
     this.layoutsGrid = this.page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(this.page);
     this.addFieldButton = this.page.getByText('Add Field');
@@ -226,5 +231,15 @@ export class BaseLayoutTab extends LayoutItemCreator {
   async exportFieldsAndObjectsReport(options: ExportFieldsAndObjectsReportOptions) {
     await this.exportFieldsAndObjectsReportButton.click();
     await this.exportFieldsAndObjectsReportModal.exportReport(options);
+  }
+
+  async addLayout(layoutName: string) {
+    await this.addLayoutLink.click();
+    await this.addLayoutDialog.nameInput.fill(layoutName);
+    await this.addLayoutDialog.saveButton.click();
+  }
+
+  getLayoutRowByName(layoutName: string) {
+    return this.layoutsGrid.getByRole('row', { name: layoutName }).first();
   }
 }
