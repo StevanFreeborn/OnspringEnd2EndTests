@@ -24,6 +24,26 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
     this.path = '/Admin/Messaging/Template';
   }
 
+  private async scrollAllTemplatesIntoView() {
+    const scrollableElement = this.emailTemplatesGrid.locator('.k-grid-content.k-auto-scrollable').first();
+
+    const pager = this.emailTemplatesGrid.locator('.k-pager-info').first();
+    const pagerText = await pager.innerText();
+    const totalNumOfEmailTemplates = parseInt(pagerText.trim().split(' ')[0]);
+
+    if (Number.isNaN(totalNumOfEmailTemplates) === false) {
+      const emailTemplateRows = this.emailTemplatesGrid.getByRole('row');
+      let emailTemplateRowsCount = await emailTemplateRows.count();
+
+      while (emailTemplateRowsCount < totalNumOfEmailTemplates) {
+        const scrollResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
+        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+        await scrollResponse;
+        emailTemplateRowsCount = await emailTemplateRows.count();
+      }
+    }
+  }
+
   async goto() {
     const getTemplatesResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
     await this.page.goto(this.path);
@@ -51,6 +71,8 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
   }
 
   async deleteTemplate(emailTemplateName: string) {
+    await this.scrollAllTemplatesIntoView();
+
     const emailTemplateRow = this.getRowByName(emailTemplateName);
     const rowElement = await emailTemplateRow.elementHandle();
 
@@ -76,23 +98,7 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
   async deleteAllTestTemplates() {
     await this.goto();
 
-    const scrollableElement = this.emailTemplatesGrid.locator('.k-grid-content.k-auto-scrollable').first();
-
-    const pager = this.emailTemplatesGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
-    const totalNumOfEmailTemplates = parseInt(pagerText.trim().split(' ')[0]);
-
-    if (Number.isNaN(totalNumOfEmailTemplates) === false) {
-      const emailTemplateRows = this.emailTemplatesGrid.getByRole('row');
-      let emailTemplateRowsCount = await emailTemplateRows.count();
-
-      while (emailTemplateRowsCount < totalNumOfEmailTemplates) {
-        const scrollResponse = this.page.waitForResponse(this.getEmailTemplatesPath);
-        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        await scrollResponse;
-        emailTemplateRowsCount = await emailTemplateRows.count();
-      }
-    }
+    await this.scrollAllTemplatesIntoView();
 
     const emailTemplateRow = this.emailTemplatesGrid
       .getByRole('row', { name: new RegExp(TEST_EMAIL_TEMPLATE_NAME, 'i') })
