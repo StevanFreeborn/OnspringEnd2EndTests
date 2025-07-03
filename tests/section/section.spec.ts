@@ -1,19 +1,67 @@
 import { expect } from '@playwright/test';
 import { test as base } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
-type SectionTestFixtures = {};
+type SectionTestFixtures = {
+  app: App;
+  appAdminPage: AppAdminPage;
+  addContentPage: AddContentPage;
+};
 
-const test = base.extend<SectionTestFixtures>({});
+const test = base.extend<SectionTestFixtures>({
+  app: app,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
+});
 
 test.describe('section', () => {
-  test("Add a section to an app's layout", async () => {
+  test("Add a section to an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-46',
     });
 
-    expect(true).toBeTruthy();
+    const tabName = 'Tab 2';
+    const sectionName = 'New Section';
+    const fieldName = 'Record Id';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Add a new section to the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
+        tabName: tabName,
+        sectionName: sectionName,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: fieldName,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the section is added successfully', async () => {
+      await addContentPage.goto(app.id);
+
+      const recordIdField = await addContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: fieldName,
+        fieldType: 'AutoNumber',
+      });
+
+      await expect(recordIdField).toBeVisible();
+    });
   });
 
   test("Update a section of an app's layout", async () => {
