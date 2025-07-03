@@ -64,6 +64,10 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     this.closeButton = this.designer.getByRole('button', { name: 'Close' });
   }
 
+  async closeLayout() {
+    await this.closeButton.click();
+  }
+
   async saveLayout() {
     const saveResponse = this.page.waitForResponse(this.saveLayoutPathRegex);
     await this.saveButton.click();

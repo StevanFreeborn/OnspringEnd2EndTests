@@ -10,7 +10,9 @@ import { ReferenceField } from '../../models/referenceField';
 import { TextField } from '../../models/textField';
 import { TimeSpanField } from '../../models/timeSpanField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
+import { AddLayoutDialog } from '../dialogs/addLayoutDialog';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
+import { DeleteLayoutDialog } from '../dialogs/deleteLayoutDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
@@ -25,11 +27,14 @@ export class BaseLayoutTab extends LayoutItemCreator {
   private readonly addItemPathRegex: RegExp;
   private readonly getLayoutItemPathRegex: RegExp;
   private readonly filterFieldsInput: Locator;
+  private readonly addLayoutLink: Locator;
+  private readonly addLayoutDialog: AddLayoutDialog;
   readonly layoutsGrid: Locator;
   readonly layoutDesignerModal: LayoutDesignerModal;
   readonly addFieldButton: Locator;
   readonly addLayoutItemMenu: AddLayoutItemMenu;
   readonly addLayoutItemDialog: AddLayoutItemDialog;
+  readonly deleteLayoutDialog: DeleteLayoutDialog;
   readonly deleteLayoutItemDialog: DeleteLayoutItemDialog;
   readonly fieldsAndObjectsGrid: Locator;
   readonly exportFieldsAndObjectsReportButton: Locator;
@@ -41,11 +46,14 @@ export class BaseLayoutTab extends LayoutItemCreator {
     this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
     this.getLayoutItemPathRegex = /Admin\/App\/\d+\/Layout\/ItemListPage/;
     this.filterFieldsInput = this.page.getByPlaceholder('Filter Fields');
+    this.addLayoutLink = this.page.getByRole('link', { name: 'Add Layout' });
+    this.addLayoutDialog = new AddLayoutDialog(this.page);
     this.layoutsGrid = this.page.locator('#grid-layouts').first();
     this.layoutDesignerModal = new LayoutDesignerModal(this.page);
     this.addFieldButton = this.page.getByText('Add Field');
     this.addLayoutItemMenu = new AddLayoutItemMenu(this.page);
     this.addLayoutItemDialog = new AddLayoutItemDialog(this.page);
+    this.deleteLayoutDialog = new DeleteLayoutDialog(this.page);
     this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(this.page);
     this.fieldsAndObjectsGrid = this.page.locator('#grid-layout-items').first();
     this.exportFieldsAndObjectsReportButton = this.page.locator('#export-layout-items');
@@ -226,5 +234,26 @@ export class BaseLayoutTab extends LayoutItemCreator {
   async exportFieldsAndObjectsReport(options: ExportFieldsAndObjectsReportOptions) {
     await this.exportFieldsAndObjectsReportButton.click();
     await this.exportFieldsAndObjectsReportModal.exportReport(options);
+  }
+
+  async addLayout(layoutName: string) {
+    await this.addLayoutLink.click();
+    await this.addLayoutDialog.nameInput.fill(layoutName);
+    await this.addLayoutDialog.saveButton.click();
+  }
+
+  async copyLayout(layoutName: string, copiedLayoutName: string) {
+    const layoutRow = this.getLayoutRowByName(layoutName);
+
+    await layoutRow.hover();
+    await layoutRow.getByTitle('Copy Layout').click();
+
+    const copyDialog = this.page.getByRole('dialog', { name: 'Copy Layout' });
+    await copyDialog.getByLabel('Layout Name').fill(copiedLayoutName);
+    await copyDialog.getByRole('button', { name: 'Copy' }).click();
+  }
+
+  getLayoutRowByName(layoutName: string) {
+    return this.layoutsGrid.getByRole('row', { name: layoutName }).first();
   }
 }
