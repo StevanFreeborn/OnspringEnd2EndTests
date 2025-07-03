@@ -212,7 +212,13 @@ export class BaseLayoutTab extends LayoutItemCreator {
   }
 
   async searchFieldsAndObjectsReport(searchTerm: string) {
-    const searchResponse = this.page.waitForResponse(this.getLayoutItemPathRegex);
+    const searchResponse = this.page.waitForResponse(res => {
+      const isCorrectPath = res.url().match(this.getLayoutItemPathRegex) !== null;
+      const isCorrectMethod = res.request().method() === 'POST';
+      const requestBody = res.request().postDataJSON();
+      const isCorrectSearchTerm = requestBody.searchTerm === searchTerm;
+      return isCorrectPath && isCorrectMethod && isCorrectSearchTerm;
+    });
     await this.filterFieldsInput.fill(searchTerm);
     await searchResponse;
   }
