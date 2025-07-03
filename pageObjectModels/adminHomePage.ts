@@ -125,7 +125,7 @@ export class AdminHomePage extends BaseAdminPage {
 
     this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
 
-    this.messagingTileLink = this.getTileLink(8);
+    this.messagingTileLink = this.getTileLink('Messaging');
     this.messagingTileCreateButton = this.getTileCreateButton('Messaging');
     this.messagingCreateMenu = this.getTileCreateMenu('Messaging');
     this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);

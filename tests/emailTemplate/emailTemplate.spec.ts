@@ -1,5 +1,6 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { EmailTemplate } from '../../models/emailTemplate';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditEmailTemplatePage } from '../../pageObjectModels/messaging/editEmailTemplatePage';
 import { EmailTemplateAdminPage } from '../../pageObjectModels/messaging/emailTemplateAdminPage';
@@ -212,13 +213,35 @@ test.describe('email template', () => {
     });
   });
 
-  test('Update an email template', async () => {
+  test('Update an email template', async ({ emailTemplateAdminPage, editEmailTemplatePage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-386',
     });
 
-    expect(true).toBeTruthy();
+    const emailTemplate = new EmailTemplate({
+      name: FakeDataFactory.createFakeEmailTemplateName(),
+    });
+
+    await test.step('Navigate to the email template admin page', async () => {
+      await emailTemplateAdminPage.goto();
+    });
+
+    await test.step('Create an email template to update', async () => {
+      await emailTemplateAdminPage.createTemplate(emailTemplate.name);
+      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
+    });
+
+    await test.step('Update the email template', async () => {
+      emailTemplate.name = `${emailTemplate.name} Updated`;
+      await editEmailTemplatePage.updateTemplate(emailTemplate);
+      await editEmailTemplatePage.save();
+    });
+
+    await test.step('Verify the email template is updated', async () => {
+      await editEmailTemplatePage.page.reload();
+      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplate.name);
+    });
   });
 
   test('Delete an email template', async () => {
