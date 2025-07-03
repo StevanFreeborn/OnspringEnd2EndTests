@@ -10,7 +10,9 @@ import { ReferenceField } from '../../models/referenceField';
 import { TextField } from '../../models/textField';
 import { TimeSpanField } from '../../models/timeSpanField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
+import { AddLayoutDialog } from '../dialogs/addLayoutDialog';
 import { AddLayoutItemDialog } from '../dialogs/addLayoutItemDialog';
+import { DeleteLayoutDialog } from '../dialogs/deleteLayoutDialog';
 import { DeleteLayoutItemDialog } from '../dialogs/deleteLayoutItemDialog';
 import { FieldType } from '../menus/addFieldTypeMenu';
 import { AddLayoutItemMenu } from '../menus/addLayoutItemMenu';
@@ -19,7 +21,6 @@ import {
   ExportFieldsAndObjectsReportModal,
   ExportFieldsAndObjectsReportOptions,
 } from './../modals/exportFieldsAndObjectsReportModal';
-import { AddLayoutDialog } from '../dialogs/addLayoutDialog';
 
 export class BaseLayoutTab extends LayoutItemCreator {
   private readonly getLayoutDesignPathRegex: RegExp;
@@ -33,6 +34,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
   readonly addFieldButton: Locator;
   readonly addLayoutItemMenu: AddLayoutItemMenu;
   readonly addLayoutItemDialog: AddLayoutItemDialog;
+  readonly deleteLayoutDialog: DeleteLayoutDialog;
   readonly deleteLayoutItemDialog: DeleteLayoutItemDialog;
   readonly fieldsAndObjectsGrid: Locator;
   readonly exportFieldsAndObjectsReportButton: Locator;
@@ -51,6 +53,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
     this.addFieldButton = this.page.getByText('Add Field');
     this.addLayoutItemMenu = new AddLayoutItemMenu(this.page);
     this.addLayoutItemDialog = new AddLayoutItemDialog(this.page);
+    this.deleteLayoutDialog = new DeleteLayoutDialog(this.page);
     this.deleteLayoutItemDialog = new DeleteLayoutItemDialog(this.page);
     this.fieldsAndObjectsGrid = this.page.locator('#grid-layout-items').first();
     this.exportFieldsAndObjectsReportButton = this.page.locator('#export-layout-items');
