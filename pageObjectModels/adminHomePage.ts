@@ -66,10 +66,10 @@ export class AdminHomePage extends BaseAdminPage {
   readonly messagingCreateMenu: Locator;
   readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
-  private getTileLink(tilePosition: number) {
-    return this.page.locator(
-      `div.landing-list-item-container:nth-child(${tilePosition}) > div:nth-child(1) > a:nth-child(1)`
-    );
+  private getTileLink(tileName: string) {
+    return this.page.locator('.landing-list-item-container', {
+      has: this.page.locator(`.title:has-text("${tileName}")`),
+    });
   }
 
   private getTileCreateButton(tileName: string) {
@@ -84,42 +84,42 @@ export class AdminHomePage extends BaseAdminPage {
     super(page);
     this.path = '/Admin/Home';
 
-    this.appTileLink = this.getTileLink(1);
+    this.appTileLink = this.getTileLink('Apps');
     this.appTileCreateButton = this.getTileCreateButton('Apps');
     this.createAppDialog = new CreateAppDialog(page);
     this.createAppModal = new CreateAppModal(page);
 
-    this.securityTileLink = this.getTileLink(6);
+    this.securityTileLink = this.getTileLink('Security');
     this.securityTileCreateButton = this.getTileCreateButton('Security');
     this.securityCreateMenu = this.getTileCreateMenu('Security');
 
-    this.surveyTileLink = this.getTileLink(2);
+    this.surveyTileLink = this.getTileLink('Surveys');
     this.surveyTileCreateButton = this.getTileCreateButton('Surveys');
     this.createSurveyDialog = new CreateSurveyDialog(page);
     this.createSurveyModal = new CreateSurveyModal(page);
 
     this.createApiKeyDialog = new CreateApiKeyDialog(page);
 
-    this.dashboardTileLink = this.getTileLink(4);
+    this.dashboardTileLink = this.getTileLink('Dashboards');
     this.dashboardTileCreateButton = this.getTileCreateButton('Dashboards');
     this.dashboardCreateMenu = this.getTileCreateMenu('Dashboards');
     this.createDashboardDialog = new CreateDashboardDialog(page);
     this.dashboardDesigner = new DashboardDesignerModal(page);
 
-    this.integrationTileLink = this.getTileLink(7);
+    this.integrationTileLink = this.getTileLink('Integration');
     this.integrationTileCreateButton = this.getTileCreateButton('Integration');
     this.integrationCreateMenu = this.getTileCreateMenu('Integration');
     this.createImportConfigDialog = new CreateImportConfigDialog(page);
 
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
 
-    this.listTileLink = this.getTileLink(3);
+    this.listTileLink = this.getTileLink('Lists');
     this.listTileCreateButton = this.getTileCreateButton('Lists');
     this.createListDialog = new CreateListDialog(page);
 
     this.createTextDialog = new CreateTextMessageDialogForApp(page);
 
-    this.documentTileLink = this.getTileLink(9);
+    this.documentTileLink = this.getTileLink('Documents');
     this.documentTileCreateButton = this.getTileCreateButton('Documents');
     this.createDocumentDialog = new CreateDynamicDocumentDialogForApp(page);
 
