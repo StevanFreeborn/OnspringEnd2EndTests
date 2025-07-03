@@ -242,6 +242,17 @@ export class BaseLayoutTab extends LayoutItemCreator {
     await this.addLayoutDialog.saveButton.click();
   }
 
+  async copyLayout(layoutName: string, copiedLayoutName: string) {
+    const layoutRow = this.getLayoutRowByName(layoutName);
+
+    await layoutRow.hover();
+    await layoutRow.getByTitle('Copy Layout').click();
+
+    const copyDialog = this.page.getByRole('dialog', { name: 'Copy Layout' });
+    await copyDialog.getByLabel('Layout Name').fill(copiedLayoutName);
+    await copyDialog.getByRole('button', { name: 'Copy' }).click();
+  }
+
   getLayoutRowByName(layoutName: string) {
     return this.layoutsGrid.getByRole('row', { name: layoutName }).first();
   }

@@ -229,12 +229,34 @@ test.describe('standard layout', () => {
     });
   });
 
-  test('Make a copy of a standard layout', async () => {
+  test('Make a copy of a standard layout', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-864',
     });
 
-    expect(true).toBeTruthy();
+    const layoutName = 'Standard Layout';
+    const copiedLayoutName = 'Standard Layout Copy';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Add a standard layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayout(layoutName);
+      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+    });
+
+    await test.step('Make a copy of a standard layout', async () => {
+      await appAdminPage.layoutTab.copyLayout(layoutName, copiedLayoutName);
+      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+    });
+
+    await test.step('Verify the copy of the standard layout is created', async () => {
+      const copiedLayoutRow = appAdminPage.layoutTab.getLayoutRowByName(copiedLayoutName);
+
+      await expect(copiedLayoutRow).toBeVisible();
+    });
   });
 });
