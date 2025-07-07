@@ -10,30 +10,51 @@ type FieldDropzoneParams = {
 };
 
 type SectionDropzoneParams = {
-  tabName: string;
+  tabName?: string;
   placementIndex?: number;
 };
 
 export class LayoutCanvasSection extends BaseCanvasSection {
-  readonly sectionDropzone: Locator;
-  readonly tabDropzone: Locator;
+  readonly hoveredStandAloneSectionDropzones: Locator;
+  readonly hoveredSectionDropzone: Locator;
+  readonly hoveredTabDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
     super(frame);
-    this.sectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
-    this.tabDropzone = this.section.locator('.tabDropArea.ui-droppable-hover');
+    this.hoveredStandAloneSectionDropzones = this.section.locator('.standaloneSectionDropArea.ui-droppable-hover');
+    this.hoveredSectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
+    this.hoveredTabDropzone = this.section.locator('.tabDropArea.ui-droppable-hover');
   }
 
   async getItemDropzone(params: FieldDropzoneParams) {
     const { tabName, sectionName, column, row } = params;
+
+    if (tabName === undefined) {
+      const section = this.getStandAloneSection(sectionName);
+      return section.getDropzone(column, row);
+    }
+
     const tab = await this.getTab(tabName);
     const section = tab.getSection(sectionName);
     return section.getDropzone(column, row);
   }
 
   async getSectionDropzone(params: SectionDropzoneParams) {
-    const { tabName, placementIndex } = params;
+    const tabName = params.tabName ?? undefined;
+    let placementIndex = params.placementIndex;
+
+    if (tabName === undefined) {
+      const numOfStandAloneDropzones = await this.section.locator('.standaloneSectionDropArea').count();
+      const maxIndex = numOfStandAloneDropzones - 1;
+      
+      if (placementIndex === undefined || placementIndex > maxIndex) {
+        placementIndex = maxIndex;
+      }
+
+      return this.section.locator('.standaloneSectionDropArea').nth(placementIndex);
+    }
+
     const tab = await this.getTab(tabName);
     const dropzone = await tab.getSectionDropzone(placementIndex);
     return dropzone;
@@ -77,6 +98,11 @@ export class LayoutCanvasSection extends BaseCanvasSection {
   async ensureTabSelected(tabName: string) {
     const tab = this.section.locator('.k-tabstrip-items').getByText(tabName).first();
     await tab.click();
+  }
+
+  getStandAloneSection(sectionName: string) {
+    const section = this.section.locator('.mainContainer > .section').filter({ hasText: sectionName }).first();
+    return new LayoutSection(section);
   }
 }
 
