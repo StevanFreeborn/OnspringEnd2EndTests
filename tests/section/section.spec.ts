@@ -190,13 +190,59 @@ test.describe('section', () => {
     });
   });
 
-  test("Update a standalone section of an app's layout", () => {
+  test("Update a standalone section of an app's layout", async ({
+    app,
+    appAdminPage,
+    addContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-50',
     });
 
-    expect(true).toBeTruthy();
+    const sectionName = 'Standalone Section';
+    const newSectionName = 'Updated Standalone Section';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Update a standalone section of the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
+        sectionName: sectionName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.updateSectionName({
+        sectionName: sectionName,
+        newSectionName: newSectionName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        sectionName: newSectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Record Id',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the standalone section is updated successfully', async () => {
+      await addContentPage.goto(app.id);
+
+      const updatedSection = addContentPage.page.locator('.section', {
+        has: addContentPage.page.getByRole('heading', { name: newSectionName }),
+      });
+
+      await expect(updatedSection).toBeVisible();
+    });
   });
 
   test("Delete a standalone section of an app's layout", () => {
