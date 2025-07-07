@@ -110,14 +110,14 @@ class LayoutTab {
 
 class LayoutSection extends BaseLayoutSection {
   private readonly editSectionNameButton: Locator;
-  private readonly editSectionButton: Locator;
-  private readonly deleteSectionButton: Locator;
+  private readonly editSectionLink: Locator;
+  private readonly deleteSectionLink: Locator;
 
   constructor(section: Locator) {
     super(section);
     this.editSectionNameButton = this.section.getByTitle('Edit Section Name');
-    this.editSectionButton = this.section.getByRole('link', { name: 'Edit' });
-    this.deleteSectionButton = this.section.getByRole('link', { name: 'Delete' });
+    this.editSectionLink = this.section.getByRole('link', { name: 'Edit' });
+    this.deleteSectionLink = this.section.getByRole('link', { name: 'Delete' });
   }
 
   async updateName(newName: string) {
@@ -151,5 +151,16 @@ class LayoutSection extends BaseLayoutSection {
 
     await columnSelector.click();
     await frame.getByRole('option', { name: columnCount.toString() }).click();
+  }
+
+  async delete() {
+    const page = this.section.page();
+    const dialog = page.getByRole('dialog', { name: 'Delete Section' });
+
+    await page.addLocatorHandler(dialog, async l => {
+      await l.getByRole('button', { name: 'Delete' }).click();
+    });
+
+    await this.deleteSectionLink.click();
   }
 }

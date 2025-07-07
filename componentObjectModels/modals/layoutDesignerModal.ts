@@ -191,6 +191,13 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await section.updateColumnCount(columnCount);
   }
 
+  async deleteSection({ tabName, sectionName }: { tabName: string; sectionName: string }) {
+    await this.canvasSection.ensureTabSelected(tabName);
+    const tab = await this.canvasSection.getTab(tabName);
+    const section = tab.getSection(sectionName);
+    await section.delete();
+  }
+
   private async getTabOrientation() {
     const selected = this.tabOrientationContainer.locator('.selected');
     const orientation = await selected.textContent();

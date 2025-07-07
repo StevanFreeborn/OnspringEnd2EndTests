@@ -115,13 +115,37 @@ test.describe('section', () => {
     });
   });
 
-  test("Delete a section of an app's layout", async () => {
+  test("Delete a section of an app's layout", async ({
+    app,
+    appAdminPage,
+    addContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-48',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Delete a section of the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.deleteSection({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the section is deleted successfully', async () => {
+      await addContentPage.goto(app.id);
+
+      const tabTwo = addContentPage.page.getByRole('tab', { name: 'Tab 2' });
+
+      await expect(tabTwo).toBeHidden();
+    });
   });
 
   test("Add a standalone section to an app's layout", () => {
