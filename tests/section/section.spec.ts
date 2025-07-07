@@ -64,13 +64,55 @@ test.describe('section', () => {
     });
   });
 
-  test("Update a section of an app's layout", async () => {
+  test("Update a section of an app's layout", async ({
+    app,
+    appAdminPage,
+    addContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-47',
     });
 
-    expect(true).toBeTruthy();
+    const sectionName = 'Updated Section';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Update a section of the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.updateSectionName({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        newSectionName: sectionName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Record Id',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the section is updated successfully', async () => {
+      await addContentPage.goto(app.id);
+
+      const recordIdField = await addContentPage.form.getField({
+        tabName: 'Tab 2',
+        sectionName: sectionName,
+        fieldName: 'Record Id',
+        fieldType: 'AutoNumber',
+      });
+
+      await expect(recordIdField).toBeVisible();
+    });
   });
 
   test("Delete a section of an app's layout", async () => {
