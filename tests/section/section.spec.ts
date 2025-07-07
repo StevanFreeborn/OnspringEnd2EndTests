@@ -245,13 +245,56 @@ test.describe('section', () => {
     });
   });
 
-  test("Delete a standalone section of an app's layout", () => {
+  test("Delete a standalone section of an app's layout", async ({
+    app,
+    appAdminPage,
+    addContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-51',
     });
 
-    expect(true).toBeTruthy();
+    const sectionName = 'Standalone Section';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Delete a standalone section of the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Record Id',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
+        sectionName: sectionName,
+      })
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.deleteSection({
+        sectionName: sectionName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the standalone section is deleted successfully', async () => {
+      await addContentPage.goto(app.id);
+
+      const standAloneSectionContainer = addContentPage.page.locator('.standalone-section-container');
+
+      await expect(standAloneSectionContainer).toBeHidden();
+    });
   });
 
   test('Rearrange the sections of an app’s layout', () => {
