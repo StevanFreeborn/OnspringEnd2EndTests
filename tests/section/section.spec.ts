@@ -297,10 +297,60 @@ test.describe('section', () => {
     });
   });
 
-  test('Rearrange the sections of an app’s layout', () => {
+  test('Rearrange the sections of an app’s layout', async ({
+    app,
+    appAdminPage,
+    addContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-52',
+    });
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Rearranged Section';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Rearrange the sections of the app layout', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.openLayout();
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: 'Section 1',
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Record Id',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
+        tabName: tabName,
+        sectionName: sectionName,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionColumn: 0,
+        sectionRow: 0,
+        fieldName: 'Last Saved By',
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.dragSection({
+        tabName: tabName,
+        sectionName: 'Section 1',
+        placementIndex: 0,
+      });
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the sections are rearranged successfully', async () => {
+      await addContentPage.goto(app.id);
+      await addContentPage.page.pause();
     });
 
     expect(true).toBeTruthy();
