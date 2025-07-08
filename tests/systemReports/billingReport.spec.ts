@@ -1,4 +1,4 @@
-import { test as base, expect, Page } from '../../fixtures';
+import { test as base, expect, Page, Response } from '../../fixtures';
 import { testUserPage } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { User, UserStatus } from '../../models/user';
@@ -40,8 +40,10 @@ test.describe('billing report', () => {
       await billingReportPage.goto();
     });
 
+    let filterResponse: Response;
+
     await test.step('Filter the usage history report', async () => {
-      await billingReportPage.applyUsageHistoryFilter({
+      filterResponse = await billingReportPage.applyUsageHistoryFilter({
         type: 'Custom Dates',
         increment: 'Year',
         startDate: new Date(2024, 5, 26),
@@ -57,8 +59,23 @@ test.describe('billing report', () => {
         '#usage-chart-container [class*="dataset-axis"]:has-text("2025")'
       );
 
-      await expect(xAxisStartYearLabel).toBeVisible();
-      await expect(xAxisEndYearLabel).toBeVisible();
+      expect(filterResponse.ok()).toBe(true);
+
+      const responseBody = await filterResponse.json();
+      const dataset = responseBody.dataset;
+      const hasSeriesData = dataset.some((d: { data: never[] }) => d.data && d.data.length > 0);
+
+      // NOTE: These are conditional because
+      // the data in this chart is supplied only if
+      // a particular scheduled task has been setup in the environment
+      // if there is no data then the x-axis labels will not be present
+      // eslint-disable-next-line playwright/no-conditional-in-test
+      if (hasSeriesData) {
+        // eslint-disable-next-line playwright/no-conditional-expect
+        await expect(xAxisStartYearLabel).toBeVisible();
+        // eslint-disable-next-line playwright/no-conditional-expect
+        await expect(xAxisEndYearLabel).toBeVisible();
+      }
     });
   });
 

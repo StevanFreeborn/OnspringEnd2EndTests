@@ -1,5 +1,5 @@
-import { Locator, Page } from '@playwright/test';
 import { DateFieldControl } from '../../componentObjectModels/controls/dateFieldControl';
+import { Locator, Page, Response } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
 type UsageHistoryFilterIncrement = 'Day' | 'Week' | 'Month' | 'Year';
@@ -89,24 +89,30 @@ export class BillingReportPage extends BaseAdminPage {
   }
 
   async goto() {
+    const responses = Promise.all([
+      this.page.waitForResponse(this.getDataUsagePath),
+      this.page.waitForResponse(this.getFileStoragePath),
+      this.page.waitForResponse(this.chartDataPath),
+    ]);
     await this.page.goto(this.path);
+    await responses;
   }
 
   private async filterUsageHistory(action: () => Promise<void>) {
     const getChartDataResponse = this.page.waitForResponse(this.chartDataPath);
     await action();
-    await getChartDataResponse;
+    return await getChartDataResponse;
   }
 
   private async selectUsageHistoryDateType(type: string) {
-    await this.filterUsageHistory(async () => {
+    return await this.filterUsageHistory(async () => {
       await this.dateSelector.click();
       await this.page.getByRole('option', { name: type }).click();
     });
   }
 
   private async selectUsageHistoryIncrement(increment: string) {
-    await this.filterUsageHistory(async () => {
+    return await this.filterUsageHistory(async () => {
       await this.incrementSelector.click();
       await this.page.getByRole('option', { name: increment }).click();
     });
@@ -117,7 +123,7 @@ export class BillingReportPage extends BaseAdminPage {
       await this.fromDateControl.clearDate();
     });
 
-    await this.filterUsageHistory(async () => {
+    return await this.filterUsageHistory(async () => {
       await this.fromDateControl.enterDate(date);
     });
   }
@@ -127,19 +133,23 @@ export class BillingReportPage extends BaseAdminPage {
       await this.toDateControl.clearDate();
     });
 
-    await this.filterUsageHistory(async () => {
+    return await this.filterUsageHistory(async () => {
       await this.toDateControl.enterDate(date);
     });
   }
 
   async applyUsageHistoryFilter(filter: UsageHistoryFilter) {
-    await this.selectUsageHistoryDateType(filter.type);
-    await this.selectUsageHistoryIncrement(filter.increment);
+    let lastResponse: Response;
+
+    lastResponse = await this.selectUsageHistoryDateType(filter.type);
+    lastResponse = await this.selectUsageHistoryIncrement(filter.increment);
 
     if (filter.type === 'Custom Dates') {
-      await this.enterUsageHistoryFromDate(filter.startDate);
-      await this.enterUsageHistoryToDate(filter.endDate);
+      lastResponse = await this.enterUsageHistoryFromDate(filter.startDate);
+      lastResponse = await this.enterUsageHistoryToDate(filter.endDate);
     }
+
+    return lastResponse;
   }
 
   async exportDetailedDataUsageByAppStatisticsReport() {
