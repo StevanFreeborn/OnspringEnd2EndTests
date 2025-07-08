@@ -2,12 +2,12 @@ import { FrameLocator, Locator } from '@playwright/test';
 import { BaseDashboardDesignerTab } from './baseDashboardDesignerTab';
 
 export class DashboardDesignerObjectsTab extends BaseDashboardDesignerTab {
-  private readonly getMoreObjetsPathRegex: RegExp;
+  private readonly getMoreObjectsPathRegex: RegExp;
 
   constructor(frame: FrameLocator) {
     super(frame);
 
-    this.getMoreObjetsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
+    this.getMoreObjectsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
   }
 
   private async isScrolledToBottom(scrollableElement: Locator) {
@@ -29,15 +29,24 @@ export class DashboardDesignerObjectsTab extends BaseDashboardDesignerTab {
       return item;
     }
 
+    let isBottom = await this.isScrolledToBottom(scrollableElement);
+
     do {
       if (await item.isVisible()) {
         break;
       }
 
-      const scrollResponse = scrollableElement.page().waitForResponse(this.getMoreObjetsPathRegex);
+      const scrollResponse = scrollableElement.page().waitForResponse(this.getMoreObjectsPathRegex);
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
+
+      isBottom = await this.isScrolledToBottom(scrollableElement);
+
+      if (isBottom) {
+        break;
+      }
+
       await scrollResponse;
-    } while ((await this.isScrolledToBottom(scrollableElement)) === false);
+    } while (isBottom === false);
 
     return item;
   }
@@ -51,7 +60,7 @@ export class DashboardDesignerObjectsTab extends BaseDashboardDesignerTab {
     }
 
     do {
-      const scrollResponse = scrollableElement.page().waitForResponse(this.getMoreObjetsPathRegex);
+      const scrollResponse = scrollableElement.page().waitForResponse(this.getMoreObjectsPathRegex);
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
 
       if (await this.isScrolledToBottom(scrollableElement)) {

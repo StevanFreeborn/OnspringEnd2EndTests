@@ -67,7 +67,7 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
   private getTileLink(tileName: string) {
-    return this.page.locator('.landing-list-item-container', {
+    return this.page.locator('.landing-list-item-container .image-link', {
       has: this.page.locator(`.title:has-text("${tileName}")`),
     });
   }

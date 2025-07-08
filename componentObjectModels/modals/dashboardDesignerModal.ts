@@ -1,4 +1,5 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { TEST_DASHBOARD_OBJECT_NAME } from '../../factories/fakeDataFactory';
 import { AppSearch } from '../../models/appSearch';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
@@ -17,7 +18,6 @@ import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
 import { ScheduleDashboardExportModal } from './scheduleDashboardExportModal';
-import { TEST_DASHBOARD_OBJECT_NAME } from '../../factories/fakeDataFactory';
 
 export class DashboardDesignerModal {
   private readonly page: Page;
@@ -41,7 +41,7 @@ export class DashboardDesignerModal {
   private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
   private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
   private readonly deleteDashboardObjectPathRegex: RegExp;
-  private readonly getMoreObjetsPathRegex: RegExp;
+  private readonly getMoreObjectsPathRegex: RegExp;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -67,7 +67,7 @@ export class DashboardDesignerModal {
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
     this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
-    this.getMoreObjetsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
+    this.getMoreObjectsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -245,7 +245,7 @@ export class DashboardDesignerModal {
       await this.deleteDashboardObjectDialog.dialog.waitFor();
 
       const deleteResponse = this.page.waitForResponse(this.deleteDashboardObjectPathRegex);
-      const getMoreObjectsResponse = this.page.waitForResponse(this.getMoreObjetsPathRegex);
+      const getMoreObjectsResponse = this.page.waitForResponse(this.getMoreObjectsPathRegex);
 
       await this.deleteDashboardObjectDialog.deleteButton.click();
       await deleteResponse;

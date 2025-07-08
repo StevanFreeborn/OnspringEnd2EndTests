@@ -1,10 +1,10 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { SavedReport } from '../../models/report';
-import { DashboardDesignerReportsTab } from '../tabs/dashboardDesignerReportsTab';
-import { BaseLayoutItemsSection } from './baseLayoutItemsSection';
-import { DashboardDesignerObjectsTab } from '../tabs/dashboardDesignerObjectsTab';
 import { DashboardItem } from '../../models/dashboard';
 import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { SavedReport } from '../../models/report';
+import { DashboardDesignerObjectsTab } from '../tabs/dashboardDesignerObjectsTab';
+import { DashboardDesignerReportsTab } from '../tabs/dashboardDesignerReportsTab';
+import { BaseLayoutItemsSection } from './baseLayoutItemsSection';
 
 type ObjectName = 'App Search' | 'Create Content Links' | 'Formatted Text Block' | 'Web Page';
 
@@ -66,9 +66,9 @@ export class DashboardResourcesSection extends BaseLayoutItemsSection {
     throw new Error(`Item type not supported: ${item.constructor.name}`);
   }
 
-  async getItemFromTabByName(TEST_DASHBOARD_OBJECT_NAME: string) {
+  async getItemFromTabByName(itemName: string) {
     await this.ensureItemTabSelected(this.objectsTabButton);
-    return await this.objectsTab.getObjectFromBank(TEST_DASHBOARD_OBJECT_NAME);
+    return await this.objectsTab.getObjectFromBank(itemName);
   }
 
   async scrollAllObjectsIntoView() {
