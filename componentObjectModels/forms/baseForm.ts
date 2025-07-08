@@ -1,10 +1,10 @@
 import { Locator, Page } from '@playwright/test';
+import 'css.escape';
 import { toPascalCase } from '../../utils';
 import { FieldType } from '../menus/addFieldTypeMenu';
-import 'css.escape';
 
 export type BaseGetParams = {
-  tabName: string | undefined;
+  tabName?: string;
   sectionName: string;
 };
 
@@ -21,8 +21,10 @@ export type GetFieldParams = BaseGetFieldParams & {
 };
 
 export class BaseForm {
+  private readonly tabStrip: Locator;
   protected page: Page;
   readonly contentContainer: Locator;
+
   createFormControlSelector(field: string, controlSelector = 'input') {
     const pascalCaseFieldName = CSS.escape(toPascalCase(field));
     return `.data-${pascalCaseFieldName} ${controlSelector}`;
@@ -31,10 +33,11 @@ export class BaseForm {
   protected constructor(contentContainer: Locator) {
     this.page = contentContainer.page();
     this.contentContainer = contentContainer;
+    this.tabStrip = contentContainer.locator('.k-tabstrip-items');
   }
 
   protected async getReadOnlyField({ tabName, sectionName, fieldName, fieldType }: GetFieldParams) {
-    const section = await this.getSection(tabName, sectionName);
+    const section = await this.getSection({ tabName, sectionName });
 
     let locator: string;
 
@@ -88,8 +91,17 @@ export class BaseForm {
     return this.contentContainer.locator(`section[data-tab-id="${tabId}"]`).first();
   }
 
-  async getSection(tabName: string | undefined, sectionName: string) {
+  async getSection({ tabName, sectionName }: { tabName?: string; sectionName: string }) {
     if (tabName === undefined) {
+      return this.contentContainer
+        .locator('.standalone-section-container section.section')
+        .filter({ hasText: sectionName })
+        .first();
+    }
+
+    const hasTabsDisplayed = await this.tabStrip.isVisible();
+
+    if (!hasTabsDisplayed) {
       return this.contentContainer.locator('section.section').filter({ hasText: sectionName }).first();
     }
 
@@ -104,7 +116,7 @@ export class BaseForm {
   }
 
   async getObject(params: GetObjectParams) {
-    const section = await this.getSection(params.tabName, params.sectionName);
+    const section = await this.getSection({ tabName: params.tabName, sectionName: params.sectionName });
     return section.locator(`td.object-cell-${params.objectName}`).first();
   }
 }

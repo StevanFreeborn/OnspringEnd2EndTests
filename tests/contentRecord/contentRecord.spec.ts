@@ -106,7 +106,7 @@ test.describe('content record', () => {
       await viewContentPage.goto(targetApp.id, createdRecordId);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -148,7 +148,7 @@ test.describe('content record', () => {
       await viewContentPage.goto(targetApp.id, createdRecordId);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -188,7 +188,7 @@ test.describe('content record', () => {
     await test.step('Add the record id field to the layout', async () => {
       await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         fieldName: 'Record Id',
-        tabName: undefined,
+        tabName: 'Tab 2',
         sectionName: 'Section 1',
         sectionColumn: 0,
         sectionRow: 0,
@@ -211,7 +211,7 @@ test.describe('content record', () => {
       await viewContentPage.goto(targetApp.id, createdRecordId);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -259,7 +259,7 @@ test.describe('content record', () => {
       await viewContentPage.goto(targetApp.id, createdRecordId);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -290,7 +290,7 @@ test.describe('content record', () => {
       await editContentPage.page.waitForURL(viewContentPage.pathRegex);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -403,7 +403,7 @@ test.describe('content record', () => {
 
     await test.step('Verify that the content record was saved', async () => {
       const createdBy = await editContentPage.form.getUnEditableField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
@@ -443,7 +443,7 @@ test.describe('content record', () => {
       await viewContentPage.goto(targetApp.id, 1);
 
       const createdBy = await viewContentPage.form.getField({
-        tabName: undefined,
+        tabName: 'About',
         sectionName: 'Record Information',
         fieldName: 'Created By',
         fieldType: 'Reference',
