@@ -47,7 +47,7 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     if (tabName === undefined) {
       const numOfStandAloneDropzones = await this.section.locator('.standaloneSectionDropArea').count();
       const maxIndex = numOfStandAloneDropzones - 1;
-      
+
       if (placementIndex === undefined || placementIndex > maxIndex) {
         placementIndex = maxIndex;
       }
@@ -58,6 +58,17 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     const tab = await this.getTab(tabName);
     const dropzone = await tab.getSectionDropzone(placementIndex);
     return dropzone;
+  }
+
+  async getSectionHandle({ tabName, sectionName }: { tabName?: string; sectionName: string }) {
+    if (tabName === undefined) {
+      return this.getStandAloneSection(sectionName).getHandle();
+    }
+
+    await this.ensureTabSelected(tabName);
+    const tab = await this.getTab(tabName);
+    const section = tab.getSection(sectionName);
+    return section.getHandle();
   }
 
   async getHorizontalTabDropzone(index?: number) {
@@ -188,5 +199,9 @@ class LayoutSection extends BaseLayoutSection {
     });
 
     await this.deleteSectionLink.click();
+  }
+
+  getHandle() {
+    return this.section.locator('[data-section-header]');
   }
 }

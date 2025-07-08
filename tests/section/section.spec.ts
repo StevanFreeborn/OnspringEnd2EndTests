@@ -190,11 +190,7 @@ test.describe('section', () => {
     });
   });
 
-  test("Update a standalone section of an app's layout", async ({
-    app,
-    appAdminPage,
-    addContentPage,
-  }) => {
+  test("Update a standalone section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-50',
@@ -245,11 +241,7 @@ test.describe('section', () => {
     });
   });
 
-  test("Delete a standalone section of an app's layout", async ({
-    app,
-    appAdminPage,
-    addContentPage,
-  }) => {
+  test("Delete a standalone section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-51',
@@ -275,7 +267,7 @@ test.describe('section', () => {
 
       await appAdminPage.layoutTab.layoutDesignerModal.addSection({
         sectionName: sectionName,
-      })
+      });
 
       await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
 
@@ -297,18 +289,15 @@ test.describe('section', () => {
     });
   });
 
-  test('Rearrange the sections of an app’s layout', async ({
-    app,
-    appAdminPage,
-    addContentPage,
-  }) => {
+  test('Rearrange the sections of an app’s layout', async ({ app, appAdminPage, addContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-52',
     });
 
     const tabName = 'Tab 2';
-    const sectionName = 'Rearranged Section';
+    const sectionOneName = 'Section 1';
+    const rearrangedSectionName = 'Rearranged Section';
 
     await test.step('Navigate to the app admin page', async () => {
       await appAdminPage.goto(app.id);
@@ -320,7 +309,7 @@ test.describe('section', () => {
 
       await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
-        sectionName: 'Section 1',
+        sectionName: sectionOneName,
         sectionColumn: 0,
         sectionRow: 0,
         fieldName: 'Record Id',
@@ -328,12 +317,12 @@ test.describe('section', () => {
 
       await appAdminPage.layoutTab.layoutDesignerModal.addSection({
         tabName: tabName,
-        sectionName: sectionName,
+        sectionName: rearrangedSectionName,
       });
 
       await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
         tabName: tabName,
-        sectionName: sectionName,
+        sectionName: rearrangedSectionName,
         sectionColumn: 0,
         sectionRow: 0,
         fieldName: 'Last Saved By',
@@ -341,7 +330,7 @@ test.describe('section', () => {
 
       await appAdminPage.layoutTab.layoutDesignerModal.dragSection({
         tabName: tabName,
-        sectionName: 'Section 1',
+        sectionName: sectionOneName,
         placementIndex: 0,
       });
 
@@ -350,9 +339,13 @@ test.describe('section', () => {
 
     await test.step('Verify the sections are rearranged successfully', async () => {
       await addContentPage.goto(app.id);
-      await addContentPage.page.pause();
-    });
 
-    expect(true).toBeTruthy();
+      const sectionOne = addContentPage.page.getByRole('heading', { name: sectionOneName });
+      const rearrangedSection = addContentPage.page.getByRole('heading', { name: rearrangedSectionName });
+
+      await expect(sectionOne).toBeVisible();
+      await expect(rearrangedSection).toBeVisible();
+      await expect(sectionOne).toBeAbove(rearrangedSection);
+    });
   });
 });

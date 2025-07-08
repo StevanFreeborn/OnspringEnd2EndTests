@@ -295,4 +295,29 @@ export class LayoutDesignerModal extends LayoutItemCreator {
 
     throw new Error('Support for vertical tabs is not implemented yet');
   }
+
+  async dragSection({
+    tabName,
+    sectionName,
+    placementIndex,
+  }: {
+    tabName?: string;
+    sectionName: string;
+    placementIndex: number;
+  }) {
+    const sectionHandle = await this.canvasSection.getSectionHandle({ tabName, sectionName });
+    const dropzone = await this.canvasSection.getSectionDropzone({ tabName, placementIndex });
+
+    await sectionHandle.hover();
+    await this.page.mouse.down();
+    await dropzone.hover();
+
+    if (tabName === undefined) {
+      await this.canvasSection.hoveredStandAloneSectionDropzones.waitFor({ state: 'visible' });
+    } else {
+      await this.canvasSection.hoveredSectionDropzone.waitFor({ state: 'visible' });
+    }
+
+    await this.page.mouse.up();
+  }
 }
