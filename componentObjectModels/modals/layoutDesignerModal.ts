@@ -7,7 +7,7 @@ import { EditLayoutPropertiesModal } from './editLayoutPropertiesModal';
 import { EditTabSetModal } from './editTabSetModal';
 
 type DragItemsParams = {
-  tabName: string | undefined;
+  tabName?: string;
   sectionName: string;
   sectionColumn: number;
   sectionRow: number;
@@ -22,7 +22,7 @@ type DragObjectParams = DragItemsParams & {
 };
 
 type AddSectionParams = {
-  tabName: string;
+  tabName?: string;
   sectionName: string;
   placementIndex?: number;
 };
@@ -155,6 +155,11 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await this.ensureObjectTabSelected();
 
     const { tabName, sectionName, placementIndex } = params;
+
+    if (tabName !== undefined) {
+      await this.canvasSection.ensureTabSelected(tabName);
+    }
+
     const object = this.layoutItemsSection.objectsTab.getObjectFromBank('New Section');
 
     const dropzone = await this.canvasSection.getSectionDropzone({ tabName, placementIndex });
@@ -162,23 +167,69 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     await object.hover();
     await this.page.mouse.down();
     await dropzone.hover();
-    await this.canvasSection.sectionDropzone.waitFor({ state: 'visible' });
+
+    if (tabName === undefined) {
+      await this.canvasSection.hoveredStandAloneSectionDropzones.waitFor({ state: 'visible' });
+    } else {
+      await this.canvasSection.hoveredSectionDropzone.waitFor({ state: 'visible' });
+    }
+
     await this.page.mouse.up();
     const initialSectionName = await this.frame.locator('#name-editor input').inputValue();
 
-    const tab = await this.canvasSection.getTab(tabName);
-    const section = tab.getSection(initialSectionName);
+    if (tabName === undefined) {
+      const section = this.canvasSection.getStandAloneSection(initialSectionName);
+      await section.updateName(sectionName);
+    } else {
+      const tab = await this.canvasSection.getTab(tabName);
+      const section = tab.getSection(initialSectionName);
 
-    await section.updateName(sectionName);
+      await section.updateName(sectionName);
+    }
   }
 
-  async updateSectionColumnCount(params: { tabName: string; sectionName: string; columnCount: number }) {
+  async updateSectionName(params: { tabName?: string; sectionName: string; newSectionName: string }) {
+    const { tabName, sectionName, newSectionName } = params;
+
+    if (tabName === undefined) {
+      const section = this.canvasSection.getStandAloneSection(sectionName);
+      await section.updateName(newSectionName);
+      return;
+    }
+
+    await this.canvasSection.ensureTabSelected(tabName);
+    const tab = await this.canvasSection.getTab(tabName);
+    const section = tab.getSection(sectionName);
+
+    await section.updateName(newSectionName);
+  }
+
+  async updateSectionColumnCount(params: { tabName?: string; sectionName: string; columnCount: number }) {
     const { tabName, sectionName, columnCount } = params;
+
+    if (tabName === undefined) {
+      const section = this.canvasSection.getStandAloneSection(sectionName);
+      await section.updateColumnCount(columnCount);
+      return;
+    }
 
     await this.canvasSection.ensureTabSelected(tabName);
     const tab = await this.canvasSection.getTab(tabName);
     const section = tab.getSection(sectionName);
     await section.updateColumnCount(columnCount);
+  }
+
+  async deleteSection({ tabName, sectionName }: { tabName?: string; sectionName: string }) {
+    if (tabName === undefined) {
+      const section = this.canvasSection.getStandAloneSection(sectionName);
+      await section.delete();
+      return;
+    }
+
+    await this.canvasSection.ensureTabSelected(tabName);
+    const tab = await this.canvasSection.getTab(tabName);
+    const section = tab.getSection(sectionName);
+    await section.delete();
   }
 
   private async getTabOrientation() {
@@ -207,7 +258,7 @@ export class LayoutDesignerModal extends LayoutItemCreator {
       await newTabItem.hover();
       await this.page.mouse.down();
       await tabDropzone.hover();
-      await this.canvasSection.tabDropzone.waitFor({ state: 'visible' });
+      await this.canvasSection.hoveredTabDropzone.waitFor({ state: 'visible' });
       await this.page.mouse.up();
       await tabNameEditor.fill(params.name);
       await tabNameApplyButton.click();
@@ -237,11 +288,36 @@ export class LayoutDesignerModal extends LayoutItemCreator {
       await this.page.mouse.move(0, 0);
       const tabDropzone = await this.canvasSection.getHorizontalTabDropzone(index);
       await tabDropzone.hover();
-      await this.canvasSection.tabDropzone.waitFor({ state: 'visible' });
+      await this.canvasSection.hoveredTabDropzone.waitFor({ state: 'visible' });
       await this.page.mouse.up();
       return;
     }
 
     throw new Error('Support for vertical tabs is not implemented yet');
+  }
+
+  async dragSection({
+    tabName,
+    sectionName,
+    placementIndex,
+  }: {
+    tabName?: string;
+    sectionName: string;
+    placementIndex: number;
+  }) {
+    const sectionHandle = await this.canvasSection.getSectionHandle({ tabName, sectionName });
+    const dropzone = await this.canvasSection.getSectionDropzone({ tabName, placementIndex });
+
+    await sectionHandle.hover();
+    await this.page.mouse.down();
+    await dropzone.hover();
+
+    if (tabName === undefined) {
+      await this.canvasSection.hoveredStandAloneSectionDropzones.waitFor({ state: 'visible' });
+    } else {
+      await this.canvasSection.hoveredSectionDropzone.waitFor({ state: 'visible' });
+    }
+
+    await this.page.mouse.up();
   }
 }

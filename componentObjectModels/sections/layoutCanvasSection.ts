@@ -10,33 +10,65 @@ type FieldDropzoneParams = {
 };
 
 type SectionDropzoneParams = {
-  tabName: string;
+  tabName?: string;
   placementIndex?: number;
 };
 
 export class LayoutCanvasSection extends BaseCanvasSection {
-  readonly sectionDropzone: Locator;
-  readonly tabDropzone: Locator;
+  readonly hoveredStandAloneSectionDropzones: Locator;
+  readonly hoveredSectionDropzone: Locator;
+  readonly hoveredTabDropzone: Locator;
 
   // TODO: Need to account for canvas having vertical tab orientation
   constructor(frame: FrameLocator) {
     super(frame);
-    this.sectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
-    this.tabDropzone = this.section.locator('.tabDropArea.ui-droppable-hover');
+    this.hoveredStandAloneSectionDropzones = this.section.locator('.standaloneSectionDropArea.ui-droppable-hover');
+    this.hoveredSectionDropzone = this.section.locator('.sectionDropArea.ui-droppable-hover');
+    this.hoveredTabDropzone = this.section.locator('.tabDropArea.ui-droppable-hover');
   }
 
   async getItemDropzone(params: FieldDropzoneParams) {
     const { tabName, sectionName, column, row } = params;
+
+    if (tabName === undefined) {
+      const section = this.getStandAloneSection(sectionName);
+      return section.getDropzone(column, row);
+    }
+
     const tab = await this.getTab(tabName);
     const section = tab.getSection(sectionName);
     return section.getDropzone(column, row);
   }
 
   async getSectionDropzone(params: SectionDropzoneParams) {
-    const { tabName, placementIndex } = params;
+    const tabName = params.tabName ?? undefined;
+    let placementIndex = params.placementIndex;
+
+    if (tabName === undefined) {
+      const numOfStandAloneDropzones = await this.section.locator('.standaloneSectionDropArea').count();
+      const maxIndex = numOfStandAloneDropzones - 1;
+
+      if (placementIndex === undefined || placementIndex > maxIndex) {
+        placementIndex = maxIndex;
+      }
+
+      return this.section.locator('.standaloneSectionDropArea').nth(placementIndex);
+    }
+
     const tab = await this.getTab(tabName);
     const dropzone = await tab.getSectionDropzone(placementIndex);
     return dropzone;
+  }
+
+  async getSectionHandle({ tabName, sectionName }: { tabName?: string; sectionName: string }) {
+    if (tabName === undefined) {
+      return this.getStandAloneSection(sectionName).getHandle();
+    }
+
+    await this.ensureTabSelected(tabName);
+    const tab = await this.getTab(tabName);
+    const section = tab.getSection(sectionName);
+    return section.getHandle();
   }
 
   async getHorizontalTabDropzone(index?: number) {
@@ -78,6 +110,11 @@ export class LayoutCanvasSection extends BaseCanvasSection {
     const tab = this.section.locator('.k-tabstrip-items').getByText(tabName).first();
     await tab.click();
   }
+
+  getStandAloneSection(sectionName: string) {
+    const section = this.section.locator('.mainContainer > .section').filter({ hasText: sectionName }).first();
+    return new LayoutSection(section);
+  }
 }
 
 class LayoutTab {
@@ -110,14 +147,14 @@ class LayoutTab {
 
 class LayoutSection extends BaseLayoutSection {
   private readonly editSectionNameButton: Locator;
-  private readonly editSectionButton: Locator;
-  private readonly deleteSectionButton: Locator;
+  private readonly editSectionLink: Locator;
+  private readonly deleteSectionLink: Locator;
 
   constructor(section: Locator) {
     super(section);
     this.editSectionNameButton = this.section.getByTitle('Edit Section Name');
-    this.editSectionButton = this.section.getByRole('link', { name: 'Edit' });
-    this.deleteSectionButton = this.section.getByRole('link', { name: 'Delete' });
+    this.editSectionLink = this.section.getByRole('link', { name: 'Edit' });
+    this.deleteSectionLink = this.section.getByRole('link', { name: 'Delete' });
   }
 
   async updateName(newName: string) {
@@ -151,5 +188,20 @@ class LayoutSection extends BaseLayoutSection {
 
     await columnSelector.click();
     await frame.getByRole('option', { name: columnCount.toString() }).click();
+  }
+
+  async delete() {
+    const page = this.section.page();
+    const dialog = page.getByRole('dialog', { name: 'Delete Section' });
+
+    await page.addLocatorHandler(dialog, async l => {
+      await l.getByRole('button', { name: 'Delete' }).click();
+    });
+
+    await this.deleteSectionLink.click();
+  }
+
+  getHandle() {
+    return this.section.locator('[data-section-header]');
   }
 }
