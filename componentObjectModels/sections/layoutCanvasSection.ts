@@ -35,6 +35,16 @@ export class LayoutCanvasSection extends BaseCanvasSection {
       return section.getDropzone(column, row);
     }
 
+    const tabStrip = this.section.locator('.k-tabstrip-items');
+    const hasTabsDisplayed = await tabStrip.isVisible();
+
+    if (!hasTabsDisplayed) {
+      const section = this.section.locator('section.section').filter({ hasText: sectionName }).first();
+      const sectionInstance = new LayoutSection(section);
+      return sectionInstance.getDropzone(column, row);
+    }
+
+    await this.ensureTabSelected(tabName);
     const tab = await this.getTab(tabName);
     const section = tab.getSection(sectionName);
     return section.getDropzone(column, row);

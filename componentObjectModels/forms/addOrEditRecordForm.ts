@@ -52,7 +52,7 @@ export class AddOrEditRecordForm extends BaseForm {
   async getField(params: GetDateFieldParams): Promise<DateFieldControl>;
   async getField(params: GetFieldParams): Promise<Locator>;
   async getField(params: GetFieldParams) {
-    const section = await this.getSection(params.tabName, params.sectionName);
+    const section = await this.getSection({ tabName: params.tabName, sectionName: params.sectionName });
 
     let locator: string;
 

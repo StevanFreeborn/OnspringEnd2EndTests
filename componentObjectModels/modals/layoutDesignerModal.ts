@@ -100,10 +100,6 @@ export class LayoutDesignerModal extends LayoutItemCreator {
     const { tabName, sectionName, sectionColumn, sectionRow, fieldName } = params;
     const field = this.layoutItemsSection.fieldsTab.getFieldFromBank(fieldName);
 
-    if (tabName !== undefined) {
-      await this.canvasSection.ensureTabSelected(tabName);
-    }
-
     const dropzone = await this.canvasSection.getItemDropzone({
       tabName: tabName,
       sectionName: sectionName,
