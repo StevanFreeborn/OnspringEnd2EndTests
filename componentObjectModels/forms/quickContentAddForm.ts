@@ -10,4 +10,8 @@ export class QuickContentAddForm {
     this.saveButton = this.form.getByRole('button', { name: 'Save' });
     this.openAfterSaveCheckbox = this.form.getByRole('checkbox', { name: 'Open this content record on save' });
   }
+
+  formLocator() {
+    return this.form;
+  }
 }
