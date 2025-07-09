@@ -18,11 +18,7 @@ const test = base.extend<QuickAddContentLayoutTestFixtures>({
 });
 
 test.describe('quick add content layout', () => {
-  test("Enable an app's quick add content layout", async ({
-    app,
-    appAdminPage,
-    appContentPage,
-  }) => {
+  test("Enable an app's quick add content layout", async ({ app, appAdminPage, appContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-30',
@@ -43,11 +39,7 @@ test.describe('quick add content layout', () => {
     });
   });
 
-  test("Disable an app's quick add content layout", async ({
-    app,
-    appAdminPage,
-    appContentPage,
-  }) => {
+  test("Disable an app's quick add content layout", async ({ app, appAdminPage, appContentPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-31',
@@ -103,7 +95,3 @@ async function setupQuickAddContentLayout(appAdminPage: AppAdminPage) {
   });
   await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
 }
-
-
-
-
