@@ -38,6 +38,16 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     await this.createDataConnectorDialog.saveButton.click();
   }
 
+  async copyConnector(connectorType: DataConnectorType, connectorToCopyName: string, connectorName: string) {
+    await this.createDataConnectorButton.click();
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.copyFromRadioButton.click();
+    await this.createDataConnectorDialog.copyFromDropdown.click();
+    await this.createDataConnectorDialog.getConnectorToCopy(connectorToCopyName).click();
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
+  }
+
   async deleteConnectors(connectorsToDelete: string[]) {
     await this.goto();
 

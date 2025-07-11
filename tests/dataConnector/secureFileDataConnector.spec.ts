@@ -42,23 +42,50 @@ test.describe('secure file data connector', () => {
       await dataConnectorsAdminPage.goto();
     });
 
-    await test.step('Create a new Secure File connector', async () => {
+    await test.step('Create a new secure file connector', async () => {
       await dataConnectorsAdminPage.createConnector(dataConnectorName, 'Secure File Data Connector');
       await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
     });
 
-    await test.step('Verify the Secure File connector is created successfully', async () => {
+    await test.step('Verify the secure file connector is created successfully', async () => {
       await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnectorName);
     });
   });
 
-  test('Create a copy of a Secure File connector', async () => {
+  test('Create a copy of a Secure File connector', async ({
+    dataConnectorsAdminPage,
+    editConnectorPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-431',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopy = FakeDataFactory.createFakeConnectorName();
+    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopy, dataConnectorName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Create the secure file connector to copy', async () => {
+      await dataConnectorsAdminPage.createConnector(connectorToCopy, 'Secure File Data Connector');
+      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Copy the secure file connector', async () => {
+      await dataConnectorsAdminPage.copyConnector('Secure File Data Connector', connectorToCopy, dataConnectorName);
+      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the secure file connector copy is created successfully', async () => {
+      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnectorName);
+    });
   });
 
   test('Delete a Secure File connector', async () => {
