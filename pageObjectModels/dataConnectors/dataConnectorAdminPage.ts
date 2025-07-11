@@ -48,22 +48,28 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     await this.createDataConnectorDialog.saveButton.click();
   }
 
+  async deleteConnector(connectorName: string) {
+    await this.goto();
+
+    const connectorRow = this.connectorsGrid.getByRole('row', { name: connectorName }).first();
+    const rowElement = await connectorRow.elementHandle();
+
+    if (rowElement === null) {
+      return;
+    }
+
+    await connectorRow.hover();
+    await connectorRow.getByTitle('Delete Data Connector').click();
+    await this.deleteConnectorDialog.deleteButton.click();
+    await this.deleteConnectorDialog.waitForDialogToBeDismissed();
+    await rowElement.waitForElementState('hidden');
+  }
+
   async deleteConnectors(connectorsToDelete: string[]) {
     await this.goto();
 
     for (const connectorName of connectorsToDelete) {
-      const connectorRow = this.connectorsGrid.getByRole('row', { name: connectorName }).first();
-      const rowElement = await connectorRow.elementHandle();
-
-      if (rowElement === null) {
-        continue;
-      }
-
-      await connectorRow.hover();
-      await connectorRow.getByTitle('Delete Data Connector').click();
-      await this.deleteConnectorDialog.deleteButton.click();
-      await this.deleteConnectorDialog.waitForDialogToBeDismissed();
-      await rowElement.waitForElementState('hidden');
+      await this.deleteConnector(connectorName);
     }
   }
 

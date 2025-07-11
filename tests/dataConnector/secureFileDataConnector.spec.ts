@@ -88,13 +88,38 @@ test.describe('secure file data connector', () => {
     });
   });
 
-  test('Delete a Secure File connector', async () => {
+  test('Delete a Secure File connector', async ({
+    dataConnectorsAdminPage,
+    editConnectorPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-432',
     });
 
-    expect(true).toBeTruthy();
+    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Create the secure file connector to delete', async () => {
+      await dataConnectorsAdminPage.createConnector(dataConnectorName, 'Secure File Data Connector');
+      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Delete the secure file connector', async () => {
+      await dataConnectorsAdminPage.deleteConnector(dataConnectorName);
+    });
+
+    await test.step('Verify the secure file connector is deleted successfully', async () => {
+      const connectorRow = dataConnectorsAdminPage.connectorsGrid.getByRole('row', { name: dataConnectorName });
+      await expect(connectorRow).toBeHidden();
+    });
   });
 
   test('Configure a new Secure File connector', async () => {
