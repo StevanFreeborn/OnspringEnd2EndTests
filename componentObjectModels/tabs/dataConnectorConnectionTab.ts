@@ -9,7 +9,7 @@ export abstract class DataConnectorConnectionTab {
   readonly viewRunHistoryLink: Locator;
 
   constructor(page: Page) {
-    this.nameInput = page.getByLabel('Name');
+    this.nameInput = page.getByRole('textbox', { name: 'Name', exact: true });
     this.descriptionEditor = page.locator('.content-area.mce-content-body');
     this.statusSwitch = page.getByRole('switch', { name: 'Status' });
     this.statusToggle = this.statusSwitch.locator('span').nth(3);

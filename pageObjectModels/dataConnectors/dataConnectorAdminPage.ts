@@ -2,12 +2,16 @@ import { Locator, Page } from '@playwright/test';
 import { DeleteDataConnectorDialog } from '../../componentObjectModels/dialogs/deleteDataConnectorDialog';
 import { TEST_CONNECTOR_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
+import { CreateDataConnectorDialog } from '../../componentObjectModels/dialogs/createDataConnectorDialog';
+import { DataConnectorType } from '../../models/dataConnector';
 
 export class DataConnectorAdminPage extends BaseAdminPage {
   private readonly getConnectorsPath: string;
+  private readonly deletePathRegex: RegExp;
+  private readonly createDataConnectorButton: Locator;
+  private readonly createDataConnectorDialog: CreateDataConnectorDialog;
   readonly path: string;
   readonly connectorsGrid: Locator;
-  private readonly deletePathRegex: RegExp;
   readonly deleteConnectorDialog: DeleteDataConnectorDialog;
 
   constructor(page: Page) {
@@ -17,12 +21,21 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     this.connectorsGrid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Delete/;
     this.deleteConnectorDialog = new DeleteDataConnectorDialog(page);
+    this.createDataConnectorButton = this.page.getByRole('button', { name: 'Create Data Connector' });
+    this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
   }
 
   async goto() {
     const getConnectorsResponse = this.page.waitForResponse(this.getConnectorsPath);
     await this.page.goto(this.path);
     await getConnectorsResponse;
+  }
+
+  async createConnector(connectorName: string, connectorType: DataConnectorType) {
+    await this.createDataConnectorButton.click();
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
   }
 
   async deleteConnectors(connectorsToDelete: string[]) {
