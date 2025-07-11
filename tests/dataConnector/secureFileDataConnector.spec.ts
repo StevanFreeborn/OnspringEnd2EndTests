@@ -2,18 +2,21 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { EditSecureFileDataConnectorPage } from '../../pageObjectModels/dataConnectors/editSecureFileDataConnectorPage';
 import { AnnotationType } from '../annotations';
 
 type SecureFileDataConnectorTestFixtures = {
   app: App;
+  appAdminPage: AppAdminPage;
   dataConnectorsAdminPage: DataConnectorAdminPage;
   editConnectorPage: EditSecureFileDataConnectorPage;
 };
 
 const test = base.extend<SecureFileDataConnectorTestFixtures>({
   app: app,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   dataConnectorsAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
   editConnectorPage: async ({ sysAdminPage }, use) => await use(new EditSecureFileDataConnectorPage(sysAdminPage)),
 });
@@ -122,11 +125,54 @@ test.describe('secure file data connector', () => {
     });
   });
 
-  test('Configure a new Secure File connector', async () => {
+  test('Configure a new Secure File connector', async ({
+    app,
+    dataConnectorsAdminPage,
+    editConnectorPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-433',
     });
+
+    const dataConnector = new SecureFileDataConnector({
+      name: FakeDataFactory.createFakeConnectorName(),
+      status: false,
+      app: app.name,
+      hostname: '',
+      port: 22,
+      fileLocation: '',
+      fileName: '',
+      fileType: 'CSV',
+      hasHeaderRow: true,
+      trimLeadingSpaces: false,
+      trimTrailingSpaces: false,
+      authenticationType: 'Username / Password',
+      username: '',
+      password: '',
+      dataMapping: {},
+      recordHandling: '',
+      Messaging: '',
+      fieldsToDefault: [],
+      startingOn: new Date(Date.now() + 1 * 60_000),
+      frequency: '',
+    });
+
+    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(dataConnectorName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Create a new secure file connector', async () => {
+      await dataConnectorsAdminPage.createConnector(dataConnectorName, 'Secure File Data Connector');
+      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Configure the secure file connector', async () => {});
+
+    await test.step('Verify the secure file connector is configured successfully', async () => {});
 
     expect(true).toBeTruthy();
   });
