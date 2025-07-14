@@ -56,6 +56,9 @@ env:
   RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
   RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
   BITSIGHT_API_KEY: ${{ secrets.BITSIGHT_API_KEY }}
+  SFDC_HOSTNAME: ${{ secrets.SFDC_HOSTNAME }}
+  SFDC_USERNAME: ${{ secrets.SFDC_USERNAME }}
+  SFDC_PASSWORD: ${{ secrets.SFDC_PASSWORD }}
 jobs:
   generate_shards:
     name: 'Generate Shards'
