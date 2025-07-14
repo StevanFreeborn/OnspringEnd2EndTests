@@ -1,5 +1,7 @@
 import { DataConnector, DataConnectorFrequency, DataConnectorObject } from './dataConnector';
 
+type MessageCenterSettings = 'Email And Message Center Alerts' | 'Message Center Alerts Only';
+
 type BitsightDataConnectorObject = Omit<DataConnectorObject, 'type'> & {
   apiKey: string;
   appMappings: BitsightAppMapping;
@@ -8,6 +10,7 @@ type BitsightDataConnectorObject = Omit<DataConnectorObject, 'type'> & {
   frequency: DataConnectorFrequency;
   notificationGroups?: string[];
   notificationUsers?: string[];
+  messagingCenterSettings?: MessageCenterSettings;
 };
 
 export class BitsightDataConnector extends DataConnector {
@@ -18,6 +21,7 @@ export class BitsightDataConnector extends DataConnector {
   frequency: DataConnectorFrequency;
   notificationGroups: string[];
   notificationUsers: string[];
+  messagingCenterSettings: MessageCenterSettings;
 
   constructor({
     name,
@@ -30,6 +34,7 @@ export class BitsightDataConnector extends DataConnector {
     frequency,
     notificationGroups = [],
     notificationUsers = [],
+    messagingCenterSettings = 'Email And Message Center Alerts',
   }: BitsightDataConnectorObject) {
     super({ name, description, status, type: 'BitSight Data Connector' });
     this.apiKey = apiKey;
@@ -39,6 +44,7 @@ export class BitsightDataConnector extends DataConnector {
     this.frequency = frequency;
     this.notificationGroups = notificationGroups;
     this.notificationUsers = notificationUsers;
+    this.messagingCenterSettings = messagingCenterSettings;
   }
 
   getAllAppMappings() {

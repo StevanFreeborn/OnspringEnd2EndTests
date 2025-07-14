@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { DataConnector } from '../../models/dataConnector';
 
 export abstract class DataConnectorConnectionTab {
+  protected readonly page: Page;
   readonly nameInput: Locator;
   readonly descriptionEditor: Locator;
   readonly statusSwitch: Locator;
@@ -9,11 +10,12 @@ export abstract class DataConnectorConnectionTab {
   readonly viewRunHistoryLink: Locator;
 
   constructor(page: Page) {
-    this.nameInput = page.getByLabel('Name');
-    this.descriptionEditor = page.locator('.content-area.mce-content-body');
-    this.statusSwitch = page.getByRole('switch', { name: 'Status' });
+    this.page = page;
+    this.nameInput = this.page.getByRole('textbox', { name: 'Name', exact: true });
+    this.descriptionEditor = this.page.locator('.content-area.mce-content-body');
+    this.statusSwitch = this.page.getByRole('switch', { name: 'Status' });
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
-    this.viewRunHistoryLink = page.getByRole('link', { name: 'View Run History' });
+    this.viewRunHistoryLink = this.page.getByRole('link', { name: 'View Run History' });
   }
 
   private async updateStatus(status: boolean) {

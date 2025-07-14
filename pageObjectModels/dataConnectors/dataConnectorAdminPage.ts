@@ -2,12 +2,16 @@ import { Locator, Page } from '@playwright/test';
 import { DeleteDataConnectorDialog } from '../../componentObjectModels/dialogs/deleteDataConnectorDialog';
 import { TEST_CONNECTOR_NAME } from '../../factories/fakeDataFactory';
 import { BaseAdminPage } from '../baseAdminPage';
+import { CreateDataConnectorDialog } from '../../componentObjectModels/dialogs/createDataConnectorDialog';
+import { DataConnectorType } from '../../models/dataConnector';
 
 export class DataConnectorAdminPage extends BaseAdminPage {
   private readonly getConnectorsPath: string;
+  private readonly deletePathRegex: RegExp;
+  private readonly createDataConnectorButton: Locator;
+  private readonly createDataConnectorDialog: CreateDataConnectorDialog;
   readonly path: string;
   readonly connectorsGrid: Locator;
-  private readonly deletePathRegex: RegExp;
   readonly deleteConnectorDialog: DeleteDataConnectorDialog;
 
   constructor(page: Page) {
@@ -17,6 +21,8 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     this.connectorsGrid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Delete/;
     this.deleteConnectorDialog = new DeleteDataConnectorDialog(page);
+    this.createDataConnectorButton = this.page.getByRole('button', { name: 'Create Data Connector' });
+    this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
   }
 
   async goto() {
@@ -25,22 +31,45 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     await getConnectorsResponse;
   }
 
+  async createConnector(connectorName: string, connectorType: DataConnectorType) {
+    await this.createDataConnectorButton.click();
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
+  }
+
+  async copyConnector(connectorType: DataConnectorType, connectorToCopyName: string, connectorName: string) {
+    await this.createDataConnectorButton.click();
+    await this.createDataConnectorDialog.selectType(connectorType);
+    await this.createDataConnectorDialog.copyFromRadioButton.click();
+    await this.createDataConnectorDialog.copyFromDropdown.click();
+    await this.createDataConnectorDialog.getConnectorToCopy(connectorToCopyName).click();
+    await this.createDataConnectorDialog.nameInput.fill(connectorName);
+    await this.createDataConnectorDialog.saveButton.click();
+  }
+
+  async deleteConnector(connectorName: string) {
+    await this.goto();
+
+    const connectorRow = this.connectorsGrid.getByRole('row', { name: connectorName }).first();
+    const rowElement = await connectorRow.elementHandle();
+
+    if (rowElement === null) {
+      return;
+    }
+
+    await connectorRow.hover();
+    await connectorRow.getByTitle('Delete Data Connector').click();
+    await this.deleteConnectorDialog.deleteButton.click();
+    await this.deleteConnectorDialog.waitForDialogToBeDismissed();
+    await rowElement.waitForElementState('hidden');
+  }
+
   async deleteConnectors(connectorsToDelete: string[]) {
     await this.goto();
 
     for (const connectorName of connectorsToDelete) {
-      const connectorRow = this.connectorsGrid.getByRole('row', { name: connectorName }).first();
-      const rowElement = await connectorRow.elementHandle();
-
-      if (rowElement === null) {
-        continue;
-      }
-
-      await connectorRow.hover();
-      await connectorRow.getByTitle('Delete Data Connector').click();
-      await this.deleteConnectorDialog.deleteButton.click();
-      await this.deleteConnectorDialog.waitForDialogToBeDismissed();
-      await rowElement.waitForElementState('hidden');
+      await this.deleteConnector(connectorName);
     }
   }
 
