@@ -427,6 +427,7 @@ test.describe('API v1', () => {
       setup,
       request,
       large51mbTxtFile,
+      environment,
     }) => {
       let createdRecordId = 0;
 
@@ -464,7 +465,7 @@ test.describe('API v1', () => {
           }
         );
 
-        expect(response.status()).toBe(413);
+        expect(response.status()).toBe(environment.isFedspring() ? 403 : 413);
       });
 
       await test.step('Delete the record', async () => {

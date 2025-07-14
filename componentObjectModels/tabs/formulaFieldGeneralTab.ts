@@ -42,8 +42,9 @@ export class FormulaFieldGeneralTab extends FieldGeneralTab {
     // There does not appear to be any other way to set the value of a CodeMirror editor
     // than to use the CodeMirror API directly.
     await this.formulaEditor.evaluate(
-      (el: HTMLElement & { CodeMirror: { setValue: (value: string) => void } }, formula) => {
+      async (el: HTMLElement & { CodeMirror: { setValue: (value: string) => void } }, formula) => {
         el.CodeMirror.setValue(formula);
+        await new Promise(resolve => setTimeout(resolve, 500));
       },
       formulaField.formula
     );
