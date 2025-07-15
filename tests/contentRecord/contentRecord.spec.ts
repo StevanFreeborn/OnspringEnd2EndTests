@@ -58,7 +58,7 @@ const test = base.extend<ContentRecordTestFixtures>({
     const copyContentPage = new CopyContentPage(sysAdminPage);
     await use(copyContentPage);
   },
-  testUser: async ({ browser, sysAdminPage }, use) => {
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
     await createUserFixture(
       {
         browser,
@@ -67,7 +67,8 @@ const test = base.extend<ContentRecordTestFixtures>({
         userStatus: UserStatus.Active,
         roles: [],
       },
-      use
+      use,
+      testInfo
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>

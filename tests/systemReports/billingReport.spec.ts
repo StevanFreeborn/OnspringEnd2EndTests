@@ -13,7 +13,7 @@ type BillingReportTestFixtures = {
 
 const test = base.extend<BillingReportTestFixtures>({
   billingReportPage: async ({ sysAdminPage }, use) => await use(new BillingReportPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use) => {
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
     await createUserFixture(
       {
         browser,
@@ -22,7 +22,8 @@ const test = base.extend<BillingReportTestFixtures>({
         userStatus: UserStatus.Active,
         roles: [],
       },
-      use
+      use,
+      testInfo
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>

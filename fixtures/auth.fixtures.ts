@@ -55,18 +55,7 @@ export async function createBaseAuthPage(
 
   page.on('response', errorResponseHandler);
 
-  page.on('pageerror', async error => {
-    const err = {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    };
-
-    await testInfo.attach(error.name, {
-      body: JSON.stringify(err, null, 2),
-      contentType: 'application/json',
-    });
-  });
+  page.on('pageerror', async error => await pageErrorHandler(error, testInfo));
 
   try {
     await use(page);
@@ -107,4 +96,17 @@ export function errorResponseHandler(response: Response) {
   if (isBaseUrl && response.status() === 502) {
     throw new Error(`Request to ${url} encountered a bad gateway at ${timestamp}.`);
   }
+}
+
+export async function pageErrorHandler(error: Error, testInfo: TestInfo) {
+  const err = {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  };
+
+  await testInfo.attach('page-error', {
+    body: JSON.stringify(err, null, 2),
+    contentType: 'application/json',
+  });
 }
