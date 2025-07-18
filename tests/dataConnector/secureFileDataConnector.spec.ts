@@ -200,10 +200,96 @@ test.describe('secure file data connector', () => {
     });
   });
 
-  test('Verify a new Secure File connector runs successfully', async () => {
+  test('Verify a new Secure File connector runs successfully', async ({
+    app,
+    appAdminPage,
+    dataConnectorsAdminPage,
+    editConnectorPage,
+    sftpService,
+    sysAdminUser,
+    sysAdminEmail,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-434',
+    });
+
+    test.slow();
+
+    const textField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const dataConnector = new SecureFileDataConnector({
+      name: FakeDataFactory.createFakeConnectorName(),
+      status: true,
+      app: app.name,
+      hostname: sftpService.hostname(),
+      port: sftpService.port(),
+      fileLocation: './',
+      fileName: `${FakeDataFactory.createUniqueIdentifier()}.csv`,
+      fileType: 'CSV (Comma delimited)',
+      authType: {
+        type: 'Username / Password',
+        username: sftpService.username(),
+        password: sftpService.password(),
+      },
+      startingOnDate: new Date(Date.now() + 10 * 60_000),
+      frequency: 'Every Day',
+      notificationUsers: [sysAdminUser.fullName],
+    });
+
+    connectorsToDelete.push(dataConnector.name);
+
+    await test.step('Navigate to app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Add text field for field mappings', async () => {
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Upload csv to be imported', async () => {
+      const sourcePath = writeCsvFile([{ [textField.name]: 'Text Field Value' }]);
+      await sftpService.uploadFile(sourcePath, dataConnector.filePath());
+    });
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorsAdminPage.goto();
+    });
+
+    await test.step('Create a new secure file connector', async () => {
+      await dataConnectorsAdminPage.createConnector(dataConnector.name, 'Secure File Data Connector');
+      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+    });
+
+    await test.step('Configure the secure file connector', async () => {
+      await editConnectorPage.updateConnector(dataConnector);
+    });
+
+    await test.step('Verify the secure file connector is run', async () => {
+      await expect(async () => {
+        const searchCriteria = [['TEXT', dataConnector.name]];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+        expect(email.subject).toBe('');
+
+        if (email.html !== false) {
+          // eslint-disable-next-line playwright/no-conditional-expect
+          expect(email.html).toContain('');
+        }
+      }).toPass({
+        intervals: [30_000],
+        timeout: 300_000,
+      });
+    });
+
+    await test.step('Remove the uploaded file from SFTP server', async () => {
+      await sftpService.deleteFile(dataConnector.filePath());
     });
 
     expect(true).toBeTruthy();
