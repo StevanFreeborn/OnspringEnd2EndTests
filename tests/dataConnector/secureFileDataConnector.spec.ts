@@ -1,3 +1,4 @@
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
@@ -6,6 +7,7 @@ import { App } from '../../models/app';
 import { SecureFileDataConnector } from '../../models/secureFileDataConnector';
 import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
 import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { EditSecureFileDataConnectorPage } from '../../pageObjectModels/dataConnectors/editSecureFileDataConnectorPage';
 import { AnnotationType } from '../annotations';
@@ -15,6 +17,7 @@ type SecureFileDataConnectorTestFixtures = {
   appAdminPage: AppAdminPage;
   dataConnectorsAdminPage: DataConnectorAdminPage;
   editConnectorPage: EditSecureFileDataConnectorPage;
+  viewContentPage: ViewContentPage;
 };
 
 const test = base.extend<SecureFileDataConnectorTestFixtures>({
@@ -22,6 +25,7 @@ const test = base.extend<SecureFileDataConnectorTestFixtures>({
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   dataConnectorsAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
   editConnectorPage: async ({ sysAdminPage }, use) => await use(new EditSecureFileDataConnectorPage(sysAdminPage)),
+  viewContentPage: async ({ sysAdminPage }, use) => await use(new ViewContentPage(sysAdminPage)),
 });
 
 test.describe('secure file data connector', () => {
@@ -208,6 +212,7 @@ test.describe('secure file data connector', () => {
     sftpService,
     sysAdminUser,
     sysAdminEmail,
+    viewContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -216,6 +221,9 @@ test.describe('secure file data connector', () => {
 
     test.slow();
 
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const textFieldValue = 'Text Field Value';
     const textField = new TextField({
       name: FakeDataFactory.createFakeFieldName(),
     });
@@ -234,7 +242,7 @@ test.describe('secure file data connector', () => {
         username: sftpService.username(),
         password: sftpService.password(),
       },
-      startingOnDate: new Date(Date.now() + 10 * 60_000),
+      startingOnDate: new Date(Date.now() + 2 * 60_000),
       frequency: 'Every Day',
       notificationUsers: [sysAdminUser.fullName],
     });
@@ -247,7 +255,16 @@ test.describe('secure file data connector', () => {
 
     await test.step('Add text field for field mappings', async () => {
       await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+        tabName: tabName,
+        sectionName: sectionName,
+        sectionRow: 0,
+        sectionColumn: 0,
+        fieldName: textField.name,
+      });
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Upload csv to be imported', async () => {
@@ -276,22 +293,26 @@ test.describe('secure file data connector', () => {
         expect(result.isOk()).toBe(true);
 
         const email = result.unwrap();
-        expect(email.subject).toBe('');
-
-        if (email.html !== false) {
-          // eslint-disable-next-line playwright/no-conditional-expect
-          expect(email.html).toContain('');
-        }
+        expect(email.subject).toBe('Onspring Data Connector Complete');
       }).toPass({
         intervals: [30_000],
         timeout: 300_000,
       });
+
+      await viewContentPage.goto(app.id, 1);
+
+      const field = await viewContentPage.form.getField({
+        tabName: tabName,
+        sectionName: sectionName,
+        fieldName: textField.name,
+        fieldType: textField.type as FieldType,
+      });
+
+      await expect(field).toHaveText(textFieldValue);
     });
 
     await test.step('Remove the uploaded file from SFTP server', async () => {
       await sftpService.deleteFile(dataConnector.filePath());
     });
-
-    expect(true).toBeTruthy();
   });
 });
