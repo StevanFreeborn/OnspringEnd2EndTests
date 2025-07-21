@@ -103,6 +103,10 @@ This workflow will run on any pull request that aims to merge into the `master` 
 
 ## Relevant Notes
 
+### SFTP Testing
+
+Some tests require the ability to upload a file to an SFTP server. This is currently done using the [`ssh2-sftp-client`](https://www.npmjs.com/package/ssh2-sftp-client) package. This library is used to connect to the SFTP server and upload files as part of the test setup and teardown. The SFTP server connection details can be configured in the `.env` file.
+
 ### Email Testing
 
 Some tests require the ability to verify that an email was sent. This is currently done using IMAP and the `imap` package. You can read more about it [here](https://www.npmjs.com/package/imap). The email account for the system administrator user running the tests can be configured in the `.env` file.

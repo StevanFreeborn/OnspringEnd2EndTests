@@ -23,5 +23,7 @@ export class BitsightSchedulingTab extends SchedulingTab {
     if (dataConnector.notificationUsers.length > 0) {
       await this.notificationUsersDualPaneSelector.selectOptions(dataConnector.notificationUsers);
     }
+
+    await this.selectMessageCenterSettings(dataConnector.messagingCenterSettings);
   }
 }

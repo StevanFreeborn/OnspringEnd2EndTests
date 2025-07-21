@@ -3,6 +3,7 @@ import { DownloadService } from '../services/downloadService';
 import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { SftpService } from '../services/sftpService';
 import { SheetParser } from '../services/sheetParser';
 
 export async function sysAdminEmailService({}, use: (r: EmailService) => Promise<void>) {
@@ -36,4 +37,15 @@ export async function sheetParser({}, use: (r: SheetParser) => Promise<void>) {
 export async function dynamicDocumentService({}, use: (r: DynamicDocumentService) => Promise<void>) {
   const dynamicDocumentService = new DynamicDocumentService();
   await use(dynamicDocumentService);
+}
+
+export async function sftpService({}, use: (r: SftpService) => Promise<void>) {
+  const sftpService = new SftpService({
+    host: env.SFDC_HOSTNAME,
+    port: 22,
+    username: env.SFDC_USERNAME,
+    password: env.SFDC_PASSWORD,
+  });
+
+  await use(sftpService);
 }

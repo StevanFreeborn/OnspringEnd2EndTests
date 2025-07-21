@@ -28,7 +28,7 @@ export class EditBitsightConnectorPage extends EditConnectorPage {
     this.schedulingTab = new BitsightSchedulingTab(page);
   }
 
-  async save() {
+  private async save() {
     const saveResponse = this.page.waitForResponse(this.savePath);
     await this.saveButton.click();
     await saveResponse;

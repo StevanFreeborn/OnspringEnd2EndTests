@@ -1,4 +1,4 @@
-import { expect, test as base, Page } from '../../fixtures';
+import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { testUserPage } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
@@ -17,7 +17,7 @@ type AdminAuditHistoryTestFixtures = {
 const test = base.extend<AdminAuditHistoryTestFixtures>({
   app: app,
   adminAuditHistoryPage: async ({ sysAdminPage }, use) => await use(new AdminAuditHistoryPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use) => {
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
     await createUserFixture(
       {
         browser,
@@ -26,7 +26,8 @@ const test = base.extend<AdminAuditHistoryTestFixtures>({
         userStatus: UserStatus.Active,
         roles: [],
       },
-      use
+      use,
+      testInfo
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>

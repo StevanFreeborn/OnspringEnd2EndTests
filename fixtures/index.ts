@@ -10,6 +10,7 @@ import { DownloadService } from '../services/downloadService';
 import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { SftpService } from '../services/sftpService';
 import { SheetParser } from '../services/sheetParser';
 import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
@@ -20,6 +21,7 @@ import {
   downloadService,
   dynamicDocumentService,
   pdfParser,
+  sftpService,
   sheetParser,
   sysAdminEmailService,
 } from './services.fixtures';
@@ -45,6 +47,7 @@ type Fixtures = {
   sheetParser: SheetParser;
   downloadService: DownloadService;
   dynamicDocumentService: DynamicDocumentService;
+  sftpService: SftpService;
   jpgFile: TestFile;
   txtFile: TestFile;
   large45mbTxtFile: TestFile;
@@ -79,6 +82,7 @@ export const test = base.extend<Fixtures>({
   sheetParser: sheetParser,
   downloadService: downloadService,
   dynamicDocumentService: dynamicDocumentService,
+  sftpService: sftpService,
   jpgFile: jpgFile,
   txtFile: txtFile,
   large45mbTxtFile: large45mbTxtFile,

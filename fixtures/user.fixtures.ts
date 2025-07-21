@@ -1,4 +1,4 @@
-import { Browser, Page } from '@playwright/test';
+import { Browser, Page, TestInfo } from '@playwright/test';
 import path from 'path';
 import { UserFactory } from '../factories/userFactory';
 import { Role } from '../models/role';
@@ -9,11 +9,12 @@ import { AddUserAdminPage } from '../pageObjectModels/users/addUserAdminPage';
 import { EditUserAdminPage } from '../pageObjectModels/users/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityAdminPage';
 import { AUTH_DIR } from '../playwright.config';
-import { errorResponseHandler } from './auth.fixtures';
+import { errorResponseHandler, pageErrorHandler } from './auth.fixtures';
 
 export async function activeUserWithRole(
   { browser, sysAdminPage, role }: { browser: Browser; sysAdminPage: Page; role: Role },
-  use: (r: User) => Promise<void>
+  use: (r: User) => Promise<void>,
+  testInfo: TestInfo
 ) {
   const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
   const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
@@ -32,6 +33,7 @@ export async function activeUserWithRole(
   const context = await browser.newContext();
   const page = await context.newPage();
   page.on('response', errorResponseHandler);
+  page.on('pageerror', async error => await pageErrorHandler(error, testInfo));
 
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
@@ -57,7 +59,8 @@ export async function createUserFixture(
     userStatus,
     roles = [],
   }: { browser: Browser; sysAdminPage: Page; sysAdmin?: boolean; userStatus: UserStatus; roles?: string[] },
-  use: (r: User) => Promise<void>
+  use: (r: User) => Promise<void>,
+  testInfo: TestInfo
 ) {
   const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
   const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
@@ -73,7 +76,7 @@ export async function createUserFixture(
   await editUserAdminPage.saveUser();
   user.id = editUserAdminPage.getUserIdFromUrl();
 
-  const userAuthStoragePath = await logUserIn({ browser, user });
+  const userAuthStoragePath = await logUserIn({ browser, user, testInfo });
   user.authStoragePath = userAuthStoragePath;
 
   await use(user);
@@ -81,11 +84,11 @@ export async function createUserFixture(
   await usersSecurityAdminPage.deleteUsers([user.username]);
 }
 
-async function logUserIn({ browser, user }: { browser: Browser; user: User }) {
+async function logUserIn({ browser, user, testInfo }: { browser: Browser; user: User; testInfo: TestInfo }) {
   const context = await browser.newContext();
   const page = await context.newPage();
   page.on('response', errorResponseHandler);
-
+  page.on('pageerror', async error => await pageErrorHandler(error, testInfo));
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
   await loginPage.login(user);

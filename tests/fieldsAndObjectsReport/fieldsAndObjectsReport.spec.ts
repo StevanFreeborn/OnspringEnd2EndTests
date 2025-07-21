@@ -17,7 +17,7 @@ type FieldsAndObjectsReportTestFixtures = {
 const test = base.extend<FieldsAndObjectsReportTestFixtures>({
   app: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use) => {
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
     await createUserFixture(
       {
         browser,
@@ -26,7 +26,8 @@ const test = base.extend<FieldsAndObjectsReportTestFixtures>({
         userStatus: UserStatus.Active,
         roles: [],
       },
-      use
+      use,
+      testInfo
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>
