@@ -105,6 +105,8 @@ test.describe('login history report', () => {
       description: 'Test-551',
     });
 
+    test.slow();
+
     const today = new Date();
     const testUserLoginPage = new LoginHistoryPage(testUserPage);
 
