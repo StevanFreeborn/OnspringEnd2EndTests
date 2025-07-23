@@ -66,7 +66,7 @@ test.describe('login history report', () => {
         const usernameValue = await usernameCell.textContent();
         const loginDay = loginDateValue?.trim().split(' ')[0];
 
-        expect(loginDay).toBe(`${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`);
+        expect(loginDay).toBe(`${today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' })}`);
         expect(usernameValue?.trim()).toBe(sysAdminUser.username);
       }
     });
