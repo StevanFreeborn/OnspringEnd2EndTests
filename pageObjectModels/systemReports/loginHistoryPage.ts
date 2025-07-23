@@ -2,7 +2,7 @@ import { DateFieldControl } from '../../componentObjectModels/controls/dateField
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
-type LoginHistoryFilter =
+type LoginHistoryDateFilter =
   | {
       type:
         | 'All Dates'
@@ -19,9 +19,10 @@ type LoginHistoryFilter =
       to: Date;
     };
 
-type LoginHistoryFilterWithUserOptions = LoginHistoryFilter & {
+type LoginHistoryFilter = {
   user?: string;
   displayLoggedInUsersOnly?: boolean;
+  dateFilter?: LoginHistoryDateFilter;
 };
 
 export class LoginHistoryPage extends BaseAdminPage {
@@ -98,24 +99,24 @@ export class LoginHistoryPage extends BaseAdminPage {
     });
   }
 
-  async filterReport(filter: LoginHistoryFilterWithUserOptions) {
-    if (filter.displayLoggedInUsersOnly) {
-      await this.displayOnlyLoggedInUsersCheckbox.setChecked(filter.displayLoggedInUsersOnly);
-    }
+  async filterReport({
+    user = 'All Users',
+    displayLoggedInUsersOnly = false,
+    dateFilter = { type: 'All Dates' },
+  }: LoginHistoryFilter) {
+    await this.displayOnlyLoggedInUsersCheckbox.setChecked(displayLoggedInUsersOnly);
 
-    if (filter.displayLoggedInUsersOnly === true) {
+    if (displayLoggedInUsersOnly === true) {
       return;
     }
 
-    if (filter.user) {
-      await this.selectUser(filter.user);
-    }
+    await this.selectUser(user);
 
-    await this.selectDateFilter(filter.type);
+    await this.selectDateFilter(dateFilter.type);
 
-    if (filter.type === 'Custom Dates') {
-      await this.enterFromDate(filter.from);
-      await this.enterToDate(filter.to);
+    if (dateFilter.type === 'Custom Dates') {
+      await this.enterFromDate(dateFilter.from);
+      await this.enterToDate(dateFilter.to);
     }
   }
 
@@ -128,5 +129,9 @@ export class LoginHistoryPage extends BaseAdminPage {
 
   getReportRows() {
     return this.reportGridBody.locator('tr').all();
+  }
+
+  getReportRowsByText(query: string) {
+    return this.reportGridBody.locator('tr', { hasText: new RegExp(query, 'i') }).all();
   }
 }

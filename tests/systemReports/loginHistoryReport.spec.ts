@@ -26,9 +26,11 @@ test.describe('login history report', () => {
     await test.step('Filter the login history report', async () => {
       await loginHistoryPage.filterReport({
         user: sysAdminUser.fullName,
-        type: 'Custom Dates',
-        from: today,
-        to: today,
+        dateFilter: {
+          type: 'Custom Dates',
+          from: today,
+          to: today,
+        },
       });
     });
 
@@ -50,19 +52,25 @@ test.describe('login history report', () => {
     });
   });
 
-  test('Display uses currently logged in', async () => {
+  test('Display uses currently logged in', async ({ loginHistoryPage, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-550',
     });
 
-    await test.step('Navigate to the login history report', async () => {});
+    await test.step('Navigate to the login history report', async () => {
+      await loginHistoryPage.goto();
+    });
 
-    await test.step('Display the users currently logged in', async () => {});
+    await test.step('Display the users currently logged in', async () => {
+      await loginHistoryPage.filterReport({ displayLoggedInUsersOnly: true });
+    });
 
-    await test.step('Verify the currently logged in users are displayed', async () => {});
+    await test.step('Verify the currently logged in users are displayed', async () => {
+      const adminRows = await loginHistoryPage.getReportRowsByText(sysAdminUser.username);
 
-    expect(true).toBeTruthy();
+      expect(adminRows.length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   test('Export the login history report', async () => {
