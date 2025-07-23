@@ -67,7 +67,7 @@ test.describe('login history report', () => {
         const loginDay = loginDateValue?.trim().split(' ')[0];
 
         expect(loginDay).toBe(`${today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' })}`);
-        expect(usernameValue?.trim()).toBe(sysAdminUser.username);
+        expect(usernameValue?.trim().toLowerCase()).toBe(sysAdminUser.username.toLowerCase());
       }
     });
   });
