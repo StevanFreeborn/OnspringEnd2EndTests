@@ -141,13 +141,40 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Create a copy of an Email Sync via the create button on the Integrations tile on the admin home page', async () => {
+  test('Create a copy of an Email Sync via the create button on the Integrations tile on the admin home page', async ({
+    adminHomePage,
+    editEmailSyncPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-376',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncToCopyName = FakeDataFactory.createFakeEmailSyncName();
+    const emailSyncCopyName = FakeDataFactory.createFakeEmailSyncName();
+    emailSyncsToDelete.push(emailSyncToCopyName, emailSyncCopyName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email sync to copy', async () => {
+      await adminHomePage.createEmailSyncUsingIntegrationsTileButton(emailSyncToCopyName);
+      await adminHomePage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email sync copy', async () => {
+      await adminHomePage.createEmailSyncCopyUsingIntegrationsTileButton(emailSyncToCopyName, emailSyncCopyName);
+      await adminHomePage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Verify the email sync copy was created successfully', async () => {
+      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+    });
   });
 
   test('Create a copy of an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async () => {

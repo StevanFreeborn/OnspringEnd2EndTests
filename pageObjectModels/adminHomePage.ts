@@ -140,6 +140,21 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createEmailSyncCopyUsingIntegrationsTileButton(emailSyncToCopyName: string, emailSyncCopyName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Email Integration (Sync)').click();
+
+    await this.createEmailSyncDialog.copyFromRadioButton.waitFor();
+    await this.createEmailSyncDialog.copyFromRadioButton.click();
+    await this.createEmailSyncDialog.copyFromDropdown.click();
+    await this.createEmailSyncDialog.getEmailSyncToCopy(emailSyncToCopyName).click();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncCopyName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
+
   async createEmailSyncUsingIntegrationsTileButton(emailSyncName: string) {
     await this.integrationTileLink.hover();
     await this.integrationTileCreateButton.waitFor();
