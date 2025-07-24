@@ -4,18 +4,21 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditEmailSyncPage } from '../../pageObjectModels/emailSyncs/editEmailSyncPage';
+import { EmailSyncAdminPage } from '../../pageObjectModels/emailSyncs/emailSyncAdminPage';
 import { AnnotationType } from '../annotations';
 
 type EmailSyncTestFixtures = {
   app: App;
   adminHomePage: AdminHomePage;
   editEmailSyncPage: EditEmailSyncPage;
+  emailSyncAdminPage: EmailSyncAdminPage;
 };
 
 const test = base.extend<EmailSyncTestFixtures>({
   app: app,
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editEmailSyncPage: async ({ sysAdminPage }, use) => await use(new EditEmailSyncPage(sysAdminPage)),
+  emailSyncAdminPage: async ({ sysAdminPage }, use) => await use(new EmailSyncAdminPage(sysAdminPage)),
 });
 
 test.describe('email sync', () => {
@@ -77,13 +80,29 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Create an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async () => {
+  test('Create an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async ({
+    emailSyncAdminPage,
+    editEmailSyncPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-374',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncName = FakeDataFactory.createFakeEmailSyncName();
+    emailSyncsToDelete.push(emailSyncName);
+
+    await test.step('Navigate to the email sync admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Create the emails sync', async () => {
+      await emailSyncAdminPage.createEmailSync(emailSyncName);
+    });
+
+    await test.step('verify the email was created successfully', async () => {
+      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncName);
+    });
   });
 
   test('Create a copy of an Email Sync via the create button in the header of the admin home page', async () => {
