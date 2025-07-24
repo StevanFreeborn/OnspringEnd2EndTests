@@ -152,6 +152,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createEmailSyncDialog.saveButton.click();
   }
 
+  async createEmailSyncCopyUsingHeaderCreateButton(emailSyncToCopyName: string, emailSyncCopyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailSyncCreateMenuOption.click();
+
+    await this.createEmailSyncDialog.copyFromRadioButton.waitFor();
+    await this.createEmailSyncDialog.copyFromRadioButton.click();
+    await this.createEmailSyncDialog.copyFromDropdown.click();
+    await this.createEmailSyncDialog.getEmailSyncToCopy(emailSyncToCopyName).click();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncCopyName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
+
   async createEmailSyncUsingHeaderCreateButton(emailSyncName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();

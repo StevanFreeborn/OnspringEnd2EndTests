@@ -96,7 +96,7 @@ test.describe('email sync', () => {
       await emailSyncAdminPage.goto();
     });
 
-    await test.step('Create the emails sync', async () => {
+    await test.step('Create the email sync', async () => {
       await emailSyncAdminPage.createEmailSync(emailSyncName);
     });
 
@@ -105,13 +105,40 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Create a copy of an Email Sync via the create button in the header of the admin home page', async () => {
+  test('Create a copy of an Email Sync via the create button in the header of the admin home page', async ({
+    adminHomePage,
+    editEmailSyncPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-375',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncToCopyName = FakeDataFactory.createFakeEmailSyncName();
+    const emailSyncCopyName = FakeDataFactory.createFakeEmailSyncName();
+    emailSyncsToDelete.push(emailSyncToCopyName, emailSyncCopyName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email sync to copy', async () => {
+      await adminHomePage.createEmailSyncUsingHeaderCreateButton(emailSyncToCopyName);
+      await adminHomePage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email sync copy', async () => {
+      await adminHomePage.createEmailSyncCopyUsingHeaderCreateButton(emailSyncToCopyName, emailSyncCopyName);
+      await adminHomePage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Verify the email sync copy was created successfully', async () => {
+      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+    });
   });
 
   test('Create a copy of an Email Sync via the create button on the Integrations tile on the admin home page', async () => {
