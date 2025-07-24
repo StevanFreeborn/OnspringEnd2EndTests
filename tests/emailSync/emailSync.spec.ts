@@ -51,13 +51,30 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Create an Email Sync via the create button on the Integrations tile on the admin home page', async () => {
+  test('Create an Email Sync via the create button on the Integrations tile on the admin home page', async ({
+    adminHomePage,
+    editEmailSyncPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-373',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncName = FakeDataFactory.createFakeEmailSyncName();
+    emailSyncsToDelete.push(emailSyncName);
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the email sync', async () => {
+      await adminHomePage.createEmailSyncUsingIntegrationsTileButton(emailSyncName);
+      await adminHomePage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Verify the email sync was created successfully', async () => {
+      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncName);
+    });
   });
 
   test('Create an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async () => {
