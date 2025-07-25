@@ -1,9 +1,9 @@
 import { Locator, Page } from '@playwright/test';
+import { CreateDataConnectorDialog } from '../../componentObjectModels/dialogs/createDataConnectorDialog';
 import { DeleteDataConnectorDialog } from '../../componentObjectModels/dialogs/deleteDataConnectorDialog';
 import { TEST_CONNECTOR_NAME } from '../../factories/fakeDataFactory';
-import { BaseAdminPage } from '../baseAdminPage';
-import { CreateDataConnectorDialog } from '../../componentObjectModels/dialogs/createDataConnectorDialog';
 import { DataConnectorType } from '../../models/dataConnector';
+import { BaseAdminPage } from '../baseAdminPage';
 
 export class DataConnectorAdminPage extends BaseAdminPage {
   private readonly getConnectorsPath: string;
@@ -20,9 +20,9 @@ export class DataConnectorAdminPage extends BaseAdminPage {
     this.path = '/Admin/Integration/DataConnector';
     this.connectorsGrid = this.page.locator('#grid');
     this.deletePathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Delete/;
-    this.deleteConnectorDialog = new DeleteDataConnectorDialog(page);
+    this.deleteConnectorDialog = new DeleteDataConnectorDialog(this.page);
     this.createDataConnectorButton = this.page.getByRole('button', { name: 'Create Data Connector' });
-    this.createDataConnectorDialog = new CreateDataConnectorDialog(page);
+    this.createDataConnectorDialog = new CreateDataConnectorDialog(this.page);
   }
 
   async goto() {

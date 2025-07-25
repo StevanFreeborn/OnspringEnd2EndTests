@@ -20,6 +20,7 @@ export class AdminNav {
   readonly dataConnectorCreateMenuOption: Locator;
   readonly dashboardCreateMenuOption: Locator;
   readonly emailTemplateCreateMenuOption: Locator;
+  readonly emailSyncCreateMenuOption: Locator;
 
   private getMenuOption(menuOptionText: string) {
     return this.adminCreateMenu.getByText(menuOptionText);
@@ -45,5 +46,6 @@ export class AdminNav {
     this.dataConnectorCreateMenuOption = this.getMenuOption('Data Connector');
     this.dashboardCreateMenuOption = this.getMenuOption('Dashboard');
     this.emailTemplateCreateMenuOption = this.getMenuOption('Email Template');
+    this.emailSyncCreateMenuOption = this.getMenuOption('Email Integration (Sync)');
   }
 }

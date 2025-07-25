@@ -5,6 +5,7 @@ import { CreateDashboardDialog } from '../componentObjectModels/dialogs/createDa
 import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
+import { createEmailSyncDialog } from '../componentObjectModels/dialogs/createEmailSyncDialog';
 import { CreateEmailTemplateDialog } from '../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
@@ -65,6 +66,8 @@ export class AdminHomePage extends BaseAdminPage {
   readonly messagingTileCreateButton: Locator;
   readonly messagingCreateMenu: Locator;
   readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
+
+  readonly createEmailSyncDialog: createEmailSyncDialog;
 
   private getTileLink(tileName: string) {
     return this.page.locator('.landing-list-item-container .image-link', {
@@ -129,10 +132,61 @@ export class AdminHomePage extends BaseAdminPage {
     this.messagingTileCreateButton = this.getTileCreateButton('Messaging');
     this.messagingCreateMenu = this.getTileCreateMenu('Messaging');
     this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);
+
+    this.createEmailSyncDialog = new createEmailSyncDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createEmailSyncCopyUsingIntegrationsTileButton(emailSyncToCopyName: string, emailSyncCopyName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Email Integration (Sync)').click();
+
+    await this.createEmailSyncDialog.copyFromRadioButton.waitFor();
+    await this.createEmailSyncDialog.copyFromRadioButton.click();
+    await this.createEmailSyncDialog.copyFromDropdown.click();
+    await this.createEmailSyncDialog.getEmailSyncToCopy(emailSyncToCopyName).click();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncCopyName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
+
+  async createEmailSyncUsingIntegrationsTileButton(emailSyncName: string) {
+    await this.integrationTileLink.hover();
+    await this.integrationTileCreateButton.waitFor();
+    await this.integrationTileCreateButton.click();
+    await this.integrationCreateMenu.waitFor();
+    await this.integrationCreateMenu.getByText('Email Integration (Sync)').click();
+
+    await this.createEmailSyncDialog.nameInput.waitFor();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
+
+  async createEmailSyncCopyUsingHeaderCreateButton(emailSyncToCopyName: string, emailSyncCopyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailSyncCreateMenuOption.click();
+
+    await this.createEmailSyncDialog.copyFromRadioButton.waitFor();
+    await this.createEmailSyncDialog.copyFromRadioButton.click();
+    await this.createEmailSyncDialog.copyFromDropdown.click();
+    await this.createEmailSyncDialog.getEmailSyncToCopy(emailSyncToCopyName).click();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncCopyName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
+
+  async createEmailSyncUsingHeaderCreateButton(emailSyncName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailSyncCreateMenuOption.click();
+
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncName);
+    await this.createEmailSyncDialog.saveButton.click();
   }
 
   async createDashboardCopyUsingDashboardsTileButton(dashboardToCopyName: string, dashboardCopyName: string) {
