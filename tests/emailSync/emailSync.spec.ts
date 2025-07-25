@@ -177,13 +177,40 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Create a copy of an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async () => {
+  test('Create a copy of an Email Sync via the "Create Email Integration (Sync)" button on the email sync home page', async ({
+    emailSyncAdminPage,
+    editEmailSyncPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-377',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncToCopyName = FakeDataFactory.createFakeEmailSyncName();
+    const emailSyncCopyName = FakeDataFactory.createFakeEmailSyncName();
+    emailSyncsToDelete.push(emailSyncToCopyName, emailSyncCopyName);
+
+    await test.step('Navigate to the email syncs admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Create the email sync to copy', async () => {
+      await emailSyncAdminPage.createEmailSync(emailSyncToCopyName);
+      await emailSyncAdminPage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the email syncs admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the email sync', async () => {
+      await emailSyncAdminPage.createEmailSyncCopy(emailSyncToCopyName, emailSyncCopyName);
+      await emailSyncAdminPage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Verify the email sync was copied successfully', async () => {
+      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+    });
   });
 
   test('Update an Email Sync', async () => {

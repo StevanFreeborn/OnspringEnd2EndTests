@@ -23,4 +23,14 @@ export class EmailSyncAdminPage extends BaseAdminPage {
     await this.createEmailSyncDialog.nameInput.fill(emailSyncName);
     await this.createEmailSyncDialog.saveButton.click();
   }
+
+  async createEmailSyncCopy(emailSyncToCopyName: string, emailSyncCopyName: string) {
+    await this.createEmailSyncButton.click();
+    await this.createEmailSyncDialog.copyFromRadioButton.waitFor();
+    await this.createEmailSyncDialog.copyFromRadioButton.click();
+    await this.createEmailSyncDialog.copyFromDropdown.click();
+    await this.createEmailSyncDialog.getEmailSyncToCopy(emailSyncToCopyName).click();
+    await this.createEmailSyncDialog.nameInput.fill(emailSyncCopyName);
+    await this.createEmailSyncDialog.saveButton.click();
+  }
 }
