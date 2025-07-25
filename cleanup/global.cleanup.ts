@@ -5,6 +5,7 @@ import { ContainersAdminPage } from '../pageObjectModels/containers/containersAd
 import { DashboardsAdminPage } from '../pageObjectModels/dashboards/dashboardsAdminPage';
 import { DataConnectorAdminPage } from '../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
+import { EmailSyncAdminPage } from '../pageObjectModels/emailSyncs/emailSyncAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
 import { EmailTemplateAdminPage } from '../pageObjectModels/messaging/emailTemplateAdminPage';
 import { SendingNumberAdminPage } from '../pageObjectModels/messaging/sendingNumberAdminPage';
@@ -75,5 +76,9 @@ teardown.describe('cleanup', () => {
 
   teardown('cleanup:emailTemplates delete all email templates created as part of tests', async ({ sysAdminPage }) => {
     await new EmailTemplateAdminPage(sysAdminPage).deleteAllTestTemplates();
+  });
+
+  teardown('cleanup:emailSyncs delete all email syncs created as part of tests', async ({ sysAdminPage }) => {
+    await new EmailSyncAdminPage(sysAdminPage).deleteAllTestEmailSyncs();
   });
 });
