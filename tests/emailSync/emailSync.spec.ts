@@ -2,13 +2,17 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { EmailSync } from '../../models/emailSync';
+import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditEmailSyncPage } from '../../pageObjectModels/emailSyncs/editEmailSyncPage';
 import { EmailSyncAdminPage } from '../../pageObjectModels/emailSyncs/emailSyncAdminPage';
 import { AnnotationType } from '../annotations';
 
 type EmailSyncTestFixtures = {
   app: App;
+  appAdminPage: AppAdminPage;
   adminHomePage: AdminHomePage;
   editEmailSyncPage: EditEmailSyncPage;
   emailSyncAdminPage: EmailSyncAdminPage;
@@ -16,6 +20,7 @@ type EmailSyncTestFixtures = {
 
 const test = base.extend<EmailSyncTestFixtures>({
   app: app,
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editEmailSyncPage: async ({ sysAdminPage }, use) => await use(new EditEmailSyncPage(sysAdminPage)),
   emailSyncAdminPage: async ({ sysAdminPage }, use) => await use(new EmailSyncAdminPage(sysAdminPage)),
@@ -50,7 +55,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was created successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncName);
     });
   });
 
@@ -76,7 +81,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was created successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncName);
     });
   });
 
@@ -101,7 +106,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('verify the email was created successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncName);
     });
   });
 
@@ -137,7 +142,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync copy was created successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncCopyName);
     });
   });
 
@@ -173,7 +178,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync copy was created successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncCopyName);
     });
   });
 
@@ -209,17 +214,52 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was copied successfully', async () => {
-      await expect(editEmailSyncPage.dataSyncTab.nameInput).toHaveValue(emailSyncCopyName);
+      await expect(editEmailSyncPage.dataSyncTab.name()).toHaveValue(emailSyncCopyName);
     });
   });
 
-  test('Update an Email Sync', async () => {
+  test('Update an Email Sync', async ({ app, appAdminPage, emailSyncAdminPage, editEmailSyncPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-378',
     });
 
-    expect(true).toBeTruthy();
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+
+    const emailSync = new EmailSync({
+      name: FakeDataFactory.createFakeEmailSyncName(),
+      status: true,
+      appOrSurvey: app.name,
+      emailKey: FakeDataFactory.createFakeEmailSyncKey(),
+      dataMapping: { Subject: textField.name },
+    });
+    emailSyncsToDelete.push(emailSync.name);
+
+    await test.step('Add text field for use in data mapping', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the email syncs admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Create the email sync to update', async () => {
+      await emailSyncAdminPage.createEmailSync(emailSync.name);
+      await emailSyncAdminPage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Update the email sync', async () => {
+      await editEmailSyncPage.updateEmailSync(emailSync);
+      await editEmailSyncPage.save();
+    });
+
+    await test.step('Verify the email sync was updated', async () => {
+      await editEmailSyncPage.page.reload();
+      await expect(editEmailSyncPage.dataSyncTab.emailKey()).toBeDisabled();
+      await expect(editEmailSyncPage.dataSyncTab.emailKey()).toHaveValue(emailSync.emailKey);
+    });
   });
 
   test('Delete an Email Sync', async () => {
