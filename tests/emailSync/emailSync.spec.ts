@@ -29,7 +29,9 @@ const test = base.extend<EmailSyncTestFixtures>({
 test.describe('email sync', () => {
   let emailSyncsToDelete: string[] = [];
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ emailSyncAdminPage }) => {
+    await emailSyncAdminPage.goto();
+    await emailSyncAdminPage.deleteEmailSyncs(emailSyncsToDelete);
     emailSyncsToDelete = [];
   });
 
@@ -262,12 +264,35 @@ test.describe('email sync', () => {
     });
   });
 
-  test('Delete an Email Sync', async () => {
+  test('Delete an Email Sync', async ({ emailSyncAdminPage, editEmailSyncPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-379',
     });
 
-    expect(true).toBeTruthy();
+    const emailSyncName = FakeDataFactory.createFakeEmailSyncName();
+
+    await test.step('Navigate to the email syncs admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Create the email sync to be deleted', async () => {
+      await emailSyncAdminPage.createEmailSync(emailSyncName);
+      await emailSyncAdminPage.page.waitForURL(editEmailSyncPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the email syncs admin page', async () => {
+      await emailSyncAdminPage.goto();
+    });
+
+    await test.step('Delete the email sync', async () => {
+      await emailSyncAdminPage.deleteEmailSync(emailSyncName);
+    });
+
+    await test.step('Verify the email sync was deleted', async () => {
+      const emailSyncRow = emailSyncAdminPage.emailSyncGrid.getByRole('row', { name: emailSyncName });
+
+      await expect(emailSyncRow).toBeHidden();
+    });
   });
 });
