@@ -45,13 +45,41 @@ test.describe('ucf data connector', () => {
     });
   });
 
-  test('Create a copy of a UCF connector', async () => {
+  test('Create a copy of a UCF connector', async ({ dataConnectorAdminPage, editUcfConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-424',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the UCF data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Unified Compliance Framework (UCF) Connector');
+      await dataConnectorAdminPage.page.waitForURL(editUcfConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the UCF data connector', async () => {
+      await dataConnectorAdminPage.copyConnector(
+        'Unified Compliance Framework (UCF) Connector',
+        connectorToCopyName,
+        connectorCopyName
+      );
+      await dataConnectorAdminPage.page.waitForURL(editUcfConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editUcfConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
   test('Delete a UCF connector', async () => {
