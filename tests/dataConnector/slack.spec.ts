@@ -9,7 +9,10 @@ type SlackAppDataConnectorTestFixtures = {
   editSlackConnectorPage: EditSlackConnectorPage;
 };
 
-const test = base.extend<SlackAppDataConnectorTestFixtures>({});
+const test = base.extend<SlackAppDataConnectorTestFixtures>({
+  dataConnectorAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
+  editSlackConnectorPage: async ({ sysAdminPage }, use) => await use(new EditSlackConnectorPage(sysAdminPage)),
+});
 
 test.describe('slack app data connector', () => {
   let connectorsToDelete: string[] = [];
@@ -32,8 +35,8 @@ test.describe('slack app data connector', () => {
       await dataConnectorAdminPage.goto();
     });
 
-    await test.step('Create the UCF data connector', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'Unified Compliance Framework (UCF) Connector');
+    await test.step('Create the slack app data connector', async () => {
+      await dataConnectorAdminPage.createConnector(connectorName, 'Slack App Connector');
       await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
     });
 
@@ -42,13 +45,37 @@ test.describe('slack app data connector', () => {
     });
   });
 
-  test('Create a copy of a Slack app connector', async () => {
+  test('Create a copy of a Slack app connector', async ({ dataConnectorAdminPage, editSlackConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-438',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the slack app data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Slack App Connector');
+      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the slack app data connector', async () => {
+      await dataConnectorAdminPage.copyConnector('Slack App Connector', connectorToCopyName, connectorCopyName);
+      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editSlackConnectorPage.generalTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
   test('Delete a Slack app connector', async () => {
