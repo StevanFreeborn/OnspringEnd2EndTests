@@ -39,7 +39,7 @@ test.describe('security scorecard data connector', () => {
       await dataConnectorAdminPage.goto();
     });
 
-    await test.step('Create the Security Scorecard data connector', async () => {
+    await test.step('Create the security scorecard data connector', async () => {
       await dataConnectorAdminPage.createConnector(connectorName, 'Security Scorecard Data Connector');
       await dataConnectorAdminPage.page.waitForURL(editSecurityScorecardConnectorPage.pathRegex);
     });
@@ -49,13 +49,44 @@ test.describe('security scorecard data connector', () => {
     });
   });
 
-  test('Create a copy of a Security Scorecard connector', async ({}) => {
+  test('Create a copy of a Security Scorecard connector', async ({
+    dataConnectorAdminPage,
+    editSecurityScorecardConnectorPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-410',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the security scorecard data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Security Scorecard Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editSecurityScorecardConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the security scorecard data connector', async () => {
+      await dataConnectorAdminPage.copyConnector(
+        'Security Scorecard Data Connector',
+        connectorToCopyName,
+        connectorCopyName
+      );
+      await dataConnectorAdminPage.page.waitForURL(editSecurityScorecardConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editSecurityScorecardConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
   test('Delete a Security Scorecard connector', async ({}) => {
