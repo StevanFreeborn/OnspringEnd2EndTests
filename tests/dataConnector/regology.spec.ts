@@ -35,8 +35,8 @@ test.describe('regology data connector', () => {
       await dataConnectorAdminPage.goto();
     });
 
-    await test.step('Create the risk recon data connector', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'Risk Recon Data Connector');
+    await test.step('Create the regology data connector', async () => {
+      await dataConnectorAdminPage.createConnector(connectorName, 'Regology Data Connector');
       await dataConnectorAdminPage.page.waitForURL(editRegologyConnectorPage.pathRegex);
     });
 
@@ -45,21 +45,68 @@ test.describe('regology data connector', () => {
     });
   });
 
-  test('Create a copy of a Regology connector', async () => {
+  test('Create a copy of a Regology connector', async ({ dataConnectorAdminPage, editRegologyConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-847',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the regology data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Regology Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editRegologyConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the regology data connector', async () => {
+      await dataConnectorAdminPage.copyConnector('Regology Data Connector', connectorToCopyName, connectorCopyName);
+      await dataConnectorAdminPage.page.waitForURL(editRegologyConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editRegologyConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
-  test('Delete a Regology connector', async () => {
+  test('Delete a Regology connector', async ({ dataConnectorAdminPage, editRegologyConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-848',
     });
 
-    expect(true).toBeTruthy();
+    const connectorName = FakeDataFactory.createFakeConnectorName();
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the data connector to delete', async () => {
+      await dataConnectorAdminPage.createConnector(connectorName, 'Regology Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editRegologyConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Delete the data connector', async () => {
+      await dataConnectorAdminPage.deleteConnector(connectorName);
+    });
+
+    await test.step('Verify the data connector has been deleted', async () => {
+      const connectorRow = dataConnectorAdminPage.connectorsGrid.getByRole('row', { name: connectorName });
+
+      await expect(connectorRow).toBeHidden();
+    });
   });
 });
