@@ -82,12 +82,35 @@ test.describe('rapid ratings data connector', () => {
     });
   });
 
-  test('Delete a RapidRatings connector', async () => {
+  test('Delete a RapidRatings connector', async ({ dataConnectorAdminPage, editRapidRatingsConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-404',
     });
 
-    expect(true).toBeTruthy();
+    const connectorName = FakeDataFactory.createFakeConnectorName();
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the data connector to delete', async () => {
+      await dataConnectorAdminPage.createConnector(connectorName, 'RapidRatings Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Delete the data connector', async () => {
+      await dataConnectorAdminPage.deleteConnector(connectorName);
+    });
+
+    await test.step('Verify the data connector has been deleted', async () => {
+      const connectorRow = dataConnectorAdminPage.connectorsGrid.getByRole('row', { name: connectorName });
+
+      await expect(connectorRow).toBeHidden();
+    });
   });
 });
