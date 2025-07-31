@@ -7,6 +7,6 @@ export class EditUcfConnectorPage extends EditConnectorPage {
 
   constructor(page: Page) {
     super(page);
-    this.connectionTab = new UcfConnectionTab(page);
+    this.connectionTab = new UcfConnectionTab(this.page);
   }
 }

@@ -8,7 +8,7 @@ export abstract class EditConnectorPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Edit/;
-    this.saveButton = page.getByRole('link', { name: 'Save Changes' });
+    this.saveButton = this.page.getByRole('link', { name: 'Save Changes' });
   }
 
   async goto(id: number) {

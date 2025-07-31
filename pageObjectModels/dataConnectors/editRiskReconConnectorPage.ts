@@ -7,6 +7,6 @@ export class EditRiskReconConnectorPage extends EditConnectorPage {
 
   constructor(page: Page) {
     super(page);
-    this.connectionTab = new RiskReconConnectionTab(page);
+    this.connectionTab = new RiskReconConnectionTab(this.page);
   }
 }

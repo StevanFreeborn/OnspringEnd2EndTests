@@ -7,6 +7,6 @@ export class EditSlackConnectorPage extends EditConnectorPage {
 
   constructor(page: Page) {
     super(page);
-    this.generalTab = new SlackConnectorGeneralTab(page);
+    this.generalTab = new SlackConnectorGeneralTab(this.page);
   }
 }

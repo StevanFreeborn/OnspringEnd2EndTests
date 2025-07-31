@@ -7,6 +7,6 @@ export class EditSecurityScorecardConnectorPage extends EditConnectorPage {
 
   constructor(page: Page) {
     super(page);
-    this.connectionTab = new SecurityScorecardConnectionTab(page);
+    this.connectionTab = new SecurityScorecardConnectionTab(this.page);
   }
 }
