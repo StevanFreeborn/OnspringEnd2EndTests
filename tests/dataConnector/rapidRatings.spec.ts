@@ -46,13 +46,40 @@ test.describe('rapid ratings data connector', () => {
     });
   });
 
-  test('Create a copy of a RapidRatings connector', async () => {
+  test('Create a copy of a RapidRatings connector', async ({
+    dataConnectorAdminPage,
+    editRapidRatingsConnectorPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-403',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the rapid ratings data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'RapidRatings Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the rapid ratings data connector', async () => {
+      await dataConnectorAdminPage.copyConnector('RapidRatings Data Connector', connectorToCopyName, connectorCopyName);
+      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editRapidRatingsConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
   test('Delete a RapidRatings connector', async () => {
