@@ -45,13 +45,37 @@ test.describe('ascent data connector', () => {
     });
   });
 
-  test('Create a copy of an Ascent Data Connector', async ({}) => {
+  test('Create a copy of an Ascent Data Connector', async ({ dataConnectorAdminPage, editAscentConnectorPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-835',
     });
 
-    expect(true).toBeTruthy();
+    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    connectorsToDelete.push(connectorToCopyName, connectorCopyName);
+
+    await test.step('Navigate to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create the ascent data connector to copy', async () => {
+      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Ascent Data Connector');
+      await dataConnectorAdminPage.page.waitForURL(editAscentConnectorPage.pathRegex);
+    });
+
+    await test.step('Navigate back to the data connectors admin page', async () => {
+      await dataConnectorAdminPage.goto();
+    });
+
+    await test.step('Create a copy of the ascent data connector', async () => {
+      await dataConnectorAdminPage.copyConnector('Ascent Data Connector', connectorToCopyName, connectorCopyName);
+      await dataConnectorAdminPage.page.waitForURL(editAscentConnectorPage.pathRegex);
+    });
+
+    await test.step('Verify the data connector was created successfully', async () => {
+      await expect(editAscentConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+    });
   });
 
   test('Delete an Ascent Data Connector', async ({}) => {
