@@ -20,14 +20,14 @@ export class EditSecureFileDataConnectorPage extends EditConnectorPage {
   constructor(page: Page) {
     super(page);
     this.savePath = '/Admin/Integration/DataConnector/EditSecureFile';
-    this.connectionTabButton = page.getByRole('tab', { name: 'Connection' });
-    this.connectionTab = new SecureFileConnectionTab(page);
-    this.dataMappingTabButton = page.getByRole('tab', { name: 'Data Mapping' });
-    this.dataMappingTab = new SecureFileDataMappingTab(page);
-    this.integrationSettingsTabButton = page.getByRole('tab', { name: 'Integration Settings' });
-    this.integrationSettingsTab = new SecureFileIntegrationSettingsTab(page);
-    this.schedulingTabButton = page.getByRole('tab', { name: 'Scheduling' });
-    this.schedulingTab = new SecureFileSchedulingTab(page);
+    this.connectionTabButton = this.page.getByRole('tab', { name: 'Connection' });
+    this.connectionTab = new SecureFileConnectionTab(this.page);
+    this.dataMappingTabButton = this.page.getByRole('tab', { name: 'Data Mapping' });
+    this.dataMappingTab = new SecureFileDataMappingTab(this.page);
+    this.integrationSettingsTabButton = this.page.getByRole('tab', { name: 'Integration Settings' });
+    this.integrationSettingsTab = new SecureFileIntegrationSettingsTab(this.page);
+    this.schedulingTabButton = this.page.getByRole('tab', { name: 'Scheduling' });
+    this.schedulingTab = new SecureFileSchedulingTab(this.page);
   }
 
   private async save() {

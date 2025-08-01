@@ -1,18 +1,14 @@
 import { Locator, Page } from '@playwright/test';
-import { DataConnectorConnectionTab } from '../../componentObjectModels/tabs/dataConnectorConnectionTab';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export abstract class EditConnectorPage extends BaseAdminPage {
   readonly pathRegex: RegExp;
   protected readonly saveButton: Locator;
-  readonly connectionTabButton: Locator;
-  abstract readonly connectionTab: DataConnectorConnectionTab;
 
   constructor(page: Page) {
     super(page);
     this.pathRegex = /\/Admin\/Integration\/DataConnector\/\d+\/Edit/;
-    this.saveButton = page.getByRole('link', { name: 'Save Changes' });
-    this.connectionTabButton = page.getByRole('tab', { name: 'Connection' });
+    this.saveButton = this.page.getByRole('link', { name: 'Save Changes' });
   }
 
   async goto(id: number) {

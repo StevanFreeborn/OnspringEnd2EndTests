@@ -8,6 +8,7 @@ import { EditConnectorPage } from './editConnectorPage';
 
 export class EditBitsightConnectorPage extends EditConnectorPage {
   private readonly savePath: RegExp;
+  readonly connectionTabButton: Locator;
   readonly appMappingTabButton: Locator;
   readonly dataMappingTabButton: Locator;
   readonly schedulingTabButton: Locator;
@@ -19,13 +20,14 @@ export class EditBitsightConnectorPage extends EditConnectorPage {
   constructor(page: Page) {
     super(page);
     this.savePath = /\/Admin\/Integration\/DataConnector\/EditBitsightConnector/;
-    this.appMappingTabButton = page.getByRole('tab', { name: /app mapping/i });
-    this.dataMappingTabButton = page.getByRole('tab', { name: /data mapping/i });
-    this.schedulingTabButton = page.getByRole('tab', { name: /scheduling/i });
-    this.connectionTab = new BitsightConnectionTab(page);
-    this.appMappingTab = new BitsightAppMappingTab(page);
-    this.dataMappingTab = new BitsightDataMapping(page);
-    this.schedulingTab = new BitsightSchedulingTab(page);
+    this.connectionTabButton = this.page.getByRole('tab', { name: /connection/i });
+    this.appMappingTabButton = this.page.getByRole('tab', { name: /app mapping/i });
+    this.dataMappingTabButton = this.page.getByRole('tab', { name: /data mapping/i });
+    this.schedulingTabButton = this.page.getByRole('tab', { name: /scheduling/i });
+    this.connectionTab = new BitsightConnectionTab(this.page);
+    this.appMappingTab = new BitsightAppMappingTab(this.page);
+    this.dataMappingTab = new BitsightDataMapping(this.page);
+    this.schedulingTab = new BitsightSchedulingTab(this.page);
   }
 
   private async save() {
