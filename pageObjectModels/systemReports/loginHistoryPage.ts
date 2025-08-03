@@ -104,7 +104,9 @@ export class LoginHistoryPage extends BaseAdminPage {
     displayLoggedInUsersOnly = false,
     dateFilter = { type: 'All Dates' },
   }: LoginHistoryFilter) {
-    await this.displayOnlyLoggedInUsersCheckbox.setChecked(displayLoggedInUsersOnly);
+    await this.filterLoginHistory(async () => {
+      await this.displayOnlyLoggedInUsersCheckbox.setChecked(displayLoggedInUsersOnly);
+    });
 
     if (displayLoggedInUsersOnly === true) {
       return;
