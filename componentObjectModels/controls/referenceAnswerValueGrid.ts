@@ -22,9 +22,16 @@ export class ReferenceAnswerValueGrid {
     await this.addAllValuesButton.click();
     await addAllValuesModal.waitFor();
 
-    const addAllValuesResponse = page.waitForResponse(this.getSurveyAnswerValuesPathRegex);
-    await addAllValuesModal.getByRole('button', { name: 'Ok' }).click();
-    await addAllValuesResponse;
+    const okButton = addAllValuesModal.getByRole('button', { name: 'Ok' });
+    const isOkButtonVisible = await okButton.isVisible();
+
+    if (isOkButtonVisible) {
+      const addAllValuesResponse = page.waitForResponse(this.getSurveyAnswerValuesPathRegex);
+      await addAllValuesModal.getByRole('button', { name: 'Ok' }).click();
+      await addAllValuesResponse;
+    } else {
+      await addAllValuesModal.getByRole('button', { name: 'Close' }).click();
+    }
   }
 
   // TODO: Need to implement this method
