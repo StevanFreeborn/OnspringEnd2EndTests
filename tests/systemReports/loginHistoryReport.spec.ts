@@ -72,7 +72,7 @@ test.describe('login history report', () => {
     });
   });
 
-  test('Display uses currently logged in', async ({ loginHistoryPage, sysAdminUser }) => {
+  test('Display users currently logged in', async ({ loginHistoryPage, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-550',

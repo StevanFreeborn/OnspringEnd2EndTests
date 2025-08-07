@@ -52,7 +52,9 @@ export class LoginHistoryPage extends BaseAdminPage {
   }
 
   async goto() {
+    const response = this.page.waitForResponse(this.getLoginHistoryPath);
     await this.page.goto(this.path);
+    await response;
   }
 
   private async filterLoginHistory(action: () => Promise<void>) {
@@ -99,14 +101,24 @@ export class LoginHistoryPage extends BaseAdminPage {
     });
   }
 
+  private async checkDisplayLoggedInUsersOnly(displayLoggedInUsersOnly: boolean) {
+    const checkBoxState = await this.displayOnlyLoggedInUsersCheckbox.isChecked();
+
+    if (checkBoxState === displayLoggedInUsersOnly) {
+      return;
+    }
+
+    await this.filterLoginHistory(async () => {
+      await this.displayOnlyLoggedInUsersCheckbox.setChecked(displayLoggedInUsersOnly);
+    });
+  }
+
   async filterReport({
     user = 'All Users',
     displayLoggedInUsersOnly = false,
     dateFilter = { type: 'All Dates' },
   }: LoginHistoryFilter) {
-    await this.filterLoginHistory(async () => {
-      await this.displayOnlyLoggedInUsersCheckbox.setChecked(displayLoggedInUsersOnly);
-    });
+    await this.checkDisplayLoggedInUsersOnly(displayLoggedInUsersOnly);
 
     if (displayLoggedInUsersOnly === true) {
       return;
