@@ -55,7 +55,7 @@ type RequestOptions = {
   timeout?: number;
 };
 
-class RequestContextProxy implements APIRequestContext {
+class APIRequestContextDecorator implements APIRequestContext {
   private context: APIRequestContext;
   private responseAssertions: Array<(response: APIResponse) => void>;
 
@@ -171,13 +171,13 @@ export async function createRequestContextFixture(
     },
   });
 
-  const proxiedContext = new RequestContextProxy(context);
+  const decoratedAPIContext = new APIRequestContextDecorator(context);
 
-  proxiedContext.onResponse(ensureCacheControlAndPragmaHeadersPresent);
+  decoratedAPIContext.onResponse(ensureCacheControlAndPragmaHeadersPresent);
 
-  await use(proxiedContext);
+  await use(decoratedAPIContext);
 
-  await proxiedContext.dispose();
+  await decoratedAPIContext.dispose();
 }
 
 export async function createApiSetupFixture(use: (r: ApiSetupResult) => Promise<void>) {
