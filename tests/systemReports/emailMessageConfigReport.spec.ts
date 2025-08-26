@@ -47,12 +47,7 @@ test.describe('email message configurations report', () => {
     });
 
     await test.step('Create an email body to find with a filter', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.messagingTabButton.click();
-      await appAdminPage.messagingTab.createEmailBody(emailBody.name);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
-      await editEmailBodyPage.updateEmailBody(emailBody);
-      await editEmailBodyPage.save();
+      await createEmailBody(app, emailBody, appAdminPage, editEmailBodyPage);
     });
 
     await test.step('Navigate to the email messaging configurations report page', async () => {
@@ -76,21 +71,88 @@ test.describe('email message configurations report', () => {
     });
   });
 
-  test('Sort the email messaging configurations report', async () => {
+  test('Sort the email messaging configurations report', async ({
+    app,
+    appAdminPage,
+    editEmailBodyPage,
+    emailMessageConfigReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-361',
     });
 
-    expect(true).toBeTruthy();
+    const firstEmailBody = new EmailBody({
+      name: FakeDataFactory.createFakeEmailBodyName(),
+      appName: app.name,
+      status: true,
+      subject: 'Test A',
+      body: 'Test',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+    });
+
+    const secondEmailBody = new EmailBody({
+      name: FakeDataFactory.createFakeEmailBodyName(),
+      appName: app.name,
+      status: true,
+      subject: 'Test B',
+      body: 'Test',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+    });
+
+    await test.step('Create email bodies to sort in the report', async () => {
+      await createEmailBody(app, firstEmailBody, appAdminPage, editEmailBodyPage);
+      await createEmailBody(app, secondEmailBody, appAdminPage, editEmailBodyPage);
+    });
+
+    await test.step('Navigate to the email messaging configurations report page', async () => {
+      await emailMessageConfigReportPage.goto();
+    });
+
+    await test.step('Filter the report to just the test app', async () => {
+      await emailMessageConfigReportPage.filterReport({
+        appOrSurvey: app.name,
+        type: 'Email Body',
+        status: 'OK',
+      });
+    });
+
+    await test.step('Sort the email messaging configurations report', async () => {
+      await emailMessageConfigReportPage.sortGridBy('App/Survey Name', 'ascending');
+    });
+
+    await test.step('Verify the email messaging configurations report is sorted', async () => {
+      const rows = await emailMessageConfigReportPage.getRows();
+
+      await expect(rows[0]).toHaveText(new RegExp(`^${app.name}.*${firstEmailBody.name}.*$`));
+      await expect(rows[1]).toHaveText(new RegExp(`^${app.name}.*${secondEmailBody.name}.*$`));
+    });
   });
 
   test('Bulk edit and update some messaging configurations sender email address', async () => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
-      description: 'Test-361',
+      description: 'Test-362',
     });
 
     expect(true).toBeTruthy();
   });
 });
+
+async function createEmailBody(
+  app: App,
+  emailBody: EmailBody,
+  appAdminPage: AppAdminPage,
+  editEmailBodyPage: EditEmailBodyPage
+) {
+  await appAdminPage.goto(app.id);
+  await appAdminPage.messagingTabButton.click();
+  await appAdminPage.messagingTab.createEmailBody(emailBody.name);
+  await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+  await editEmailBodyPage.updateEmailBody(emailBody);
+  await editEmailBodyPage.save();
+}

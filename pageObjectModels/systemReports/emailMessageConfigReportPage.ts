@@ -13,12 +13,23 @@ type EmailType =
 
 type FromAddressStatus = 'All' | 'OK' | 'Requires Attention';
 
+type SortableGridColumn =
+  | 'App/Survey Name'
+  | 'Email Type'
+  | 'Item Name'
+  | 'Current From Name'
+  | 'Current From Address'
+  | 'From Address Status';
+
+type SortDirection = 'ascending' | 'descending';
+
 export class EmailMessageConfigReportPage extends BaseAdminPage {
   private readonly getConfigsPath: string;
   private readonly emailTypeSelector: Locator;
   private readonly fromAddressStatusSelector: Locator;
   private readonly appOrSurveySelector: Locator;
   private readonly reportGrid: Locator;
+  private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
   readonly path: string;
 
@@ -31,6 +42,7 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
       .getByRole('listbox');
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.reportGrid = this.page.locator('#grid');
+    this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
     this.path = '/Admin/Reporting/Messaging/Configurations';
   }
@@ -105,5 +117,18 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
 
   async getRowByName(name: string | RegExp) {
     return this.reportGridBody.getByRole('row', { name });
+  }
+
+  async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
+    const columnHeader = this.reportGridHeader.getByRole('columnheader', { name: column });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getConfigsPath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
+    }
   }
 }
