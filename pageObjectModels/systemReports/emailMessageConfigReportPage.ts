@@ -31,6 +31,10 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
+  private readonly selectAllCheckbox: Locator;
+  private readonly bulkActionButton: Locator;
+  private readonly bulkActionMenu: Locator;
+  private readonly bulkEditModal: BulkEditModal;
   readonly path: string;
 
   constructor(page: Page) {
@@ -44,6 +48,10 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
+    this.selectAllCheckbox = this.reportGrid.locator('[data-select-all]');
+    this.bulkActionButton = this.reportGrid.locator('[data-bulk-menu-button]');
+    this.bulkActionMenu = this.reportGrid.locator('.popover-menu');
+    this.bulkEditModal = new BulkEditModal(this.page);
     this.path = '/Admin/Reporting/Messaging/Configurations';
   }
 
@@ -130,5 +138,59 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
 
       currentSortDirection = await columnHeader.getAttribute('aria-sort');
     }
+  }
+
+  async selectAllRecords() {
+    await this.selectAllCheckbox.check();
+  }
+
+  async bulkEditSelectedRecords(localPart?: string, domain?: string) {
+    await this.bulkActionButton.click();
+    await this.bulkActionMenu.waitFor();
+    await this.bulkActionMenu.getByText('Edit Selected Configurations').click();
+    await this.bulkEditModal.fillOutForm(localPart, domain);
+
+    const reloadNavigation = this.page.waitForURL(this.path);
+    const getConfigsResponse = this.page.waitForResponse(this.getConfigsPath);
+    await this.bulkEditModal.saveChanges();
+    await reloadNavigation;
+    await getConfigsResponse;
+  }
+}
+
+class BulkEditModal {
+  private readonly modal: Locator;
+  private readonly saveButton: Locator;
+  private readonly localPartInput: Locator;
+  private readonly domainSelector: Locator;
+  private readonly progressDialog: Locator;
+
+  constructor(page: Page) {
+    this.modal = page.getByRole('dialog', { name: 'Bulk Edit: Email Messaging Configurations' });
+    this.saveButton = this.modal.getByRole('button', { name: 'Save' });
+    this.localPartInput = this.modal.locator('.label:has-text("Local Part (mailbox)") + .data').getByRole('textbox');
+    this.domainSelector = this.modal.locator('.label:has-text("Domain") + .data').getByRole('listbox');
+    this.progressDialog = page.getByRole('dialog', { name: /updating items/i });
+  }
+
+  private async selectDomain(domain: string) {
+    await this.domainSelector.click();
+    await this.domainSelector.page().getByRole('option', { name: domain }).click();
+  }
+
+  async fillOutForm(localPart?: string, domain?: string) {
+    if (localPart) {
+      await this.localPartInput.fill(localPart);
+    }
+
+    if (domain) {
+      await this.selectDomain(domain);
+    }
+  }
+
+  async saveChanges() {
+    await this.saveButton.click();
+    await this.progressDialog.waitFor();
+    await this.progressDialog.waitFor({ state: 'hidden' });
   }
 }

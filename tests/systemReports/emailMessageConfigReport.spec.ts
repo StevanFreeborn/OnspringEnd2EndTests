@@ -133,13 +133,66 @@ test.describe('email message configurations report', () => {
     });
   });
 
-  test('Bulk edit and update some messaging configurations sender email address', async () => {
+  test('Bulk edit and update some messaging configurations sender email address', async ({
+    app,
+    appAdminPage,
+    editEmailBodyPage,
+    emailMessageConfigReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-362',
     });
 
-    expect(true).toBeTruthy();
+    const emailBody = new EmailBody({
+      name: FakeDataFactory.createFakeEmailBodyName(),
+      appName: app.name,
+      status: true,
+      subject: 'Test C',
+      body: 'Test',
+      fromName: 'Automation Test',
+      fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
+      recipientsBasedOnFields: ['Created By'],
+    });
+
+    await test.step('Create an email body for the report', async () => {
+      await createEmailBody(app, emailBody, appAdminPage, editEmailBodyPage);
+    });
+
+    await test.step('Navigate to the email messaging configurations report page', async () => {
+      await emailMessageConfigReportPage.goto();
+    });
+
+    await test.step('Filter the report to just the test app', async () => {
+      await emailMessageConfigReportPage.filterReport({
+        appOrSurvey: app.name,
+        type: 'Email Body',
+        status: 'OK',
+      });
+    });
+
+    const newLocalText = 'automation-changed';
+
+    await test.step('Bulk edit the email body', async () => {
+      await emailMessageConfigReportPage.selectAllRecords();
+      await emailMessageConfigReportPage.bulkEditSelectedRecords(newLocalText, 'onspring.tech');
+    });
+
+    await test.step('Verify the email body was updated', async () => {
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await emailMessageConfigReportPage.page.waitForTimeout(1000);
+      await emailMessageConfigReportPage.filterReport({
+        appOrSurvey: app.name,
+        type: 'Email Body',
+        status: 'OK',
+      });
+
+      const rows = await emailMessageConfigReportPage.getRows();
+
+      for (const row of rows) {
+        await expect(row).toHaveText(new RegExp(`^.*${newLocalText}.*$`));
+      }
+    });
   });
 });
 
