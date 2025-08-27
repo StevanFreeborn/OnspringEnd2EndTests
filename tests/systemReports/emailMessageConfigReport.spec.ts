@@ -171,11 +171,14 @@ test.describe('email message configurations report', () => {
       });
     });
 
-    const newLocalText = 'automation-changed';
+    const fakeEmail = FakeDataFactory.createFakeEmailFromAddress();
+    const fakeEmailParts = fakeEmail.split('@');
+    const newLocalText = fakeEmailParts[0];
+    const newDomain = fakeEmailParts[1];
 
     await test.step('Bulk edit the email body', async () => {
       await emailMessageConfigReportPage.selectAllRecords();
-      await emailMessageConfigReportPage.bulkEditSelectedRecords(newLocalText, 'onspring.tech');
+      await emailMessageConfigReportPage.bulkEditSelectedRecords(newLocalText, newDomain);
     });
 
     await test.step('Verify the email body was updated', async () => {
