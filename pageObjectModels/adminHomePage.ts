@@ -140,6 +140,10 @@ export class AdminHomePage extends BaseAdminPage {
     await this.page.goto(this.path);
   }
 
+  async createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain: string) {
+      throw new Error('Method not implemented.');
+  }
+
   async createEmailSyncCopyUsingIntegrationsTileButton(emailSyncToCopyName: string, emailSyncCopyName: string) {
     await this.integrationTileLink.hover();
     await this.integrationTileCreateButton.waitFor();

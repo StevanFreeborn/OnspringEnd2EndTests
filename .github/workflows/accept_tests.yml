@@ -26,6 +26,7 @@ env:
   SFDC_HOSTNAME: ${{ secrets.SFDC_HOSTNAME }}
   SFDC_USERNAME: ${{ secrets.SFDC_USERNAME }}
   SFDC_PASSWORD: ${{ secrets.SFDC_PASSWORD }}
+  CUSTOM_EMAIL_SENDING_DOMAIN: ${{ secrets.CUSTOM_EMAIL_SENDING_DOMAIN }}
 on:
   pull_request:
     branches:
