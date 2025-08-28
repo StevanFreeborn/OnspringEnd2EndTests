@@ -25,9 +25,19 @@ test.describe(
     tag: [Tags.NotFedRAMP],
   },
   () => {
+    const emailSendingDomainsToDelete: string[] = [];
+
     test.beforeEach(({ environment }) => {
       // eslint-disable-next-line playwright/no-skipped-test
       test.skip(environment.isFedspring(), 'This feature is not applicable to the FEDSPRING environment');
+    });
+
+    test.afterEach(async ({ emailSendingDomainAdminPage }) => {
+      await emailSendingDomainAdminPage.goto();
+
+      for (const emailSendingDomain of emailSendingDomainsToDelete) {
+        await emailSendingDomainAdminPage.deleteEmailSendingDomain(emailSendingDomain);
+      }
     });
 
     test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
@@ -40,6 +50,7 @@ test.describe(
       });
 
       const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+      emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the admin home page', async () => {
         await adminHomePage.goto();
@@ -65,6 +76,7 @@ test.describe(
       });
 
       const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+      emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the admin home page', async () => {
         await adminHomePage.goto();
@@ -90,6 +102,7 @@ test.describe(
       });
 
       const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+      emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the email sending domain home page', async () => {
         await emailSendingDomainAdminPage.goto();
@@ -113,13 +126,38 @@ test.describe(
       expect(true).toBe(true);
     });
 
-    test('Delete a custom email sending domain', async () => {
+    test('Delete a custom email sending domain', async ({
+      emailSendingDomainAdminPage,
+      editEmailSendingDomainPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-371',
       });
 
-      expect(true).toBe(true);
+      const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+
+      await test.step('Navigate to the email sending domain admin page', async () => {
+        await emailSendingDomainAdminPage.goto();
+      });
+
+      await test.step('Create an email sending domain to delete', async () => {
+        await emailSendingDomainAdminPage.createEmailSendingDomain(emailSendingDomain);
+        await emailSendingDomainAdminPage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+      });
+
+      await test.step('Navigate back to the email sending domain admin page', async () => {
+        await emailSendingDomainAdminPage.goto();
+      });
+
+      await test.step('Delete the email sending domain', async () => {
+        await emailSendingDomainAdminPage.deleteEmailSendingDomain(emailSendingDomain);
+      });
+
+      await test.step('Verify the email sending domain was deleted', async () => {
+        const row = await emailSendingDomainAdminPage.getEmailSendingDomainRowByName(emailSendingDomain);
+        await expect(row).toBeHidden();
+      });
     });
   }
 );

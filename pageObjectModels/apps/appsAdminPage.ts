@@ -20,11 +20,11 @@ export class AppsAdminPage extends BaseAdminPage {
     this.getAppsListPath = '/Admin/App/AppsListRead';
     this.path = '/Admin/App';
     this.deleteAppPathRegex = /\/Admin\/App\/\d+\/Delete/;
-    this.createAppButton = page.locator('.create-button');
-    this.appGrid = page.locator('#grid');
-    this.createAppDialog = new CreateAppDialog(page);
-    this.createAppModal = new CreateAppModal(page);
-    this.deleteAppDialog = new DeleteAppDialog(page);
+    this.createAppButton = this.page.locator('.create-button');
+    this.appGrid = this.page.locator('#grid');
+    this.createAppDialog = new CreateAppDialog(this.page);
+    this.createAppModal = new CreateAppModal(this.page);
+    this.deleteAppDialog = new DeleteAppDialog(this.page);
   }
 
   async goto() {

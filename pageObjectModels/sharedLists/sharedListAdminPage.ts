@@ -18,10 +18,10 @@ export class SharedListAdminPage extends BaseAdminPage {
     this.getSharedListPath = '/Admin/SharedList/GetListPage';
     this.pathRegex = /\/Admin\/SharedList/;
     this.deleteListPathRegex = /\/Admin\/SharedList\/\d+\/Delete/;
-    this.createListButton = page.getByRole('button', { name: 'Create List' });
-    this.listsGrid = page.locator('#grid');
-    this.createListDialog = new CreateListDialog(page);
-    this.deleteListDialog = new DeleteListDialog(page);
+    this.createListButton = this.page.getByRole('button', { name: 'Create List' });
+    this.listsGrid = this.page.locator('#grid');
+    this.createListDialog = new CreateListDialog(this.page);
+    this.deleteListDialog = new DeleteListDialog(this.page);
   }
 
   async goto() {
