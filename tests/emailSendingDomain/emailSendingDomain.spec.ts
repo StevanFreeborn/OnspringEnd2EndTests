@@ -3,6 +3,7 @@ import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditEmailSendingDomainPage } from '../../pageObjectModels/emailSendingDomain/editEmailSendingDomainPage';
 import { AnnotationType } from '../annotations';
+import { Tags } from '../tags';
 
 type EmailSendingDomainTestFixtures = {
   adminHomePage: AdminHomePage;
@@ -14,81 +15,92 @@ const test = base.extend<EmailSendingDomainTestFixtures>({
   editEmailSendingDomainPage: async ({ sysAdminPage }, use) => await use(new EditEmailSendingDomainPage(sysAdminPage)),
 });
 
-test.describe('email sending domain', () => {
-  test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
-    adminHomePage,
-    editEmailSendingDomainPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-367',
+test.describe(
+  'email sending domain',
+  {
+    tag: [Tags.NotFedRAMP],
+  },
+  () => {
+    test.beforeEach(({ environment }) => {
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip(environment.isFedspring(), 'This feature is not applicable to the FEDSPRING environment');
     });
 
-    const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+    test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
+      adminHomePage,
+      editEmailSendingDomainPage,
+    }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-367',
+      });
 
-    await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+
+      await test.step('Navigate to the admin home page', async () => {
+        await adminHomePage.goto();
+      });
+
+      await test.step('Create an email sending domain', async () => {
+        await adminHomePage.createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain);
+        await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+      });
+
+      await test.step('Verify the email sending domain was created', async () => {
+        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+      });
     });
 
-    await test.step('Create an email sending domain', async () => {
-      await adminHomePage.createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain);
-      await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+    test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async ({
+      adminHomePage,
+      editEmailSendingDomainPage,
+    }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-368',
+      });
+
+      const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+
+      await test.step('Navigate to the admin home page', async () => {
+        await adminHomePage.goto();
+      });
+
+      await test.step('Create an email sending domain', async () => {
+        await adminHomePage.createEmailSendingDomainUsingInstanceTileCreateButton(emailSendingDomain);
+        await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+      });
+
+      await test.step('Verify the email sending domain was created', async () => {
+        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+      });
     });
 
-    await test.step('Verify the email sending domain was created', async () => {
-      await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
-    });
-  });
+    test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async () => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-369',
+      });
 
-  test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async ({
-    adminHomePage,
-    editEmailSendingDomainPage,
-  }) => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-368',
+      expect(true).toBe(true);
     });
 
-    const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+    test('Setup an verify an email sending domain', async () => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-370',
+      });
 
-    await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      expect(true).toBe(true);
     });
 
-    await test.step('Create an email sending domain', async () => {
-      await adminHomePage.createEmailSendingDomainUsingInstanceTileCreateButton(emailSendingDomain);
-      await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+    test('Delete a custom email sending domain', async () => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-371',
+      });
+
+      expect(true).toBe(true);
     });
-
-    await test.step('Verify the email sending domain was created', async () => {
-      await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
-    });
-  });
-
-  test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-369',
-    });
-
-    expect(true).toBe(true);
-  });
-
-  test('Setup an verify an email sending domain', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-370',
-    });
-
-    expect(true).toBe(true);
-  });
-
-  test('Delete a custom email sending domain', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-371',
-    });
-
-    expect(true).toBe(true);
-  });
-});
+  }
+);
