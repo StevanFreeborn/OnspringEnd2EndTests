@@ -2,17 +2,21 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { EditEmailSendingDomainPage } from '../../pageObjectModels/emailSendingDomain/editEmailSendingDomainPage';
+import { EmailSendingDomainAdminPage } from '../../pageObjectModels/emailSendingDomain/emailSendingDomainAdminPage';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
 
 type EmailSendingDomainTestFixtures = {
   adminHomePage: AdminHomePage;
   editEmailSendingDomainPage: EditEmailSendingDomainPage;
+  emailSendingDomainAdminPage: EmailSendingDomainAdminPage;
 };
 
 const test = base.extend<EmailSendingDomainTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   editEmailSendingDomainPage: async ({ sysAdminPage }, use) => await use(new EditEmailSendingDomainPage(sysAdminPage)),
+  emailSendingDomainAdminPage: async ({ sysAdminPage }, use) =>
+    await use(new EmailSendingDomainAdminPage(sysAdminPage)),
 });
 
 test.describe(
@@ -76,13 +80,28 @@ test.describe(
       });
     });
 
-    test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async () => {
+    test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async ({
+      emailSendingDomainAdminPage,
+      editEmailSendingDomainPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-369',
       });
 
-      expect(true).toBe(true);
+      const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+
+      await test.step('Navigate to the email sending domain home page', async () => {
+        await emailSendingDomainAdminPage.goto();
+      });
+
+      await test.step('Create an email sending domain', async () => {
+        await emailSendingDomainAdminPage.createEmailSendingDomain(emailSendingDomain);
+      });
+
+      await test.step('Verify the email sending domain was created', async () => {
+        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+      });
     });
 
     test('Setup an verify an email sending domain', async () => {
