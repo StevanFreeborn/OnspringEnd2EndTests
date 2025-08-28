@@ -5,6 +5,7 @@ import { ContainersAdminPage } from '../pageObjectModels/containers/containersAd
 import { DashboardsAdminPage } from '../pageObjectModels/dashboards/dashboardsAdminPage';
 import { DataConnectorAdminPage } from '../pageObjectModels/dataConnectors/dataConnectorAdminPage';
 import { DataImportsAdminPage } from '../pageObjectModels/dataImports/dataImportsAdminPage';
+import { EmailSendingDomainAdminPage } from '../pageObjectModels/emailSendingDomain/emailSendingDomainAdminPage';
 import { EmailSyncAdminPage } from '../pageObjectModels/emailSyncs/emailSyncAdminPage';
 import { GroupsSecurityAdminPage } from '../pageObjectModels/groups/groupsSecurityAdminPage';
 import { EmailTemplateAdminPage } from '../pageObjectModels/messaging/emailTemplateAdminPage';
@@ -13,6 +14,7 @@ import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityA
 import { SharedListAdminPage } from '../pageObjectModels/sharedLists/sharedListAdminPage';
 import { SurveysAdminPage } from '../pageObjectModels/surveys/surveysAdminPage';
 import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityAdminPage';
+import { Tags } from '../tests/tags';
 
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
@@ -55,9 +57,17 @@ teardown.describe('cleanup', () => {
     await new SharedListAdminPage(sysAdminPage).deleteAllTestLists();
   });
 
-  teardown('cleanup:sendingNumbers delete all sending numbers created as part of tests', async ({ sysAdminPage }) => {
-    await new SendingNumberAdminPage(sysAdminPage).deleteAllTestNumbers();
-  });
+  teardown(
+    'cleanup:sendingNumbers delete all sending numbers created as part of tests',
+    {
+      tag: [Tags.NotFedRAMP],
+    },
+    async ({ sysAdminPage, environment }) => {
+      teardown.skip(environment.isFedspring(), 'This is not applicable to the FEDSPRING environment');
+
+      await new SendingNumberAdminPage(sysAdminPage).deleteAllTestNumbers();
+    }
+  );
 
   teardown('cleanup:connectors delete all data connectors created as part of tests', async ({ sysAdminPage }) => {
     await new DataConnectorAdminPage(sysAdminPage).deleteAllTestConnectors();
@@ -81,4 +91,16 @@ teardown.describe('cleanup', () => {
   teardown('cleanup:emailSyncs delete all email syncs created as part of tests', async ({ sysAdminPage }) => {
     await new EmailSyncAdminPage(sysAdminPage).deleteAllTestEmailSyncs();
   });
+
+  teardown(
+    'cleanup:emailSendingDomains delete all email sending domains created as part of tests',
+    {
+      tag: [Tags.NotFedRAMP],
+    },
+    async ({ sysAdminPage, environment }) => {
+      teardown.skip(environment.isFedspring(), 'This is not applicable to the FEDSPRING environment');
+
+      await new EmailSendingDomainAdminPage(sysAdminPage).deleteAllTestEmailSendingDomains();
+    }
+  );
 });

@@ -1,10 +1,12 @@
 import { CreateEmailSendingDomainDialog } from '../../componentObjectModels/dialogs/createEmailSendingDomainDialog';
 import { DeleteEmailSendingDomainDialog } from '../../componentObjectModels/dialogs/deleteEmailSendingDomainDialog';
+import { env } from '../../env';
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class EmailSendingDomainAdminPage extends BaseAdminPage {
   private readonly getListPath: string;
+  private readonly deleteEmailSendingDomainPathRegex: RegExp;
   private readonly createEmailSendingDomainButton: Locator;
   private readonly createEmailSendingDomainDialog: CreateEmailSendingDomainDialog;
   private readonly emailSendingDomainGrid: Locator;
@@ -15,6 +17,7 @@ export class EmailSendingDomainAdminPage extends BaseAdminPage {
     super(page);
     this.path = '/Admin/EmailSendingDomain';
     this.getListPath = '/Admin/EmailSendingDomain/GetListPage';
+    this.deleteEmailSendingDomainPathRegex = /Admin\/EmailSendingDomain\/\d+\/Delete/;
     this.createEmailSendingDomainButton = this.page.getByRole('button', { name: 'Create Email Sending Domain' });
     this.createEmailSendingDomainDialog = new CreateEmailSendingDomainDialog(this.page);
     this.emailSendingDomainGrid = this.page.locator('#grid');
@@ -79,5 +82,29 @@ export class EmailSendingDomainAdminPage extends BaseAdminPage {
   async getEmailSendingDomainRowByName(emailSendingDomain: string) {
     await this.scrollAllIntoView();
     return this.emailSendingDomainGrid.getByRole('row', { name: emailSendingDomain });
+  }
+
+  async deleteAllTestEmailSendingDomains() {
+    await this.goto();
+    await this.scrollAllIntoView();
+
+    const deleteListRow = this.emailSendingDomainGrid
+      .getByRole('row', { name: new RegExp(env.CUSTOM_EMAIL_SENDING_DOMAIN, 'i') })
+      .last();
+
+    let isVisible = await deleteListRow.isVisible();
+
+    while (isVisible) {
+      await deleteListRow.hover();
+      await deleteListRow.getByTitle('Delete Email Sending Domain').click();
+
+      const deleteResponse = this.page.waitForResponse(this.deleteEmailSendingDomainPathRegex);
+
+      await this.deleteEmailSendingDomainDialog.deleteButton.click();
+
+      await deleteResponse;
+
+      isVisible = await deleteListRow.isVisible();
+    }
   }
 }
