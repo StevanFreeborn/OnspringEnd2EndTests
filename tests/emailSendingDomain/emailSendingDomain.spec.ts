@@ -40,13 +40,29 @@ test.describe('email sending domain', () => {
     });
   });
 
-  test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async () => {
+  test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async ({
+    adminHomePage,
+    editEmailSendingDomainPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-368',
     });
 
-    expect(true).toBe(true);
+    const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create an email sending domain', async () => {
+      await adminHomePage.createEmailSendingDomainUsingInstanceTileCreateButton(emailSendingDomain);
+      await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+    });
+
+    await test.step('Verify the email sending domain was created', async () => {
+      await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+    });
   });
 
   test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async () => {

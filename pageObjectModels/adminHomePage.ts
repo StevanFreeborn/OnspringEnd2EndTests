@@ -142,13 +142,24 @@ export class AdminHomePage extends BaseAdminPage {
     this.createEmailSyncDialog = new createEmailSyncDialog(page);
 
     this.instanceTileLink = this.getTileLink('Instance');
-    this.instanceTileCreateButton = this.getTileCreateButton('Instance');
-    this.instanceCreateMenu = this.getTileCreateMenu('Instance');
+    this.instanceTileCreateButton = this.getTileCreateButton('InstanceConfig');
+    this.instanceCreateMenu = this.getTileCreateMenu('InstanceConfig');
     this.createEmailSendingDomainDialog = new CreateEmailSendingDomainDialog(page);
   }
 
   async goto() {
     await this.page.goto(this.path);
+  }
+
+  async createEmailSendingDomainUsingInstanceTileCreateButton(emailSendingDomain: string) {
+    await this.instanceTileLink.hover();
+    await this.instanceTileCreateButton.waitFor();
+    await this.instanceTileCreateButton.click();
+    await this.instanceCreateMenu.waitFor();
+    await this.instanceCreateMenu.getByText('Email Sending Domain').click();
+
+    await this.createEmailSendingDomainDialog.nameInput.fill(emailSendingDomain);
+    await this.createEmailSendingDomainDialog.saveButton.click();
   }
 
   async createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain: string) {
