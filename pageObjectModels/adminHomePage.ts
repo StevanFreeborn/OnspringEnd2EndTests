@@ -5,6 +5,7 @@ import { CreateDashboardDialog } from '../componentObjectModels/dialogs/createDa
 import { CreateDataConnectorDialog } from '../componentObjectModels/dialogs/createDataConnectorDialog';
 import { CreateDynamicDocumentDialogForApp } from '../componentObjectModels/dialogs/createDynamicDocumentDialog';
 import { CreateEmailBodyDialogForApp } from '../componentObjectModels/dialogs/createEmailBodyDialog';
+import { CreateEmailSendingDomainDialog } from '../componentObjectModels/dialogs/createEmailSendingDomainDialog';
 import { createEmailSyncDialog } from '../componentObjectModels/dialogs/createEmailSyncDialog';
 import { CreateEmailTemplateDialog } from '../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
@@ -68,6 +69,11 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createEmailTemplateDialog: CreateEmailTemplateDialog;
 
   readonly createEmailSyncDialog: createEmailSyncDialog;
+
+  readonly instanceTileLink: Locator;
+  readonly instanceTileCreateButton: Locator;
+  readonly instanceCreateMenu: Locator;
+  readonly createEmailSendingDomainDialog: CreateEmailSendingDomainDialog;
 
   private getTileLink(tileName: string) {
     return this.page.locator('.landing-list-item-container .image-link', {
@@ -134,6 +140,11 @@ export class AdminHomePage extends BaseAdminPage {
     this.createEmailTemplateDialog = new CreateEmailTemplateDialog(page);
 
     this.createEmailSyncDialog = new createEmailSyncDialog(page);
+
+    this.instanceTileLink = this.getTileLink('Instance');
+    this.instanceTileCreateButton = this.getTileCreateButton('Instance');
+    this.instanceCreateMenu = this.getTileCreateMenu('Instance');
+    this.createEmailSendingDomainDialog = new CreateEmailSendingDomainDialog(page);
   }
 
   async goto() {
@@ -141,7 +152,12 @@ export class AdminHomePage extends BaseAdminPage {
   }
 
   async createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain: string) {
-      throw new Error('Method not implemented.');
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.emailSendingDomainMenuOption.click();
+
+    await this.createEmailSendingDomainDialog.nameInput.fill(emailSendingDomain);
+    await this.createEmailSendingDomainDialog.saveButton.click();
   }
 
   async createEmailSyncCopyUsingIntegrationsTileButton(emailSyncToCopyName: string, emailSyncCopyName: string) {

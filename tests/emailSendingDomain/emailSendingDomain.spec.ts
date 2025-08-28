@@ -15,7 +15,10 @@ const test = base.extend<EmailSendingDomainTestFixtures>({
 });
 
 test.describe('email sending domain', () => {
-  test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({ adminHomePage }) => {
+  test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
+    adminHomePage,
+    editEmailSendingDomainPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-367',
@@ -29,11 +32,12 @@ test.describe('email sending domain', () => {
 
     await test.step('Create an email sending domain', async () => {
       await adminHomePage.createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain);
+      await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
     });
 
-    await test.step('Verify the email sending domain was created', async () => {});
-
-    expect(true).toBe(true);
+    await test.step('Verify the email sending domain was created', async () => {
+      await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+    });
   });
 
   test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async () => {
@@ -70,5 +74,5 @@ test.describe('email sending domain', () => {
     });
 
     expect(true).toBe(true);
-  })
+  });
 });
