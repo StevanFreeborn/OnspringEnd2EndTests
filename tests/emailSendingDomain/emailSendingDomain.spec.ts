@@ -29,7 +29,7 @@ test.describe(
     tag: [Tags.NotFedRAMP],
   },
   () => {
-    const emailSendingDomainsToDelete: string[] = [];
+    let emailSendingDomainsToDelete: string[] = [];
 
     test.beforeEach(({ environment }) => {
       // eslint-disable-next-line playwright/no-skipped-test
@@ -38,10 +38,8 @@ test.describe(
 
     test.afterEach(async ({ emailSendingDomainAdminPage }) => {
       await emailSendingDomainAdminPage.goto();
-
-      for (const emailSendingDomain of emailSendingDomainsToDelete) {
-        await emailSendingDomainAdminPage.deleteEmailSendingDomain(emailSendingDomain);
-      }
+      await emailSendingDomainAdminPage.deleteEmailSendingDomains(emailSendingDomainsToDelete);
+      emailSendingDomainsToDelete = [];
     });
 
     test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
