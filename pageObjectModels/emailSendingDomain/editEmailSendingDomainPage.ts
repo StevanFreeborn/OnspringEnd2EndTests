@@ -8,6 +8,10 @@ export class EditEmailSendingDomainPage extends BaseAdminPage {
   private readonly ownershipRow: Locator;
   private readonly dkimRow: Locator;
   private readonly returnPathRow: Locator;
+  private readonly verifyOwnershipPathRegex: RegExp;
+  private readonly verifyDkimPathRegex: RegExp;
+  private readonly verifyReturnPathPathRegex: RegExp;
+  private readonly verificationFailureDialog: Locator;
   readonly pathRegex: RegExp;
 
   constructor(page: Page) {
@@ -18,6 +22,10 @@ export class EditEmailSendingDomainPage extends BaseAdminPage {
     this.ownershipRow = this.dnsRecordsGridBody.locator('tr').nth(1);
     this.dkimRow = this.dnsRecordsGridBody.locator('tr').nth(2);
     this.returnPathRow = this.dnsRecordsGridBody.locator('tr').nth(3);
+    this.verifyOwnershipPathRegex = /Admin\/EmailSendingDomain\/\d+\/VerifyOwnership/;
+    this.verifyDkimPathRegex = /Admin\/EmailSendingDomain\/\d+\/VerifyDkim/;
+    this.verifyReturnPathPathRegex = /Admin\/EmailSendingDomain\/\d+\/VerifyReturnPath/;
+    this.verificationFailureDialog = this.page.getByRole('dialog', { name: 'Warning' });
     this.pathRegex = /Admin\/EmailSendingDomain\/\d+\/Details/;
   }
 
@@ -42,8 +50,8 @@ export class EditEmailSendingDomainPage extends BaseAdminPage {
   }
 
   private async isDnsRecordVerified(row: Locator) {
-    const statusValue = await row.locator('td').nth(4).textContent();
-    return statusValue?.match(/verified/i) !== null;
+    const statusValue = row.locator('td').nth(4).locator('.success');
+    return statusValue.isVisible();
   }
 
   async dnsRecords() {
@@ -53,15 +61,39 @@ export class EditEmailSendingDomainPage extends BaseAdminPage {
     return { ownershipRecord, dkimRecord, returnPathRecord };
   }
 
-  async isOwnershipVerified() {
-    return this.isDnsRecordVerified(this.ownershipRow);
+  private async verifyDnsRecord(row: Locator, pathRegex: RegExp) {
+    const isVerified = await this.isDnsRecordVerified(row);
+
+    if (isVerified) {
+      return true;
+    }
+
+    const verifyLink = row.getByRole('link', { name: 'Verify' });
+    const verificationPromise = this.page.waitForResponse(
+      response => response.url().match(pathRegex) != null && response.status() === 200
+    );
+    await verifyLink.click();
+    const response = await verificationPromise;
+    const responseData = await response.json();
+
+    if (responseData.success) {
+      return true;
+    }
+
+    await this.verificationFailureDialog.getByRole('button', { name: 'Close' }).click();
+
+    return false;
   }
 
-  async isDkimVerified() {
-    return this.isDnsRecordVerified(this.dkimRow);
+  async verifyOwnershipRecord() {
+    return this.verifyDnsRecord(this.ownershipRow, this.verifyOwnershipPathRegex);
   }
 
-  async isReturnPathVerified() {
-    return this.isDnsRecordVerified(this.returnPathRow);
+  async verifyDkimRecord() {
+    return this.verifyDnsRecord(this.dkimRow, this.verifyDkimPathRegex);
+  }
+
+  async verifyReturnPathRecord() {
+    return this.verifyDnsRecord(this.returnPathRow, this.verifyReturnPathPathRegex);
   }
 }
