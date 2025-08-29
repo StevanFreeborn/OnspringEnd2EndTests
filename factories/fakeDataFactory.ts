@@ -26,6 +26,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeCustomEmailSendingDomain() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}.${env.CUSTOM_EMAIL_SENDING_DOMAIN}`;
+  }
+
   static createFakeEmailSyncKey() {
     return faker.string.alphanumeric(20);
   }
