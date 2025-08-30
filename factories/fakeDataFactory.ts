@@ -26,6 +26,11 @@ export class FakeDataFactory {
     return `${timestamp}-${id}`;
   }
 
+  static createFakeRecordRetentionRuleName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-record-retention-rule-test`;
+  }
+
   static createFakeCustomEmailSendingDomain() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}.${env.CUSTOM_EMAIL_SENDING_DOMAIN}`;

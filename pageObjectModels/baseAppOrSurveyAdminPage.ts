@@ -21,6 +21,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
   readonly triggersTabButton: Locator;
   readonly messagingTabButton: Locator;
   readonly documentsTabButton: Locator;
+  readonly recordRetentionTabButton: Locator;
 
   abstract readonly generalTab: BaseAppOrSurveyGeneralTab;
   abstract readonly layoutTab: BaseLayoutTab;
@@ -34,6 +35,7 @@ export abstract class BaseAppOrSurveyAdminPage extends BaseAdminPage {
     this.triggersTabButton = page.getByRole('tab', { name: 'Triggers' });
     this.messagingTabButton = page.getByRole('tab', { name: 'Messaging' });
     this.documentsTabButton = page.getByRole('tab', { name: 'Documents' });
+    this.recordRetentionTabButton = page.getByRole('tab', { name: 'Record Retention' });
   }
 
   abstract getIdFromUrl(): number;

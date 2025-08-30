@@ -3,6 +3,7 @@ import { AppDocumentsTab } from '../../componentObjectModels/tabs/appDocumentsTa
 import { AppGeneralTab } from '../../componentObjectModels/tabs/appGeneralTab';
 import { AppLayoutTab } from '../../componentObjectModels/tabs/appLayoutTab';
 import { AppMessagingTab } from '../../componentObjectModels/tabs/appMessagingTab';
+import { AppRecordRetentionTab } from '../../componentObjectModels/tabs/appRecordRetentionTab';
 import { AppTriggerTab } from '../../componentObjectModels/tabs/appTriggersTab';
 import { BASE_URL } from '../../playwright.config';
 import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
@@ -17,6 +18,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   readonly triggersTab: AppTriggerTab;
   readonly messagingTab: AppMessagingTab;
   readonly documentsTab: AppDocumentsTab;
+  readonly recordRetentionTab: AppRecordRetentionTab;
 
   constructor(page: Page) {
     super(page);
@@ -29,6 +31,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
     this.triggersTab = new AppTriggerTab(page);
     this.messagingTab = new AppMessagingTab(page);
     this.documentsTab = new AppDocumentsTab(page);
+    this.recordRetentionTab = new AppRecordRetentionTab(page);
   }
 
   async goto(appId: number) {
