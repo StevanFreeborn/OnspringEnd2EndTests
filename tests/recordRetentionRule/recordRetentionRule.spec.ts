@@ -3,6 +3,8 @@ import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { RecordRetentionRule } from '../../models/recordRetentionRule';
+import { DateRule } from '../../models/rule';
+import { SimpleRuleLogic } from '../../models/ruleLogic';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AnnotationType } from '../annotations';
 
@@ -25,19 +27,21 @@ test.describe('record retention rule', () => {
 
     const recordRetentionRule = new RecordRetentionRule({
       name: FakeDataFactory.createFakeRecordRetentionRuleName(),
+      ruleSet: new SimpleRuleLogic({
+        rules: [new DateRule({ fieldName: 'Created Date', operator: 'Is Not Empty' })],
+      }),
     });
 
     await test.step('Navigate to the app admin page', async () => {
       await appAdminPage.goto(app.id);
     });
 
-    await test.step('Navigate to the Record Retention tab', async () => {
+    await test.step('Navigate to the record retention tab', async () => {
       await appAdminPage.recordRetentionTabButton.click();
     });
 
     await test.step('Create the record retention rule', async () => {
       await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
-      await appAdminPage.recordRetentionTab.editRuleModal.cancel();
     });
 
     await test.step('Verify the record retention rule was created', async () => {
@@ -46,13 +50,42 @@ test.describe('record retention rule', () => {
     });
   });
 
-  test('Update a record retention rule from the Record Retention tab of an app', async () => {
+  test('Update a record retention rule from the Record Retention tab of an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-250',
     });
 
-    expect(true).toBe(true);
+    const updatedRecordRetentionRule = new RecordRetentionRule({
+      name: FakeDataFactory.createFakeRecordRetentionRuleName(),
+      ruleSet: new SimpleRuleLogic({
+        rules: [new DateRule({ fieldName: 'Created Date', operator: 'Is Not Empty' })],
+      }),
+    });
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Navigate to the record retention tab', async () => {
+      await appAdminPage.recordRetentionTabButton.click();
+    });
+
+    await test.step('Create the record retention rule', async () => {
+      await appAdminPage.recordRetentionTab.addRule(updatedRecordRetentionRule);
+    });
+
+    updatedRecordRetentionRule.status = true;
+
+    await test.step('Update the record retention rule', async () => {
+      await appAdminPage.recordRetentionTab.updateRule(updatedRecordRetentionRule.name, updatedRecordRetentionRule);
+    });
+
+    await test.step('Verify the record retention rule was updated', async () => {
+      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(updatedRecordRetentionRule.name);
+      await expect(row).toBeVisible();
+      await expect(row).toHaveText(/enabled/i);
+    });
   });
 
   test('Delete a record retention rule from the Record Retention tab of an app', async () => {

@@ -48,6 +48,15 @@ export class TextRuleWithValue extends Rule {
   }
 }
 
+export class DateRule extends Rule {
+  readonly operator: NonValueOperator;
+
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator }) {
+    super({ fieldName, fieldType: 'Date/Time' });
+    this.operator = operator;
+  }
+}
+
 export class ListRule extends Rule {
   readonly operator: NonValueOperator;
 
