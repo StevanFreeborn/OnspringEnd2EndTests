@@ -1,5 +1,5 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { AutoNumberRuleWithValue, ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
+import { AutoNumberRuleWithValue, DateRule, ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
@@ -81,6 +81,13 @@ export class RuleControl {
       return;
     }
 
+    if (rule instanceof DateRule) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.addRuleButton.click();
+      return;
+    }
+
     throw new Error('Unsupported Rule Type');
   }
 
@@ -90,7 +97,15 @@ export class RuleControl {
     }
   }
 
+  private async clearRules() {
+    for (const removeButton of await this.control.locator('.rule-list').getByTitle('Delete').all()) {
+      await removeButton.click();
+    }
+  }
+
   async addLogic(logic: RuleLogic) {
+    await this.clearRules();
+
     if (logic instanceof SimpleRuleLogic) {
       await this.simpleModeRadioButton.click();
       return await this.addRules(logic.rules);
