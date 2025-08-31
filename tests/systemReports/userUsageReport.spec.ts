@@ -1,18 +1,39 @@
 import { test as base, expect } from '../../fixtures';
+import { UserUsagePage } from '../../pageObjectModels/systemReports/userUsagePage';
 import { AnnotationType } from '../annotations';
 
-type UserUsageReportTextFixtures = {};
+type UserUsageReportTextFixtures = {
+  userUsagePage: UserUsagePage;
+};
 
-const test = base.extend<UserUsageReportTextFixtures>({});
+const test = base.extend<UserUsageReportTextFixtures>({
+  userUsagePage: async ({ sysAdminPage }, use) => await use(new UserUsagePage(sysAdminPage)),
+});
 
 test.describe('user usage report', () => {
-  test('Filter the user usage report', async () => {
+  test('Filter the user usage report', async ({ userUsagePage, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-886',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the user usage report page', async () => {
+      await userUsagePage.goto();
+    });
+
+    await test.step('Filter the user usage report', async () => {
+      await userUsagePage.filterReport({
+        name: sysAdminUser.fullName,
+        status: 'Active',
+        tier: 'Full User',
+      });
+    });
+
+    await test.step('Verify the report is filtered', async () => {
+      const rows = await userUsagePage.getRows();
+      expect(rows.length).toBe(1);
+      await expect(rows[0]).toHaveText(new RegExp(sysAdminUser.fullName));
+    });
   });
 
   test('Sort the user usage report', async () => {

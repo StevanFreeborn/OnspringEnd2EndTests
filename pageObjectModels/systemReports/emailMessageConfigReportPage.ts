@@ -69,7 +69,7 @@ export class EmailMessageConfigReportPage extends BaseAdminPage {
 
   private async hasSameValue(value: string, locator: Locator) {
     const currentValue = await locator.textContent();
-    return currentValue?.toLowerCase().includes(value.toLowerCase());
+    return currentValue?.toLowerCase().trim() === value.toLowerCase().trim();
   }
 
   private async selectEmailType(emailType: string) {
