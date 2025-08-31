@@ -88,13 +88,39 @@ test.describe('record retention rule', () => {
     });
   });
 
-  test('Delete a record retention rule from the Record Retention tab of an app', async () => {
+  test('Delete a record retention rule from the Record Retention tab of an app', async ({ app, appAdminPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-251',
     });
 
-    expect(true).toBe(true);
+    const recordRetentionRule = new RecordRetentionRule({
+      name: FakeDataFactory.createFakeRecordRetentionRuleName(),
+      ruleSet: new SimpleRuleLogic({
+        rules: [new DateRule({ fieldName: 'Created Date', operator: 'Is Not Empty' })],
+      }),
+    });
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+    });
+
+    await test.step('Navigate to the record retention tab', async () => {
+      await appAdminPage.recordRetentionTabButton.click();
+    });
+
+    await test.step('Create the record retention rule', async () => {
+      await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
+    });
+
+    await test.step('Delete the record retention rule', async () => {
+      await appAdminPage.recordRetentionTab.deleteRule(recordRetentionRule.name);
+    });
+
+    await test.step('Verify the record retention rule was deleted', async () => {
+      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(recordRetentionRule.name);
+      await expect(row).toBeHidden();
+    });
   });
 
   test("Enable a record retention rule from an app's Record Retention tab", async () => {

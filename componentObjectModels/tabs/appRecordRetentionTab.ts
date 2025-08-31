@@ -1,6 +1,7 @@
 import { Locator, Page } from '../../fixtures';
 import { RecordRetentionRule } from '../../models/recordRetentionRule';
 import { AddRecordRetentionRuleDialog } from '../dialogs/addRecordRetentionRuleDialog';
+import { DeleteRecordRetentionRuleDialog } from '../dialogs/deleteRecordRetentionRuleDialog';
 import { EditRecordRetentionRuleModal } from '../modals/editRecordRetentionRuleModal';
 
 export class AppRecordRetentionTab {
@@ -9,6 +10,7 @@ export class AppRecordRetentionTab {
   private readonly addRuleDialog: AddRecordRetentionRuleDialog;
   private readonly ruleGrid: Locator;
   private readonly ruleGridBody: Locator;
+  private readonly deleteRecordRetentionRuleDialog: DeleteRecordRetentionRuleDialog;
   readonly editRuleModal: EditRecordRetentionRuleModal;
 
   constructor(page: Page) {
@@ -18,6 +20,7 @@ export class AppRecordRetentionTab {
     this.editRuleModal = new EditRecordRetentionRuleModal(this.page);
     this.ruleGrid = this.page.locator('#grid-recordRetentionRules');
     this.ruleGridBody = this.ruleGrid.locator('tbody');
+    this.deleteRecordRetentionRuleDialog = new DeleteRecordRetentionRuleDialog(this.page);
   }
 
   private async updateAndSaveRule(rule: RecordRetentionRule) {
@@ -28,6 +31,10 @@ export class AppRecordRetentionTab {
     } else {
       await this.editRuleModal.save();
     }
+  }
+
+  async getRuleRowByName(name: string) {
+    return this.ruleGridBody.getByRole('row', { name });
   }
 
   async addRule(recordRetentionRule: RecordRetentionRule) {
@@ -44,7 +51,11 @@ export class AppRecordRetentionTab {
     await this.updateAndSaveRule(updatedRecordRetentionRule);
   }
 
-  async getRuleRowByName(name: string) {
-    return this.ruleGridBody.getByRole('row', { name });
+  async deleteRule(name: string) {
+    const ruleRow = await this.getRuleRowByName(name);
+    await ruleRow.hover();
+    await ruleRow.getByTitle('Delete Record Retention Rule').click();
+    await this.deleteRecordRetentionRuleDialog.deleteButton.click();
+    await this.deleteRecordRetentionRuleDialog.waitForDialogToBeDismissed();
   }
 }
