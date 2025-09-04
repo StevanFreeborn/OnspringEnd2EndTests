@@ -61,8 +61,8 @@ const envSchema = z
     SFDC_USERNAME: z.string().min(1),
     SFDC_PASSWORD: z.string().min(1),
     CUSTOM_EMAIL_SENDING_DOMAIN: z.string().min(1),
-    CLOUDFLARE_ZONE_ID: z.string(),
-    CLOUDFLARE_API_KEY: z.string(),
+    CLOUDFLARE_ZONE_ID: z.string().optional(),
+    CLOUDFLARE_API_KEY: z.string().optional(),
   })
   .refine(data => {
     const testEnv = data.TEST_ENV;

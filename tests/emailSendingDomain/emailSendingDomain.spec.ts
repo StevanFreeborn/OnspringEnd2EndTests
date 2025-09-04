@@ -20,7 +20,7 @@ const test = base.extend<EmailSendingDomainTestFixtures>({
   editEmailSendingDomainPage: async ({ sysAdminPage }, use) => await use(new EditEmailSendingDomainPage(sysAdminPage)),
   emailSendingDomainAdminPage: async ({ sysAdminPage }, use) =>
     await use(new EmailSendingDomainAdminPage(sysAdminPage)),
-  dnsService: async ({}, use) => await use(new CloudflareService(env.CLOUDFLARE_ZONE_ID, env.CLOUDFLARE_API_KEY)),
+  dnsService: async ({}, use) => await use(new CloudflareService(env.CLOUDFLARE_ZONE_ID!, env.CLOUDFLARE_API_KEY!)),
 });
 
 test.describe(
