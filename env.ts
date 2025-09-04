@@ -61,8 +61,8 @@ const envSchema = z
     SFDC_USERNAME: z.string().min(1),
     SFDC_PASSWORD: z.string().min(1),
     CUSTOM_EMAIL_SENDING_DOMAIN: z.string().min(1),
-    CLOUDFLARE_ZONE_ID: z.string().min(1),
-    CLOUDFLARE_API_KEY: z.string().min(1),
+    CLOUDFLARE_ZONE_ID: z.string(),
+    CLOUDFLARE_API_KEY: z.string(),
   })
   .refine(data => {
     const testEnv = data.TEST_ENV;
@@ -73,6 +73,19 @@ const envSchema = z
     }
 
     return true;
-  }, 'Instance URL must be defined for the specified test environment.');
+  }, 'Instance URL must be defined for the specified test environment.')
+  .refine(data => {
+    if (data.TEST_ENV !== 'FEDSPRING_IST') {
+      if (!data.CLOUDFLARE_ZONE_ID || data.CLOUDFLARE_ZONE_ID.trim() === '') {
+        return false;
+      }
+
+      if (!data.CLOUDFLARE_API_KEY || data.CLOUDFLARE_API_KEY.trim() === '') {
+        return false;
+      }
+    }
+
+    return true;
+  }, 'CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_KEY must be non-empty strings when TEST_ENV is not FEDSPRING_IST.');
 
 export const env = envSchema.parse(process.env);
