@@ -76,8 +76,10 @@ export async function createUserFixture(
   await editUserAdminPage.saveUser();
   user.id = editUserAdminPage.getUserIdFromUrl();
 
-  const userAuthStoragePath = await logUserIn({ browser, user, testInfo });
-  user.authStoragePath = userAuthStoragePath;
+  if (user.status === UserStatus.Active) {
+    const userAuthStoragePath = await logUserIn({ browser, user, testInfo });
+    user.authStoragePath = userAuthStoragePath;
+  }
 
   await use(user);
 
