@@ -36,13 +36,33 @@ test.describe('user usage report', () => {
     });
   });
 
-  test('Sort the user usage report', async () => {
+  test('Sort the user usage report', async ({ userUsagePage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-887',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the user usage report page', async () => {
+      await userUsagePage.goto();
+    });
+
+    await test.step('Sort the user usage report', async () => {
+      await userUsagePage.filterReport({ status: 'Active' });
+      await userUsagePage.sortGridBy('Username', 'ascending');
+    });
+
+    await test.step('Verify the report is sorted', async () => {
+      const rows = await userUsagePage.getRows();
+      const usernames = await Promise.all(
+        rows.map(async row => {
+          const usernameCell = row.locator('td').nth(1);
+          return usernameCell.innerText();
+        })
+      );
+      const sortedUsernames = [...usernames].sort((a, b) => a.localeCompare(b));
+
+      expect(usernames).toEqual(sortedUsernames);
+    });
   });
 
   test('Click on the Usage link for a user in the report to view the usage details', async () => {
