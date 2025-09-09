@@ -65,13 +65,31 @@ test.describe('user usage report', () => {
     });
   });
 
-  test('Click on the Usage link for a user in the report to view the usage details', async () => {
+  test('Click on the Usage link for a user in the report to view the usage details', async ({
+    userUsagePage,
+    sysAdminUser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-888',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the user usage report page', async () => {
+      await userUsagePage.goto();
+    });
+
+    await test.step('Click on the Usage link for a user', async () => {
+      await userUsagePage.filterReport({ name: sysAdminUser.fullName, status: 'Active' });
+
+      const userRow = await userUsagePage.getRowByName(new RegExp(sysAdminUser.fullName));
+      const usageLink = userRow.getByRole('link', { name: 'Usage' });
+      await usageLink.click();
+    });
+
+    await test.step('Verify the usage details dialog is displayed', async () => {
+      const dialog = userUsagePage.page.getByRole('dialog', { name: 'User Usage' });
+      await expect(dialog).toBeVisible();
+    });
   });
 
   test('Click on a "Link" link within the usage details dialog', async () => {
