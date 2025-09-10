@@ -82,6 +82,7 @@ test.describe('user usage report', () => {
 
     await test.step('Sort the user usage report', async () => {
       await userUsagePage.filterReport({ status: 'Active' });
+      await userUsagePage.clearSort();
       await userUsagePage.sortGridBy('Username', 'ascending');
     });
 

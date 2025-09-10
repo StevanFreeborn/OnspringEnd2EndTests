@@ -99,6 +99,16 @@ export class UserUsagePage extends BaseAdminPage {
     await this.filterByTier(tier);
   }
 
+  async clearSort() {
+    const sortedColumn = this.gridHeader.locator('th[aria-sort]').first();
+
+    while (await sortedColumn.isVisible()) {
+      const clearSortResponse = this.page.waitForResponse(this.getUsagePath);
+      await sortedColumn.click();
+      await clearSortResponse;
+    }
+  }
+
   async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
     const columnHeader = this.gridHeader.getByRole('columnheader', { name: column });
     let currentSortDirection = await columnHeader.getAttribute('aria-sort');
