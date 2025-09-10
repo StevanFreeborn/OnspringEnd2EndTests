@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
+import { testUserPage } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { ReferenceField } from '../../models/referenceField';
@@ -13,7 +14,8 @@ import { AnnotationType } from '../annotations';
 
 type UserUsageReportTextFixtures = {
   app: App;
-  testUser: User;
+  user: User;
+  testUserPage: Page;
   appAdminPage: AppAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
@@ -22,18 +24,20 @@ type UserUsageReportTextFixtures = {
 
 const test = base.extend<UserUsageReportTextFixtures>({
   app: app,
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
+  user: async ({ browser, sysAdminPage }, use, testInfo) => {
     await createUserFixture(
       {
         browser,
         sysAdminPage,
-        userStatus: UserStatus.Inactive,
+        userStatus: UserStatus.Active,
+        sysAdmin: true,
         roles: [],
       },
       use,
       testInfo
     );
   },
+  testUserPage: testUserPage,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
@@ -127,7 +131,7 @@ test.describe('user usage report', () => {
     appAdminPage,
     addContentPage,
     editContentPage,
-    testUser,
+    user: testUser,
     userUsagePage,
   }) => {
     test.info().annotations.push({
@@ -143,31 +147,19 @@ test.describe('user usage report', () => {
     });
 
     await test.step("Create a reference field to the user's app", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        fieldName: referenceField.name,
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await createReferenceFieldToUsersApp(appAdminPage, app, tabName, sectionName, referenceField);
     });
 
     await test.step('Create a record with a reference to a user', async () => {
-      await addContentPage.goto(app.id);
-      const editableReferenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: referenceField.name,
-        fieldType: 'Reference',
-      });
-      await editableReferenceField.searchForAndSelectRecord(testUser.fullName);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await createRecordWithReferenceToUser(
+        addContentPage,
+        editContentPage,
+        app,
+        tabName,
+        sectionName,
+        referenceField,
+        testUser
+      );
     });
 
     await test.step('Navigate to the user usage report page', async () => {
@@ -175,7 +167,7 @@ test.describe('user usage report', () => {
     });
 
     await test.step('Click on the Usage link for a user', async () => {
-      await userUsagePage.filterReport({ name: testUser.fullName, status: 'Inactive' });
+      await userUsagePage.filterReport({ name: testUser.fullName, status: 'Active' });
       const userRow = await userUsagePage.getRowByName(new RegExp(testUser.fullName));
       const usageLink = userRow.getByRole('link', { name: 'Usage' });
       await usageLink.click();
@@ -196,12 +188,207 @@ test.describe('user usage report', () => {
     });
   });
 
-  test('Export the User Usage details for a user', async () => {
+  test('Export the User Usage details for a user', async ({
+    app,
+    appAdminPage,
+    addContentPage,
+    editContentPage,
+    user: testUser,
+    testUserPage,
+    sysAdminEmail,
+    downloadService,
+    sheetParser,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-890',
     });
 
-    expect(true).toBeTruthy();
+    test.slow();
+
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+    const referenceField = new ReferenceField({
+      name: FakeDataFactory.createFakeFieldName(),
+      reference: 'Users',
+    });
+
+    await test.step("Create a reference field to the user's app", async () => {
+      await createReferenceFieldToUsersApp(appAdminPage, app, tabName, sectionName, referenceField);
+    });
+
+    await test.step('Create a record with a reference to a user', async () => {
+      await createRecordWithReferenceToUser(
+        addContentPage,
+        editContentPage,
+        app,
+        tabName,
+        sectionName,
+        referenceField,
+        testUser
+      );
+    });
+
+    const testUserUsagePage = new UserUsagePage(testUserPage);
+
+    await test.step('Navigate to the user usage report page', async () => {
+      await testUserUsagePage.goto();
+    });
+
+    await test.step('Click on the Usage link for a user', async () => {
+      await testUserUsagePage.filterReport({ name: testUser.fullName, status: 'Active' });
+      const userRow = await testUserUsagePage.getRowByName(new RegExp(testUser.fullName));
+      const usageLink = userRow.getByRole('link', { name: 'Usage' });
+      await usageLink.click();
+    });
+
+    await test.step('Click the Export button within the usage details dialog', async () => {
+      const usageDialog = testUserUsagePage.page.getByRole('dialog', { name: 'User Usage' });
+      const exportButtonLink = usageDialog.getByRole('link', { name: 'Export' });
+      await exportButtonLink.click();
+
+      const exportReportDialog = testUserUsagePage.page.getByRole('dialog', { name: 'Export Report' });
+      const exportButton = exportReportDialog.getByRole('button', { name: 'Export' });
+      await exportButton.click();
+    });
+
+    let exportEmailContent: string;
+
+    await test.step('Verify the user usage details are exported', async () => {
+      await expect(async () => {
+        const searchCriteria = [
+          ['TO', testUser.email],
+          ['SUBJECT', 'Onspring Report Export Complete'],
+          ['TEXT', `User Usage Report`],
+          ['UNSEEN'],
+        ];
+        const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
+
+        expect(result.isOk()).toBe(true);
+
+        const email = result.unwrap();
+
+        exportEmailContent = email.html as string;
+      }).toPass({
+        intervals: [30_000],
+        timeout: 300_000,
+      });
+    });
+
+    let reportPath: string;
+
+    await test.step('Download the exported user usage details', async () => {
+      await testUserPage.setContent(exportEmailContent);
+
+      const reportDownload = testUserPage.waitForEvent('download');
+      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
+
+      const report = await reportDownload;
+      reportPath = await downloadService.saveDownload(report);
+    });
+
+    await test.step('Verify report contains expected data', async () => {
+      const reportData = sheetParser.parseFile(reportPath, false);
+      expect(reportData).toMatchObject([
+        {
+          name: 'Content References',
+          data: [
+            {
+              '0': `Username: ${testUser.fullName} / ${testUser.username}`,
+            },
+            {},
+            {
+              '0': 'Content References',
+            },
+            {
+              '0': 'App/Survey',
+              '1': 'Field Name',
+              '2': 'Record Count',
+              '3': 'Report Link',
+            },
+            {
+              '0': app.name,
+              '1': referenceField.name,
+              '2': 1,
+              '3': 'Link',
+            },
+          ],
+        },
+        {
+          name: 'Admin Apps',
+          data: [
+            {
+              '0': 'App',
+              '1': 'Type',
+              '2': 'Name',
+              '3': 'Link',
+            },
+          ],
+        },
+        {
+          name: 'Admin Integration',
+          data: [
+            {
+              '0': 'Apps',
+              '1': 'Type',
+              '2': 'Name',
+              '3': 'Link',
+            },
+          ],
+        },
+        {
+          name: 'Admin Dashboard',
+          data: [
+            {
+              '0': 'Name',
+              '1': 'Type',
+              '2': 'Link',
+            },
+          ],
+        },
+      ]);
+    });
   });
 });
+
+async function createReferenceFieldToUsersApp(
+  appAdminPage: AppAdminPage,
+  app: App,
+  tabName: string,
+  sectionName: string,
+  referenceField: ReferenceField
+) {
+  await appAdminPage.goto(app.id);
+  await appAdminPage.layoutTabButton.click();
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+  await appAdminPage.layoutTab.openLayout();
+  await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+    fieldName: referenceField.name,
+    tabName: tabName,
+    sectionName: sectionName,
+    sectionColumn: 0,
+    sectionRow: 0,
+  });
+  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+}
+
+async function createRecordWithReferenceToUser(
+  addContentPage: AddContentPage,
+  editContentPage: EditContentPage,
+  app: App,
+  tabName: string,
+  sectionName: string,
+  referenceField: ReferenceField,
+  testUser: User
+) {
+  await addContentPage.goto(app.id);
+  const editableReferenceField = await addContentPage.form.getField({
+    tabName: tabName,
+    sectionName: sectionName,
+    fieldName: referenceField.name,
+    fieldType: 'Reference',
+  });
+  await editableReferenceField.searchForAndSelectRecord(testUser.fullName);
+  await addContentPage.saveRecordButton.click();
+  await addContentPage.page.waitForURL(editContentPage.pathRegex);
+}
