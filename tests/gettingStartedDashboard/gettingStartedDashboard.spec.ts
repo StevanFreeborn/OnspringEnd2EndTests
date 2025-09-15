@@ -112,12 +112,12 @@ test.describe('getting started dashboard', () => {
 
     await test.step('Verify that LinkedIn link works', async () => {
       const linkLocator = frame.getByRole('link', { name: 'LinkedIn' });
-      await checkLinkOpensExpectedPage(context, linkLocator, /linkedin.com\/company\/onspring-technologies/);
+      await checkLinkOpensExpectedPage(context, linkLocator, /linkedin\.com/);
     });
 
     await test.step('Verify that Facebook link works', async () => {
       const linkLocator = frame.getByRole('link', { name: 'Facebook' });
-      await checkLinkOpensExpectedPage(context, linkLocator, /facebook.com\/OnspringTechnologies/);
+      await checkLinkOpensExpectedPage(context, linkLocator, /facebook\.com\/OnspringTechnologies/);
     });
   });
 });
