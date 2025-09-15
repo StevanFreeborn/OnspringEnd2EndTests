@@ -99,6 +99,26 @@ test.describe('getting started dashboard', () => {
       const linkLocator = frame.getByRole('link', { name: 'Event Calendar' });
       await checkLinkOpensExpectedPage(context, linkLocator, /\/resources\/events-webinars/);
     });
+
+    await test.step('Verify that YouTube Channel link works', async () => {
+      const linkLocator = frame.getByRole('link', { name: 'Youtube' });
+      await checkLinkOpensExpectedPage(context, linkLocator, /\/channel\/UCsfhhDvZB-YxJ7HqQvb-ohA/);
+    });
+
+    await test.step('Verify that Twitter link works', async () => {
+      const linkLocator = frame.getByRole('link', { name: 'Twitter' });
+      await checkLinkOpensExpectedPage(context, linkLocator, /x.com\/onspring/);
+    });
+
+    await test.step('Verify that LinkedIn link works', async () => {
+      const linkLocator = frame.getByRole('link', { name: 'LinkedIn' });
+      await checkLinkOpensExpectedPage(context, linkLocator, /linkedin.com\/company\/onspring-technologies/);
+    });
+
+    await test.step('Verify that Facebook link works', async () => {
+      const linkLocator = frame.getByRole('link', { name: 'Facebook' });
+      await checkLinkOpensExpectedPage(context, linkLocator, /facebook.com\/OnspringTechnologies/);
+    });
   });
 });
 
