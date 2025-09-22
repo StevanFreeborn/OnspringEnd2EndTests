@@ -5,8 +5,10 @@ import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
 import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { KeyMetric } from '../../models/keyMetric';
 import { WebPage } from '../../models/webPage';
 import { WaitForOptions } from '../../utils';
+import { AddKeyMetricDialog } from '../dialogs/addKeyMetricDialog';
 import { AddObjectDialog } from '../dialogs/addObjectDialog';
 import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
@@ -14,6 +16,7 @@ import { DashboardResourcesSection } from '../sections/dashboardResourcesSection
 import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
 import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
 import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
+import { AddOrEditKeyMetricModal } from './addOrEditKeyMetricModal';
 import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
@@ -35,10 +38,12 @@ export class DashboardDesignerModal {
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
   private readonly addObjectDialog: AddObjectDialog;
+  private readonly addKeyMetricDialog: AddKeyMetricDialog;
   private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
   private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
   private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
   private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
+  private readonly addKeyMetricModal: AddOrEditKeyMetricModal;
   private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
   private readonly deleteDashboardObjectPathRegex: RegExp;
   private readonly getMoreObjectsPathRegex: RegExp;
@@ -61,10 +66,12 @@ export class DashboardDesignerModal {
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
     this.addObjectDialog = new AddObjectDialog(this.page);
+    this.addKeyMetricDialog = new AddKeyMetricDialog(this.page);
     this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
     this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
     this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
+    this.addKeyMetricModal = new AddOrEditKeyMetricModal(this.page);
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
     this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
     this.getMoreObjectsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
@@ -170,6 +177,11 @@ export class DashboardDesignerModal {
     }
   }
 
+  private async enterAndSaveKeyMetric(keyMetric: KeyMetric) {
+    await this.addKeyMetricModal.fillOutForm(keyMetric);
+    await this.addKeyMetricModal.save();
+  }
+
   async updateDashboard(dashboard: Dashboard) {
     if (dashboard.schedule) {
       await this.updateDashboardScheduling(dashboard.schedule);
@@ -254,5 +266,13 @@ export class DashboardDesignerModal {
 
       isVisible = await object.isVisible();
     }
+  }
+
+  async addKeyMetric(keyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+    await this.resourcesSection.clickAddKeyMetricButton(keyMetric.type);
+    await this.addKeyMetricDialog.continueButton.waitFor();
+    await this.addKeyMetricDialog.continueButton.click();
+    await this.enterAndSaveKeyMetric(keyMetric);
   }
 }

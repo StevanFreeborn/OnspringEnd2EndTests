@@ -1,19 +1,86 @@
 import { expect } from '@playwright/test';
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
+import { App } from '../../models/app';
+import { Container } from '../../models/container';
+import { Dashboard } from '../../models/dashboard';
+import { SingleValueKeyMetric } from '../../models/keyMetric';
+import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
+import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
 
-type KeyMetricTestFixtures = {};
+type KeyMetricTestFixtures = {
+  dashboardsAdminPage: DashboardsAdminPage;
+  sourceApp: App;
+  container: Container;
+  dashboard: Dashboard;
+  dashboardPage: DashboardPage;
+};
 
-const test = base.extend<KeyMetricTestFixtures>({});
+const test = base.extend<KeyMetricTestFixtures>({
+  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
+  sourceApp: app,
+  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  dashboard: async ({ sysAdminPage, container }, use) =>
+    await createDashboardFixture(
+      {
+        sysAdminPage,
+        dashboard: new Dashboard({ name: FakeDataFactory.createFakeDashboardName(), containers: [container.name] }),
+      },
+      use
+    ),
+  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
+});
 
 test.describe('key metrics', () => {
-  test('Add a new single value key metric with an app/survey field source', async () => {
+  test('Add a new single value key metric with an app/survey field source', async ({
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-774',
     });
 
-    expect(true).toBeTruthy();
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = await dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Add a new single value key metric with a content record field source', async () => {
