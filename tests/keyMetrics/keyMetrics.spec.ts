@@ -11,6 +11,8 @@ import { SingleValueKeyMetric } from '../../models/keyMetric';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
+import { AddContentPage } from './../../pageObjectModels/content/addContentPage';
+import { EditContentPage } from './../../pageObjectModels/content/editContentPage';
 
 type KeyMetricTestFixtures = {
   dashboardsAdminPage: DashboardsAdminPage;
@@ -18,6 +20,8 @@ type KeyMetricTestFixtures = {
   container: Container;
   dashboard: Dashboard;
   dashboardPage: DashboardPage;
+  addContentPage: AddContentPage;
+  editContentPage: EditContentPage;
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
@@ -33,6 +37,8 @@ const test = base.extend<KeyMetricTestFixtures>({
       use
     ),
   dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
+  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
+  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
 });
 
 test.describe('key metrics', () => {
@@ -78,18 +84,69 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = await dashboardPage.getDashboardItem(keyMetric.objectName);
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
       await expect(keyMetricCard).toBeVisible();
     });
   });
 
-  test('Add a new single value key metric with a content record field source', async () => {
+  test('Add a new single value key metric with a content record field source', async ({
+    sourceApp,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+    addContentPage,
+    editContentPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-775',
     });
 
-    expect(true).toBeTruthy();
+    let recordId = 0;
+
+    await test.step('Create a content record in the source app', async () => {
+      await addContentPage.goto(sourceApp.id);
+      await addContentPage.saveRecordButton.click();
+      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      recordId = editContentPage.getRecordIdFromUrl();
+      expect(recordId).toBeGreaterThan(0);
+    });
+
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'Content Record',
+        record: recordId.toString(),
+        field: 'Created Date',
+      },
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Add a new single value key metric with a report field source', async () => {

@@ -1,6 +1,7 @@
 import { Locator, Page } from '../../fixtures';
 import { KeyMetric } from '../../models/keyMetric';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
+import { SelectARecordModal } from './selectARecordModal';
 
 export class AddOrEditKeyMetricModal {
   private readonly page: Page;
@@ -16,6 +17,9 @@ export class AddOrEditKeyMetricModal {
   private readonly appOrSurveySelector: Locator;
   private readonly fieldSourceSelector: Locator;
   private readonly aggregateSelector: Locator;
+  private readonly recordSelector: Locator;
+  private readonly selectRecordModal: SelectARecordModal;
+  private readonly recordFieldSelector: Locator;
   private readonly securityTabButton: Locator;
   private readonly viewSelector: Locator;
   private readonly rolesDualPaneSelector: DualPaneSelector;
@@ -35,7 +39,10 @@ export class AddOrEditKeyMetricModal {
     this.typeSelector = this.modal.locator('.label:has-text("Type") + td .data').getByRole('listbox');
     this.appOrSurveySelector = this.modal.locator('.label:has-text("App/Survey") + td .data').getByRole('listbox');
     this.fieldSourceSelector = this.modal.locator('.label:has-text("Field Source") + td .data').getByRole('listbox');
-    this.aggregateSelector = this.modal.locator('.label:has-text("Aggregate") + td .data').getByRole('listbox');
+    this.aggregateSelector = this.modal.locator('.label:has-text("Aggregate") + td .data').getByRole('listbox').first();
+    this.recordSelector = this.modal.locator('[data-related-record-field]').locator('.onx-selector').first();
+    this.selectRecordModal = new SelectARecordModal(this.page);
+    this.recordFieldSelector = this.modal.locator('[data-content-record-field]').getByRole('listbox');
     this.securityTabButton = this.modal.getByRole('tab', { name: 'Security' });
     this.viewSelector = this.modal.locator('.label:has-text("View") + .data').getByRole('listbox');
     this.rolesDualPaneSelector = new DualPaneSelector(this.modal.locator('.label:has-text("Roles") + .data'));
@@ -67,6 +74,16 @@ export class AddOrEditKeyMetricModal {
     await this.page.getByRole('option', { name: view }).click();
   }
 
+  private async selectRecord(record: string) {
+    await this.recordSelector.click();
+    await this.selectRecordModal.selectRecord(record);
+  }
+
+  private async selectRecordField(field: string) {
+    await this.recordFieldSelector.click();
+    await this.page.getByRole('option', { name: field }).click();
+  }
+
   async fillOutForm(keyMetric: KeyMetric) {
     await this.generalTabButton.click();
     await this.objectNameInput.fill(keyMetric.objectName);
@@ -87,6 +104,11 @@ export class AddOrEditKeyMetricModal {
 
     if (keyMetric.fieldSource.type === 'App/Survey') {
       await this.selectAggregate(keyMetric.fieldSource.aggregate.fn);
+    }
+
+    if (keyMetric.fieldSource.type === 'Content Record') {
+      await this.selectRecord(keyMetric.fieldSource.record);
+      await this.selectRecordField(keyMetric.fieldSource.field);
     }
 
     await this.securityTabButton.click();

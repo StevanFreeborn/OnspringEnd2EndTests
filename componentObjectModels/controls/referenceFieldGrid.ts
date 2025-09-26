@@ -1,23 +1,31 @@
-import { Locator, Page } from '@playwright/test';
+import { FrameLocator, Locator, Page } from '@playwright/test';
 
 export class ReferenceFieldGrid {
   private readonly page: Page;
+  private readonly frame?: FrameLocator;
   private readonly popupPathRegex: RegExp;
   private readonly editReferenceSearchListPathRegex: RegExp;
   readonly control: Locator;
   readonly filterInput: Locator;
-  readonly searchResults: Locator;
   readonly createNewButton: Locator;
   readonly quickAddButton: Locator;
   readonly gridTable: Locator;
 
-  constructor(control: Locator) {
+  get searchResults(): Locator {
+    return this.frame
+      ? this.frame.locator('.grid-search-results:visible')
+      : this.page.locator('.grid-search-results:visible');
+  }
+
+  constructor(control: Locator, frame?: FrameLocator, searchPathRegex?: RegExp, filterPlaceholder?: string) {
     this.page = control.page();
+    this.frame = frame;
     this.popupPathRegex = /\/Content\/\d+\/PopupAdd/;
-    this.editReferenceSearchListPathRegex = /\/Content\/[0-9]+\/[0-9]+\/EditReferenceSearchList/;
+    this.editReferenceSearchListPathRegex = searchPathRegex
+      ? searchPathRegex
+      : /\/Content\/[0-9]+\/[0-9]+\/EditReferenceSearchList/;
     this.control = control;
-    this.filterInput = this.control.getByPlaceholder('Select Related');
-    this.searchResults = this.page.locator('div.grid-search-results:visible');
+    this.filterInput = this.control.getByPlaceholder(filterPlaceholder || 'Select Related');
     this.createNewButton = this.control.getByTitle('Create New');
     this.quickAddButton = this.control.getByRole('button', { name: 'Quick Add' });
     this.gridTable = this.control.getByRole('grid');

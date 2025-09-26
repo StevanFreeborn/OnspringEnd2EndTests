@@ -12,7 +12,7 @@ type FieldSource =
       type: 'App/Survey';
       aggregate: AggregateFunction;
     }
-  | { type: 'Content Record' }
+  | { type: 'Content Record'; record: string; field: string }
   | { type: 'Report' };
 
 type Security =
