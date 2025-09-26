@@ -20,6 +20,7 @@ export class AddOrEditKeyMetricModal {
   private readonly recordSelector: Locator;
   private readonly selectRecordModal: SelectARecordModal;
   private readonly recordFieldSelector: Locator;
+  private readonly reportSelector: Locator;
   private readonly securityTabButton: Locator;
   private readonly viewSelector: Locator;
   private readonly rolesDualPaneSelector: DualPaneSelector;
@@ -43,6 +44,7 @@ export class AddOrEditKeyMetricModal {
     this.recordSelector = this.modal.locator('[data-related-record-field]').locator('.onx-selector').first();
     this.selectRecordModal = new SelectARecordModal(this.page);
     this.recordFieldSelector = this.modal.locator('[data-content-record-field]').getByRole('listbox');
+    this.reportSelector = this.modal.locator('[data-report-field]').getByRole('listbox');
     this.securityTabButton = this.modal.getByRole('tab', { name: 'Security' });
     this.viewSelector = this.modal.locator('.label:has-text("View") + .data').getByRole('listbox');
     this.rolesDualPaneSelector = new DualPaneSelector(this.modal.locator('.label:has-text("Roles") + .data'));
@@ -84,6 +86,11 @@ export class AddOrEditKeyMetricModal {
     await this.page.getByRole('option', { name: field }).click();
   }
 
+  private async selectReport(report: string) {
+    await this.reportSelector.click();
+    await this.page.getByRole('option', { name: report }).click();
+  }
+
   async fillOutForm(keyMetric: KeyMetric) {
     await this.generalTabButton.click();
     await this.objectNameInput.fill(keyMetric.objectName);
@@ -109,6 +116,11 @@ export class AddOrEditKeyMetricModal {
     if (keyMetric.fieldSource.type === 'Content Record') {
       await this.selectRecord(keyMetric.fieldSource.record);
       await this.selectRecordField(keyMetric.fieldSource.field);
+    }
+
+    if (keyMetric.fieldSource.type === 'Report') {
+      await this.selectReport(keyMetric.fieldSource.report);
+      await this.selectAggregate(keyMetric.fieldSource.aggregate.fn);
     }
 
     await this.securityTabButton.click();

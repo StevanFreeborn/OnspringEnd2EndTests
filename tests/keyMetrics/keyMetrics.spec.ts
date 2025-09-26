@@ -8,8 +8,11 @@ import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
 import { SingleValueKeyMetric } from '../../models/keyMetric';
+import { SavedReportAsReportDataOnly } from '../../models/report';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
+import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
+import { ReportPage } from '../../pageObjectModels/reports/reportPage';
 import { AnnotationType } from '../annotations';
 import { AddContentPage } from './../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from './../../pageObjectModels/content/editContentPage';
@@ -22,6 +25,8 @@ type KeyMetricTestFixtures = {
   dashboardPage: DashboardPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
+  reportHomePage: ReportHomePage;
+  reportPage: ReportPage;
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
@@ -39,6 +44,8 @@ const test = base.extend<KeyMetricTestFixtures>({
   dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
+  reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
+  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
 });
 
 test.describe('key metrics', () => {
@@ -149,13 +156,66 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Add a new single value key metric with a report field source', async () => {
+  test('Add a new single value key metric with a report field source', async ({
+    sourceApp,
+    reportHomePage,
+    reportPage,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-776',
     });
 
-    expect(true).toBeTruthy();
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      security: 'Public',
+    });
+
+    await test.step('Create a report in the source app', async () => {
+      await reportHomePage.goto();
+      await reportHomePage.createReport(report);
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'Report',
+        report: report.name,
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Modify an existing key metric', async () => {

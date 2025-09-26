@@ -1,11 +1,13 @@
 type KeyMetricType = 'Single Value' | 'Dial Gauge' | 'Donut Gauge' | 'Bar Gauge' | 'Bulb Gauge';
 
+type CountOfRecordsAggregateFunction = { fn: 'Count (of Records Returned)' };
+
 type AggregateFunction =
   | {
       fn: 'Sum' | 'Minimum' | 'Maximum' | 'Average';
       fieldToAggregate: string;
     }
-  | { fn: 'Count (of Records Returned)' };
+  | CountOfRecordsAggregateFunction;
 
 type FieldSource =
   | {
@@ -13,7 +15,7 @@ type FieldSource =
       aggregate: AggregateFunction;
     }
   | { type: 'Content Record'; record: string; field: string }
-  | { type: 'Report' };
+  | { type: 'Report'; report: string; aggregate: CountOfRecordsAggregateFunction };
 
 type Security =
   | {
