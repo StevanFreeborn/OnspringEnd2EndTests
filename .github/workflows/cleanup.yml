@@ -45,6 +45,8 @@ env:
   SFDC_USERNAME: ${{ secrets.SFDC_USERNAME }}
   SFDC_PASSWORD: ${{ secrets.SFDC_PASSWORD }}
   CUSTOM_EMAIL_SENDING_DOMAIN: ${{ secrets.CUSTOM_EMAIL_SENDING_DOMAIN }}
+  CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+  CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
 jobs:
   cleanup:
     name: 'Cleanup test artifacts'
