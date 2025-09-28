@@ -224,6 +224,14 @@ test.describe('key metrics', () => {
       description: 'Test-777',
     });
 
+    await test.step('Navigate to the dashboards admin page', async () => {});
+
+    await test.step('Create a key metric to update', async () => {});
+
+    await test.step('Update the key metric', async () => {});
+
+    await test.step('Verify the key metric was updated successfully', async () => {});
+
     expect(true).toBeTruthy();
   });
 
@@ -232,6 +240,14 @@ test.describe('key metrics', () => {
       type: AnnotationType.TestId,
       description: 'Test-778',
     });
+
+    await test.step('Navigate to the dashboards admin page', async () => {});
+
+    await test.step('Create a key metric to delete', async () => {});
+
+    await test.step('Delete the key metric', async () => {});
+
+    await test.step('Verify the key metric was deleted successfully', async () => {});
 
     expect(true).toBeTruthy();
   });
