@@ -275,4 +275,14 @@ export class DashboardDesignerModal {
     await this.addKeyMetricDialog.continueButton.click();
     await this.enterAndSaveKeyMetric(keyMetric);
   }
+
+  async updateKeyMetric(existingKeyMetric: KeyMetric, updatedKeyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+
+    const item = await this.resourcesSection.getItemFromTab(existingKeyMetric);
+    await item.hover();
+    await item.getByTitle('Edit Key Metric Properties').click();
+
+    await this.enterAndSaveKeyMetric(updatedKeyMetric);
+  }
 }

@@ -67,6 +67,8 @@ export abstract class KeyMetric {
     this.fieldSource = fieldSource;
     this.security = security;
   }
+
+  abstract clone(): KeyMetric;
 }
 
 type SingleValueColorDisplay =
@@ -109,5 +111,19 @@ export class SingleValueKeyMetric extends KeyMetric {
       security,
     });
     this.colorDisplay = colorDisplay;
+  }
+
+  clone() {
+    return new SingleValueKeyMetric({
+      objectName: this.objectName,
+      displayName: this.displayName,
+      description: this.description,
+      forceRefresh: this.forceRefresh,
+      overridePermissions: this.overridePermissions,
+      appOrSurvey: this.appOrSurvey,
+      fieldSource: this.fieldSource,
+      security: this.security,
+      colorDisplay: this.colorDisplay,
+    });
   }
 }

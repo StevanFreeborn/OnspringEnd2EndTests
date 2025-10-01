@@ -218,21 +218,58 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Modify an existing key metric', async () => {
+  test('Modify an existing key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-777',
     });
 
-    await test.step('Navigate to the dashboards admin page', async () => {});
+    const keyMetricName = FakeDataFactory.createFakeKeyMetricName();
+    const updatedKeyMetricName = FakeDataFactory.createFakeKeyMetricName();
 
-    await test.step('Create a key metric to update', async () => {});
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: keyMetricName,
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+    });
 
-    await test.step('Update the key metric', async () => {});
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
 
-    await test.step('Verify the key metric was updated successfully', async () => {});
+    await test.step('Create a key metric to update', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
 
-    expect(true).toBeTruthy();
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Update the key metric', async () => {
+      const updatedKeyMetric = keyMetric.clone();
+      updatedKeyMetric.objectName = updatedKeyMetricName;
+
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+
+      await dashboardsAdminPage.dashboardDesigner.updateKeyMetric(keyMetric, updatedKeyMetric);
+
+      await dashboardsAdminPage.dashboardDesigner.close();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was updated successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(updatedKeyMetricName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Delete a key metric', async () => {
