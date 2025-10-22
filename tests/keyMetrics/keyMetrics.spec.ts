@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
@@ -9,6 +10,8 @@ import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
 import { SingleValueKeyMetric } from '../../models/keyMetric';
 import { SavedReportAsReportDataOnly } from '../../models/report';
+import { TextField } from '../../models/textField';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
@@ -28,6 +31,7 @@ type KeyMetricTestFixtures = {
   editContentPage: EditContentPage;
   reportHomePage: ReportHomePage;
   reportPage: ReportPage;
+  appAdminPage: AppAdminPage;
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
@@ -47,6 +51,7 @@ const test = base.extend<KeyMetricTestFixtures>({
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
   reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
   reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
 });
 
 test.describe('key metrics', () => {
@@ -389,14 +394,113 @@ test.describe('key metrics', () => {
     }
   );
 
-  test('Verify a content record single value key metric displays and functions as expected', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-780',
-    });
+  test(
+    'Verify a content record single value key metric displays and functions as expected',
+    { tag: [Tags.Snapshot] },
+    async ({
+      sourceApp,
+      appAdminPage,
+      dashboardsAdminPage,
+      dashboard,
+      dashboardPage,
+      addContentPage,
+      editContentPage,
+    }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-780',
+      });
 
-    expect(true).toBeTruthy();
-  });
+      let recordId = 0;
+
+      const tabName = 'Tab 2';
+      const sectionName = 'Section 1';
+      const textField = new TextField({
+        name: FakeDataFactory.createFakeFieldName(),
+      });
+
+      await test.step('Add a text field to the source app', async () => {
+        await appAdminPage.goto(sourceApp.id);
+        await appAdminPage.layoutTabButton.click();
+        await appAdminPage.layoutTab.openLayout();
+        await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
+        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionRow: 0,
+          sectionColumn: 0,
+          fieldName: textField.name,
+        });
+        await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      });
+
+      await test.step('Create a content record in the source app', async () => {
+        await addContentPage.goto(sourceApp.id);
+
+        const textFieldInput = await addContentPage.form.getField({
+          tabName: tabName,
+          sectionName: sectionName,
+          fieldName: textField.name,
+          fieldType: textField.type as FieldType,
+        });
+        await textFieldInput.fill('Test Value');
+
+        await addContentPage.saveRecordButton.click();
+        await addContentPage.page.waitForURL(editContentPage.pathRegex);
+
+        recordId = editContentPage.getRecordIdFromUrl();
+
+        expect(recordId).toBeGreaterThan(0);
+      });
+
+      const keyMetric = new SingleValueKeyMetric({
+        objectName: FakeDataFactory.createFakeKeyMetricName(),
+        appOrSurvey: sourceApp.name,
+        fieldSource: {
+          type: 'Content Record',
+          record: recordId.toString(),
+          field: textField.name,
+        },
+      });
+
+      await test.step('Navigate to the dashboards admin page', async () => {
+        await dashboardsAdminPage.goto();
+      });
+
+      await test.step('Open the dashboard designer', async () => {
+        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      });
+
+      await test.step('Add key metric to the dashboard', async () => {
+        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      });
+
+      await test.step('Navigate to the dashboard page', async () => {
+        await dashboardPage.goto(dashboard.id);
+      });
+
+      await test.step('Verify the key metric displays as expected', async () => {
+        const keyMetricPlaceholderName = 'Key Metric';
+
+        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+
+        const keyMetricTitle = keyMetricCard.locator('.title');
+
+        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
+
+        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
+
+        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
+
+        await expect(keyMetricCard).toHaveScreenshot();
+      });
+    }
+  );
 
   test('Verify a report single value key metric displays and functions as expected', async () => {
     test.info().annotations.push({
