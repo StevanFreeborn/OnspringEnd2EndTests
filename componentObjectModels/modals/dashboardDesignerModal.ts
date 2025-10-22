@@ -11,6 +11,7 @@ import { WaitForOptions } from '../../utils';
 import { AddKeyMetricDialog } from '../dialogs/addKeyMetricDialog';
 import { AddObjectDialog } from '../dialogs/addObjectDialog';
 import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
+import { DeleteKeyMetricDialog } from '../dialogs/deleteKeyMetricDialog';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
 import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
@@ -47,6 +48,8 @@ export class DashboardDesignerModal {
   private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
   private readonly deleteDashboardObjectPathRegex: RegExp;
   private readonly getMoreObjectsPathRegex: RegExp;
+  private readonly deleteKeyMetricDialog: DeleteKeyMetricDialog;
+  private readonly getMoreKeyMetricsPathRegex: RegExp;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -75,6 +78,8 @@ export class DashboardDesignerModal {
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
     this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
     this.getMoreObjectsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
+    this.deleteKeyMetricDialog = new DeleteKeyMetricDialog(this.page);
+    this.getMoreKeyMetricsPathRegex = /\/Admin\/Dashboard\/GetMoreKeyMetricsListItems/;
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -284,5 +289,17 @@ export class DashboardDesignerModal {
     await item.getByTitle('Edit Key Metric Properties').click();
 
     await this.enterAndSaveKeyMetric(updatedKeyMetric);
+  }
+
+  async deleteKeyMetric(existingKeyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+    const item = await this.resourcesSection.getItemFromTab(existingKeyMetric);
+
+    await item.hover();
+    await item.getByTitle('Delete Key Metric').click();
+    await this.deleteKeyMetricDialog.dialog.waitFor();
+    await this.deleteKeyMetricDialog.deleteButton.click();
+    await this.deleteKeyMetricDialog.dialog.waitFor({ state: 'hidden' });
+    await item.waitFor({ state: 'hidden' });
   }
 }

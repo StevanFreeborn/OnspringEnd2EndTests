@@ -272,21 +272,64 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Delete a key metric', async () => {
+  test('Delete a key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-778',
     });
 
-    await test.step('Navigate to the dashboards admin page', async () => {});
+    const keyMetricName = FakeDataFactory.createFakeKeyMetricName();
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: keyMetricName,
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+    });
 
-    await test.step('Create a key metric to delete', async () => {});
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
 
-    await test.step('Delete the key metric', async () => {});
+    await test.step('Create a key metric to delete', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
 
-    await test.step('Verify the key metric was deleted successfully', async () => {});
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
 
-    expect(true).toBeTruthy();
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was created successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
+
+    await test.step('Navigate back to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Delete the key metric', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await dashboardsAdminPage.dashboardDesigner.deleteKeyMetric(keyMetric);
+      await dashboardsAdminPage.dashboardDesigner.close();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was deleted successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeHidden();
+    });
   });
 
   test('Verify an app/survey single value key metric displays and functions as expected', async () => {
