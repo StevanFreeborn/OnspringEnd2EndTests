@@ -502,13 +502,77 @@ test.describe('key metrics', () => {
     }
   );
 
-  test('Verify a report single value key metric displays and functions as expected', async () => {
+  test('Verify a report single value key metric displays and functions as expected', async ({
+    sourceApp,
+    reportHomePage,
+    reportPage,
+    dashboardsAdminPage,
+    dashboard,
+    dashboardPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-781',
     });
 
-    expect(true).toBeTruthy();
+    const report = new SavedReportAsReportDataOnly({
+      appName: sourceApp.name,
+      name: FakeDataFactory.createFakeReportName(),
+      security: 'Public',
+    });
+
+    await test.step('Create a report in the source app', async () => {
+      await reportHomePage.goto();
+      await reportHomePage.createReport(report);
+      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+    });
+
+    const keyMetric = new SingleValueKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'Report',
+        report: report.name,
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+    });
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric displays as expected', async () => {
+      const keyMetricPlaceholderName = 'Key Metric';
+
+      let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+
+      const keyMetricTitle = keyMetricCard.locator('.title');
+
+      await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
+
+      await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
+
+      keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
+
+      await expect(keyMetricCard).toHaveScreenshot();
+    });
   });
 
   test('Add a new dial gauge key metric', async () => {
