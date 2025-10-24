@@ -8,7 +8,7 @@ import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
-import { DialGaugeKeyMetric, KeyMetric, SingleValueKeyMetric } from '../../models/keyMetric';
+import { DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric, SingleValueKeyMetric } from '../../models/keyMetric';
 import { SavedReportAsReportDataOnly } from '../../models/report';
 import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -658,13 +658,56 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Add a new donut gauge key metric', async () => {
+  test('Add a new donut gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-796',
     });
 
-    expect(true).toBeTruthy();
+    const keyMetric = new DonutGaugeKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+      colorDisplay: {
+        type: 'Selected Color',
+        selectedColor: '#FF0000',
+        label: 'Red',
+      },
+      totalSource: {
+        type: 'Static',
+        totalValue: 10,
+      },
+    });
+    keyMetricsToDelete.push(keyMetric);
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Add a new bar gauge key metric', async () => {

@@ -1,5 +1,5 @@
 import { Locator, Page } from '../../fixtures';
-import { DialGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
+import { DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
 import { SelectARecordModal } from './selectARecordModal';
 
@@ -23,7 +23,11 @@ export class AddOrEditKeyMetricModal {
   private readonly recordFieldSelector: Locator;
   private readonly reportSelector: Locator;
   private readonly needleDisplaySelector: Locator;
+  private readonly centerDisplaySelector: Locator;
   private readonly calculatedPercentageDisplaySelector: Locator;
+  private readonly colorDisplaySelector: Locator;
+  private readonly selectedColorPicker: Locator;
+  private readonly labelInput: Locator;
   private readonly valueRangesGrid: Locator;
   private readonly totalDataTypeTabButtonPicker: Locator;
   private readonly totalDataTotalValueInput: Locator;
@@ -56,9 +60,15 @@ export class AddOrEditKeyMetricModal {
     this.needleDisplaySelector = this.modal
       .locator('.label:has-text("Needle Display") + td .data')
       .getByRole('listbox');
+    this.centerDisplaySelector = this.modal
+      .locator('.label:has-text("Center Display") + td .data')
+      .getByRole('listbox');
     this.calculatedPercentageDisplaySelector = this.modal
       .locator('.label:has-text("Calculated Percentage Display") + td .data')
       .getByRole('listbox');
+    this.colorDisplaySelector = this.modal.locator('.label:has-text("Color Display") + td .data').getByRole('listbox');
+    this.selectedColorPicker = this.modal.locator('.label:has-text("Selected Color") + .data .k-colorpicker');
+    this.labelInput = this.modal.locator('.label:has-text("Label") + .data').getByRole('textbox');
     this.valueRangesGrid = this.modal.locator('.label:has-text("Value Ranges") + .data .color-stops');
     this.totalDataTypeTabButtonPicker = this.modal.locator('.label:has-text("Total Source Type") + .data');
     this.totalDataTotalValueInput = this.modal.locator('.label:has-text("Total Value") + .data input:visible');
@@ -124,6 +134,16 @@ export class AddOrEditKeyMetricModal {
     await this.page.getByRole('button', { name: totalDataType }).click();
   }
 
+  private async selectCenterDisplay(centerDisplay: string) {
+    await this.centerDisplaySelector.click();
+    await this.page.getByRole('option', { name: centerDisplay }).click();
+  }
+
+  private async selectColorDisplay(colorDisplay: string) {
+    await this.colorDisplaySelector.click();
+    await this.page.getByRole('option', { name: colorDisplay }).click();
+  }
+
   async fillOutForm(keyMetric: KeyMetric) {
     await this.generalTabButton.click();
     await this.objectNameInput.fill(keyMetric.objectName);
@@ -142,6 +162,10 @@ export class AddOrEditKeyMetricModal {
 
     if (keyMetric instanceof DialGaugeKeyMetric) {
       await this.selectNeedleDisplay(keyMetric.needleDisplay);
+    }
+
+    if (keyMetric instanceof DonutGaugeKeyMetric) {
+      await this.selectCenterDisplay(keyMetric.centerDisplay);
     }
 
     await this.selectAppOrSurvey(keyMetric.appOrSurvey);
@@ -171,6 +195,34 @@ export class AddOrEditKeyMetricModal {
 
         await addButton.click();
         await rangeStopInput.fill(range.rangeStop.toString());
+      }
+
+      await this.selectTotalSourceType(keyMetric.totalSource.type);
+
+      if (keyMetric.totalSource.type === 'Static') {
+        await this.totalDataTotalValueInput.fill(keyMetric.totalSource.totalValue.toString());
+      }
+
+      if (keyMetric.totalSource.type === 'Dynamic') {
+        throw new Error('Not supported yet');
+      }
+    }
+
+    if (keyMetric instanceof DonutGaugeKeyMetric) {
+      await this.selectCalculatedPercentageDisplay(keyMetric.calculatedPercentageDisplay);
+
+      if (keyMetric.colorDisplay.type === 'Conditional Color based on Range') {
+        for (const range of keyMetric.colorDisplay.ranges) {
+          const addButton = this.valueRangesGrid.getByRole('button', { name: 'Add Value' });
+          const lastRow = this.valueRangesGrid.locator('tbody tr').last();
+          const rangeStopInput = lastRow.locator('[data-field="rangeStop"] input:visible');
+
+          await addButton.click();
+          await rangeStopInput.fill(range.rangeStop.toString());
+        }
+      }
+
+      if (keyMetric.colorDisplay.type === 'Selected Color') {
       }
 
       await this.selectTotalSourceType(keyMetric.totalSource.type);
