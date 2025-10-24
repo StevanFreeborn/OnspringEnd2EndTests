@@ -2,16 +2,17 @@ import { expect } from '@playwright/test';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
+import { createApp } from '../../fixtures/app.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
-import { SingleValueKeyMetric } from '../../models/keyMetric';
+import { DialGaugeKeyMetric, KeyMetric, SingleValueKeyMetric } from '../../models/keyMetric';
 import { SavedReportAsReportDataOnly } from '../../models/report';
 import { TextField } from '../../models/textField';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
@@ -32,11 +33,15 @@ type KeyMetricTestFixtures = {
   reportHomePage: ReportHomePage;
   reportPage: ReportPage;
   appAdminPage: AppAdminPage;
+  appsAdminPage: AppsAdminPage;
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
   dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
-  sourceApp: app,
+  sourceApp: async ({ sysAdminPage }, use) => {
+    const app = await createApp(sysAdminPage);
+    await use(app);
+  },
   container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
   dashboard: async ({ sysAdminPage, container }, use) =>
     await createDashboardFixture(
@@ -52,9 +57,25 @@ const test = base.extend<KeyMetricTestFixtures>({
   reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
   reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+  appsAdminPage: async ({ sysAdminPage }, use) => await use(new AppsAdminPage(sysAdminPage)),
 });
 
 test.describe('key metrics', () => {
+  let keyMetricsToDelete: KeyMetric[] = [];
+
+  test.afterEach(async ({ appsAdminPage, dashboardsAdminPage, dashboard, sourceApp }) => {
+    await dashboardsAdminPage.goto();
+    await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+
+    for (const keyMetric of keyMetricsToDelete) {
+      await dashboardsAdminPage.dashboardDesigner.deleteKeyMetric(keyMetric);
+    }
+
+    keyMetricsToDelete = [];
+
+    await appsAdminPage.deleteApps([sourceApp.name]);
+  });
+
   test('Add a new single value key metric with an app/survey field source', async ({
     sourceApp,
     dashboardsAdminPage,
@@ -74,6 +95,7 @@ test.describe('key metrics', () => {
         aggregate: { fn: 'Count (of Records Returned)' },
       },
     });
+    keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -134,6 +156,7 @@ test.describe('key metrics', () => {
         field: 'Created Date',
       },
     });
+    keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -196,6 +219,7 @@ test.describe('key metrics', () => {
         aggregate: { fn: 'Count (of Records Returned)' },
       },
     });
+    keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -260,6 +284,7 @@ test.describe('key metrics', () => {
     await test.step('Update the key metric', async () => {
       const updatedKeyMetric = keyMetric.clone();
       updatedKeyMetric.objectName = updatedKeyMetricName;
+      keyMetricsToDelete.push(updatedKeyMetric);
 
       await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
 
@@ -355,6 +380,7 @@ test.describe('key metrics', () => {
           aggregate: { fn: 'Count (of Records Returned)' },
         },
       });
+      keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
         await dashboardsAdminPage.goto();
@@ -462,6 +488,7 @@ test.describe('key metrics', () => {
           field: textField.name,
         },
       });
+      keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
         await dashboardsAdminPage.goto();
@@ -536,6 +563,7 @@ test.describe('key metrics', () => {
         aggregate: { fn: 'Count (of Records Returned)' },
       },
     });
+    keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
       await dashboardsAdminPage.goto();
@@ -575,13 +603,59 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Add a new dial gauge key metric', async () => {
+  test('Add a new dial gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-795',
     });
 
-    expect(true).toBeTruthy();
+    const keyMetric = new DialGaugeKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+      valueRanges: [
+        {
+          rangeStop: 50,
+        },
+        {
+          rangeStop: 100,
+        },
+      ],
+      totalSource: {
+        type: 'Static',
+        totalValue: 10,
+      },
+    });
+    keyMetricsToDelete.push(keyMetric);
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Add a new donut gauge key metric', async () => {

@@ -127,3 +127,77 @@ export class SingleValueKeyMetric extends KeyMetric {
     });
   }
 }
+
+type ValueRange = {
+  label?: string;
+  rangeStop: number;
+  color?: string;
+};
+
+type NeedleDisplay = 'Value as Percentage' | 'Value as Number';
+
+type TotalSource =
+  | { type: 'Static'; totalValue: number }
+  | { type: 'Dynamic'; appOrSurvey: string; fieldSource: FieldSource };
+
+type DialGaugeKeyMetricObject = Omit<KeyMetricObject, 'type'> & {
+  valueRanges: ValueRange[];
+  totalSource: TotalSource;
+  needleDisplay?: NeedleDisplay;
+  calculatedPercentageDisplay?: number;
+  goalDisplay?: boolean;
+};
+
+export class DialGaugeKeyMetric extends KeyMetric {
+  needleDisplay: NeedleDisplay;
+  calculatedPercentageDisplay: number;
+  valueRanges: ValueRange[];
+  goalDisplay: boolean;
+  totalSource: TotalSource;
+
+  constructor({
+    objectName,
+    displayName,
+    description,
+    forceRefresh,
+    overridePermissions,
+    appOrSurvey,
+    fieldSource,
+    security,
+    valueRanges,
+    totalSource,
+    needleDisplay = 'Value as Percentage',
+    calculatedPercentageDisplay = 0,
+    goalDisplay = false,
+  }: DialGaugeKeyMetricObject) {
+    super({
+      objectName,
+      displayName,
+      description,
+      forceRefresh,
+      overridePermissions,
+      type: 'Dial Gauge',
+      appOrSurvey,
+      fieldSource,
+      security,
+    });
+
+    this.needleDisplay = needleDisplay;
+    this.calculatedPercentageDisplay = calculatedPercentageDisplay;
+    this.valueRanges = valueRanges;
+    this.goalDisplay = goalDisplay;
+    this.totalSource = totalSource;
+
+    if (this.valueRanges.length < 2) {
+      throw new Error('At least two color range stops are required for a Dial Gauge key metric.');
+    }
+
+    if (this.calculatedPercentageDisplay < 0 || this.calculatedPercentageDisplay > 6) {
+      throw new Error('Calculated Percentage Display must be between 0 and 6.');
+    }
+  }
+
+  clone(): KeyMetric {
+    throw new Error('Method not implemented.');
+  }
+}
