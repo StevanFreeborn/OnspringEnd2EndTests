@@ -213,6 +213,7 @@ export class AddOrEditKeyMetricModal {
 
     if (keyMetric instanceof DonutGaugeKeyMetric) {
       await this.selectCalculatedPercentageDisplay(keyMetric.calculatedPercentageDisplay);
+      await this.selectColorDisplay(keyMetric.colorDisplay.type);
 
       if (keyMetric.colorDisplay.type === 'Conditional Color based on Range') {
         for (const range of keyMetric.colorDisplay.ranges) {
@@ -226,8 +227,8 @@ export class AddOrEditKeyMetricModal {
       }
 
       if (keyMetric.colorDisplay.type === 'Selected Color') {
-        await this.selectedColorPicker.selectColor(keyMetric.colorDisplay.color);
         await this.labelInput.fill(keyMetric.colorDisplay.label);
+        await this.selectedColorPicker.selectColor(keyMetric.colorDisplay.color);
       }
 
       await this.selectTotalSourceType(keyMetric.totalSource.type);
