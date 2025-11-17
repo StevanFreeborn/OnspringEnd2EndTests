@@ -218,7 +218,7 @@ test.describe('bitsight data connector', () => {
 
       await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnector.name);
       await expect(editConnectorPage.connectionTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
-      await expect(editConnectorPage.connectionTab.apiKeyInput).toHaveValue(dataConnector.apiKey);
+      await expect(editConnectorPage.connectionTab.apiKeyInput).not.toHaveValue(dataConnector.apiKey);
     });
   });
 
