@@ -1,6 +1,7 @@
 import { Locator, Page } from '../../fixtures';
 import { DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
+import { TabbedColorPicker } from './../controls/tabbedColorPicker';
 import { SelectARecordModal } from './selectARecordModal';
 
 export class AddOrEditKeyMetricModal {
@@ -26,7 +27,7 @@ export class AddOrEditKeyMetricModal {
   private readonly centerDisplaySelector: Locator;
   private readonly calculatedPercentageDisplaySelector: Locator;
   private readonly colorDisplaySelector: Locator;
-  private readonly selectedColorPicker: Locator;
+  private readonly selectedColorPicker: TabbedColorPicker;
   private readonly labelInput: Locator;
   private readonly valueRangesGrid: Locator;
   private readonly totalDataTypeTabButtonPicker: Locator;
@@ -67,7 +68,9 @@ export class AddOrEditKeyMetricModal {
       .locator('.label:has-text("Calculated Percentage Display") + td .data')
       .getByRole('listbox');
     this.colorDisplaySelector = this.modal.locator('.label:has-text("Color Display") + td .data').getByRole('listbox');
-    this.selectedColorPicker = this.modal.locator('.label:has-text("Selected Color") + .data .k-colorpicker');
+    this.selectedColorPicker = new TabbedColorPicker(
+      this.modal.locator('.label:has-text("Selected Color") + .data .k-colorpicker')
+    );
     this.labelInput = this.modal.locator('.label:has-text("Label") + .data').getByRole('textbox');
     this.valueRangesGrid = this.modal.locator('.label:has-text("Value Ranges") + .data .color-stops');
     this.totalDataTypeTabButtonPicker = this.modal.locator('.label:has-text("Total Source Type") + .data');
@@ -223,6 +226,8 @@ export class AddOrEditKeyMetricModal {
       }
 
       if (keyMetric.colorDisplay.type === 'Selected Color') {
+        await this.selectedColorPicker.selectColor(keyMetric.colorDisplay.color);
+        await this.labelInput.fill(keyMetric.colorDisplay.label);
       }
 
       await this.selectTotalSourceType(keyMetric.totalSource.type);

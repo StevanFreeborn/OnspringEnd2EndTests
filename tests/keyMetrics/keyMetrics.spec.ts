@@ -673,7 +673,7 @@ test.describe('key metrics', () => {
       },
       colorDisplay: {
         type: 'Selected Color',
-        selectedColor: '#FF0000',
+        color: '#FF0000',
         label: 'Red',
       },
       totalSource: {

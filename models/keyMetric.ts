@@ -266,7 +266,7 @@ export class DonutGaugeKeyMetric extends KeyMetric {
     this.colorDisplay = colorDisplay;
     this.totalSource = totalSource;
 
-    if (this.colorDisplay.type === 'Conditional Color based on Range' && this.colorDisplay.valueRanges.length < 2) {
+    if (this.colorDisplay.type === 'Conditional Color based on Range' && this.colorDisplay.ranges.length < 2) {
       throw new Error('At least two color range stops are required.');
     }
 
