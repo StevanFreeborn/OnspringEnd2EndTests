@@ -57,32 +57,43 @@ type RequestOptions = {
 
 class APIRequestContextDecorator implements APIRequestContext {
   private context: APIRequestContext;
-  private responseAssertions: Array<(response: APIResponse) => void>;
+  private responseCallbacks: Array<{
+    callback: (response: APIResponse) => void | Promise<void>;
+    condition: ((response: APIResponse) => boolean | Promise<boolean>) | undefined;
+  }>;
 
   constructor(context: APIRequestContext) {
     this.context = context;
-    this.responseAssertions = [];
+    this.responseCallbacks = [];
   }
 
-  private handleResponse(response: APIResponse) {
-    for (const assertion of this.responseAssertions) {
-      assertion(response);
+  private async handleResponse(response: APIResponse) {
+    for (const assertion of this.responseCallbacks) {
+      if (assertion.condition) {
+        const condition = await assertion.condition(response);
+
+        if (condition === false) {
+          continue;
+        }
+      }
+
+      await assertion.callback(response);
     }
   }
 
-  onResponse(callback: (response: APIResponse) => void) {
-    this.responseAssertions.push(callback);
+  onResponse(callback: (response: APIResponse) => void, condition?: (response: APIResponse) => boolean) {
+    this.responseCallbacks.push({ callback, condition });
   }
 
   async put(url: string, options?: RequestOptions) {
     const response = await this.context.put(url, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
   async delete(urlOrRequest: string, options?: RequestOptions) {
     const response = await this.context.delete(urlOrRequest, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
@@ -92,31 +103,31 @@ class APIRequestContextDecorator implements APIRequestContext {
 
   async fetch(urlOrRequest: string | Request, options?: RequestOptions) {
     const response = await this.context.fetch(urlOrRequest, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
   async get(url: string, options?: RequestOptions) {
     const response = await this.context.get(url, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
   async head(url: string, options?: RequestOptions) {
     const response = await this.context.head(url, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
   async patch(url: string, options?: RequestOptions) {
     const response = await this.context.patch(url, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
   async post(url: string, options?: RequestOptions) {
     const response = await this.context.post(url, options);
-    this.handleResponse(response);
+    await this.handleResponse(response);
     return response;
   }
 
@@ -160,6 +171,12 @@ function ensureCacheControlAndPragmaHeadersPresent(response: APIResponse) {
   expect(pragmaHeader).toBe('no-cache');
 }
 
+function isNotFailedFileRequest(response: APIResponse) {
+  const url = response.url();
+  const isFileRequest = url.includes('/files');
+  return isFileRequest === false || response.ok();
+}
+
 export async function createRequestContextFixture(
   { apiUrl, setup }: { apiUrl: string; setup: ApiSetupResult },
   use: (r: APIRequestContext) => Promise<void>
@@ -173,7 +190,7 @@ export async function createRequestContextFixture(
 
   const decoratedAPIContext = new APIRequestContextDecorator(context);
 
-  decoratedAPIContext.onResponse(ensureCacheControlAndPragmaHeadersPresent);
+  decoratedAPIContext.onResponse(ensureCacheControlAndPragmaHeadersPresent, isNotFailedFileRequest);
 
   await use(decoratedAPIContext);
 
