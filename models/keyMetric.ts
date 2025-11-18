@@ -220,19 +220,19 @@ export class DialGaugeKeyMetric extends KeyMetric {
   }
 }
 
-type DonutGaugeColorDisplay = SelectedColorDisplay | ConditionalColorRangeDisplay;
+type SpecificOrConditionalColorDisplay = SelectedColorDisplay | ConditionalColorRangeDisplay;
 
 type DonutGaugeKeyMetricObject = Omit<KeyMetricObject, 'type'> & {
   centerDisplay?: PercentOrNumberDisplay;
   calculatedPercentageDisplay?: number;
-  colorDisplay: DonutGaugeColorDisplay;
+  colorDisplay: SpecificOrConditionalColorDisplay;
   totalSource: TotalSource;
 };
 
 export class DonutGaugeKeyMetric extends KeyMetric {
   centerDisplay: PercentOrNumberDisplay;
   calculatedPercentageDisplay: number;
-  colorDisplay: DonutGaugeColorDisplay;
+  colorDisplay: SpecificOrConditionalColorDisplay;
   totalSource: TotalSource;
 
   constructor({
@@ -275,8 +275,21 @@ export class DonutGaugeKeyMetric extends KeyMetric {
     }
   }
 
-  clone(): KeyMetric {
-    throw new Error('Method not implemented.');
+  clone() {
+    return new DonutGaugeKeyMetric({
+      objectName: this.objectName,
+      displayName: this.displayName,
+      description: this.description,
+      forceRefresh: this.forceRefresh,
+      overridePermissions: this.overridePermissions,
+      appOrSurvey: this.appOrSurvey,
+      fieldSource: this.fieldSource,
+      security: this.security,
+      colorDisplay: this.colorDisplay,
+      totalSource: this.totalSource,
+      centerDisplay: this.centerDisplay,
+      calculatedPercentageDisplay: this.calculatedPercentageDisplay,
+    });
   }
 }
 
@@ -333,7 +346,79 @@ export class BarGaugeKeyMetric extends KeyMetric {
     }
   }
 
-  clone(): KeyMetric {
-    throw new Error('Method not implemented.');
+  clone() {
+    return new BarGaugeKeyMetric({
+      objectName: this.objectName,
+      displayName: this.displayName,
+      description: this.description,
+      forceRefresh: this.forceRefresh,
+      overridePermissions: this.overridePermissions,
+      appOrSurvey: this.appOrSurvey,
+      fieldSource: this.fieldSource,
+      security: this.security,
+      valueRanges: this.valueRanges,
+      totalSource: this.totalSource,
+      pointerDisplay: this.pointerDisplay,
+      calculatedPercentageDisplay: this.calculatedPercentageDisplay,
+    });
+  }
+}
+
+type ValueOrRangeLabelDisplay = 'Value' | 'Range Label';
+
+type BulbGaugeKeyMetricObject = Omit<KeyMetricObject, 'type'> & {
+  centerDisplay?: ValueOrRangeLabelDisplay;
+  colorDisplay: SpecificOrConditionalColorDisplay;
+};
+
+export class BulbGaugeKeyMetric extends KeyMetric {
+  centerDisplay: ValueOrRangeLabelDisplay;
+  colorDisplay: SpecificOrConditionalColorDisplay;
+
+  constructor({
+    objectName,
+    displayName,
+    description,
+    forceRefresh,
+    overridePermissions,
+    appOrSurvey,
+    fieldSource,
+    security,
+    colorDisplay,
+    centerDisplay = 'Value',
+  }: BulbGaugeKeyMetricObject) {
+    super({
+      objectName,
+      displayName,
+      description,
+      forceRefresh,
+      overridePermissions,
+      type: 'Bulb Gauge',
+      appOrSurvey,
+      fieldSource,
+      security,
+    });
+
+    this.centerDisplay = centerDisplay;
+    this.colorDisplay = colorDisplay;
+
+    if (this.colorDisplay.type === 'Conditional Color based on Range' && this.colorDisplay.ranges.length < 2) {
+      throw new Error('At least two color range stops are required.');
+    }
+  }
+
+  clone() {
+    return new BulbGaugeKeyMetric({
+      objectName: this.objectName,
+      displayName: this.displayName,
+      description: this.description,
+      forceRefresh: this.forceRefresh,
+      overridePermissions: this.overridePermissions,
+      appOrSurvey: this.appOrSurvey,
+      fieldSource: this.fieldSource,
+      security: this.security,
+      colorDisplay: this.colorDisplay,
+      centerDisplay: this.centerDisplay,
+    });
   }
 }

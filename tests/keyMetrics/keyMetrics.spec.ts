@@ -10,6 +10,7 @@ import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
 import {
   BarGaugeKeyMetric,
+  BulbGaugeKeyMetric,
   DialGaugeKeyMetric,
   DonutGaugeKeyMetric,
   KeyMetric,
@@ -771,13 +772,52 @@ test.describe('key metrics', () => {
     });
   });
 
-  test('Add a new bulb gauge key metric', async () => {
+  test('Add a new bulb gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-798',
     });
 
-    expect(true).toBeTruthy();
+    const keyMetric = new BulbGaugeKeyMetric({
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
+      appOrSurvey: sourceApp.name,
+      fieldSource: {
+        type: 'App/Survey',
+        aggregate: { fn: 'Count (of Records Returned)' },
+      },
+      colorDisplay: {
+        type: 'Selected Color',
+        color: '#00FF00',
+        label: 'Green',
+      },
+    });
+    keyMetricsToDelete.push(keyMetric);
+
+    await test.step('Navigate to the dashboards admin page', async () => {
+      await dashboardsAdminPage.goto();
+    });
+
+    await test.step('Open the dashboard designer', async () => {
+      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+    });
+
+    await test.step('Add key metric to the dashboard', async () => {
+      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+    });
+
+    await test.step('Navigate to the dashboard page', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the key metric was added successfully', async () => {
+      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+      await expect(keyMetricCard).toBeVisible();
+    });
   });
 
   test('Verify a bulb gauge key metric displays and functions as expected', async () => {

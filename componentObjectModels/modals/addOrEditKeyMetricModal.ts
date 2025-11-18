@@ -1,5 +1,11 @@
 import { Locator, Page } from '../../fixtures';
-import { BarGaugeKeyMetric, DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
+import {
+  BarGaugeKeyMetric,
+  BulbGaugeKeyMetric,
+  DialGaugeKeyMetric,
+  DonutGaugeKeyMetric,
+  KeyMetric,
+} from '../../models/keyMetric';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
 import { TabbedColorPicker } from './../controls/tabbedColorPicker';
 import { SelectARecordModal } from './selectARecordModal';
@@ -187,7 +193,7 @@ export class AddOrEditKeyMetricModal {
       await this.selectNeedleDisplay(keyMetric.needleDisplay);
     }
 
-    if (keyMetric instanceof DonutGaugeKeyMetric) {
+    if (keyMetric instanceof DonutGaugeKeyMetric || keyMetric instanceof BulbGaugeKeyMetric) {
       await this.selectCenterDisplay(keyMetric.centerDisplay);
     }
 
@@ -262,6 +268,19 @@ export class AddOrEditKeyMetricModal {
 
       if (keyMetric.totalSource.type === 'Dynamic') {
         throw new Error('Not supported yet');
+      }
+    }
+
+    if (keyMetric instanceof BulbGaugeKeyMetric) {
+      await this.selectColorDisplay(keyMetric.colorDisplay.type);
+
+      if (keyMetric.colorDisplay.type === 'Conditional Color based on Range') {
+        await this.addValueRanges(keyMetric.colorDisplay.ranges);
+      }
+
+      if (keyMetric.colorDisplay.type === 'Selected Color') {
+        await this.labelInput.fill(keyMetric.colorDisplay.label);
+        await this.selectedColorPicker.selectColor(keyMetric.colorDisplay.color);
       }
     }
 
