@@ -1,5 +1,5 @@
 import { Locator, Page } from '../../fixtures';
-import { DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
+import { BarGaugeKeyMetric, DialGaugeKeyMetric, DonutGaugeKeyMetric, KeyMetric } from '../../models/keyMetric';
 import { DualPaneSelector } from '../controls/dualPaneSelector';
 import { TabbedColorPicker } from './../controls/tabbedColorPicker';
 import { SelectARecordModal } from './selectARecordModal';
@@ -25,6 +25,7 @@ export class AddOrEditKeyMetricModal {
   private readonly reportSelector: Locator;
   private readonly needleDisplaySelector: Locator;
   private readonly centerDisplaySelector: Locator;
+  private readonly pointerDisplaySelector: Locator;
   private readonly calculatedPercentageDisplaySelector: Locator;
   private readonly colorDisplaySelector: Locator;
   private readonly selectedColorPicker: TabbedColorPicker;
@@ -63,6 +64,9 @@ export class AddOrEditKeyMetricModal {
       .getByRole('listbox');
     this.centerDisplaySelector = this.modal
       .locator('.label:has-text("Center Display") + td .data')
+      .getByRole('listbox');
+    this.pointerDisplaySelector = this.modal
+      .locator('.label:has-text("Pointer Display") + td .data')
       .getByRole('listbox');
     this.calculatedPercentageDisplaySelector = this.modal
       .locator('.label:has-text("Calculated Percentage Display") + td .data')
@@ -147,6 +151,22 @@ export class AddOrEditKeyMetricModal {
     await this.page.getByRole('option', { name: colorDisplay }).click();
   }
 
+  private async selectPointerDisplay(pointerDisplay: string) {
+    await this.pointerDisplaySelector.click();
+    await this.page.getByRole('option', { name: pointerDisplay }).click();
+  }
+
+  private async addValueRanges(ranges: { rangeStop: number; label?: string }[]) {
+    for (const range of ranges) {
+      const addButton = this.valueRangesGrid.getByRole('button', { name: 'Add Value' });
+      const lastRow = this.valueRangesGrid.locator('tbody tr').last();
+      const rangeStopInput = lastRow.locator('[data-field="rangeStop"] input:visible');
+
+      await addButton.click();
+      await rangeStopInput.fill(range.rangeStop.toString());
+    }
+  }
+
   async fillOutForm(keyMetric: KeyMetric) {
     await this.generalTabButton.click();
     await this.objectNameInput.fill(keyMetric.objectName);
@@ -171,6 +191,10 @@ export class AddOrEditKeyMetricModal {
       await this.selectCenterDisplay(keyMetric.centerDisplay);
     }
 
+    if (keyMetric instanceof BarGaugeKeyMetric) {
+      await this.selectPointerDisplay(keyMetric.pointerDisplay);
+    }
+
     await this.selectAppOrSurvey(keyMetric.appOrSurvey);
     await this.selectFieldSource(keyMetric.fieldSource.type);
 
@@ -190,16 +214,7 @@ export class AddOrEditKeyMetricModal {
 
     if (keyMetric instanceof DialGaugeKeyMetric) {
       await this.selectCalculatedPercentageDisplay(keyMetric.calculatedPercentageDisplay);
-
-      for (const range of keyMetric.valueRanges) {
-        const addButton = this.valueRangesGrid.getByRole('button', { name: 'Add Value' });
-        const lastRow = this.valueRangesGrid.locator('tbody tr').last();
-        const rangeStopInput = lastRow.locator('[data-field="rangeStop"] input:visible');
-
-        await addButton.click();
-        await rangeStopInput.fill(range.rangeStop.toString());
-      }
-
+      await this.addValueRanges(keyMetric.valueRanges);
       await this.selectTotalSourceType(keyMetric.totalSource.type);
 
       if (keyMetric.totalSource.type === 'Static') {
@@ -216,20 +231,28 @@ export class AddOrEditKeyMetricModal {
       await this.selectColorDisplay(keyMetric.colorDisplay.type);
 
       if (keyMetric.colorDisplay.type === 'Conditional Color based on Range') {
-        for (const range of keyMetric.colorDisplay.ranges) {
-          const addButton = this.valueRangesGrid.getByRole('button', { name: 'Add Value' });
-          const lastRow = this.valueRangesGrid.locator('tbody tr').last();
-          const rangeStopInput = lastRow.locator('[data-field="rangeStop"] input:visible');
-
-          await addButton.click();
-          await rangeStopInput.fill(range.rangeStop.toString());
-        }
+        await this.addValueRanges(keyMetric.colorDisplay.ranges);
       }
 
       if (keyMetric.colorDisplay.type === 'Selected Color') {
         await this.labelInput.fill(keyMetric.colorDisplay.label);
         await this.selectedColorPicker.selectColor(keyMetric.colorDisplay.color);
       }
+
+      await this.selectTotalSourceType(keyMetric.totalSource.type);
+
+      if (keyMetric.totalSource.type === 'Static') {
+        await this.totalDataTotalValueInput.fill(keyMetric.totalSource.totalValue.toString());
+      }
+
+      if (keyMetric.totalSource.type === 'Dynamic') {
+        throw new Error('Not supported yet');
+      }
+    }
+
+    if (keyMetric instanceof BarGaugeKeyMetric) {
+      await this.selectCalculatedPercentageDisplay(keyMetric.calculatedPercentageDisplay);
+      await this.addValueRanges(keyMetric.valueRanges);
 
       await this.selectTotalSourceType(keyMetric.totalSource.type);
 

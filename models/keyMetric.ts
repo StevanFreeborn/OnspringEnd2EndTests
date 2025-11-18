@@ -279,3 +279,61 @@ export class DonutGaugeKeyMetric extends KeyMetric {
     throw new Error('Method not implemented.');
   }
 }
+
+type BarGaugeKeyMetricObject = Omit<KeyMetricObject, 'type'> & {
+  pointerDisplay?: PercentOrNumberDisplay;
+  calculatedPercentageDisplay?: number;
+  valueRanges: ValueRange[];
+  totalSource: TotalSource;
+};
+
+export class BarGaugeKeyMetric extends KeyMetric {
+  pointerDisplay: PercentOrNumberDisplay;
+  calculatedPercentageDisplay: number;
+  valueRanges: ValueRange[];
+  totalSource: TotalSource;
+
+  constructor({
+    objectName,
+    displayName,
+    description,
+    forceRefresh,
+    overridePermissions,
+    appOrSurvey,
+    fieldSource,
+    security,
+    valueRanges,
+    totalSource,
+    pointerDisplay = 'Value as Percentage',
+    calculatedPercentageDisplay = 0,
+  }: BarGaugeKeyMetricObject) {
+    super({
+      objectName,
+      displayName,
+      description,
+      forceRefresh,
+      overridePermissions,
+      type: 'Bar Gauge',
+      appOrSurvey,
+      fieldSource,
+      security,
+    });
+
+    this.pointerDisplay = pointerDisplay;
+    this.calculatedPercentageDisplay = calculatedPercentageDisplay;
+    this.valueRanges = valueRanges;
+    this.totalSource = totalSource;
+
+    if (this.valueRanges.length < 2) {
+      throw new Error('At least two color range stops are required.');
+    }
+
+    if (this.calculatedPercentageDisplay < 0 || this.calculatedPercentageDisplay > 6) {
+      throw new Error('Calculated Percentage Display must be between 0 and 6.');
+    }
+  }
+
+  clone(): KeyMetric {
+    throw new Error('Method not implemented.');
+  }
+}
