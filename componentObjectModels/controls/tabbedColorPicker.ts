@@ -10,13 +10,15 @@ export class TabbedColorPicker {
   }
 
   async selectColor(color: string) {
-    const popupOwner = this.frame ?? this.control.page();
+    const page = this.control.page();
+    const popupOwner = this.frame ?? page;
     const colorPickerPopup = popupOwner.locator('.tabbed-color-popup:visible');
     const customTab = colorPickerPopup.getByRole('tab', { name: 'Custom' });
     const colorInput = colorPickerPopup.locator('.k-color-value');
 
-    // TODO: Make this work
     await this.control.click();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     await customTab.click();
     await colorInput.clear();
     await colorInput.pressSequentially(color, { delay: 150 });
