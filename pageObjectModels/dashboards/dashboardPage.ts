@@ -38,6 +38,7 @@ export class DashboardPage extends BasePage {
   async goto(dashboardId?: number) {
     const path = dashboardId ? `${this.path}/${dashboardId}` : this.path;
     await this.page.goto(path);
+    await this.copyrightPatentInfo.waitFor({ state: 'hidden' });
   }
 
   async openDashboardDesigner() {
