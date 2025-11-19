@@ -411,17 +411,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricPlaceholderName = 'Key Metric';
-
-        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-        const keyMetricTitle = keyMetricCard.locator('.title');
-
-        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -519,18 +509,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricPlaceholderName = 'Key Metric';
-
-        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-
-        const keyMetricTitle = keyMetricCard.locator('.title');
-
-        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -594,18 +573,7 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Verify the key metric displays as expected', async () => {
-      const keyMetricPlaceholderName = 'Key Metric';
-
-      let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-
-      const keyMetricTitle = keyMetricCard.locator('.title');
-
-      await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-      await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-      keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+      const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
       await expect(keyMetricCard).toHaveScreenshot();
     });
   });
@@ -866,18 +834,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricPlaceholderName = 'Key Metric';
-
-        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-
-        const keyMetricTitle = keyMetricCard.locator('.title');
-
-        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -936,18 +893,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricPlaceholderName = 'Key Metric';
-
-        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-
-        const keyMetricTitle = keyMetricCard.locator('.title');
-
-        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -1003,29 +949,83 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricPlaceholderName = 'Key Metric';
-
-        let keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-
-        const keyMetricTitle = keyMetricCard.locator('.title');
-
-        await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-        await keyMetricTitle.evaluate((el, name) => (el.textContent = name), keyMetricPlaceholderName);
-
-        keyMetricCard = dashboardPage.getDashboardItem(keyMetricPlaceholderName);
-
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
   );
 
-  test('Verify a dial gauge key metric displays and functions as expected', async () => {
-    test.info().annotations.push({
-      type: AnnotationType.TestId,
-      description: 'Test-802',
-    });
+  test(
+    'Verify a dial gauge key metric displays and functions as expected',
+    { tag: [Tags.Snapshot] },
+    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+      test.info().annotations.push({
+        type: AnnotationType.TestId,
+        description: 'Test-802',
+      });
 
-    expect(true).toBeTruthy();
-  });
+      const keyMetric = new DialGaugeKeyMetric({
+        objectName: FakeDataFactory.createFakeKeyMetricName(),
+        appOrSurvey: sourceApp.name,
+        fieldSource: {
+          type: 'App/Survey',
+          aggregate: { fn: 'Count (of Records Returned)' },
+        },
+        valueRanges: [
+          {
+            rangeStop: 50,
+          },
+          {
+            rangeStop: 100,
+          },
+        ],
+        totalSource: {
+          type: 'Static',
+          totalValue: 10,
+        },
+      });
+      keyMetricsToDelete.push(keyMetric);
+
+      await test.step('Navigate to the dashboards admin page', async () => {
+        await dashboardsAdminPage.goto();
+      });
+
+      await test.step('Open the dashboard designer', async () => {
+        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      });
+
+      await test.step('Add key metric to the dashboard', async () => {
+        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
+
+        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
+
+        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
+        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      });
+
+      await test.step('Navigate to the dashboard page', async () => {
+        await dashboardPage.goto(dashboard.id);
+      });
+
+      await test.step('Verify the key metric displays as expected', async () => {
+        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        await expect(keyMetricCard).toHaveScreenshot();
+      });
+    }
+  );
 });
+
+async function getKeyMetricForScreenshot(
+  dashboardPage: DashboardPage,
+  keyMetric: KeyMetric,
+  placeholderName: string = 'Key Metric'
+) {
+  const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
+  const keyMetricTitle = keyMetricCard.locator('.title');
+
+  await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
+
+  await keyMetricTitle.evaluate((el, name) => (el.textContent = name), placeholderName);
+
+  return dashboardPage.getDashboardItem(placeholderName);
+}
