@@ -18,12 +18,18 @@ export const TEST_DASHBOARD_NAME = 'dashboard-test';
 export const TEST_DASHBOARD_OBJECT_NAME = 'object-test';
 export const TEST_EMAIL_TEMPLATE_NAME = 'email-template-test';
 export const TEST_EMAIL_SYNC_NAME = 'email-sync-test';
+export const TEST_KEY_METRIC_NAME = 'key-metric-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeKeyMetricName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_KEY_METRIC_NAME}`;
   }
 
   static createFakeRecordRetentionRuleName() {

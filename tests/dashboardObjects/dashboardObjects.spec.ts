@@ -9,15 +9,15 @@ import { Container } from '../../models/container';
 import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard } from '../../models/dashboard';
 import { DashboardFormattedTextBlock as FormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
+import { DashboardObjectItem } from '../../models/dashboardObjectItem';
 import { WebPage } from '../../models/webPage';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
+import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
+import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
-import { DashboardObjectItem } from '../../models/dashboardObjectItem';
-import { ContentHomePage } from '../../pageObjectModels/content/contentHomePage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { AppContentPage } from '../../pageObjectModels/content/appContentPage';
 
 type DashboardObjectTestFixtures = {
   dashboardsAdminPage: DashboardsAdminPage;
@@ -859,7 +859,5 @@ test.describe('dashboard objects', () => {
       await expect(iframe).toBeVisible();
       await expect(iframe).toHaveAttribute('src', webPageObject.url);
     });
-
-    expect(true).toBeTruthy();
   });
 });

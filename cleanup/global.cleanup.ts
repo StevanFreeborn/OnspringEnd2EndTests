@@ -84,6 +84,10 @@ teardown.describe('cleanup', () => {
     }
   );
 
+  teardown('cleanup:KeyMetrics delete all test key metrics created as part of tests', async ({ sysAdminPage }) => {
+    await new DashboardsAdminPage(sysAdminPage).deleteAllTestKeyMetrics();
+  });
+
   teardown('cleanup:emailTemplates delete all email templates created as part of tests', async ({ sysAdminPage }) => {
     await new EmailTemplateAdminPage(sysAdminPage).deleteAllTestTemplates();
   });

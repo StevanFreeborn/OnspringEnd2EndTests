@@ -1,8 +1,9 @@
 import { DashboardObjectItem } from './dashboardObjectItem';
 import { ExportDashboardOptions } from './exportDashboardOptions';
+import { KeyMetric } from './keyMetric';
 import { Report, ScheduledExportCustomSchedule, ScheduledExportFrequency } from './report';
 
-export type DashboardItem = Report | DashboardObjectItem;
+export type DashboardItem = Report | DashboardObjectItem | KeyMetric;
 
 export type DashboardItemWithLocation = {
   item: DashboardItem;
