@@ -7,6 +7,7 @@ import { Dashboard } from '../../models/dashboard';
 import { BaseAdminPage } from '../baseAdminPage';
 
 export class DashboardsAdminPage extends BaseAdminPage {
+  private readonly gettingStartedDashboard: string;
   private readonly getDashboardsPath: string;
   private readonly deletePathRegex: RegExp;
   private readonly createDashboardButton: Locator;
@@ -18,6 +19,7 @@ export class DashboardsAdminPage extends BaseAdminPage {
 
   constructor(page: Page) {
     super(page);
+    this.gettingStartedDashboard = 'Welcome to Onspring';
     this.getDashboardsPath = '/Admin/Dashboard/GetListPage';
     this.path = '/Admin/Dashboard';
     this.grid = this.page.locator('#grid');
@@ -125,7 +127,13 @@ export class DashboardsAdminPage extends BaseAdminPage {
 
   async deleteAllTestDashboardObjects() {
     await this.goto();
-    await this.openDashboardDesigner('Welcome to Onspring');
+    await this.openDashboardDesigner(this.gettingStartedDashboard);
     await this.dashboardDesigner.deleteAllDashboardObjects();
+  }
+
+  async deleteAllTestKeyMetrics() {
+    await this.goto();
+    await this.openDashboardDesigner(this.gettingStartedDashboard);
+    await this.dashboardDesigner.deleteAllTestKeyMetrics();
   }
 }

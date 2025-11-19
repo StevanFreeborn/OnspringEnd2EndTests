@@ -5,15 +5,20 @@ import { CreateContentLinks } from '../../models/createContentLinks';
 import { Dashboard, DashboardItemWithLocation, DashboardSchedule } from '../../models/dashboard';
 import { DashboardFormattedTextBlock } from '../../models/dashboardFormattedTextBlock';
 import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { KeyMetric } from '../../models/keyMetric';
 import { WebPage } from '../../models/webPage';
 import { WaitForOptions } from '../../utils';
+import { AddKeyMetricDialog } from '../dialogs/addKeyMetricDialog';
 import { AddObjectDialog } from '../dialogs/addObjectDialog';
 import { DeleteDashboardObjectDialog } from '../dialogs/deleteDashboardObjectDialog';
+import { DeleteKeyMetricDialog } from '../dialogs/deleteKeyMetricDialog';
 import { DashboardCanvasSection } from '../sections/dashboardCanvasSection';
 import { DashboardResourcesSection } from '../sections/dashboardResourcesSection';
+import { TEST_KEY_METRIC_NAME } from './../../factories/fakeDataFactory';
 import { AddOrEditAppSearchObjectModal } from './addOrEditAppSearchObjectModal';
 import { AddOrEditCreateContentLinksObjectModal } from './addOrEditCreateContentLinksObjectModal';
 import { AddOrEditFormattedTextBlockObjectModal } from './addOrEditFormattedTextBlockObjectModal';
+import { AddOrEditKeyMetricModal } from './addOrEditKeyMetricModal';
 import { AddOrEditWebPageObjectModal } from './addOrEditWebPageObjectModal';
 import { DashboardPermissionsModal } from './dashboardPermissionsModal';
 import { DashboardPropertiesModal } from './dashboardPropertiesModal';
@@ -35,13 +40,17 @@ export class DashboardDesignerModal {
   private readonly resourcesSection: DashboardResourcesSection;
   private readonly canvasSection: DashboardCanvasSection;
   private readonly addObjectDialog: AddObjectDialog;
+  private readonly addKeyMetricDialog: AddKeyMetricDialog;
   private readonly appSearchObjectModal: AddOrEditAppSearchObjectModal;
   private readonly createContentLinksObjectModal: AddOrEditCreateContentLinksObjectModal;
   private readonly formattedTextBlockObjectModal: AddOrEditFormattedTextBlockObjectModal;
   private readonly webPageObjectModal: AddOrEditWebPageObjectModal;
+  private readonly addKeyMetricModal: AddOrEditKeyMetricModal;
   private readonly deleteDashboardObjectDialog: DeleteDashboardObjectDialog;
   private readonly deleteDashboardObjectPathRegex: RegExp;
   private readonly getMoreObjectsPathRegex: RegExp;
+  private readonly deleteKeyMetricDialog: DeleteKeyMetricDialog;
+  private readonly getMoreKeyMetricsPathRegex: RegExp;
   readonly title: Locator;
 
   constructor(page: Page) {
@@ -61,13 +70,17 @@ export class DashboardDesignerModal {
     this.resourcesSection = new DashboardResourcesSection(this.designer);
     this.canvasSection = new DashboardCanvasSection(this.designer);
     this.addObjectDialog = new AddObjectDialog(this.page);
+    this.addKeyMetricDialog = new AddKeyMetricDialog(this.page);
     this.appSearchObjectModal = new AddOrEditAppSearchObjectModal(this.page);
     this.createContentLinksObjectModal = new AddOrEditCreateContentLinksObjectModal(this.page);
     this.formattedTextBlockObjectModal = new AddOrEditFormattedTextBlockObjectModal(this.page);
     this.webPageObjectModal = new AddOrEditWebPageObjectModal(this.page);
+    this.addKeyMetricModal = new AddOrEditKeyMetricModal(this.page);
     this.deleteDashboardObjectDialog = new DeleteDashboardObjectDialog(this.page);
     this.deleteDashboardObjectPathRegex = /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/;
     this.getMoreObjectsPathRegex = /\/Admin\/Dashboard\/GetMoreObjectListItems/;
+    this.deleteKeyMetricDialog = new DeleteKeyMetricDialog(this.page);
+    this.getMoreKeyMetricsPathRegex = /\/Admin\/Dashboard\/GetMoreKeyMetricsListItems/;
   }
 
   async waitFor(options?: WaitForOptions) {
@@ -170,6 +183,11 @@ export class DashboardDesignerModal {
     }
   }
 
+  private async enterAndSaveKeyMetric(keyMetric: KeyMetric) {
+    await this.addKeyMetricModal.fillOutForm(keyMetric);
+    await this.addKeyMetricModal.save();
+  }
+
   async updateDashboard(dashboard: Dashboard) {
     if (dashboard.schedule) {
       await this.updateDashboardScheduling(dashboard.schedule);
@@ -251,6 +269,62 @@ export class DashboardDesignerModal {
       await deleteResponse;
       await this.deleteDashboardObjectDialog.dialog.waitFor({ state: 'hidden' });
       await getMoreObjectsResponse;
+
+      isVisible = await object.isVisible();
+    }
+  }
+
+  async addKeyMetric(keyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+    await this.resourcesSection.clickAddKeyMetricButton(keyMetric.type);
+    await this.addKeyMetricDialog.continueButton.waitFor();
+    await this.addKeyMetricDialog.continueButton.click();
+    await this.enterAndSaveKeyMetric(keyMetric);
+  }
+
+  async updateKeyMetric(existingKeyMetric: KeyMetric, updatedKeyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+
+    const item = await this.resourcesSection.getItemFromTab(existingKeyMetric);
+    await item.hover();
+    await item.getByTitle('Edit Key Metric Properties').click();
+
+    await this.enterAndSaveKeyMetric(updatedKeyMetric);
+  }
+
+  async deleteKeyMetric(existingKeyMetric: KeyMetric) {
+    await this.resourcesSection.selectKeyMetricsTab();
+    const item = await this.resourcesSection.getItemFromTab(existingKeyMetric);
+
+    await item.hover();
+    await item.getByTitle('Delete Key Metric').click();
+    await this.deleteKeyMetricDialog.dialog.waitFor();
+    await this.deleteKeyMetricDialog.deleteButton.click();
+    await this.deleteKeyMetricDialog.dialog.waitFor({ state: 'hidden' });
+    await item.waitFor({ state: 'hidden' });
+  }
+
+  async deleteAllTestKeyMetrics() {
+    await this.resourcesSection.selectKeyMetricsTab();
+    await this.resourcesSection.scrollAllObjectsIntoView();
+
+    const item = await this.resourcesSection.getItemFromTabByName(TEST_KEY_METRIC_NAME);
+    const object = item.last();
+
+    let isVisible = await object.isVisible();
+
+    while (isVisible) {
+      await object.hover();
+      await object.getByTitle('Delete Key Metric').click();
+      await this.deleteKeyMetricDialog.dialog.waitFor();
+
+      const deleteResponse = this.page.waitForResponse(this.deleteDashboardObjectPathRegex);
+      const getMoreKeyMetricsResponse = this.page.waitForResponse(this.getMoreKeyMetricsPathRegex);
+
+      await this.deleteKeyMetricDialog.deleteButton.click();
+      await deleteResponse;
+      await this.deleteKeyMetricDialog.dialog.waitFor({ state: 'hidden' });
+      await getMoreKeyMetricsResponse;
 
       isVisible = await object.isVisible();
     }
