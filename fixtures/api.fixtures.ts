@@ -1,6 +1,7 @@
-import { APIRequestContext, Page, request } from '@playwright/test';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { APIRequestContext, APIResponse, expect, Page, Request, request } from '@playwright/test';
+import { existsSync, mkdirSync, readFileSync, ReadStream, rmSync, writeFileSync } from 'fs';
 import path from 'path';
+import { Serializable } from 'playwright-core/types/structs';
 import { env } from '../env';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
 import { ApiKey } from '../models/apiKey';
@@ -37,6 +38,145 @@ const FILE_NAME = `${env.TEST_ENV}_api_setup_result.json`;
 const DIRECTORY_PATH = path.join(process.cwd(), FILE_DIRECTORY);
 const FILE_PATH = path.join(DIRECTORY_PATH, FILE_NAME);
 
+type RequestOptions = {
+  data?: string | Buffer | Serializable;
+  failOnStatusCode?: boolean;
+  form?: { [key: string]: string | number | boolean } | FormData;
+  headers?: { [key: string]: string };
+  ignoreHTTPSErrors?: boolean;
+  maxRedirects?: number;
+  maxRetries?: number;
+  multipart?:
+    | FormData
+    | {
+        [key: string]: string | number | boolean | ReadStream | { name: string; mimeType: string; buffer: Buffer };
+      };
+  params?: { [key: string]: string | number | boolean } | URLSearchParams | string;
+  timeout?: number;
+};
+
+class APIRequestContextDecorator implements APIRequestContext {
+  private context: APIRequestContext;
+  private responseCallbacks: Array<{
+    callback: (response: APIResponse) => void | Promise<void>;
+    condition: ((response: APIResponse) => boolean | Promise<boolean>) | undefined;
+  }>;
+
+  constructor(context: APIRequestContext) {
+    this.context = context;
+    this.responseCallbacks = [];
+  }
+
+  private async handleResponse(response: APIResponse) {
+    for (const assertion of this.responseCallbacks) {
+      if (assertion.condition) {
+        const condition = await assertion.condition(response);
+
+        if (condition === false) {
+          continue;
+        }
+      }
+
+      await assertion.callback(response);
+    }
+  }
+
+  onResponse(callback: (response: APIResponse) => void, condition?: (response: APIResponse) => boolean) {
+    this.responseCallbacks.push({ callback, condition });
+  }
+
+  async put(url: string, options?: RequestOptions) {
+    const response = await this.context.put(url, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  async delete(urlOrRequest: string, options?: RequestOptions) {
+    const response = await this.context.delete(urlOrRequest, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  dispose(options?: { reason?: string }) {
+    return this.context.dispose(options);
+  }
+
+  async fetch(urlOrRequest: string | Request, options?: RequestOptions) {
+    const response = await this.context.fetch(urlOrRequest, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  async get(url: string, options?: RequestOptions) {
+    const response = await this.context.get(url, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  async head(url: string, options?: RequestOptions) {
+    const response = await this.context.head(url, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  async patch(url: string, options?: RequestOptions) {
+    const response = await this.context.patch(url, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  async post(url: string, options?: RequestOptions) {
+    const response = await this.context.post(url, options);
+    await this.handleResponse(response);
+    return response;
+  }
+
+  storageState(options?: { indexedDB?: boolean; path?: string }): Promise<{
+    cookies: Array<{
+      name: string;
+      value: string;
+      domain: string;
+      path: string;
+      expires: number;
+      httpOnly: boolean;
+      secure: boolean;
+      sameSite: 'Strict' | 'Lax' | 'None';
+    }>;
+    origins: Array<{ origin: string; localStorage: Array<{ name: string; value: string }> }>;
+  }> {
+    return this.context.storageState(options);
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.dispose();
+  }
+}
+
+function ensureCacheControlAndPragmaHeadersPresent(response: APIResponse) {
+  const headers = response.headers();
+  const normalizedHeaders = Object.keys(headers).reduce(
+    (acc, key) => {
+      const value = headers[key];
+      acc[key.toLowerCase()] = value.toLowerCase();
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
+  const cacheControlHeader = normalizedHeaders['cache-control'];
+  const pragmaHeader = normalizedHeaders['pragma'];
+
+  expect(cacheControlHeader).toContain('no-store');
+  expect(cacheControlHeader).toContain('no-cache');
+  expect(pragmaHeader).toBe('no-cache');
+}
+
+function isNotFailedFileRequest(response: APIResponse) {
+  const url = response.url();
+  const isFileRequest = url.includes('/files');
+  return isFileRequest === false || response.ok();
+}
+
 export async function createRequestContextFixture(
   { apiUrl, setup }: { apiUrl: string; setup: ApiSetupResult },
   use: (r: APIRequestContext) => Promise<void>
@@ -48,9 +188,13 @@ export async function createRequestContextFixture(
     },
   });
 
-  await use(context);
+  const decoratedAPIContext = new APIRequestContextDecorator(context);
 
-  await context.dispose();
+  decoratedAPIContext.onResponse(ensureCacheControlAndPragmaHeadersPresent, isNotFailedFileRequest);
+
+  await use(decoratedAPIContext);
+
+  await decoratedAPIContext.dispose();
 }
 
 export async function createApiSetupFixture(use: (r: ApiSetupResult) => Promise<void>) {
