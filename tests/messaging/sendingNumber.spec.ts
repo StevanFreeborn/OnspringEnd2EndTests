@@ -117,7 +117,7 @@ test.describe(
         try {
           await sendingNumberAdminPage.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
           await sendingNumberAdminPage.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
-          // eslint-disable-next-line no-empty
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
         } catch (error) {}
 
         await sendingNumberAdminPage.deleteNumberDialog.okInput.pressSequentially('OK', { delay: 150 });

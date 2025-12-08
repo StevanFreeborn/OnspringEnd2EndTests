@@ -40,6 +40,7 @@ type EmailType =
   | 'Workflow'
   | 'Workflow Finish';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GRID_COLUMNS = [
   'Email Type',
   'To Name',
