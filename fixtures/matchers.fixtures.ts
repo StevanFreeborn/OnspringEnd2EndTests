@@ -1,4 +1,3 @@
-/* eslint-disable playwright/no-standalone-expect */
 import { expect as baseExpect, Locator } from '@playwright/test';
 
 type BoundingBox = {
