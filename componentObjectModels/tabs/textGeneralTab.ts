@@ -10,6 +10,11 @@ export class TextGeneralTab extends BaseMessageGeneralTab {
   async fillOutForm(textMessage: TextMessage) {
     await this.nameInput.fill(textMessage.name);
     await this.descriptionEditor.fill(textMessage.description);
-    textMessage.status ? await this.enableStatus() : await this.disableStatus();
+
+    if (textMessage.status) {
+      await this.enableStatus();
+    } else {
+      await this.disableStatus();
+    }
   }
 }

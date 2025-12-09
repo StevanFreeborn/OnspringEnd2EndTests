@@ -30,7 +30,6 @@ class RolePermissionRow {
     if ((await this.editCheckbox.isVisible()) && (await this.editCheckbox.isEditable())) {
       await this.editCheckbox.setChecked(permissions.update);
     }
-    7;
 
     if ((await this.readCheckbox.isVisible()) && (await this.readCheckbox.isEditable())) {
       await this.readCheckbox.setChecked(permissions.read);

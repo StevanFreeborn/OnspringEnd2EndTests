@@ -53,14 +53,24 @@ export class EditEmailBodyPage extends BaseAdminPage {
     await this.generalTab.nameInput.fill(emailBody.name);
     await this.generalTab.descriptionEditor.fill(emailBody.description);
     await this.generalTab.selectTemplate(emailBody.template);
-    emailBody.status ? await this.generalTab.enableStatus() : await this.generalTab.disableStatus();
+
+    if (emailBody.status) {
+      await this.generalTab.enableStatus();
+    } else {
+      await this.generalTab.disableStatus();
+    }
   }
 
   private async fillOutContentsTab(emailBody: EmailBody) {
     await this.contentsTabButton.click();
     await this.contentsTab.subjectInput.fill(emailBody.subject);
     await this.contentsTab.bodyEditor.fill(emailBody.body);
-    emailBody.allowDownloads ? await this.contentsTab.enableDownloads() : await this.contentsTab.disableDownloads();
+
+    if (emailBody.allowDownloads) {
+      await this.contentsTab.enableDownloads();
+    } else {
+      await this.contentsTab.disableDownloads();
+    }
 
     if (emailBody.recordLinkText) {
       await this.contentsTab.fieldsBank.getByText('Record Link').click();
@@ -96,9 +106,7 @@ export class EditEmailBodyPage extends BaseAdminPage {
     const optInCertificationVisible = await this.recipientsTab.optInCertCheckbox.isVisible();
 
     if (optInCertificationVisible) {
-      emailBody.optInCertification
-        ? await this.recipientsTab.optInCertCheckbox.check()
-        : await this.recipientsTab.optInCertCheckbox.uncheck();
+      await this.recipientsTab.optInCertCheckbox.setChecked(emailBody.optInCertification);
     }
   }
 

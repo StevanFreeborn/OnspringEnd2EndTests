@@ -60,7 +60,7 @@ export class SendingNumberAdminPage extends BaseAdminPage {
       try {
         await this.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
         await this.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
-        // eslint-disable-next-line no-empty
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
       } catch (error) {}
 
       await this.deleteNumberDialog.okInput.pressSequentially('OK', { delay: 150 });
@@ -93,7 +93,7 @@ export class SendingNumberAdminPage extends BaseAdminPage {
       try {
         await this.deleteNumberDialog.numberSelector.click({ timeout: 2000 });
         await this.deleteNumberDialog.numberSelector.page().getByRole('option').first().click();
-        // eslint-disable-next-line no-empty
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-empty
       } catch (error) {}
 
       await this.deleteNumberDialog.okInput.pressSequentially('OK', { delay: 150 });

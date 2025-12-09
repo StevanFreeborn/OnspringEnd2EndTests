@@ -16,6 +16,7 @@ type UsageHistoryFilter =
       increment: UsageHistoryFilterIncrement;
     };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DETAILED_DATA_USAGE_BY_APP_STATISTICS_COLUMNS = [
   'App ID',
   'App Name',
@@ -23,6 +24,7 @@ const DETAILED_DATA_USAGE_BY_APP_STATISTICS_COLUMNS = [
   'Total Size (GB)',
 ] as const;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DETAILED_FILE_STORAGE_BY_APP_STATISTICS_COLUMNS = [
   'App ID',
   'App/Survey Name',

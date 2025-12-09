@@ -10,6 +10,11 @@ export class EmailTemplateGeneralTab extends BaseMessageGeneralTab {
   async fillOutForm(emailTemplate: EmailTemplate) {
     await this.nameInput.fill(emailTemplate.name);
     await this.descriptionEditor.fill(emailTemplate.description);
-    emailTemplate.status ? await this.enableStatus() : await this.disableStatus();
+
+    if (emailTemplate.status) {
+      await this.enableStatus();
+    } else {
+      await this.disableStatus();
+    }
   }
 }
