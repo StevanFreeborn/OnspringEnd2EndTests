@@ -53,6 +53,7 @@ export class AppRecordRetentionTab {
 
   async deleteRule(name: string) {
     const ruleRow = await this.getRuleRowByName(name);
+    await this.page.waitForTimeout(100);
     await ruleRow.hover();
     await ruleRow.getByTitle('Delete Record Retention Rule').click();
     await this.deleteRecordRetentionRuleDialog.deleteButton.click();
