@@ -11,41 +11,22 @@ export const SYS_ADMIN_AUTH_PATH = path.join('.auth', 'sysAdmin.json');
 export const isCI = env.CI == 'true';
 const testResultsDir = 'test-results';
 const jsonReportPath = path.join(testResultsDir, 'report.json');
-const TEST_ENV = env.TEST_ENV || 'ALPHA';
-export let BASE_URL: string;
+const TEST_ENV = env.TEST_ENV;
 
-switch (TEST_ENV) {
-  case 'BETA':
-    BASE_URL = env.BETA_INSTANCE_URL;
-    break;
-  case 'QA':
-    BASE_URL = env.QA_INSTANCE_URL;
-    break;
-  case 'IST':
-    BASE_URL = env.IST_INSTANCE_URL;
-    break;
-  case 'VPRIOR':
-    BASE_URL = env.VPRIOR_INSTANCE_URL;
-    break;
-  case 'VNEXT':
-    BASE_URL = env.VNEXT_INSTANCE_URL;
-    break;
-  case 'PROD':
-    BASE_URL = env.PROD_INSTANCE_URL;
-    break;
-  case 'FEDSPRING_IST':
-    BASE_URL = env.FEDSPRING_IST_INSTANCE_URL;
-    break;
-  case 'ALPHA':
-    BASE_URL = env.ALPHA_INSTANCE_URL;
-    break;
-  case 'AZURE':
-    BASE_URL = env.AZURE_INSTANCE_URL;
-    break;
-  default:
-    BASE_URL = env.ALPHA_INSTANCE_URL;
-    break;
-}
+const URL_MAP = {
+  BETA: env.BETA_INSTANCE_URL,
+  QA: env.QA_INSTANCE_URL,
+  IST: env.IST_INSTANCE_URL,
+  VPRIOR: env.VPRIOR_INSTANCE_URL,
+  VNEXT: env.VNEXT_INSTANCE_URL,
+  PROD: env.PROD_INSTANCE_URL,
+  FEDSPRING_IST: env.FEDSPRING_IST_INSTANCE_URL,
+  ALPHA: env.ALPHA_INSTANCE_URL,
+  AZURE: env.AZURE_INSTANCE_URL,
+  AZURE_UK: env.AZURE_UK_INSTANCE_URL,
+};
+
+export const BASE_URL = URL_MAP[TEST_ENV];
 
 const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 

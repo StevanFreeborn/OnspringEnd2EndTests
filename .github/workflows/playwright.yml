@@ -15,6 +15,7 @@ on:
           - PROD
           - FEDSPRING_IST
           - AZURE
+          - AZURE_UK
         required: true
         default: ALPHA
       record_har:
@@ -53,6 +54,7 @@ env:
   PROD_INSTANCE_URL: ${{ secrets.PROD_INSTANCE_URL }}
   FEDSPRING_IST_INSTANCE_URL: ${{ secrets.FEDSPRING_IST_INSTANCE_URL }}
   AZURE_INSTANCE_URL: ${{ secrets.AZURE_INSTANCE_URL }}
+  AZURE_UK_INSTANCE_URL: ${{ secrets.AZURE_UK_INSTANCE_URL }}
   RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
   RENDER_REPORT_SITE_SERVICE_ID: ${{ secrets.RENDER_REPORT_SITE_SERVICE_ID }}
   BITSIGHT_API_KEY: ${{ secrets.BITSIGHT_API_KEY }}
