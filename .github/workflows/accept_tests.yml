@@ -35,6 +35,7 @@ on:
     branches:
       - master
     paths-ignore:
+      - docs/**
       - .vscode/**
       - .github/**
       - scripts/**

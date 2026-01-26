@@ -1,0 +1,19 @@
+# New Environment Checklist
+
+- [ ] **Add environment secret** to GitHub repository secrets
+  - [ ] `{ENV_NAME}_INSTANCE_URL` secret with the instance URL value
+- [ ] **Update CI/CD workflows** to support new environment:
+  - [ ] `.github/workflows/accept_tests.yml` - Add `{ENV_NAME}` to environment variable
+  - [ ] `.github/workflows/cleanup.yml` - Add `{ENV_NAME}` to workflow input options and environment variables
+  - [ ] `.github/workflows/playwright.yml` - Add `{ENV_NAME}` to workflow input options and environment variables
+- [ ] **Update environment configuration** files:
+  - [ ] `env.ts` - Add `z.literal('{ENV_NAME}')` to TEST_ENV schema and `{ENV_NAME}_INSTANCE_URL` string to schema
+  - [ ] `example.env` - Add `{ENV_NAME}_INSTANCE_URL=` example variable in alphabetical order
+- [ ] **Update BASE_URL mapping** in `playwright.config.ts`:
+  - [ ] Add `{ENV_NAME}: env.{ENV_NAME}_INSTANCE_URL,` to URL_MAP object
+- [ ] Setup instance
+  - [ ] Connect instance to slack
+  - [ ] Allow users to override default dashboard
+  - [ ] Ensure instance stats reporter runs
+- [ ] **Verify API URL mapping** - Ensure API_URL correctly replaces subdomain for new environment
+- [ ] **Test new environment** - Run tests against the new environment
