@@ -26,7 +26,7 @@ const URL_MAP = {
   AZURE_UK: env.AZURE_UK_INSTANCE_URL,
 };
 
-export let BASE_URL = URL_MAP[TEST_ENV];
+export const BASE_URL = URL_MAP[TEST_ENV];
 
 const API_URL = BASE_URL.replace(/^https:\/\/[^.]+/, 'https://api');
 
