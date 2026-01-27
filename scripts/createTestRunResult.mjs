@@ -27,6 +27,8 @@ const environmentListValuesMap = {
   VNEXT: 'b64dc2db-9e80-4822-a1b3-add2aacfbcbd',
   PROD: '770d679e-23c6-4127-af66-27be70721a60',
   FEDSPRING_IST: '22645656-dbc4-4dca-8736-1f83fac8e095',
+  AZURE: '6842fe78-6857-4500-aab7-54b20c0b9d79',
+  AZURE_UK: 'a4d62635-aa9b-4231-adeb-302a038db708',
 };
 
 const resultListValuesMap = {
