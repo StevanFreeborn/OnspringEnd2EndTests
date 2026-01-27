@@ -16,4 +16,6 @@
   - [ ] Allow users to override default dashboard
   - [ ] Ensure instance stats reporter runs
 - [ ] **Verify API URL mapping** - Ensure API_URL correctly replaces subdomain for new environment
+- [ ] Add new list value in CORP to represent environment
+- [ ] Update list value environment map `createTestRunResult.mjs`
 - [ ] **Test new environment** - Run tests against the new environment
