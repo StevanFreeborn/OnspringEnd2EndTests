@@ -7,6 +7,7 @@ import { LayoutItem } from '../../models/layoutItem';
 import { ListField } from '../../models/listField';
 import { NumberField } from '../../models/numberField';
 import { ReferenceField } from '../../models/referenceField';
+import { SectionLabel } from '../../models/sectionLabel';
 import { TextField } from '../../models/textField';
 import { TimeSpanField } from '../../models/timeSpanField';
 import { LayoutItemCreator } from '../creators/layoutItemCreator';
@@ -43,7 +44,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
   constructor(page: Page) {
     super(page);
     this.getLayoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
-    this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings)/;
+    this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings|LabelObject)/;
     this.getLayoutItemPathRegex = /Admin\/App\/\d+\/Layout\/ItemListPage/;
     this.filterFieldsInput = this.page.getByPlaceholder('Filter Fields');
     this.addLayoutLink = this.page.getByRole('link', { name: 'Add Layout' });
@@ -62,6 +63,11 @@ export class BaseLayoutTab extends LayoutItemCreator {
 
   private async addLayoutItem(item: LayoutItem, frameNumber: number = 0) {
     switch (item.type) {
+      case 'Section Label': {
+        const addSectionLabelModal = this.getLayoutItemModal(item.type, frameNumber);
+        await addSectionLabelModal.generalTab.fillOutGeneralTab(item as SectionLabel);
+        break;
+      }
       case 'Formatted Text Block': {
         const addTextBlockModal = this.getLayoutItemModal(item.type, frameNumber);
         await addTextBlockModal.generalTab.fillOutGeneralTab(item as FormattedTextBlock);
