@@ -1,6 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { expect, layoutItemTest as test } from '../../fixtures';
 import { SectionLabel } from '../../models/sectionLabel';
+import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { AnnotationType } from '../annotations';
 
 test.describe('section label object', () => {
@@ -73,13 +74,60 @@ test.describe('section label object', () => {
     });
   });
 
-  test("Add a section label object to an app's layout", async ({}) => {
+  test("Add a section label object to an app's layout", async ({ appAdminPage, sysAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-874',
     });
 
-    expect(true).toBeTruthy();
+    const sectionLabel = new SectionLabel({
+      name: FakeDataFactory.createFakeSectionLabelName(),
+      text: 'Section Label',
+    });
+    const tabName = 'Tab 2';
+    const sectionName = 'Section 1';
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Add the section label that will be added to the layout', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+    });
+
+    await test.step('Add the section label to the layout', async () => {
+      await appAdminPage.layoutTab.openLayout();
+      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
+
+      const { object: sectionLabelInBank, dropzone } =
+        await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
+          tabName: tabName,
+          sectionName: sectionName,
+          sectionColumn: 0,
+          sectionRow: 0,
+          objectName: sectionLabel.name,
+        });
+
+      await expect(sectionLabelInBank).toHaveClass(/ui-draggable-disabled/);
+      await expect(dropzone).toHaveText(new RegExp(sectionLabel.name));
+
+      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+    });
+
+    await test.step('Verify the section label was added to the layout', async () => {
+      const addContentPage = new AddContentPage(sysAdminPage);
+      await addContentPage.goto(app.id);
+
+      const sectionLabelContent = await addContentPage.form.getObject({
+        tabName: tabName,
+        sectionName: sectionName,
+        objectName: sectionLabel.name,
+      });
+
+      await expect(sectionLabelContent).toBeVisible();
+      await expect(sectionLabelContent).toHaveText(new RegExp(sectionLabel.text));
+    });
   });
 
   test('Update the configuration of a Section Label Object in an app', async ({}) => {

@@ -14,5 +14,6 @@ export class SectionLabelGeneralTab {
 
   async fillOutGeneralTab(sectionLabel: SectionLabel) {
     await this.nameInput.fill(sectionLabel.name);
+    await this.textEditor.fill(sectionLabel.text);
   }
 }
