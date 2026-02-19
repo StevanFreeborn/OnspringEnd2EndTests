@@ -170,12 +170,41 @@ test.describe('section label object', () => {
     });
   });
 
-  test('Delete a Section Label Object from an app', async ({}) => {
+  test('Delete a Section Label Object from an app', async ({ appAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-876',
     });
 
-    expect(true).toBeTruthy();
+    const sectionLabel = new SectionLabel({
+      name: FakeDataFactory.createFakeSectionLabelName(),
+    });
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Add the section label', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+    });
+
+    await test.step('Delete the section label', async () => {
+      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
+      await sectionLabelRow.hover();
+      await sectionLabelRow.getByTitle('Delete').click();
+
+      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
+      await appAdminPage.layoutTab.deleteLayoutDialog.deleteButton.click();
+      await deleteResponse;
+    });
+
+    await test.step('Verify the section label was deleted', async () => {
+      const deleteSectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: sectionLabel.name,
+      });
+
+      await expect(deleteSectionLabelRow).toBeHidden();
+    });
   });
 });
