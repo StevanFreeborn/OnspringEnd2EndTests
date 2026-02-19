@@ -14,6 +14,7 @@ export class RuleControl {
   protected readonly numberOperatorContainer: Locator;
   protected readonly listDualPaneSelector: DualPaneSelector;
   protected readonly addRuleButton: Locator;
+  protected readonly ruleList: Locator;
   protected readonly simpleModeRadioButton: Locator;
   protected readonly advancedModeRadioButton: Locator;
   protected readonly useFilterLogicCheckbox: Locator;
@@ -34,6 +35,7 @@ export class RuleControl {
       this.frame
     );
     this.addRuleButton = this.control.getByRole('button', { name: 'Add' });
+    this.ruleList = this.control.locator('.rule-list');
     this.simpleModeRadioButton = this.control.getByRole('radio', { name: 'Simple Mode' });
     this.advancedModeRadioButton = this.control.getByRole('radio', { name: 'Advanced Mode' });
     this.useFilterLogicCheckbox = this.control.getByRole('checkbox', { name: 'Use Filter Logic' });
@@ -125,6 +127,10 @@ export class RuleControl {
     }
 
     throw new Error('Invalid Rule Logic');
+  }
+
+  getRulesList() {
+    return this.ruleList;
   }
 }
 
