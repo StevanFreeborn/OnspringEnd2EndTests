@@ -9,6 +9,7 @@ import { AddOrEditLayoutItemModal } from '../modals/addOrEditLayoutItemModal';
 import { AddOrEditListFieldModal } from '../modals/addOrEditListFieldModal';
 import { AddOrEditNumberFieldModal } from '../modals/addOrEditNumberFieldModal';
 import { AddOrEditReferenceFieldModal } from '../modals/addOrEditReferenceFieldModal';
+import { AddOrEditSectionLabelModal } from '../modals/addOrEditSectionLabelModal';
 import { AddOrEditTextFieldModal } from '../modals/addOrEditTextFieldModal';
 import { AddOrEditTimeSpanFieldModal } from '../modals/addOrEditTimeSpanFieldModal';
 
@@ -21,6 +22,7 @@ export class LayoutItemCreator {
 
   // FIX: Shouldn't need to explicitly pass frameNumber here.
   // https://corp.onspring.com/Content/8/4092
+  getLayoutItemModal(itemType: 'Section Label', frameNumber?: number): AddOrEditSectionLabelModal;
   getLayoutItemModal(itemType: 'Formatted Text Block', frameNumber?: number): AddOrEditFormattedBlockModal;
   getLayoutItemModal(itemType: 'Reference', frameNumber?: number): AddOrEditReferenceFieldModal;
   getLayoutItemModal(itemType: 'Attachment', frameNumber?: number): AddOrEditAttachmentFieldModal;
@@ -54,6 +56,8 @@ export class LayoutItemCreator {
         return new AddOrEditFormulaFieldModal(this.page, frameNumber);
       case 'Formatted Text Block':
         return new AddOrEditFormattedBlockModal(this.page);
+      case 'Section Label':
+        return new AddOrEditSectionLabelModal(this.page);
       default:
         throw new Error(`Unknown layout item type: ${itemType}`);
     }

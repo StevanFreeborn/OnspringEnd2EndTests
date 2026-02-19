@@ -146,9 +146,14 @@ export class FakeDataFactory {
     return `${uniqueId}-${questionText}`;
   }
 
-  static createFakeTextBlockName(fieldName: string = 'text-block-test') {
+  static createFakeTextBlockName(textBlockName: string = 'text-block-test') {
     const uniqueId = this.createUniqueIdentifier();
-    return `${uniqueId}-${fieldName}`;
+    return `${uniqueId}-${textBlockName}`;
+  }
+
+  static createFakeSectionLabelName(sectionLabelName: string = 'section-label-test') {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${sectionLabelName}`;
   }
 
   static createFakeApiKeyName() {
