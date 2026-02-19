@@ -130,13 +130,44 @@ test.describe('section label object', () => {
     });
   });
 
-  test('Update the configuration of a Section Label Object in an app', async ({}) => {
+  test('Update the configuration of a Section Label Object in an app', async ({ appAdminPage, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-875',
     });
 
-    expect(true).toBeTruthy();
+    const sectionLabel = new SectionLabel({
+      name: FakeDataFactory.createFakeSectionLabelName(),
+      text: 'Section Label',
+    });
+    const updatedSectionLabelName = `${sectionLabel.name} updated`;
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(app.id);
+      await appAdminPage.layoutTabButton.click();
+    });
+
+    await test.step('Add the section label', async () => {
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+    });
+
+    await test.step('Update the section label', async () => {
+      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
+      await sectionLabelRow.hover();
+      await sectionLabelRow.getByTitle('Edit').click();
+
+      const editSectionLabelModal = appAdminPage.layoutTab.getLayoutItemModal('Section Label');
+      await editSectionLabelModal.generalTab.nameInput.waitFor();
+      await editSectionLabelModal.generalTab.nameInput.fill(updatedSectionLabelName);
+      await editSectionLabelModal.save();
+    });
+
+    await test.step('Verify the section label was updated', async () => {
+      const updatedSectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
+        name: updatedSectionLabelName,
+      });
+      await expect(updatedSectionLabelRow).toBeVisible();
+    });
   });
 
   test('Delete a Section Label Object from an app', async ({}) => {
