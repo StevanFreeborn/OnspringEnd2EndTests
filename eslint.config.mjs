@@ -1,11 +1,11 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +14,7 @@ const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
   allConfig: js.configs.all,
 });
+const tsconfigPath = path.join(__dirname, 'tsconfig.json');
 
 export default defineConfig([
   globalIgnores([
@@ -32,25 +33,20 @@ export default defineConfig([
       'plugin:@typescript-eslint/recommended',
       'plugin:playwright/recommended'
     ),
-
     plugins: {
       '@typescript-eslint': typescriptEslint,
     },
-
     languageOptions: {
       globals: {
         ...globals.node,
       },
-
       parser: tsParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-
       parserOptions: {
-        project: ['./tsconfig.json'],
+        project: [tsconfigPath],
       },
     },
-
     rules: {
       'no-console': 'warn',
       'playwright/no-networkidle': 'error',
