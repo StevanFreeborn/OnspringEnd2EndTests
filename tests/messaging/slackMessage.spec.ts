@@ -2,6 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
+import { SlackMessage } from '../../models/slackMessage';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditSlackMessagePage } from '../../pageObjectModels/messaging/editSlackMessagePage';
@@ -222,13 +223,64 @@ test.describe('slack message', () => {
     });
   });
 
-  test("Update a Slack Message's configurations on an app from an app's Messaging tab", async () => {
+  test("Update a Slack Message's configurations on an app from an app's Messaging tab", async ({
+    targetApp,
+    appAdminPage,
+    editSlackMessagePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-235',
     });
 
-    expect(true).toBeTruthy();
+    const slackMessage = new SlackMessage({
+      appName: targetApp.name,
+      name: FakeDataFactory.createFakeSlackMessageName(),
+      messageTitle: 'Message Title',
+      message: 'Hello, world!',
+      channelName: 'general',
+      status: false,
+      description: 'This is a test slack message',
+    });
+
+    await test.step('Navigate to the app messaging tab', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create a new slack message', async () => {
+      await appAdminPage.messagingTab.createSlackMessage(slackMessage.name);
+      await appAdminPage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Navigate back to the app messaging tab', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Open the slack message configurations', async () => {
+      const slackMessageRow = appAdminPage.messagingTab.slackMessageGrid.getByRole('row', { name: slackMessage.name });
+
+      await slackMessageRow.hover();
+      await slackMessageRow.getByTitle('Edit Slack Message').click();
+
+      await appAdminPage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Update the slack message configurations', async () => {
+      await editSlackMessagePage.updateSlackMessage(slackMessage);
+      await editSlackMessagePage.save();
+    });
+
+    await test.step('Verify the slack message configurations were updated', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+
+      const row = appAdminPage.messagingTab.slackMessageGrid.getByRole('row', { name: slackMessage.name });
+      await expect(row).toBeVisible();
+      await expect(row).toHaveText(new RegExp(slackMessage.name, 'i'));
+      await expect(row).toHaveText(/disabled/i);
+    });
   });
 
   test("Update a Slack Message's configurations on an app from the Slack Message page", async () => {
