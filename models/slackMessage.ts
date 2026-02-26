@@ -2,8 +2,8 @@ import { Message, MessageObject } from './message';
 
 type SlackMessageObject = MessageObject & {
   message: string;
-  channelName?: string;
-  messageTitle?: string;
+  channelName: string;
+  messageTitle: string;
   appendViewRecordButton?: boolean;
   sidebarColor?: string;
 };
@@ -22,8 +22,8 @@ export class SlackMessage extends Message {
     description = '',
     status = true,
     message,
-    channelName = '',
-    messageTitle = '',
+    channelName,
+    messageTitle,
     appendViewRecordButton = false,
     sidebarColor = '',
     recipientsBasedOnFields = [],
@@ -59,13 +59,5 @@ export class SlackMessage extends Message {
     if (this.message === '') {
       throw new Error('Message cannot be empty');
     }
-  }
-
-  static createDefault(appName: string, name: string): SlackMessage {
-    return new SlackMessage({
-      appName,
-      name,
-      message: 'Default Slack Message',
-    });
   }
 }
