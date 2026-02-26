@@ -39,6 +39,15 @@ export class AppMessagingTab {
     await this.createSlackMessageDialog.saveButton.click();
   }
 
+  async createSlackMessageCopy(slackMessageToCopy: string, slackMessageName: string) {
+    await this.addSlackMessageLink.click();
+    await this.createSlackMessageDialog.copyFromRadioButton.click();
+    await this.createSlackMessageDialog.copyFromDropdown.click();
+    await this.createSlackMessageDialog.getTextToCopy(slackMessageToCopy).click();
+    await this.createSlackMessageDialog.nameInput.fill(slackMessageName);
+    await this.createSlackMessageDialog.saveButton.click();
+  }
+
   async createEmailBody(emailBodyName: string) {
     await this.addEmailBodyLink.click();
     await this.createEmailBodyDialog.nameInput.fill(emailBodyName);
