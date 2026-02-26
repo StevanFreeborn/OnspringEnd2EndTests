@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { CreateEmailBodyDialog } from '../dialogs/createEmailBodyDialog';
+import { CreateSlackMessageDialog } from '../dialogs/createSlackMessageDialog';
 import { CreateTextMessageDialog } from '../dialogs/createTextMessageDialog';
 import { DeleteEmailBodyDialog } from '../dialogs/deleteEmailBodyDialog';
 
@@ -13,6 +14,10 @@ export class AppMessagingTab {
   readonly createTextMessageDialog: CreateTextMessageDialog;
   readonly textMessageGrid: Locator;
 
+  readonly addSlackMessageLink: Locator;
+  readonly createSlackMessageDialog: CreateSlackMessageDialog;
+  readonly slackMessageGrid: Locator;
+
   constructor(page: Page) {
     this.addEmailBodyLink = page.getByRole('link', { name: 'Add Email Body' });
     this.createEmailBodyDialog = new CreateEmailBodyDialog(page);
@@ -22,6 +27,16 @@ export class AppMessagingTab {
     this.addTextMessageLink = page.getByRole('link', { name: 'Add Text Message' });
     this.createTextMessageDialog = new CreateTextMessageDialog(page);
     this.textMessageGrid = page.locator('#grid-text-messages');
+
+    this.addSlackMessageLink = page.getByRole('link', { name: 'Add Slack Message' });
+    this.createSlackMessageDialog = new CreateSlackMessageDialog(page);
+    this.slackMessageGrid = page.locator('#grid-slack-messages');
+  }
+
+  async createSlackMessage(slackMessageName: string) {
+    await this.addSlackMessageLink.click();
+    await this.createSlackMessageDialog.nameInput.fill(slackMessageName);
+    await this.createSlackMessageDialog.saveButton.click();
   }
 
   async createEmailBody(emailBodyName: string) {

@@ -19,6 +19,7 @@ export const TEST_DASHBOARD_OBJECT_NAME = 'object-test';
 export const TEST_EMAIL_TEMPLATE_NAME = 'email-template-test';
 export const TEST_EMAIL_SYNC_NAME = 'email-sync-test';
 export const TEST_KEY_METRIC_NAME = 'key-metric-test';
+export const TEST_SLACK_MESSAGE_NAME = 'slack-message-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
@@ -84,6 +85,11 @@ export class FakeDataFactory {
   static createFakeTextMessageName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-text-message-test`;
+  }
+
+  static createFakeSlackMessageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_SLACK_MESSAGE_NAME}`;
   }
 
   static createFakeListName() {

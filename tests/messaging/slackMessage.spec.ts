@@ -1,18 +1,52 @@
+import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
+import { app } from '../../fixtures/app.fixtures';
+import { App } from '../../models/app';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { EditSlackMessagePage } from '../../pageObjectModels/messaging/editSlackMessagePage';
 import { AnnotationType } from '../annotations';
 
-type SlackMessageTestFixtures = {};
+type SlackMessageTestFixtures = {
+  targetApp: App;
+  appAdminPage: AppAdminPage;
+  editSlackMessagePage: EditSlackMessagePage;
+};
 
-const test = base.extend<SlackMessageTestFixtures>({});
+const test = base.extend<SlackMessageTestFixtures>({
+  targetApp: app,
+  appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
+  editSlackMessagePage: async ({ sysAdminPage }, use) => use(new EditSlackMessagePage(sysAdminPage)),
+});
 
 test.describe('slack message', () => {
-  test("Add Slack Message to an app from an app's Messaging tab", async () => {
+  test("Add Slack Message to an app from an app's Messaging tab", async ({
+    targetApp,
+    appAdminPage,
+    editSlackMessagePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-229',
     });
 
-    expect(true).toBeTruthy();
+    const slackMessageName = FakeDataFactory.createFakeSlackMessageName();
+
+    await test.step('Navigate to the app admin page', async () => {
+      await appAdminPage.goto(targetApp.id);
+    });
+
+    await test.step('Navigate to the messaging tab', async () => {
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create the slack message', async () => {
+      await appAdminPage.messagingTab.createSlackMessage(slackMessageName);
+      await appAdminPage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Verify the slack message was created', async () => {
+      await expect(editSlackMessagePage.generalTab.nameInput).toHaveValue(slackMessageName);
+    });
   });
 
   test("Create a copy of a Slack Message on an app from an app's Messaging tab", async () => {
