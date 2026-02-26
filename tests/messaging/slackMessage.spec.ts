@@ -339,13 +339,43 @@ test.describe('slack message', () => {
     });
   });
 
-  test("Delete a Slack Message from an app's Messaging tab", async () => {
+  test("Delete a Slack Message from an app's Messaging tab", async ({
+    targetApp,
+    appAdminPage,
+    editSlackMessagePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-237',
     });
 
-    expect(true).toBeTruthy();
+    const slackMessageName = FakeDataFactory.createFakeSlackMessageName();
+    const slackMessageRow = appAdminPage.messagingTab.slackMessageGrid.getByRole('row', { name: slackMessageName });
+
+    await test.step('Navigate to the app messaging tab', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+    });
+
+    await test.step('Create a new slack message', async () => {
+      await appAdminPage.messagingTab.createSlackMessage(slackMessageName);
+      await appAdminPage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Delete the slack message', async () => {
+      await appAdminPage.goto(targetApp.id);
+      await appAdminPage.messagingTabButton.click();
+
+      await slackMessageRow.hover();
+      await slackMessageRow.getByTitle('Delete Slack Message').click();
+
+      await appAdminPage.messagingTab.deleteSlackMessageDialog.deleteButton.click();
+      await appAdminPage.messagingTab.deleteSlackMessageDialog.waitForDialogToBeDismissed();
+    });
+
+    await test.step('Verify the slack message was deleted', async () => {
+      await expect(slackMessageRow).not.toBeAttached();
+    });
   });
 
   test('Delete a Slack Message from the Slack Message page', async () => {

@@ -3,6 +3,7 @@ import { CreateEmailBodyDialog } from '../dialogs/createEmailBodyDialog';
 import { CreateSlackMessageDialog } from '../dialogs/createSlackMessageDialog';
 import { CreateTextMessageDialog } from '../dialogs/createTextMessageDialog';
 import { DeleteEmailBodyDialog } from '../dialogs/deleteEmailBodyDialog';
+import { DeleteSlackMessageDialog } from '../dialogs/deleteSlackMessageDialog';
 
 export class AppMessagingTab {
   readonly addEmailBodyLink: Locator;
@@ -17,6 +18,7 @@ export class AppMessagingTab {
   readonly addSlackMessageLink: Locator;
   readonly createSlackMessageDialog: CreateSlackMessageDialog;
   readonly slackMessageGrid: Locator;
+  readonly deleteSlackMessageDialog: DeleteSlackMessageDialog;
 
   constructor(page: Page) {
     this.addEmailBodyLink = page.getByRole('link', { name: 'Add Email Body' });
@@ -31,6 +33,7 @@ export class AppMessagingTab {
     this.addSlackMessageLink = page.getByRole('link', { name: 'Add Slack Message' });
     this.createSlackMessageDialog = new CreateSlackMessageDialog(page);
     this.slackMessageGrid = page.locator('#grid-slack-messages');
+    this.deleteSlackMessageDialog = new DeleteSlackMessageDialog(page);
   }
 
   async createSlackMessage(slackMessageName: string) {
