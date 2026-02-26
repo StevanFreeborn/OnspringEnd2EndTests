@@ -532,6 +532,19 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createSlackMessageDialog.saveButton.click();
   }
 
+  async createSlackMessageCopyUsingHeaderCreateButton(appName: string, slackMessageToCopy: string, copyName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.slackMessageCreateMenuOption.click();
+
+    await this.createSlackMessageDialog.selectApp(appName);
+    await this.createSlackMessageDialog.copyFromRadioButton.click();
+    await this.createSlackMessageDialog.copyFromDropdown.click();
+    await this.createSlackMessageDialog.getTextToCopy(slackMessageToCopy).click();
+    await this.createSlackMessageDialog.nameInput.fill(copyName);
+    await this.createSlackMessageDialog.saveButton.click();
+  }
+
   async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {
     await this.adminNav.adminCreateButton.hover();
     await this.adminNav.adminCreateMenu.waitFor();

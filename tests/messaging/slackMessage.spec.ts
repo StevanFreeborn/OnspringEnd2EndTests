@@ -119,13 +119,43 @@ test.describe('slack message', () => {
     });
   });
 
-  test('Create a copy of a Slack Message on an app from the Create button in the admin header', async () => {
+  test('Create a copy of a Slack Message on an app from the Create button in the admin header', async ({
+    targetApp,
+    adminHomePage,
+    editSlackMessagePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-232',
     });
 
-    expect(true).toBeTruthy();
+    const slackMessageName = FakeDataFactory.createFakeSlackMessageName();
+    const slackMessageCopyName = FakeDataFactory.createFakeSlackMessageName();
+
+    await test.step('Navigate to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Create the slack message to be copied', async () => {
+      await adminHomePage.createSlackMessageUsingHeaderCreateButton(targetApp.name, slackMessageName);
+      await adminHomePage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Navigate back to the admin home page', async () => {
+      await adminHomePage.goto();
+    });
+
+    await test.step('Copy the slack message', async () => {
+      await adminHomePage.createSlackMessageCopyUsingHeaderCreateButton(
+        targetApp.name,
+        slackMessageName,
+        slackMessageCopyName
+      );
+    });
+
+    await test.step('Verify the slack message was copied', async () => {
+      await expect(editSlackMessagePage.generalTab.nameInput).toHaveValue(slackMessageCopyName);
+    });
   });
 
   test('Add Slack Message to an app from the Create Slack Message button on the slack message page', async () => {
