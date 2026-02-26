@@ -19,13 +19,8 @@ export class SlackContentsTab {
   }
 
   async fillOutForm(slackMessage: SlackMessage) {
-    if (slackMessage.messageTitle) {
-      await this.messageTitleInput.fill(slackMessage.messageTitle);
-    }
-
-    if (slackMessage.message) {
-      await this.messageEditor.fill(slackMessage.message);
-    }
+    await this.messageTitleInput.fill(slackMessage.messageTitle);
+    await this.messageEditor.fill(slackMessage.message);
 
     if (slackMessage.appendViewRecordButton !== undefined) {
       if (slackMessage.appendViewRecordButton) {

@@ -56,8 +56,16 @@ export class SlackMessage extends Message {
     this.appendViewRecordButton = appendViewRecordButton;
     this.sidebarColor = sidebarColor;
 
-    if (this.message === '') {
+    if (this.message.trim() === '') {
       throw new Error('Message cannot be empty');
+    }
+
+    if (this.channelName.trim() === '') {
+      throw new Error('Channel name cannot be empty');
+    }
+
+    if (this.messageTitle.trim() === '') {
+      throw new Error('Message title cannot be empty');
     }
   }
 }

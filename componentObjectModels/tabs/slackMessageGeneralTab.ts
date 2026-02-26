@@ -20,8 +20,6 @@ export class SlackMessageGeneralTab extends BaseMessageGeneralTab {
       await this.disableStatus();
     }
 
-    if (slackMessage.channelName) {
-      await this.channelNameInput.fill(slackMessage.channelName);
-    }
+    await this.channelNameInput.fill(slackMessage.channelName);
   }
 }
