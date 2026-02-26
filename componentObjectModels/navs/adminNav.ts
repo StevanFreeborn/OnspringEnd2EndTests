@@ -13,6 +13,7 @@ export class AdminNav {
   readonly containerCreateMenuOption: Locator;
   readonly importConfigCreateMenuOption: Locator;
   readonly emailBodyCreateMenuOption: Locator;
+  readonly slackMessageCreateMenuOption: Locator;
   readonly listCreateMenuOption: Locator;
   readonly textCreateMenuOption: Locator;
   readonly sendingNumberCreateMenuOption: Locator;
@@ -40,6 +41,7 @@ export class AdminNav {
     this.containerCreateMenuOption = this.getMenuOption('Container');
     this.importConfigCreateMenuOption = this.getMenuOption('Import Configuration');
     this.emailBodyCreateMenuOption = this.getMenuOption('Email Body');
+    this.slackMessageCreateMenuOption = this.getMenuOption('Slack Message');
     this.listCreateMenuOption = this.getMenuOption('List');
     this.textCreateMenuOption = this.getMenuOption('Text Message');
     this.sendingNumberCreateMenuOption = this.getMenuOption('Sending Number');

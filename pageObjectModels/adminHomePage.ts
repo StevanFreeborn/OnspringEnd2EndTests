@@ -9,6 +9,7 @@ import { CreateEmailSendingDomainDialog } from '../componentObjectModels/dialogs
 import { createEmailSyncDialog } from '../componentObjectModels/dialogs/createEmailSyncDialog';
 import { CreateEmailTemplateDialog } from '../componentObjectModels/dialogs/createEmailTemplateDialog';
 import { CreateImportConfigDialog } from '../componentObjectModels/dialogs/createImportConfigDialog';
+import { CreateSlackMessageDialogForApp } from '../componentObjectModels/dialogs/createSlackMessageDialog';
 import { CreateSurveyDialog } from '../componentObjectModels/dialogs/createSurveyDialog';
 import { CreateTextMessageDialogForApp } from '../componentObjectModels/dialogs/createTextMessageDialog';
 import { CreateAppModal } from '../componentObjectModels/modals/createAppModal';
@@ -47,6 +48,7 @@ export class AdminHomePage extends BaseAdminPage {
   readonly createImportConfigDialog: CreateImportConfigDialog;
 
   readonly createEmailBodyDialog: CreateEmailBodyDialogForApp;
+  readonly createSlackMessageDialog: CreateSlackMessageDialogForApp;
 
   readonly listTileLink: Locator;
   readonly listTileCreateButton: Locator;
@@ -121,6 +123,7 @@ export class AdminHomePage extends BaseAdminPage {
     this.createImportConfigDialog = new CreateImportConfigDialog(page);
 
     this.createEmailBodyDialog = new CreateEmailBodyDialogForApp(page);
+    this.createSlackMessageDialog = new CreateSlackMessageDialogForApp(page);
 
     this.listTileLink = this.getTileLink('Lists');
     this.listTileCreateButton = this.getTileCreateButton('Lists');
@@ -517,6 +520,16 @@ export class AdminHomePage extends BaseAdminPage {
     await this.createEmailBodyDialog.selectApp(appName);
     await this.createEmailBodyDialog.nameInput.fill(emailBodyName);
     await this.createEmailBodyDialog.saveButton.click();
+  }
+
+  async createSlackMessageUsingHeaderCreateButton(appName: string, slackMessageName: string) {
+    await this.adminNav.adminCreateButton.hover();
+    await this.adminNav.adminCreateMenu.waitFor();
+    await this.adminNav.slackMessageCreateMenuOption.click();
+
+    await this.createSlackMessageDialog.selectApp(appName);
+    await this.createSlackMessageDialog.nameInput.fill(slackMessageName);
+    await this.createSlackMessageDialog.saveButton.click();
   }
 
   async createApiKeyUsingHeaderCreateButton(apiKeyName: string) {
