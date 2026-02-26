@@ -5,6 +5,7 @@ import { App } from '../../models/app';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { EditSlackMessagePage } from '../../pageObjectModels/messaging/editSlackMessagePage';
+import { SlackMessageAdminPage } from '../../pageObjectModels/messaging/slackMessageAdminPage';
 import { AnnotationType } from '../annotations';
 
 type SlackMessageTestFixtures = {
@@ -12,6 +13,7 @@ type SlackMessageTestFixtures = {
   adminHomePage: AdminHomePage;
   appAdminPage: AppAdminPage;
   editSlackMessagePage: EditSlackMessagePage;
+  slackMessageAdminPage: SlackMessageAdminPage;
 };
 
 const test = base.extend<SlackMessageTestFixtures>({
@@ -19,6 +21,7 @@ const test = base.extend<SlackMessageTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => use(new AdminHomePage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   editSlackMessagePage: async ({ sysAdminPage }, use) => use(new EditSlackMessagePage(sysAdminPage)),
+  slackMessageAdminPage: async ({ sysAdminPage }, use) => use(new SlackMessageAdminPage(sysAdminPage)),
 });
 
 test.describe('slack message', () => {
@@ -158,13 +161,30 @@ test.describe('slack message', () => {
     });
   });
 
-  test('Add Slack Message to an app from the Create Slack Message button on the slack message page', async () => {
+  test('Add Slack Message to an app from the Create Slack Message button on the slack message page', async ({
+    targetApp,
+    slackMessageAdminPage,
+    editSlackMessagePage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-233',
     });
 
-    expect(true).toBeTruthy();
+    const slackMessageName = FakeDataFactory.createFakeSlackMessageName();
+
+    await test.step('Navigate to slack message admin page', async () => {
+      await slackMessageAdminPage.goto();
+    });
+
+    await test.step('Create the slack message', async () => {
+      await slackMessageAdminPage.createSlackMessage(targetApp.name, slackMessageName);
+      await slackMessageAdminPage.page.waitForURL(editSlackMessagePage.pathRegex);
+    });
+
+    await test.step('Verify the slack message was created', async () => {
+      await expect(editSlackMessagePage.generalTab.nameInput).toHaveValue(slackMessageName);
+    });
   });
 
   test('Create a copy of a Slack Message on an app from the Create Slack Message button on the slack message page', async () => {
