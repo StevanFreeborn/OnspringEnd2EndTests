@@ -2,7 +2,7 @@ import { CreateRecordModal } from '../../componentObjectModels/modals/createReco
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { Locator, Page, test as base, expect } from '../../fixtures';
 import { app, appAdminPage } from '../../fixtures/app.fixtures';
-import { testUserPage } from '../../fixtures/auth.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { activeUserWithRole } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { LayoutItemPermission } from '../../models/layoutItem';
@@ -61,7 +61,7 @@ const test = base.extend<ReferenceFieldTestFixtures>({
     await roleSecurityAdminPage.deleteRoles([roleName]);
   },
   user: activeUserWithRole,
-  testUserPage: testUserPage,
+  testUserPage: createTestUserPageFixture,
 });
 
 test.describe('reference field', () => {

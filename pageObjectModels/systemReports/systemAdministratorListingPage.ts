@@ -11,6 +11,8 @@ export class SystemAdministratorListingPage extends BaseAdminPage {
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
+  private readonly exportReportButton: Locator;
+  private readonly exportReportDialog: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -19,6 +21,8 @@ export class SystemAdministratorListingPage extends BaseAdminPage {
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
+    this.exportReportButton = this.page.getByRole('link', { name: 'Export Report' });
+    this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
   }
 
   async goto() {
@@ -42,5 +46,11 @@ export class SystemAdministratorListingPage extends BaseAdminPage {
 
   async getRows() {
     return this.reportGridBody.locator('tr').all();
+  }
+
+  async exportReport() {
+    await this.exportReportButton.click();
+    await this.exportReportDialog.waitFor();
+    await this.exportReportDialog.getByRole('button', { name: 'Export' }).click();
   }
 }
