@@ -127,12 +127,29 @@ test.describe('system administrator listing report', () => {
     });
   });
 
-  test('Filter the system administrator listing report', async () => {
+  test('Filter the system administrator listing report', async ({
+    systemAdministratorListingPage,
+    testSystemAdmin,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-480',
     });
 
-    expect(true).toBeTruthy();
+    await test.step('Navigate to the system administrator listing report page', async () => {
+      await systemAdministratorListingPage.goto();
+    });
+
+    await test.step('Filter the system administrator listing report', async () => {
+      await systemAdministratorListingPage.filterReport({
+        dateFilter: { type: 'Last 24 Hours' },
+      });
+    });
+
+    await test.step('Verify the system administrator listing report is filtered', async () => {
+      const row = await systemAdministratorListingPage.getRowByText(testSystemAdmin.email);
+
+      await expect(row).toBeVisible();
+    });
   });
 });
