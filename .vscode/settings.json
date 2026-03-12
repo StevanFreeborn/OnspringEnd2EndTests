@@ -52,5 +52,6 @@
     "VPRIOR"
   ],
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "githubIssues.issueBranchTitle": "${user}/issue-${issueNumber}-${sanitizedIssueTitle}"
+  "githubIssues.issueBranchTitle": "${user}/issue-${issueNumber}-${sanitizedIssueTitle}",
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }

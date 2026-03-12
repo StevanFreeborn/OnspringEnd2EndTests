@@ -1,7 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
-import { testUserPage } from '../../fixtures/auth.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { ReferenceField } from '../../models/referenceField';
@@ -37,7 +37,7 @@ const test = base.extend<UserUsageReportTextFixtures>({
       testInfo
     );
   },
-  testUserPage: testUserPage,
+  testUserPage: createTestUserPageFixture,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
