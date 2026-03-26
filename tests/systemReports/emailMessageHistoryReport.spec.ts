@@ -3,7 +3,7 @@ import { env } from '../../env';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
-import { testUserPage } from '../../fixtures/auth.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { activeUserWithRole } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { EmailBody } from '../../models/emailBody';
@@ -75,7 +75,7 @@ const test = base.extend<EmailHistoryReportTestFixtures>({
     await roleSecurityAdminPage.deleteRoles([roleName]);
   },
   user: activeUserWithRole,
-  testUserPage: testUserPage,
+  testUserPage: createTestUserPageFixture,
   emailHistoryPage: async ({ sysAdminPage }, use) => use(new EmailHistoryPage(sysAdminPage)),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),

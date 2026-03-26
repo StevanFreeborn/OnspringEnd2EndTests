@@ -14,7 +14,7 @@ import { SftpService } from '../services/sftpService';
 import { SheetParser } from '../services/sheetParser';
 import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
-import { sysAdminPage, testUserPage } from './auth.fixtures';
+import { createTestUserPageFixture, sysAdminPage } from './auth.fixtures';
 import { TestFile, jpgFile, large45mbTxtFile, large51mbTxtFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
 import {
@@ -95,7 +95,7 @@ export const layoutItemTest = test.extend<FieldTestFixtures>({
   app: app,
   role: activeRoleWithPermissions,
   user: activeUserWithRole,
-  testUserPage: testUserPage,
+  testUserPage: createTestUserPageFixture,
 });
 
 export const surveyQuestionTest = test.extend<QuestionTestFixtures>({

@@ -74,14 +74,14 @@ export class EmailHistoryPage extends BaseAdminPage {
     this.historyGridSessionKey = 'onx.grid/Admin/Reporting/Messaging/History.grid';
     this.path = '/Admin/Reporting/Messaging/History';
     this.getHistoryPath = '/Admin/Reporting/Messaging/GetHistoryPage';
-    this.emailTypeSelector = page.getByRole('listbox', { name: 'Email Type' });
-    this.appSelector = page.getByRole('listbox', { name: 'App/Survey' });
-    this.emailsGridHeader = page.locator('#grid .k-grid-header');
-    this.exportReportButton = page.getByRole('link', { name: 'Export Report' });
-    this.exportReportDialog = page.getByRole('dialog', { name: 'Export Report' });
-    this.emailsGridBody = page.locator('#grid .k-grid-content');
-    this.messageDetailModal = new EmailMessageDetailModal(page);
-    this.resendEmailDialog = new ResendEmailDialog(page);
+    this.emailTypeSelector = this.page.getByRole('listbox', { name: 'Email Type' });
+    this.appSelector = this.page.getByRole('listbox', { name: 'App/Survey' });
+    this.emailsGridHeader = this.page.locator('#grid .k-grid-header');
+    this.exportReportButton = this.page.getByRole('link', { name: 'Export Report' });
+    this.exportReportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
+    this.emailsGridBody = this.page.locator('#grid .k-grid-content');
+    this.messageDetailModal = new EmailMessageDetailModal(this.page);
+    this.resendEmailDialog = new ResendEmailDialog(this.page);
   }
 
   /**

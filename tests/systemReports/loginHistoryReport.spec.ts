@@ -1,5 +1,5 @@
 import { test as base, expect, Page } from '../../fixtures';
-import { testUserPage } from '../../fixtures/auth.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { User, UserStatus } from '../../models/user';
 import { LoginHistoryPage } from '../../pageObjectModels/systemReports/loginHistoryPage';
@@ -27,7 +27,7 @@ const test = base.extend<LoginHistoryReportTestFixtures>({
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await testUserPage({ browser, user: testUser }, use, testInfo),
+    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
 });
 
 test.describe('login history report', () => {

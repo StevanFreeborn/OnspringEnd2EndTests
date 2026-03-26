@@ -1,7 +1,7 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
-import { testUserPage } from '../../fixtures/auth.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { TextField } from '../../models/textField';
@@ -72,7 +72,7 @@ const test = base.extend<ContentRecordTestFixtures>({
     );
   },
   testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await testUserPage({ browser, user: testUser }, use, testInfo),
+    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
 });
 
 test.describe('content record', () => {

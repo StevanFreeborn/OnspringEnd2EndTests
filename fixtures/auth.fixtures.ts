@@ -13,7 +13,7 @@ export async function sysAdminPage(
   await createBaseAuthPage({ browser }, use, testInfo, SYS_ADMIN_AUTH_PATH);
 }
 
-export async function testUserPage(
+export async function createTestUserPageFixture(
   {
     browser,
     user,
