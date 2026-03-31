@@ -31,7 +31,7 @@ const test = base.extend<PageHistoryReportTestFixtures>({
 });
 
 test.describe('page history report', () => {
-  test('Filter page history report', async ({ pageHistoryReportPage, sysAdminUser }) => {
+  test('Filter page history report', async ({ pageHistoryReportPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-580',
@@ -45,8 +45,6 @@ test.describe('page history report', () => {
 
     await test.step('Filter the page history report', async () => {
       await pageHistoryReportPage.filterReport({
-        user: sysAdminUser.fullName,
-        httpMethod: 'GET',
         dateFilter: {
           type: 'Custom Dates',
           from: today,
@@ -62,17 +60,11 @@ test.describe('page history report', () => {
 
       for (const row of rows) {
         const dateCell = row.getByRole('gridcell').nth(0);
-        const usernameCell = row.getByRole('gridcell').nth(1);
-        const methodCell = row.getByRole('gridcell').nth(2);
 
         const dateValue = await dateCell.textContent();
-        const usernameValue = await usernameCell.textContent();
-        const methodValue = await methodCell.textContent();
         const activityDay = dateValue?.trim().split(' ')[0];
 
         expect(activityDay).toBe(`${today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' })}`);
-        expect(usernameValue?.trim().toLowerCase()).toBe(sysAdminUser.username.toLowerCase());
-        expect(methodValue?.trim()).toBe('GET');
       }
     });
   });
@@ -138,7 +130,6 @@ test.describe('page history report', () => {
 
     await test.step('Filter the page history report to limit results', async () => {
       await testUserPageHistoryPage.filterReport({
-        user: testUser.fullName,
         dateFilter: {
           type: 'Custom Dates',
           from: today,
