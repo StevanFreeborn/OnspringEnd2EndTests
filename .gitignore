@@ -3,6 +3,7 @@ node_modules/
 /playwright-report/
 /playwright/.cache/
 .playwright-mcp/
+.playwright-cli/
 config/.env
 .env*
 .flaskenv*
