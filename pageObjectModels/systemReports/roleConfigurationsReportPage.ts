@@ -27,10 +27,14 @@ export class RoleConfigurationsReportPage extends BaseAdminPage {
     super(page);
     this.path = '/Admin/Reporting/Security/RoleConfigurations';
     this.getDataPath = '/Admin/Reporting/Security/GetRoleConfigurationItems';
-    this.statusFilterDropdown = this.page.locator('span[aria-owns="statusFilter_listbox"]');
-    this.tierFilterDropdown = this.page.locator('span[aria-owns="tierFilter_listbox"]');
-    this.nameFilterInput = this.page.locator('#textFilter input[type="text"]');
-    this.nameFilterClear = this.page.locator('#textFilter [data-clear]');
+    this.statusFilterDropdown = this.page.locator('.label:has-text("Status") + .data').getByRole('listbox');
+    this.tierFilterDropdown = this.page.locator('.label:has-text("Role Tier") + .data').getByRole('listbox');
+    this.nameFilterInput = this.page.locator('.label:has-text("Name Filter") + .data').getByRole('textbox');
+    this.nameFilterClear = this.page
+      .locator('.label:has-text("Name Filter") + .data')
+      .getByRole('textbox')
+      .getByTitle('clear');
+
     this.exportButton = this.page.getByRole('link', { name: 'Export Report' });
     this.exportDialog = this.page.getByRole('dialog', { name: 'Export Report' });
     this.roleItemsContainer = this.page.locator('#role-item-container');
