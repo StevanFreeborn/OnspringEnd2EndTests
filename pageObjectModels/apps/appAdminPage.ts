@@ -9,7 +9,6 @@ import { BASE_URL } from '../../playwright.config';
 import { BaseAppOrSurveyAdminPage } from '../baseAppOrSurveyAdminPage';
 
 export class AppAdminPage extends BaseAppOrSurveyAdminPage {
-  private readonly deleteLayoutItemPathRegex: RegExp;
   readonly path: string;
   readonly pathRegex: RegExp;
 
@@ -22,7 +21,6 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
 
   constructor(page: Page) {
     super(page);
-    this.deleteLayoutItemPathRegex = /\/Admin\/App\/\d+\/Layout\/DeleteItem/;
     this.path = '/Admin/App/';
     this.pathRegex = new RegExp(`${BASE_URL}${this.path}[0-9]+`);
 
@@ -40,7 +38,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   }
 
   async waitForLayoutItemDeleteResponse() {
-    return this.page.waitForResponse(this.deleteLayoutItemPathRegex);
+    await this.waitForLayoutItemDeleteResponse();
   }
 
   getIdFromUrl() {
