@@ -80,10 +80,10 @@ export default defineConfig<PlaywrightTestConfig & ApiTestOptions>({
     baseURL: BASE_URL,
     apiURL: API_URL,
     useCachedApiSetup: isCI ? false : true,
-    trace: 'retain-on-first-failure',
-    screenshot: 'on-first-failure',
+    trace: isCI ? 'retain-on-first-failure' : 'off',
+    screenshot: isCI ? 'on-first-failure' : 'off',
     video: {
-      mode: isCI ? 'off' : 'retain-on-failure',
+      mode: 'off',
       size: { width: 1920, height: 1080 },
     },
   },

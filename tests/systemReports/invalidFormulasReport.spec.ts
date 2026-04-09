@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Locator } from '../../fixtures';
 import { createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { TextField } from '../../models/textField';
@@ -30,42 +30,10 @@ test.describe('invalid formulas report', () => {
       description: 'Test-534',
     });
 
-    const textFieldOne = new TextField({
-      name: FakeDataFactory.createFakeFieldName(),
-    });
-    const formulaFieldOne = new TextFormulaField({
-      name: FakeDataFactory.createFakeFieldName(),
-      formula: `return {:${textFieldOne.name}};`,
-    });
-
-    const textFieldTwo = new TextField({
-      name: FakeDataFactory.createFakeFieldName(),
-    });
-    const formulaFieldTwo = new TextFormulaField({
-      name: FakeDataFactory.createFakeFieldName(),
-      formula: `return {:${textFieldTwo.name}};`,
-    });
-
-    const fieldsToDelete = [textFieldOne, textFieldTwo];
-    const invalidFields = [formulaFieldOne, formulaFieldTwo];
-    const fieldsToCreate = [...fieldsToDelete, ...invalidFields];
-
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(testApp.id);
-    });
+    let invalidFields: TextFormulaField[];
 
     await test.step('Create an invalid formula fields', async () => {
-      await appAdminPage.layoutTabButton.click();
-
-      for (const field of fieldsToCreate) {
-        await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      }
-
-      for (const field of fieldsToDelete) {
-        await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(field);
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await appAdminPage.page.waitForTimeout(1_000);
-      }
+      invalidFields = await createInvalidFields(appAdminPage, testApp);
     });
 
     await test.step('Navigate to the invalid formulas report', async () => {
@@ -87,13 +55,55 @@ test.describe('invalid formulas report', () => {
     });
   });
 
-  test('Sort the invalid formulas report', async () => {
+  test('Sort the invalid formulas report', async ({ appAdminPage, testApp, invalidFormulasReportPage }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-535',
     });
 
-    expect(true).toBeTruthy();
+    let invalidFields: TextFormulaField[];
+
+    await test.step('Create an invalid formula fields', async () => {
+      invalidFields = await createInvalidFields(appAdminPage, testApp);
+    });
+
+    await test.step('Navigate to the invalid formulas report', async () => {
+      await invalidFormulasReportPage.goto();
+    });
+
+    await test.step('Sort the invalid formulas report', async () => {
+      await invalidFormulasReportPage.clearSort();
+      await invalidFormulasReportPage.sortGridBy('Last Saved', 'descending');
+    });
+
+    await test.step('Verify the invalid formulas report is sorted', async () => {
+      let rows: Locator[] = [];
+
+      await expect(async () => {
+        await invalidFormulasReportPage.reload();
+        rows = await invalidFormulasReportPage.getRows();
+        expect(rows.length).toBeGreaterThanOrEqual(invalidFields.length);
+      }).toPass({ timeout: 300_000, intervals: [1_000] });
+
+      const timestamps: number[] = [];
+
+      for (const row of rows) {
+        const lastSavedText = await row.locator('td').nth(3).innerText();
+        const lastSavedDate = new Date(lastSavedText.trim()).getTime();
+        timestamps.push(lastSavedDate);
+      }
+
+      for (let i = 0; i < rows.length - 1; i++) {
+        const lastSavedDateColumnIndex = 3;
+        const currentRowLastSavedText = await rows[i].locator('td').nth(lastSavedDateColumnIndex).innerText();
+        const nextRowLastSavedText = await rows[i + 1].locator('td').nth(lastSavedDateColumnIndex).innerText();
+
+        const currentRowTimestamp = new Date(currentRowLastSavedText.trim()).getTime();
+        const nextRowTimestamp = new Date(nextRowLastSavedText.trim()).getTime();
+
+        expect(currentRowTimestamp).toBeGreaterThanOrEqual(nextRowTimestamp);
+      }
+    });
   });
 
   test('Edit a formula field in the invalid formulas report', async () => {
@@ -114,3 +124,41 @@ test.describe('invalid formulas report', () => {
     expect(true).toBeTruthy();
   });
 });
+
+async function createInvalidFields(appAdminPage: AppAdminPage, testApp: App) {
+  const textFieldOne = new TextField({
+    name: FakeDataFactory.createFakeFieldName(),
+  });
+  const formulaFieldOne = new TextFormulaField({
+    name: FakeDataFactory.createFakeFieldName(),
+    formula: `return {:${textFieldOne.name}};`,
+  });
+
+  const textFieldTwo = new TextField({
+    name: FakeDataFactory.createFakeFieldName(),
+  });
+  const formulaFieldTwo = new TextFormulaField({
+    name: FakeDataFactory.createFakeFieldName(),
+    formula: `return {:${textFieldTwo.name}};`,
+  });
+
+  const fieldsToDelete = [textFieldOne, textFieldTwo];
+  const invalidFields = [formulaFieldOne, formulaFieldTwo];
+  const fieldsToCreate = [...fieldsToDelete, ...invalidFields];
+
+  await appAdminPage.goto(testApp.id);
+
+  await appAdminPage.layoutTabButton.click();
+
+  for (const field of fieldsToCreate) {
+    await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+  }
+
+  for (const field of fieldsToDelete) {
+    await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(field);
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await appAdminPage.page.waitForTimeout(1_000);
+  }
+
+  return invalidFields;
+}

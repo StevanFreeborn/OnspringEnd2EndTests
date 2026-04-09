@@ -1,6 +1,10 @@
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
+type SortableGridColumn = 'App/Survey Name' | 'Field Name' | 'Last Saved';
+
+type SortDirection = 'ascending' | 'descending';
+
 export class InvalidFormulasReportPage extends BaseAdminPage {
   private readonly path: string;
   private readonly getInvalidFormulaPath: string;
@@ -22,6 +26,12 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
   async goto() {
     const response = this.page.waitForResponse(this.getInvalidFormulaPath);
     await this.page.goto(this.path);
+    await response;
+  }
+
+  async reload() {
+    const response = this.page.waitForResponse(this.getInvalidFormulaPath);
+    await this.page.reload();
     await response;
   }
 
@@ -48,11 +58,34 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     await this.selectAppOrSurvey(appFilter);
   }
 
-  async getRows() {
+  getRows() {
     return this.reportGridBody.locator('tr').all();
   }
 
   getRowByText(name: string | RegExp) {
     return this.reportGridBody.getByRole('row', { name });
+  }
+
+  async clearSort() {
+    const sortedColumn = this.reportGridHeader.locator('th[aria-sort]').first();
+
+    while (await sortedColumn.isVisible()) {
+      const clearSortResponse = this.page.waitForResponse(this.getInvalidFormulaPath);
+      await sortedColumn.click();
+      await clearSortResponse;
+    }
+  }
+
+  async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
+    const columnHeader = this.reportGridHeader.getByRole('columnheader', { name: column });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getInvalidFormulaPath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
+    }
   }
 }
