@@ -27,6 +27,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
   private readonly getLayoutDesignPathRegex: RegExp;
   private readonly addItemPathRegex: RegExp;
   private readonly getLayoutItemPathRegex: RegExp;
+  private readonly deleteLayoutItemPathRegex: RegExp;
   private readonly filterFieldsInput: Locator;
   private readonly addLayoutLink: Locator;
   private readonly addLayoutDialog: AddLayoutDialog;
@@ -46,6 +47,7 @@ export class BaseLayoutTab extends LayoutItemCreator {
     this.getLayoutDesignPathRegex = /\/Admin\/App\/Layout\/\d+\/Design/;
     this.addItemPathRegex = /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings|LabelObject)/;
     this.getLayoutItemPathRegex = /Admin\/App\/\d+\/Layout\/ItemListPage/;
+    this.deleteLayoutItemPathRegex = /\/Admin\/App\/\d+\/Layout\/DeleteItem/;
     this.filterFieldsInput = this.page.getByPlaceholder('Filter Fields');
     this.addLayoutLink = this.page.getByRole('link', { name: 'Add Layout' });
     this.addLayoutDialog = new AddLayoutDialog(this.page);
@@ -129,6 +131,10 @@ export class BaseLayoutTab extends LayoutItemCreator {
     await modal.save();
   }
 
+  async waitForLayoutItemDeleteResponse() {
+    return this.page.waitForResponse(this.deleteLayoutItemPathRegex);
+  }
+
   /**
    * Opens the specified layout.
    * @param layoutName - The name of the layout to open. Defaults to 'Default Layout'.
@@ -147,6 +153,16 @@ export class BaseLayoutTab extends LayoutItemCreator {
     await this.addLayoutItemDialog.continueButton.click();
     await addItemResponse;
     await this.addLayoutItem(item);
+  }
+
+  async deleteLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {
+    const fieldRow = this.fieldsAndObjectsGrid.getByRole('row', { name: item.name });
+    await fieldRow.hover();
+    await fieldRow.getByTitle('Delete').click();
+
+    const deleteResponse = this.waitForLayoutItemDeleteResponse();
+    await this.deleteLayoutItemDialog.deleteButton.click();
+    await deleteResponse;
   }
 
   /**

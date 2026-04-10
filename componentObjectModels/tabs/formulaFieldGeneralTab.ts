@@ -21,6 +21,18 @@ export class FormulaFieldGeneralTab extends FieldGeneralTab {
     await this.frame.getByRole('option', { name: outputType }).click();
   }
 
+  async enterFormula(formula: string) {
+    // There does not appear to be any other way to set the value of a CodeMirror editor
+    // than to use the CodeMirror API directly.
+    await this.formulaEditor.evaluate(
+      async (el: HTMLElement & { CodeMirror: { setValue: (value: string) => void } }, formula) => {
+        el.CodeMirror.setValue(formula);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      },
+      formula
+    );
+  }
+
   async fillOutGeneralTab(formulaField: FormulaField) {
     await this.fieldInput.fill(formulaField.name);
     await this.selectOutputType(formulaField.outputType);
@@ -39,14 +51,6 @@ export class FormulaFieldGeneralTab extends FieldGeneralTab {
         break;
     }
 
-    // There does not appear to be any other way to set the value of a CodeMirror editor
-    // than to use the CodeMirror API directly.
-    await this.formulaEditor.evaluate(
-      async (el: HTMLElement & { CodeMirror: { setValue: (value: string) => void } }, formula) => {
-        el.CodeMirror.setValue(formula);
-        await new Promise(resolve => setTimeout(resolve, 500));
-      },
-      formulaField.formula
-    );
+    await this.enterFormula(formulaField.formula);
   }
 }
