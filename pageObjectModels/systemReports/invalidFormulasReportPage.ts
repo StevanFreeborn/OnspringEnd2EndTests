@@ -1,3 +1,4 @@
+import { DeleteInvalidFormulaFieldDialog } from '../../componentObjectModels/dialogs/deleteInvalidFormulaFieldDialog';
 import { AddOrEditFormulaFieldModal } from '../../componentObjectModels/modals/addOrEditFormulaFieldModal';
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
@@ -13,6 +14,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
+  private readonly deleteInvalidFormulaFieldDialog: DeleteInvalidFormulaFieldDialog;
   readonly formulaFieldModal: AddOrEditFormulaFieldModal;
 
   constructor(page: Page) {
@@ -23,6 +25,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
+    this.deleteInvalidFormulaFieldDialog = new DeleteInvalidFormulaFieldDialog(this.page);
     this.formulaFieldModal = new AddOrEditFormulaFieldModal(this.page);
   }
 
@@ -59,6 +62,17 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
 
   async filterReport({ appFilter = 'All Apps & Surveys' }: { appFilter: string }) {
     await this.selectAppOrSurvey(appFilter);
+  }
+
+  async deleteField(name: string) {
+    const row = this.getRowByText(name);
+    const deleteButton = row.getByTitle('Delete');
+
+    await row.hover();
+    await deleteButton.click();
+    await this.deleteInvalidFormulaFieldDialog.dialog.waitFor();
+    await this.deleteInvalidFormulaFieldDialog.deleteButton.click();
+    await this.deleteInvalidFormulaFieldDialog.waitForDialogToBeDismissed();
   }
 
   getRows() {
