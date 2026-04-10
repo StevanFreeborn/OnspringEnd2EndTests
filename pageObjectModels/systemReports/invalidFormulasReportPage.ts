@@ -1,3 +1,4 @@
+import { AddOrEditFormulaFieldModal } from '../../componentObjectModels/modals/addOrEditFormulaFieldModal';
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
@@ -12,6 +13,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
+  readonly formulaFieldModal: AddOrEditFormulaFieldModal;
 
   constructor(page: Page) {
     super(page);
@@ -21,6 +23,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
+    this.formulaFieldModal = new AddOrEditFormulaFieldModal(this.page);
   }
 
   async goto() {

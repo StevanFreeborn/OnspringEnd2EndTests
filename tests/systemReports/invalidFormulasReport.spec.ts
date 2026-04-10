@@ -32,7 +32,7 @@ test.describe('invalid formulas report', () => {
 
     let invalidFields: TextFormulaField[];
 
-    await test.step('Create an invalid formula fields', async () => {
+    await test.step('Create invalid formula fields', async () => {
       invalidFields = await createInvalidFields(appAdminPage, testApp);
     });
 
@@ -63,7 +63,7 @@ test.describe('invalid formulas report', () => {
 
     let invalidFields: TextFormulaField[];
 
-    await test.step('Create an invalid formula fields', async () => {
+    await test.step('Create invalid formula fields', async () => {
       invalidFields = await createInvalidFields(appAdminPage, testApp);
     });
 
@@ -106,13 +106,52 @@ test.describe('invalid formulas report', () => {
     });
   });
 
-  test('Edit a formula field in the invalid formulas report', async () => {
+  test('Edit a formula field in the invalid formulas report', async ({
+    appAdminPage,
+    testApp,
+    invalidFormulasReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-536',
     });
 
-    expect(true).toBeTruthy();
+    let invalidFields: TextFormulaField[];
+
+    await test.step('Create invalid formula fields', async () => {
+      invalidFields = await createInvalidFields(appAdminPage, testApp);
+    });
+
+    await test.step('Navigate to the invalid formulas report', async () => {
+      await invalidFormulasReportPage.goto();
+    });
+
+    await test.step('Edit a field in the invalid formulas report', async () => {
+      await invalidFormulasReportPage.filterReport({ appFilter: testApp.name });
+
+      await expect(async () => {
+        await invalidFormulasReportPage.reload();
+        const row = invalidFormulasReportPage.getRowByText(invalidFields[0].name);
+        await expect(row).toBeVisible({ timeout: 100 });
+      }).toPass({ timeout: 300_000, intervals: [1_000] });
+
+      const invalidFieldRow = invalidFormulasReportPage.getRowByText(invalidFields[0].name);
+      await invalidFieldRow.hover();
+      await invalidFieldRow.getByTitle('Edit').click();
+
+      await invalidFormulasReportPage.formulaFieldModal.generalSettingsTabButton.click();
+      await invalidFormulasReportPage.formulaFieldModal.generalTab.statusButtonControl.selectStatus('Enabled');
+      await invalidFormulasReportPage.formulaFieldModal.generalTab.enterFormula('return null');
+      await invalidFormulasReportPage.formulaFieldModal.save();
+    });
+
+    await test.step('Verify the field was edited', async () => {
+      await appAdminPage.goto(testApp.id);
+      await appAdminPage.layoutTabButton.click();
+
+      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: invalidFields[0].name });
+      await expect(fieldRow).toContainText(/Enabled/);
+    });
   });
 
   test('Delete a formula field in the invalid formulas report', async () => {
