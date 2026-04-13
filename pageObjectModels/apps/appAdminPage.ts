@@ -38,7 +38,7 @@ export class AppAdminPage extends BaseAppOrSurveyAdminPage {
   }
 
   async waitForLayoutItemDeleteResponse() {
-    await this.waitForLayoutItemDeleteResponse();
+    await this.layoutTab.waitForLayoutItemDeleteResponse();
   }
 
   getIdFromUrl() {
