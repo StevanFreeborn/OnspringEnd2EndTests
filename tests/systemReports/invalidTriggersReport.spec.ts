@@ -1,5 +1,5 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Locator } from '../../fixtures';
 import { createApp } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
@@ -94,13 +94,83 @@ test.describe('invalid triggers report', () => {
     });
   });
 
-  test('Sort the invalid triggers and outcomes report', async () => {
+  test('Sort the invalid triggers and outcomes report', async ({
+    testApp,
+    appAdminPage,
+    invalidTriggersReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-539',
     });
 
-    expect(true).toBeTruthy();
+    const textField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const invalidTriggers = [
+      new Trigger({
+        name: FakeDataFactory.createFakeTriggerName(),
+        description: 'This is a test trigger.',
+        status: true,
+        logicMode: 'Advanced Mode',
+        ruleSet: new FilterRuleLogic({
+          filterLogic: '1',
+          rules: [new TextRule({ fieldName: textField.name, operator: 'Is Empty' })],
+        }),
+        outcomes: [
+          new ObjectVisibilityOutcome({
+            sections: [
+              new ObjectVisibilitySection({
+                tabName: 'About',
+                name: 'Record Information',
+                visibility: 'Read Only',
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+
+    await test.step('Create invalid triggers', async () => {});
+
+    await test.step('Navigate to the invalid formulas report', async () => {
+      await invalidTriggersReportPage.goto();
+    });
+
+    await test.step('Sort the invalid formulas report', async () => {
+      await invalidTriggersReportPage.clearSort();
+      await invalidTriggersReportPage.sortGridBy('Last Saved', 'descending');
+    });
+
+    await test.step('Verify the invalid triggers report is sorted', async () => {
+      let rows: Locator[] = [];
+
+      await expect(async () => {
+        await invalidTriggersReportPage.reload();
+        rows = await invalidTriggersReportPage.getRows();
+        expect(rows.length).toBeGreaterThanOrEqual(invalidTriggers.length);
+      }).toPass({ timeout: 300_000, intervals: [1_000] });
+
+      const timestamps: number[] = [];
+
+      for (const row of rows) {
+        const lastSavedText = await row.locator('td').nth(3).innerText();
+        const lastSavedDate = new Date(lastSavedText.trim()).getTime();
+        timestamps.push(lastSavedDate);
+      }
+
+      for (let i = 0; i < rows.length - 1; i++) {
+        const lastSavedDateColumnIndex = 3;
+        const currentRowLastSavedText = await rows[i].locator('td').nth(lastSavedDateColumnIndex).innerText();
+        const nextRowLastSavedText = await rows[i + 1].locator('td').nth(lastSavedDateColumnIndex).innerText();
+
+        const currentRowTimestamp = new Date(currentRowLastSavedText.trim()).getTime();
+        const nextRowTimestamp = new Date(nextRowLastSavedText.trim()).getTime();
+
+        expect(currentRowTimestamp).toBeGreaterThanOrEqual(nextRowTimestamp);
+      }
+    });
   });
 
   test('Edit a trigger and outcome in the invalid triggers and outcomes report', async () => {

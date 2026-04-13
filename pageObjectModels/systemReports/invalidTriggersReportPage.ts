@@ -1,11 +1,16 @@
 import { Locator, Page } from '../../fixtures';
 import { BaseAdminPage } from '../baseAdminPage';
 
+type SortableGridColumn = 'App/Survey Name' | 'Trigger Name' | 'Last Saved';
+
+type SortDirection = 'ascending' | 'descending';
+
 export class InvalidTriggersReportPage extends BaseAdminPage {
   private readonly path: string;
   private readonly getInvalidTriggersPath: string;
   private readonly appOrSurveySelector: Locator;
   private readonly reportGrid: Locator;
+  private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
 
   constructor(page: Page) {
@@ -14,6 +19,7 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
     this.getInvalidTriggersPath = '/Admin/Reporting/Apps/GetInvalidTriggerPage';
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.reportGrid = this.page.locator('#grid');
+    this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
   }
 
@@ -54,5 +60,28 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
 
   getRowByText(name: string | RegExp) {
     return this.reportGridBody.getByRole('row', { name });
+  }
+
+  async clearSort() {
+    const sortedColumn = this.reportGridHeader.locator('th[aria-sort]').first();
+
+    while (await sortedColumn.isVisible()) {
+      const clearSortResponse = this.page.waitForResponse(this.getInvalidTriggersPath);
+      await sortedColumn.click();
+      await clearSortResponse;
+    }
+  }
+
+  async sortGridBy(column: SortableGridColumn, direction: SortDirection = 'ascending') {
+    const columnHeader = this.reportGridHeader.getByRole('columnheader', { name: column });
+    let currentSortDirection = await columnHeader.getAttribute('aria-sort');
+
+    while (currentSortDirection !== direction) {
+      const sortResponse = this.page.waitForResponse(this.getInvalidTriggersPath);
+      await columnHeader.click();
+      await sortResponse;
+
+      currentSortDirection = await columnHeader.getAttribute('aria-sort');
+    }
   }
 }

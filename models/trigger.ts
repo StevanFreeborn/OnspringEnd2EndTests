@@ -40,4 +40,16 @@ export class Trigger {
     this.logicOperator = logicOperator;
     this.outcomes = outcomes;
   }
+
+  clone() {
+    return new Trigger({
+      name: this.name,
+      status: this.status,
+      description: this.description,
+      ruleSet: this.ruleSet.clone(),
+      logicMode: this.logicMode,
+      logicOperator: this.logicOperator,
+      outcomes: this.outcomes.map(o => o.clone()),
+    });
+  }
 }

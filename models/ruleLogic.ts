@@ -18,6 +18,8 @@ export abstract class RuleLogic {
     this.mode = mode;
     this.addRecordIsNew = addRecordIsNew;
   }
+
+  abstract clone(): RuleLogic;
 }
 
 abstract class BaseAdvancedRuleLogic extends RuleLogic {
