@@ -9,7 +9,7 @@ type SortDirection = 'ascending' | 'descending';
 
 export class InvalidFormulasReportPage extends BaseAdminPage {
   private readonly path: string;
-  private readonly getInvalidFormulaPath: string;
+  private readonly getInvalidFormulasPath: string;
   private readonly appOrSurveySelector: Locator;
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
@@ -20,7 +20,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
   constructor(page: Page) {
     super(page);
     this.path = '/Admin/Reporting/Apps/InvalidFormulas';
-    this.getInvalidFormulaPath = '/Admin/Reporting/Apps/GetInvalidFormulaPage';
+    this.getInvalidFormulasPath = '/Admin/Reporting/Apps/GetInvalidFormulaPage';
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
@@ -30,21 +30,21 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
   }
 
   async goto() {
-    const response = this.page.waitForResponse(this.getInvalidFormulaPath);
+    const response = this.page.waitForResponse(this.getInvalidFormulasPath);
     await this.page.goto(this.path);
     await response;
   }
 
   async reload() {
-    const response = this.page.waitForResponse(this.getInvalidFormulaPath);
+    const response = this.page.waitForResponse(this.getInvalidFormulasPath);
     await this.page.reload();
     await response;
   }
 
   private async filterInvalidFormulasReport(action: () => Promise<void>) {
-    const getLoginHistoryDataResponse = this.page.waitForResponse(this.getInvalidFormulaPath);
+    const getDataResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
     await action();
-    await getLoginHistoryDataResponse;
+    await getDataResponse;
   }
 
   private async selectAppOrSurvey(appOrSurvey: string) {
@@ -87,7 +87,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     const sortedColumn = this.reportGridHeader.locator('th[aria-sort]').first();
 
     while (await sortedColumn.isVisible()) {
-      const clearSortResponse = this.page.waitForResponse(this.getInvalidFormulaPath);
+      const clearSortResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
       await sortedColumn.click();
       await clearSortResponse;
     }
@@ -98,7 +98,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     let currentSortDirection = await columnHeader.getAttribute('aria-sort');
 
     while (currentSortDirection !== direction) {
-      const sortResponse = this.page.waitForResponse(this.getInvalidFormulaPath);
+      const sortResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
       await columnHeader.click();
       await sortResponse;
 

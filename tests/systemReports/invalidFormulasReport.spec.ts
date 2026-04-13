@@ -46,7 +46,7 @@ test.describe('invalid formulas report', () => {
 
     await test.step('Verify the invalid formulas report is filtered', async () => {
       await expect(async () => {
-        await invalidFormulasReportPage.page.reload();
+        await invalidFormulasReportPage.reload();
 
         for (const invalidField of invalidFields) {
           await expect(invalidFormulasReportPage.getRowByText(invalidField.name)).toBeVisible({ timeout: 1_000 });
