@@ -46,6 +46,14 @@ export class CmroOnSaveWithCustomBatchOutcome extends CreateMultipleRecordsOnSav
     super({ status, description, batchType: 'Custom Batch' });
     this.definitions = definitions;
   }
+
+  clone(): CmroOnSaveWithCustomBatchOutcome {
+    return new CmroOnSaveWithCustomBatchOutcome({
+      status: this.status,
+      description: this.description,
+      definitions: this.definitions.map(d => d.clone()),
+    });
+  }
 }
 
 type CmroOnSaveWithDefinedLibraryOutcomeObject = Omit<
@@ -62,6 +70,14 @@ export class CmroOnSaveWithDefinedLibraryOutcome extends CreateMultipleRecordsOn
     super({ status, description, batchType: 'Defined Library Copy' });
     this.definitions = definitions;
   }
+
+  clone(): CmroOnSaveWithDefinedLibraryOutcome {
+    return new CmroOnSaveWithDefinedLibraryOutcome({
+      status: this.status,
+      description: this.description,
+      definitions: this.definitions.map(d => d.clone()),
+    });
+  }
 }
 
 export class CmroOnSaveWithDynamicLibraryOutcome extends CreateMultipleRecordsOnSaveOutcome {
@@ -70,6 +86,14 @@ export class CmroOnSaveWithDynamicLibraryOutcome extends CreateMultipleRecordsOn
   constructor({ status, description = '', definitions = [] }: CmroOnSaveWithDefinedLibraryOutcomeObject) {
     super({ status, description, batchType: 'Dynamic Library Copy' });
     this.definitions = definitions;
+  }
+
+  clone(): CmroOnSaveWithDynamicLibraryOutcome {
+    return new CmroOnSaveWithDynamicLibraryOutcome({
+      status: this.status,
+      description: this.description,
+      definitions: this.definitions.map(d => d.clone()),
+    });
   }
 }
 
@@ -86,6 +110,8 @@ export abstract class ContentDefinition {
     this.targetApp = targetApp;
     this.layout = layout;
   }
+
+  abstract clone(): ContentDefinition;
 }
 
 type CustomBatchContentDefinitionObject = ContentDefinitionObject & {
@@ -101,6 +127,15 @@ export class CustomBatchContentDefinition extends ContentDefinition {
     super({ targetApp, layout });
     this.batchRecordName = batchRecordName;
     this.description = description;
+  }
+
+  clone(): CustomBatchContentDefinition {
+    return new CustomBatchContentDefinition({
+      batchRecordName: this.batchRecordName,
+      description: this.description,
+      targetApp: this.targetApp,
+      layout: this.layout,
+    });
   }
 }
 
@@ -131,6 +166,8 @@ export abstract class LibraryContentDefinition extends ContentDefinition {
     this.dynamicFilter = dynamicFilter;
     this.dynamicFilterFields = dynamicFilterFields;
   }
+
+  abstract clone(): LibraryContentDefinition;
 }
 
 export class DefinedLibraryContentDefinition extends LibraryContentDefinition {
@@ -144,6 +181,17 @@ export class DefinedLibraryContentDefinition extends LibraryContentDefinition {
   }: LibraryContentDefinitionObject) {
     super({ sourceApp, dataFilterLogic, dynamicFilter, dynamicFilterFields, targetApp, layout });
   }
+
+  clone(): DefinedLibraryContentDefinition {
+    return new DefinedLibraryContentDefinition({
+      sourceApp: this.sourceApp,
+      dataFilterLogic: this.dataFilterLogic.clone(),
+      dynamicFilter: this.dynamicFilter,
+      dynamicFilterFields: [...this.dynamicFilterFields],
+      targetApp: this.targetApp,
+      layout: this.layout,
+    });
+  }
 }
 
 export class DynamicLibraryContentDefinition extends LibraryContentDefinition {
@@ -156,5 +204,16 @@ export class DynamicLibraryContentDefinition extends LibraryContentDefinition {
     layout,
   }: LibraryContentDefinitionObject) {
     super({ sourceApp, dataFilterLogic, dynamicFilter, dynamicFilterFields, targetApp, layout });
+  }
+
+  clone(): DynamicLibraryContentDefinition {
+    return new DynamicLibraryContentDefinition({
+      sourceApp: this.sourceApp,
+      dataFilterLogic: this.dataFilterLogic.clone(),
+      dynamicFilter: this.dynamicFilter,
+      dynamicFilterFields: [...this.dynamicFilterFields],
+      targetApp: this.targetApp,
+      layout: this.layout,
+    });
   }
 }

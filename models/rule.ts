@@ -10,7 +10,7 @@ type ListValueOperator = 'Contains Any' | 'Excludes Any';
 
 type AutoNumberOperator = 'Equals' | 'Does Not Equal' | 'Is Greater Than' | 'Is Less Than';
 
-export class Rule {
+export abstract class Rule {
   readonly fieldName: string;
   readonly fieldType: FieldType;
 
@@ -18,6 +18,8 @@ export class Rule {
     this.fieldName = fieldName;
     this.fieldType = fieldType;
   }
+
+  abstract clone(): Rule;
 }
 
 export class TextRule extends Rule {
@@ -26,6 +28,13 @@ export class TextRule extends Rule {
   constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator }) {
     super({ fieldName, fieldType: 'Text' });
     this.operator = operator;
+  }
+
+  clone(): TextRule {
+    return new TextRule({
+      fieldName: this.fieldName,
+      operator: this.operator,
+    });
   }
 }
 
@@ -46,6 +55,14 @@ export class TextRuleWithValue extends Rule {
     this.operator = operator;
     this.value = value;
   }
+
+  clone(): TextRuleWithValue {
+    return new TextRuleWithValue({
+      fieldName: this.fieldName,
+      operator: this.operator,
+      value: this.value,
+    });
+  }
 }
 
 export class DateRule extends Rule {
@@ -55,14 +72,28 @@ export class DateRule extends Rule {
     super({ fieldName, fieldType: 'Date/Time' });
     this.operator = operator;
   }
+
+  clone(): DateRule {
+    return new DateRule({
+      fieldName: this.fieldName,
+      operator: this.operator,
+    });
+  }
 }
 
 export class ListRule extends Rule {
   readonly operator: NonValueOperator;
 
-  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator; value: string }) {
+  constructor({ fieldName, operator }: { fieldName: string; operator: NonValueOperator }) {
     super({ fieldName, fieldType: 'List' });
     this.operator = operator;
+  }
+
+  clone(): ListRule {
+    return new ListRule({
+      fieldName: this.fieldName,
+      operator: this.operator,
+    });
   }
 }
 
@@ -83,6 +114,14 @@ export class ListRuleWithValues extends Rule {
     this.operator = operator;
     this.values = values;
   }
+
+  clone(): ListRuleWithValues {
+    return new ListRuleWithValues({
+      fieldName: this.fieldName,
+      operator: this.operator,
+      values: [...this.values],
+    });
+  }
 }
 
 export class AutoNumberRuleWithValue extends Rule {
@@ -101,6 +140,14 @@ export class AutoNumberRuleWithValue extends Rule {
     super({ fieldName, fieldType: 'Number' });
     this.operator = operator;
     this.value = value;
+  }
+
+  clone(): AutoNumberRuleWithValue {
+    return new AutoNumberRuleWithValue({
+      fieldName: this.fieldName,
+      operator: this.operator,
+      value: this.value,
+    });
   }
 }
 
@@ -124,6 +171,15 @@ export class AutoNumberRuleWithRange extends Rule {
     this.operator = operator;
     this.start = start;
     this.end = end;
+  }
+
+  clone(): AutoNumberRuleWithRange {
+    return new AutoNumberRuleWithRange({
+      fieldName: this.fieldName,
+      operator: this.operator,
+      start: this.start,
+      end: this.end,
+    });
   }
 }
 

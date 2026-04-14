@@ -11,6 +11,14 @@ export class SetReferenceOutcome extends Outcome {
     super({ type: 'Set Reference', status, description });
     this.setReferenceConfig = setReferenceConfig;
   }
+
+  clone(): SetReferenceOutcome {
+    return new SetReferenceOutcome({
+      status: this.status,
+      description: this.description,
+      setReferenceConfig: this.setReferenceConfig.clone(),
+    });
+  }
 }
 
 export abstract class SetReferenceConfig {
@@ -19,6 +27,8 @@ export abstract class SetReferenceConfig {
   constructor({ fieldName }: { fieldName: string }) {
     this.fieldName = fieldName;
   }
+
+  abstract clone(): SetReferenceConfig;
 }
 
 export class SetSpecificSingleReferenceConfig extends SetReferenceConfig {
@@ -28,5 +38,12 @@ export class SetSpecificSingleReferenceConfig extends SetReferenceConfig {
   constructor({ fieldName, value }: { fieldName: string; value: string }) {
     super({ fieldName });
     this.value = value;
+  }
+
+  clone(): SetSpecificSingleReferenceConfig {
+    return new SetSpecificSingleReferenceConfig({
+      fieldName: this.fieldName,
+      value: this.value,
+    });
   }
 }

@@ -58,6 +58,10 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
     await this.selectAppOrSurvey(appFilter);
   }
 
+  getRows() {
+    return this.reportGridBody.locator('tr').all();
+  }
+
   getRowByText(name: string | RegExp) {
     return this.reportGridBody.getByRole('row', { name });
   }

@@ -108,31 +108,48 @@ test.describe('invalid triggers report', () => {
       name: FakeDataFactory.createFakeFieldName(),
     });
 
-    const invalidTriggers = [
-      new Trigger({
-        name: FakeDataFactory.createFakeTriggerName(),
-        description: 'This is a test trigger.',
-        status: true,
-        logicMode: 'Advanced Mode',
-        ruleSet: new FilterRuleLogic({
-          filterLogic: '1',
-          rules: [new TextRule({ fieldName: textField.name, operator: 'Is Empty' })],
-        }),
-        outcomes: [
-          new ObjectVisibilityOutcome({
-            sections: [
-              new ObjectVisibilitySection({
-                tabName: 'About',
-                name: 'Record Information',
-                visibility: 'Read Only',
-              }),
-            ],
-          }),
-        ],
+    const invalidTriggerOne = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      status: true,
+      logicMode: 'Advanced Mode',
+      ruleSet: new FilterRuleLogic({
+        filterLogic: '1',
+        rules: [new TextRule({ fieldName: textField.name, operator: 'Is Empty' })],
       }),
-    ];
+      outcomes: [
+        new ObjectVisibilityOutcome({
+          sections: [
+            new ObjectVisibilitySection({
+              tabName: 'About',
+              name: 'Record Information',
+              visibility: 'Read Only',
+            }),
+          ],
+        }),
+      ],
+    });
 
-    await test.step('Create invalid triggers', async () => {});
+    const invalidTriggerTwo = invalidTriggerOne.clone();
+    invalidTriggerTwo.name = FakeDataFactory.createFakeTriggerName();
+
+    const invalidTriggers = [invalidTriggerOne, invalidTriggerTwo];
+
+    await test.step('Create invalid triggers', async () => {
+      await appAdminPage.goto(testApp.id);
+
+      await appAdminPage.layoutTabButton.click();
+
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+
+      for (const trigger of invalidTriggers) {
+        await appAdminPage.triggersTabButton.click();
+        await appAdminPage.triggersTab.addTrigger(trigger);
+      }
+
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
 
     await test.step('Navigate to the invalid formulas report', async () => {
       await invalidTriggersReportPage.goto();
@@ -146,8 +163,11 @@ test.describe('invalid triggers report', () => {
     await test.step('Verify the invalid triggers report is sorted', async () => {
       let rows: Locator[] = [];
 
+      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+
       await expect(async () => {
         await invalidTriggersReportPage.reload();
+
         rows = await invalidTriggersReportPage.getRows();
         expect(rows.length).toBeGreaterThanOrEqual(invalidTriggers.length);
       }).toPass({ timeout: 300_000, intervals: [1_000] });

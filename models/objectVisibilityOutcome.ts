@@ -14,6 +14,15 @@ export class ObjectVisibilityOutcome extends Outcome {
     this.layoutName = layoutName;
     this.sections = sections;
   }
+
+  clone(): ObjectVisibilityOutcome {
+    return new ObjectVisibilityOutcome({
+      status: this.status,
+      description: this.description,
+      layoutName: this.layoutName,
+      sections: this.sections.map(s => s.clone()),
+    });
+  }
 }
 
 type VisibilityState = 'No Change' | 'Read Only' | 'Hidden';
@@ -33,5 +42,13 @@ export class ObjectVisibilitySection {
     this.tabName = tabName;
     this.name = name;
     this.visibility = visibility;
+  }
+
+  clone() {
+    return new ObjectVisibilitySection({
+      tabName: this.tabName,
+      name: this.name,
+      visibility: this.visibility,
+    });
   }
 }

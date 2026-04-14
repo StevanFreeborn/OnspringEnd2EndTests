@@ -11,4 +11,12 @@ export class StopCalculationOutcome extends Outcome {
     super({ type: 'Stop Calculation', status, description });
     this.fieldsToStop = fieldsToStop;
   }
+
+  clone(): StopCalculationOutcome {
+    return new StopCalculationOutcome({
+      status: this.status,
+      description: this.description,
+      fieldsToStop: [...this.fieldsToStop],
+    });
+  }
 }

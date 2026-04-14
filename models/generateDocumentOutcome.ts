@@ -31,4 +31,15 @@ export class GenerateDocumentOutcome extends Outcome {
     this.attachmentField = attachmentField;
     this.documentType = documentType;
   }
+
+  clone(): GenerateDocumentOutcome {
+    return new GenerateDocumentOutcome({
+      status: this.status,
+      description: this.description,
+      document: this.document,
+      fileType: this.fileType,
+      attachmentField: this.attachmentField,
+      documentType: this.documentType,
+    });
+  }
 }

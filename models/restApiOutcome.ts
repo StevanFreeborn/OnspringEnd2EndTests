@@ -43,4 +43,17 @@ export class RestApiOutcome extends Outcome {
       throw new Error('At least one notification user or group is required');
     }
   }
+
+  clone(): RestApiOutcome {
+    return new RestApiOutcome({
+      status: this.status,
+      description: this.description,
+      method: this.method,
+      restURL: this.restURL,
+      authorization: this.authorization,
+      notificationUsers: [...this.notificationUsers],
+      notificationGroups: [...this.notificationGroups],
+      dataMappings: { ...this.dataMappings },
+    });
+  }
 }

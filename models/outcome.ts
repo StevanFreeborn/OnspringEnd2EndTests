@@ -19,7 +19,7 @@ export type OutcomeObject = {
   status?: boolean;
 };
 
-export class Outcome {
+export abstract class Outcome {
   type: OutcomeType;
   description: string;
   status: boolean;
@@ -29,4 +29,6 @@ export class Outcome {
     this.description = description;
     this.status = status;
   }
+
+  abstract clone(): Outcome;
 }
