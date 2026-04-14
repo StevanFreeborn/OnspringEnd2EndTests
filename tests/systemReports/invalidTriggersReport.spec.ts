@@ -1,6 +1,6 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect, Locator } from '../../fixtures';
-import { createApp } from '../../fixtures/app.fixtures';
+import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { TextRule } from '../../models/rule';
@@ -18,10 +18,7 @@ type InvalidTriggersReportTestFixtures = {
 };
 
 const test = base.extend<InvalidTriggersReportTestFixtures>({
-  testApp: async ({ sysAdminPage }, use) => {
-    const app = await createApp(sysAdminPage);
-    await use(app);
-  },
+  testApp: app,
   appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
   invalidTriggersReportPage: async ({ sysAdminPage }, use) => await use(new InvalidTriggersReportPage(sysAdminPage)),
 });

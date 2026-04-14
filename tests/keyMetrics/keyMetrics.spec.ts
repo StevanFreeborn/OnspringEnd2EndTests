@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base } from '../../fixtures';
-import { createApp } from '../../fixtures/app.fixtures';
+import { app } from '../../fixtures/app.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { App } from '../../models/app';
@@ -45,10 +45,7 @@ type KeyMetricTestFixtures = {
 
 const test = base.extend<KeyMetricTestFixtures>({
   dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
-  sourceApp: async ({ sysAdminPage }, use) => {
-    const app = await createApp(sysAdminPage);
-    await use(app);
-  },
+  sourceApp: app,
   container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
   dashboard: async ({ sysAdminPage, container }, use) =>
     await createDashboardFixture(
