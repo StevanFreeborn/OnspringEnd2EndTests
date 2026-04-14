@@ -1,3 +1,4 @@
+import { DeleteTriggerDialog } from '../../componentObjectModels/dialogs/deleteTriggerDialog';
 import { AddOrEditTriggerModal } from '../../componentObjectModels/modals/addOrEditTriggerModal';
 import { Locator, Page } from '../../fixtures';
 import { Trigger } from '../../models/trigger';
@@ -15,6 +16,7 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
   private readonly addOrEditTriggerModal: AddOrEditTriggerModal;
+  private readonly deleteTriggerDialog: DeleteTriggerDialog;
 
   constructor(page: Page) {
     super(page);
@@ -25,6 +27,7 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
     this.addOrEditTriggerModal = new AddOrEditTriggerModal(this.page);
+    this.deleteTriggerDialog = new DeleteTriggerDialog(this.page);
   }
 
   async goto() {
@@ -97,5 +100,15 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
     await this.getRowByText(trigger.name).click();
     await this.addOrEditTriggerModal.fillOutForm(trigger);
     await this.addOrEditTriggerModal.saveButton.click();
+  }
+
+  async deleteTrigger(trigger: Trigger) {
+    const triggerRow = this.getRowByText(trigger.name);
+
+    await triggerRow.hover();
+    await triggerRow.getByTitle('Delete').click();
+
+    await this.deleteTriggerDialog.deleteButton.click();
+    await this.deleteTriggerDialog.waitForDialogToBeDismissed();
   }
 }

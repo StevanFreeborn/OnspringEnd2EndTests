@@ -236,21 +236,69 @@ test.describe('invalid triggers report', () => {
     });
   });
 
-  test('Delete a trigger and outcome in the invalid triggers and outcomes report', async () => {
+  test('Delete a trigger and outcome in the invalid triggers and outcomes report', async ({
+    testApp,
+    appAdminPage,
+    invalidTriggersReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-541',
     });
 
-    await test.step('Create the invalid trigger', async () => {});
+    const textField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
 
-    await test.step('Navigate to the invalid triggers report', async () => {});
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      status: true,
+      logicMode: 'Advanced Mode',
+      ruleSet: new FilterRuleLogic({
+        filterLogic: '1',
+        rules: [new TextRule({ fieldName: textField.name, operator: 'Is Empty' })],
+      }),
+      outcomes: [
+        new ObjectVisibilityOutcome({
+          sections: [
+            new ObjectVisibilitySection({
+              tabName: 'About',
+              name: 'Record Information',
+              visibility: 'Read Only',
+            }),
+          ],
+        }),
+      ],
+    });
 
-    await test.step('Delete the invalid trigger', async () => {});
+    await test.step('Create the invalid trigger', async () => {
+      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
+    });
 
-    await test.step('Verify the trigger was deleted successfully', async () => {});
+    await test.step('Navigate to the invalid triggers report', async () => {
+      await invalidTriggersReportPage.goto();
+    });
 
-    expect(true).toBeTruthy();
+    await test.step('Delete the invalid trigger', async () => {
+      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+
+      await expect(async () => {
+        await invalidTriggersReportPage.reload();
+        const row = invalidTriggersReportPage.getRowByText(trigger.name);
+        await expect(row).toBeVisible({ timeout: 100 });
+      }).toPass({ timeout: 300_000, intervals: [1_000] });
+
+      await invalidTriggersReportPage.deleteTrigger(trigger);
+    });
+
+    await test.step('Verify the trigger was deleted successfully', async () => {
+      await appAdminPage.goto(testApp.id);
+      await appAdminPage.triggersTabButton.click();
+
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+      await expect(triggerRow).toBeHidden();
+    });
   });
 });
 
