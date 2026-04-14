@@ -4,7 +4,7 @@ import { app } from '../../fixtures/app.fixtures';
 import { App } from '../../models/app';
 import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
 import { TextRule } from '../../models/rule';
-import { FilterRuleLogic } from '../../models/ruleLogic';
+import { FilterRuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { TextField } from '../../models/textField';
 import { Trigger } from '../../models/trigger';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
@@ -61,17 +61,7 @@ test.describe('invalid triggers report', () => {
     });
 
     await test.step('Create invalid triggers', async () => {
-      await appAdminPage.goto(testApp.id);
-
-      await appAdminPage.layoutTabButton.click();
-
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
-
-      await appAdminPage.triggersTabButton.click();
-      await appAdminPage.triggersTab.addTrigger(trigger);
-
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(textField);
+      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
     });
 
     await test.step('Navigate to the invalid triggers report', async () => {
@@ -133,19 +123,7 @@ test.describe('invalid triggers report', () => {
     const invalidTriggers = [invalidTriggerOne, invalidTriggerTwo];
 
     await test.step('Create invalid triggers', async () => {
-      await appAdminPage.goto(testApp.id);
-
-      await appAdminPage.layoutTabButton.click();
-
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
-
-      for (const trigger of invalidTriggers) {
-        await appAdminPage.triggersTabButton.click();
-        await appAdminPage.triggersTab.addTrigger(trigger);
-      }
-
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(textField);
+      await createInvalidTriggers(testApp, appAdminPage, textField, ...invalidTriggers);
     });
 
     await test.step('Navigate to the invalid formulas report', async () => {
@@ -190,13 +168,72 @@ test.describe('invalid triggers report', () => {
     });
   });
 
-  test('Edit a trigger and outcome in the invalid triggers and outcomes report', async () => {
+  test('Edit a trigger and outcome in the invalid triggers and outcomes report', async ({
+    testApp,
+    appAdminPage,
+    invalidTriggersReportPage,
+  }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-540',
     });
 
-    expect(true).toBeTruthy();
+    const textField = new TextField({
+      name: FakeDataFactory.createFakeFieldName(),
+    });
+
+    const trigger = new Trigger({
+      name: FakeDataFactory.createFakeTriggerName(),
+      description: 'This is a test trigger.',
+      status: true,
+      logicMode: 'Advanced Mode',
+      ruleSet: new FilterRuleLogic({
+        filterLogic: '1',
+        rules: [new TextRule({ fieldName: textField.name, operator: 'Is Empty' })],
+      }),
+      outcomes: [
+        new ObjectVisibilityOutcome({
+          sections: [
+            new ObjectVisibilitySection({
+              tabName: 'About',
+              name: 'Record Information',
+              visibility: 'Read Only',
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await test.step('Create invalid triggers', async () => {
+      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
+    });
+
+    await test.step('Navigate to the invalid triggers report', async () => {
+      await invalidTriggersReportPage.goto();
+    });
+
+    await test.step('Edit the invalid trigger', async () => {
+      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+
+      await expect(async () => {
+        await invalidTriggersReportPage.reload();
+        const row = invalidTriggersReportPage.getRowByText(trigger.name);
+        await expect(row).toBeVisible({ timeout: 100 });
+      }).toPass({ timeout: 300_000, intervals: [1_000] });
+
+      trigger.status = false;
+      trigger.ruleSet = new SimpleRuleLogic({ rules: [] });
+
+      await invalidTriggersReportPage.updateTrigger(trigger);
+    });
+
+    await test.step('Verify the trigger was edited successfully', async () => {
+      await appAdminPage.goto(testApp.id);
+      await appAdminPage.triggersTabButton.click();
+
+      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
+      await expect(triggerRow).toHaveText(/Disabled/);
+    });
   });
 
   test('Delete a trigger and outcome in the invalid triggers and outcomes report', async () => {
@@ -205,6 +242,35 @@ test.describe('invalid triggers report', () => {
       description: 'Test-541',
     });
 
+    await test.step('Create the invalid trigger', async () => {});
+
+    await test.step('Navigate to the invalid triggers report', async () => {});
+
+    await test.step('Delete the invalid trigger', async () => {});
+
+    await test.step('Verify the trigger was deleted successfully', async () => {});
+
     expect(true).toBeTruthy();
   });
 });
+
+async function createInvalidTriggers(
+  testApp: App,
+  appAdminPage: AppAdminPage,
+  fieldToDelete: TextField,
+  ...triggers: Trigger[]
+) {
+  await appAdminPage.goto(testApp.id);
+
+  await appAdminPage.layoutTabButton.click();
+
+  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(fieldToDelete);
+
+  for (const trigger of triggers) {
+    await appAdminPage.triggersTabButton.click();
+    await appAdminPage.triggersTab.addTrigger(trigger);
+  }
+
+  await appAdminPage.layoutTabButton.click();
+  await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(fieldToDelete);
+}

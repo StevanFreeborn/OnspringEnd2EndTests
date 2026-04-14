@@ -1,4 +1,6 @@
+import { AddOrEditTriggerModal } from '../../componentObjectModels/modals/addOrEditTriggerModal';
 import { Locator, Page } from '../../fixtures';
+import { Trigger } from '../../models/trigger';
 import { BaseAdminPage } from '../baseAdminPage';
 
 type SortableGridColumn = 'App/Survey Name' | 'Trigger Name' | 'Last Saved';
@@ -12,6 +14,7 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
+  private readonly addOrEditTriggerModal: AddOrEditTriggerModal;
 
   constructor(page: Page) {
     super(page);
@@ -21,6 +24,7 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
+    this.addOrEditTriggerModal = new AddOrEditTriggerModal(this.page);
   }
 
   async goto() {
@@ -87,5 +91,11 @@ export class InvalidTriggersReportPage extends BaseAdminPage {
 
       currentSortDirection = await columnHeader.getAttribute('aria-sort');
     }
+  }
+
+  async updateTrigger(trigger: Trigger) {
+    await this.getRowByText(trigger.name).click();
+    await this.addOrEditTriggerModal.fillOutForm(trigger);
+    await this.addOrEditTriggerModal.saveButton.click();
   }
 }
