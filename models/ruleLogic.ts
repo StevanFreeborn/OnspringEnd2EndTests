@@ -18,6 +18,8 @@ export abstract class RuleLogic {
     this.mode = mode;
     this.addRecordIsNew = addRecordIsNew;
   }
+
+  abstract clone(): RuleLogic;
 }
 
 abstract class BaseAdvancedRuleLogic extends RuleLogic {
@@ -41,6 +43,13 @@ export class SimpleRuleLogic extends RuleLogic {
   constructor({ rules, addRecordIsNew = false }: { rules: Rule[]; addRecordIsNew?: boolean }) {
     super({ mode: 'Simple Mode', rules, addRecordIsNew });
   }
+
+  clone(): SimpleRuleLogic {
+    return new SimpleRuleLogic({
+      rules: this.rules.map(r => r.clone()),
+      addRecordIsNew: this.addRecordIsNew,
+    });
+  }
 }
 
 export class AdvancedRuleLogic extends BaseAdvancedRuleLogic {
@@ -58,6 +67,13 @@ export class AdvancedRuleLogic extends BaseAdvancedRuleLogic {
     super({ rules, useFilterLogic: false, addRecordIsNew });
     this.operator = operator;
   }
+
+  clone(): AdvancedRuleLogic {
+    return new AdvancedRuleLogic({
+      operator: this.operator,
+      rules: this.rules.map(r => r.clone()),
+    });
+  }
 }
 
 export class FilterRuleLogic extends BaseAdvancedRuleLogic {
@@ -74,5 +90,13 @@ export class FilterRuleLogic extends BaseAdvancedRuleLogic {
   }) {
     super({ rules, useFilterLogic: true, addRecordIsNew });
     this.filterLogic = filterLogic;
+  }
+
+  clone(): FilterRuleLogic {
+    return new FilterRuleLogic({
+      filterLogic: this.filterLogic,
+      rules: this.rules.map(r => r.clone()),
+      addRecordIsNew: this.addRecordIsNew,
+    });
   }
 }

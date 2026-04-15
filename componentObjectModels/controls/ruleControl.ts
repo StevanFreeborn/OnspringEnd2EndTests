@@ -1,5 +1,12 @@
 import { FrameLocator, Locator } from '@playwright/test';
-import { AutoNumberRuleWithValue, DateRule, ListRuleWithValues, Rule, TextRuleWithValue } from '../../models/rule';
+import {
+  AutoNumberRuleWithValue,
+  DateRule,
+  ListRuleWithValues,
+  Rule,
+  TextRule,
+  TextRuleWithValue,
+} from '../../models/rule';
 import { AdvancedRuleLogic, FilterRuleLogic, RuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
 import { DualPaneSelector } from './dualPaneSelector';
 import { TreeviewSelector } from './treeviewSelector';
@@ -39,7 +46,7 @@ export class RuleControl {
     this.simpleModeRadioButton = this.control.getByRole('radio', { name: 'Simple Mode' });
     this.advancedModeRadioButton = this.control.getByRole('radio', { name: 'Advanced Mode' });
     this.useFilterLogicCheckbox = this.control.getByRole('checkbox', { name: 'Use Filter Logic' });
-    this.filterLogicInput = this.control.locator('.filter-logic-container input');
+    this.filterLogicInput = this.control.locator('#Rules_FilterLogic');
   }
 
   private async selectConjunctionOperator(operator: 'AND' | 'OR') {
@@ -59,6 +66,13 @@ export class RuleControl {
   }
 
   private async addRule(rule: Rule) {
+    if (rule instanceof TextRule) {
+      await this.fieldSelector.selectOption(rule.fieldName);
+      await this.selectRuleOperator(rule.operator);
+      await this.addRuleButton.click();
+      return;
+    }
+
     if (rule instanceof TextRuleWithValue) {
       await this.fieldSelector.selectOption(rule.fieldName);
       await this.selectRuleOperator(rule.operator);

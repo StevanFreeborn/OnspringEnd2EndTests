@@ -47,7 +47,15 @@ export class AddOrEditTriggerModal {
     await this.generalTab.nameInput.fill(trigger.name);
     await this.generalTab.descriptionEditor.fill(trigger.description);
 
-    if (await this.needToUpdateSwitch(trigger)) {
+    const statusButtonsVisible = await this.generalTab.statusButtons.isVisible();
+
+    if (statusButtonsVisible) {
+      if (trigger.status) {
+        await this.generalTab.statusButtons.getByRole('button', { name: 'Enabled' }).click();
+      } else {
+        await this.generalTab.statusButtons.getByRole('button', { name: 'Disabled' }).click();
+      }
+    } else if (await this.needToUpdateSwitch(trigger)) {
       await this.generalTab.statusToggle.click();
     }
 

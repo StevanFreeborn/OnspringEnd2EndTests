@@ -1,48 +1,49 @@
-import { DeleteInvalidFormulaFieldDialog } from '../../componentObjectModels/dialogs/deleteInvalidFormulaFieldDialog';
-import { AddOrEditFormulaFieldModal } from '../../componentObjectModels/modals/addOrEditFormulaFieldModal';
+import { DeleteTriggerDialog } from '../../componentObjectModels/dialogs/deleteTriggerDialog';
+import { AddOrEditTriggerModal } from '../../componentObjectModels/modals/addOrEditTriggerModal';
 import { Locator, Page } from '../../fixtures';
+import { Trigger } from '../../models/trigger';
 import { BaseAdminPage } from '../baseAdminPage';
 
-type SortableGridColumn = 'App/Survey Name' | 'Field Name' | 'Last Saved';
+type SortableGridColumn = 'App/Survey Name' | 'Trigger Name' | 'Last Saved';
 
 type SortDirection = 'ascending' | 'descending';
 
-export class InvalidFormulasReportPage extends BaseAdminPage {
+export class InvalidTriggersReportPage extends BaseAdminPage {
   private readonly path: string;
-  private readonly getInvalidFormulasPath: string;
+  private readonly getInvalidTriggersPath: string;
   private readonly appOrSurveySelector: Locator;
   private readonly reportGrid: Locator;
   private readonly reportGridHeader: Locator;
   private readonly reportGridBody: Locator;
-  private readonly deleteInvalidFormulaFieldDialog: DeleteInvalidFormulaFieldDialog;
-  readonly formulaFieldModal: AddOrEditFormulaFieldModal;
+  private readonly addOrEditTriggerModal: AddOrEditTriggerModal;
+  private readonly deleteTriggerDialog: DeleteTriggerDialog;
 
   constructor(page: Page) {
     super(page);
-    this.path = '/Admin/Reporting/Apps/InvalidFormulas';
-    this.getInvalidFormulasPath = '/Admin/Reporting/Apps/GetInvalidFormulaPage';
+    this.path = '/Admin/Reporting/Apps/InvalidTriggers';
+    this.getInvalidTriggersPath = '/Admin/Reporting/Apps/GetInvalidTriggerPage';
     this.appOrSurveySelector = this.page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox');
     this.reportGrid = this.page.locator('#grid');
     this.reportGridHeader = this.reportGrid.locator('.k-grid-header');
     this.reportGridBody = this.reportGrid.locator('.k-grid-content');
-    this.deleteInvalidFormulaFieldDialog = new DeleteInvalidFormulaFieldDialog(this.page);
-    this.formulaFieldModal = new AddOrEditFormulaFieldModal(this.page);
+    this.addOrEditTriggerModal = new AddOrEditTriggerModal(this.page);
+    this.deleteTriggerDialog = new DeleteTriggerDialog(this.page);
   }
 
   async goto() {
-    const response = this.page.waitForResponse(this.getInvalidFormulasPath);
+    const response = this.page.waitForResponse(this.getInvalidTriggersPath);
     await this.page.goto(this.path);
     await response;
   }
 
   async reload() {
-    const response = this.page.waitForResponse(this.getInvalidFormulasPath);
+    const response = this.page.waitForResponse(this.getInvalidTriggersPath);
     await this.page.reload();
     await response;
   }
 
-  private async filterInvalidFormulasReport(action: () => Promise<void>) {
-    const getDataResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
+  private async filterInvalidTriggersReport(action: () => Promise<void>) {
+    const getDataResponse = this.page.waitForResponse(this.getInvalidTriggersPath);
     await action();
     await getDataResponse;
   }
@@ -54,7 +55,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
       return;
     }
 
-    await this.filterInvalidFormulasReport(async () => {
+    await this.filterInvalidTriggersReport(async () => {
       await this.appOrSurveySelector.click();
       await this.page.getByRole('option', { name: appOrSurvey }).click();
     });
@@ -62,17 +63,6 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
 
   async filterReport({ appFilter = 'All Apps & Surveys' }: { appFilter: string }) {
     await this.selectAppOrSurvey(appFilter);
-  }
-
-  async deleteField(name: string) {
-    const row = this.getRowByText(name);
-    const deleteButton = row.getByTitle('Delete');
-
-    await row.hover();
-    await deleteButton.click();
-    await this.deleteInvalidFormulaFieldDialog.dialog.waitFor();
-    await this.deleteInvalidFormulaFieldDialog.deleteButton.click();
-    await this.deleteInvalidFormulaFieldDialog.waitForDialogToBeDismissed();
   }
 
   getRows() {
@@ -87,7 +77,7 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     const sortedColumn = this.reportGridHeader.locator('th[aria-sort]').first();
 
     while (await sortedColumn.isVisible()) {
-      const clearSortResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
+      const clearSortResponse = this.page.waitForResponse(this.getInvalidTriggersPath);
       await sortedColumn.click();
       await clearSortResponse;
     }
@@ -98,11 +88,27 @@ export class InvalidFormulasReportPage extends BaseAdminPage {
     let currentSortDirection = await columnHeader.getAttribute('aria-sort');
 
     while (currentSortDirection !== direction) {
-      const sortResponse = this.page.waitForResponse(this.getInvalidFormulasPath);
+      const sortResponse = this.page.waitForResponse(this.getInvalidTriggersPath);
       await columnHeader.click();
       await sortResponse;
 
       currentSortDirection = await columnHeader.getAttribute('aria-sort');
     }
+  }
+
+  async updateTrigger(trigger: Trigger) {
+    await this.getRowByText(trigger.name).click();
+    await this.addOrEditTriggerModal.fillOutForm(trigger);
+    await this.addOrEditTriggerModal.saveButton.click();
+  }
+
+  async deleteTrigger(trigger: Trigger) {
+    const triggerRow = this.getRowByText(trigger.name);
+
+    await triggerRow.hover();
+    await triggerRow.getByTitle('Delete').click();
+
+    await this.deleteTriggerDialog.deleteButton.click();
+    await this.deleteTriggerDialog.waitForDialogToBeDismissed();
   }
 }

@@ -31,4 +31,13 @@ export class CreateOneRecordOnSaveOutcome extends CreateOneRecordOutcome {
   constructor({ status, description = '', targetApp, layout }: CreateOneRecordOnSaveOutcomeObject) {
     super({ status, description, targetApp, frequency: 'Always on save', layout });
   }
+
+  clone(): CreateOneRecordOnSaveOutcome {
+    return new CreateOneRecordOnSaveOutcome({
+      status: this.status,
+      description: this.description,
+      targetApp: this.targetApp,
+      layout: this.layout,
+    });
+  }
 }

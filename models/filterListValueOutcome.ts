@@ -11,6 +11,14 @@ export class FilterListValueOutcome extends Outcome {
     super({ type: 'Filter List Values', status, description });
     this.filterListValueRules = filterListValueRules;
   }
+
+  clone(): FilterListValueOutcome {
+    return new FilterListValueOutcome({
+      status: this.status,
+      description: this.description,
+      filterListValueRules: this.filterListValueRules.map(r => r.clone()),
+    });
+  }
 }
 
 export class FilterListValueRule {
@@ -20,5 +28,12 @@ export class FilterListValueRule {
   constructor({ fieldName, valuesToInclude }: { fieldName: string; valuesToInclude: string[] }) {
     this.fieldName = fieldName;
     this.valuesToInclude = valuesToInclude;
+  }
+
+  clone() {
+    return new FilterListValueRule({
+      fieldName: this.fieldName,
+      valuesToInclude: [...this.valuesToInclude],
+    });
   }
 }

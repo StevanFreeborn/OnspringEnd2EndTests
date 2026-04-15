@@ -30,4 +30,13 @@ export class PrintContentRecordOutcome extends Outcome {
     this.orientation = orientation;
     this.attachmentField = attachmentField;
   }
+
+  clone(): PrintContentRecordOutcome {
+    return new PrintContentRecordOutcome({
+      layout: this.layout,
+      contentVisibility: this.contentVisibility,
+      orientation: this.orientation,
+      attachmentField: this.attachmentField,
+    });
+  }
 }

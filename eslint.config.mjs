@@ -26,6 +26,7 @@ export default defineConfig([
     '**/playwright-report',
     '**/test-results',
     '**/scripts',
+    'eslint.config.mjs',
   ]),
   {
     extends: compat.extends(

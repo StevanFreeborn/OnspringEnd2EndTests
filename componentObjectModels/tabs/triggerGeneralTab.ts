@@ -5,11 +5,13 @@ export class TriggerGeneralTab {
   readonly descriptionEditor: Locator;
   readonly statusToggle: Locator;
   readonly statusSwitch: Locator;
+  readonly statusButtons: Locator;
 
   constructor(frame: FrameLocator) {
     this.nameInput = frame.getByLabel('Name');
     this.descriptionEditor = frame.locator('.content-area.mce-content-body');
     this.statusSwitch = frame.getByRole('switch', { name: 'Status' });
     this.statusToggle = this.statusSwitch.locator('span').nth(3);
+    this.statusButtons = frame.locator('.button-status-container');
   }
 }

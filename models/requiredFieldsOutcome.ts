@@ -11,4 +11,12 @@ export class RequiredFieldsOutcome extends Outcome {
     super({ type: 'Required Fields', status, description });
     this.requiredFields = requiredFields;
   }
+
+  clone(): RequiredFieldsOutcome {
+    return new RequiredFieldsOutcome({
+      status: this.status,
+      description: this.description,
+      requiredFields: [...this.requiredFields],
+    });
+  }
 }
