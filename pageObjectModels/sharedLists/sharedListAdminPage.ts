@@ -73,8 +73,8 @@ export class SharedListAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.listsGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.listsGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.listsGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfLists = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfLists) === false) {

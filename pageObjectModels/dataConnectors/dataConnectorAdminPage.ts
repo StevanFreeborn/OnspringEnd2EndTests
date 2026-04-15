@@ -78,8 +78,8 @@ export class DataConnectorAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.connectorsGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.connectorsGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.connectorsGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfConnectors = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfConnectors) === false) {

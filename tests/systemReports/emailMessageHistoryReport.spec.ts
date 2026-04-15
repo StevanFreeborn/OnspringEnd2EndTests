@@ -142,8 +142,8 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Verify the email message history report is filtered', async () => {
-      const emailCount = await emailHistoryPage.emailsGridBody.locator('tr').count();
-      expect(emailCount).toBe(1);
+      const emailCount = emailHistoryPage.emailsGridBody.locator('tr');
+      await expect(emailCount).toHaveCount(1);
     });
   });
 

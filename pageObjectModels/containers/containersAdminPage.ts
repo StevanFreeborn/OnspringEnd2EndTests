@@ -32,8 +32,8 @@ export class ContainersAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.containerGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.containerGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.containerGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfContainers = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfContainers) === false) {

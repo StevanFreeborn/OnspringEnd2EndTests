@@ -35,8 +35,8 @@ export class DataImportsAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.dataImportGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.dataImportGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.dataImportGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfImports = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfImports) === false) {

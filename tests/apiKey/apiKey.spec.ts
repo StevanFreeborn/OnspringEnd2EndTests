@@ -429,6 +429,7 @@ test.describe('API Key', () => {
       await deleteResponse;
       await apiKeysAdminPage.deleteApiKeyDialog.waitForDialogToBeDismissed();
     });
+
     await test.step('Verify the api key was deleted correctly', async () => {
       await expect(apiKeyRow).not.toBeAttached();
     });

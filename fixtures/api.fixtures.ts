@@ -1,7 +1,6 @@
 import { APIRequestContext, APIResponse, expect, Page, Request, request } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, ReadStream, rmSync, writeFileSync } from 'fs';
 import path from 'path';
-import { Serializable } from 'playwright-core/types/structs';
 import { env } from '../env';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
 import { ApiKey } from '../models/apiKey';
@@ -39,7 +38,7 @@ const DIRECTORY_PATH = path.join(process.cwd(), FILE_DIRECTORY);
 const FILE_PATH = path.join(DIRECTORY_PATH, FILE_NAME);
 
 type RequestOptions = {
-  data?: string | Buffer | Serializable;
+  data?: string | Buffer;
   failOnStatusCode?: boolean;
   form?: { [key: string]: string | number | boolean } | FormData;
   headers?: { [key: string]: string };

@@ -1,3 +1,4 @@
+/* eslint-disable playwright/expect-expect */
 import { test as teardown } from '@playwright/test';
 import fs from 'fs';
 import { AUTH_DIR } from '../playwright.config';

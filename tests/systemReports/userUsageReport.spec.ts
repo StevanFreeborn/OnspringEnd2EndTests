@@ -65,7 +65,7 @@ test.describe('user usage report', () => {
 
     await test.step('Verify the report is filtered', async () => {
       const rows = await userUsagePage.getRows();
-      expect(rows.length).toBe(1);
+      expect(rows).toHaveLength(1);
       await expect(rows[0]).toHaveText(new RegExp(sysAdminUser.fullName));
     });
   });

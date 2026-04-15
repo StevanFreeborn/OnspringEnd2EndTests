@@ -35,8 +35,8 @@ export class UsersSecurityAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.userGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.userGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.userGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfUsers = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfUsers) === false) {

@@ -1,3 +1,5 @@
+/* eslint-disable playwright/no-skipped-test */
+/* eslint-disable playwright/expect-expect */
 import { test as teardown } from '../fixtures';
 import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
 import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
