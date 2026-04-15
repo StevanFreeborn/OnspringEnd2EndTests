@@ -33,8 +33,8 @@ export class EmailSendingDomainAdminPage extends BaseAdminPage {
   private async scrollAllIntoView() {
     const scrollableElement = this.emailSendingDomainGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.emailSendingDomainGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.emailSendingDomainGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfItems = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfItems) === false) {

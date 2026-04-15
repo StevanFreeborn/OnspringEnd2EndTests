@@ -18,7 +18,7 @@ setup('Setup before API tests', async ({ page, useCachedApiSetup }) => {
 
   await setup.step('Login as system administrator', async () => {
     await loginPage.login(sysAdminUser);
-    // eslint-disable-next-line playwright/no-standalone-expect
+     
     await expect(dashboardPage.sidebar.usersFullName).toHaveText(sysAdminUser.fullName);
   });
 

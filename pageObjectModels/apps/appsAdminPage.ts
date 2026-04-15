@@ -50,8 +50,8 @@ export class AppsAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.appGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.appGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.appGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfApps = parseInt(pagerText.trim().split(' ')[0]);
     const appRows = this.appGrid.getByRole('row');
     let appRowsCount = await appRows.count();

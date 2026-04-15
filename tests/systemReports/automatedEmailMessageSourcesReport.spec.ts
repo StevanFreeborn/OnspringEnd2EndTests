@@ -56,7 +56,7 @@ test.describe('automated email message sources report', () => {
 
     await test.step('Verify the automated email message sources report is filtered', async () => {
       const rows = await automatedMessageSourcesPage.getRows();
-      expect(rows.length).toBe(1);
+      expect(rows).toHaveLength(1);
     });
   });
 

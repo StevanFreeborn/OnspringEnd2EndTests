@@ -27,8 +27,8 @@ export class EmailTemplateAdminPage extends BaseAdminPage {
   private async scrollAllTemplatesIntoView() {
     const scrollableElement = this.emailTemplatesGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.emailTemplatesGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.emailTemplatesGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfEmailTemplates = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfEmailTemplates) === false) {

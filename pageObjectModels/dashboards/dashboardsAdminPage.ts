@@ -39,8 +39,8 @@ export class DashboardsAdminPage extends BaseAdminPage {
   private async scrollAllIntoView() {
     const scrollableElement = this.grid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.grid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.grid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfItems = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfItems) === false) {

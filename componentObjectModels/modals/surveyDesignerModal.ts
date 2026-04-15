@@ -443,9 +443,9 @@ export class SurveyDesignerModal {
 
   async updatePage(pageName: string, updatedPage: SurveyPage) {
     const page = this.getPageLocator(pageName);
-    const pageMenuButton = page.locator('.page-menu-button');
+    const surveyPageMenuButton = page.locator('.page-menu-button');
 
-    await pageMenuButton.click();
+    await surveyPageMenuButton.click();
     await this.pageMenu.editPropertiesButton.waitFor();
     await this.pageMenu.editPropertiesButton.click();
 
@@ -459,9 +459,9 @@ export class SurveyDesignerModal {
 
   async deletePage(pageName: string) {
     const page = this.getPageLocator(pageName);
-    const pageMenuButton = page.locator('.page-menu-button');
+    const surveyPageMenuButton = page.locator('.page-menu-button');
 
-    await pageMenuButton.click();
+    await surveyPageMenuButton.click();
     await this.pageMenu.deleteButton.waitFor();
     await this.pageMenu.deleteButton.click();
 
@@ -472,8 +472,8 @@ export class SurveyDesignerModal {
   }
 
   async goToPage(pageName: string) {
-    const page = this.getPageLocator(pageName);
-    await page.click();
+    const surveyPageLocator = this.getPageLocator(pageName);
+    await surveyPageLocator.click();
   }
 
   async movePageAbove(pageToMove: string, pageToMoveAbove: string) {

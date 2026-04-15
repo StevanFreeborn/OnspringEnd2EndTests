@@ -57,7 +57,7 @@ test.describe('admin audit history report', function () {
     await test.step('Verify the audit history report has been filtered', async () => {
       const rows = await adminAuditHistoryPage.getRows();
 
-      expect(rows.length).toBe(1);
+      expect(rows).toHaveLength(1);
     });
   });
 

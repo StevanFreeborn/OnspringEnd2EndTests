@@ -170,7 +170,7 @@ test.describe('login history report', () => {
 
       const sheet = reportData[0];
       expect(sheet.name).toEqual('Report Data');
-      expect(sheet.data.length).toBe(1);
+      expect(sheet.data).toHaveLength(1);
 
       const headers = Object.keys(sheet.data[0]);
       expect(headers).toEqual(

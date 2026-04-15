@@ -52,10 +52,10 @@ test.describe('fields & objects report', () => {
     });
 
     await test.step('Verify the field is found in the report', async () => {
-      const rows = await appAdminPage.layoutTab.fieldsAndObjectsGrid.locator('.k-grid-content tr').all();
+      const rows = appAdminPage.layoutTab.fieldsAndObjectsGrid.locator('.k-grid-content tr');
       const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: /Record Id/i });
 
-      expect(rows.length).toBe(1);
+      await expect(rows).toHaveCount(1);
       await expect(fieldRow).toBeVisible();
     });
   });

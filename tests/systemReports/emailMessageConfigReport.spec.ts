@@ -66,7 +66,7 @@ test.describe('email message configurations report', () => {
       const rows = await emailMessageConfigReportPage.getRows();
       const row = await emailMessageConfigReportPage.getRowByName(emailBody.name);
 
-      expect(rows.length).toBe(1);
+      expect(rows).toHaveLength(1);
       await expect(row).toBeVisible();
     });
   });

@@ -72,8 +72,8 @@ export class EmailSyncAdminPage extends BaseAdminPage {
 
     const scrollableElement = this.emailSyncGrid.locator('.k-grid-content.k-auto-scrollable').first();
 
-    const pager = this.emailSyncGrid.locator('.k-pager-info').first();
-    const pagerText = await pager.innerText();
+    const paginationPagerInfo = this.emailSyncGrid.locator('.k-pager-info').first();
+    const pagerText = await paginationPagerInfo.innerText();
     const totalNumOfEmailSyncs = parseInt(pagerText.trim().split(' ')[0]);
 
     if (Number.isNaN(totalNumOfEmailSyncs) === false) {

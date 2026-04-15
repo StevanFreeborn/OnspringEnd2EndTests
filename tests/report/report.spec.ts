@@ -741,8 +741,10 @@ test.describe('report', () => {
     });
 
     await test.step('Verify the report was created', async () => {
-      const numOfMasterRows = await reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row').count();
-      expect(numOfMasterRows).toEqual(records.length);
+      const masterRows = reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row');
+      await expect(masterRows).toHaveCount(records.length);
+
+      const numOfMasterRows = await masterRows.count();
 
       for (let i = 0; i < numOfMasterRows; i++) {
         const detailListResponse = reportAppPage.page.waitForResponse(/\/Report\/\d+\/DetailRecordList/);
@@ -2019,7 +2021,6 @@ test.describe('report', () => {
     await test.step('Verify the heat map chart displays as expected', async () => {
       await expect(reportPage.reportContents).toHaveScreenshot();
     });
-    expect(true).toBeTruthy();
   });
 });
 
