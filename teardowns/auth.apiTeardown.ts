@@ -16,7 +16,7 @@ teardown('Teardown after API tests', async ({ page, useCachedApiSetup }) => {
 
   await teardown.step('Login as system administrator', async () => {
     await loginPage.login(sysAdminUser);
-     
+
     await expect(dashboardPage.sidebar.usersFullName).toHaveText(sysAdminUser.fullName);
   });
 
