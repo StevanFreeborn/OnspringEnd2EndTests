@@ -8,9 +8,9 @@ import { PrintDashboardModal } from '../../componentObjectModels/modals/printDas
 import { BasePage } from '../basePage';
 
 export class DashboardPage extends BasePage {
-  private actionMenuButton: Locator;
-  private actionMenu: DashboardActionMenu;
-  private dashboardContents: Locator;
+  private readonly actionMenuButton: Locator;
+  private readonly actionMenu: DashboardActionMenu;
+  private readonly dashboardContents: Locator;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -19,6 +19,7 @@ export class DashboardPage extends BasePage {
   readonly dashboardLinkModal: DashboardLinkModal;
   readonly dashboardBreadcrumbTitle: Locator;
   readonly dashboardTitle: Locator;
+  readonly dashboardFilterBar: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -32,6 +33,7 @@ export class DashboardPage extends BasePage {
     this.dashboardLinkModal = new DashboardLinkModal(this.page);
     this.dashboardBreadcrumbTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
     this.dashboardTitle = this.page.locator('#dashboard-title-container');
+    this.dashboardFilterBar = this.page.locator('[data-dashboard-filters]');
     this.dashboardContents = this.page.locator('#dashboard-contents');
   }
 
@@ -83,5 +85,10 @@ export class DashboardPage extends BasePage {
 
   getDashboardItem(name: string) {
     return this.dashboardContents.locator('.dashboard-item', { has: this.page.locator(`.title:has-text("${name}")`) });
+  }
+
+  async toggleDashboardFilters() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.toggleDashboardFilteringLink.click();
   }
 }

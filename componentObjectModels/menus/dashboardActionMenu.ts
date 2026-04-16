@@ -6,6 +6,7 @@ export class DashboardActionMenu {
   readonly printDashboardLink: Locator;
   readonly exportDashboardLink: Locator;
   readonly getDashboardUrlLink: Locator;
+  readonly toggleDashboardFilteringLink: Locator;
 
   constructor(menu: Locator) {
     this.menu = menu;
@@ -13,5 +14,6 @@ export class DashboardActionMenu {
     this.printDashboardLink = this.menu.getByText('Print Dashboard');
     this.exportDashboardLink = this.menu.getByText('Export Dashboard');
     this.getDashboardUrlLink = this.menu.getByText('Get Dashboard Link');
+    this.toggleDashboardFilteringLink = this.menu.getByText('Dashboard Filtering');
   }
 }
