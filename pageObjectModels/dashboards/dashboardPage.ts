@@ -15,6 +15,7 @@ export class DashboardPage extends BasePage {
   private readonly dashboardContents: Locator;
   private readonly addDashboardFilterButton: Locator;
   private readonly addOrEditDashboardFilterModal: AddOrEditDashboardFilterModal;
+  private readonly moveFilterPathRegex: RegExp;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -28,6 +29,7 @@ export class DashboardPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.path = '/Dashboard';
+    this.moveFilterPathRegex = /\/DashboardFilter\/\d+\/Move/;
     this.actionMenuButton = this.page.locator('#breadcrumb-action-menu-button');
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
@@ -123,6 +125,21 @@ export class DashboardPage extends BasePage {
     await editButton.click();
     await this.addOrEditDashboardFilterModal.fillOutForm(filter);
     await this.addOrEditDashboardFilterModal.save();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2_000);
+  }
+
+  async moveDashboardFilterRight(filterLabel: string) {
+    const filterLocator = this.getDashboardFilterByLabel(filterLabel);
+    const menuButton = filterLocator.locator('.dashboard-filter-menu');
+
+    await menuButton.click();
+
+    const moveRightButton = filterLocator.getByText('Move Right');
+
+    const moveResponse = this.page.waitForResponse(this.moveFilterPathRegex);
+    await moveRightButton.click();
+    await moveResponse;
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(2_000);
   }

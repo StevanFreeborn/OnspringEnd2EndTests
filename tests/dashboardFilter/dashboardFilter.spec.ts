@@ -173,4 +173,58 @@ test.describe('dashboard filter', () => {
       await expect(filter).toBeVisible();
     });
   });
+
+  test('Move a dashboard filter', async ({ report, appAdminPage, sourceApp, dashboardPage, dashboard }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-754',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const firstDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+    const secondDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+
+    await test.step('Create the text field that will be mapped in the filters', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Add dashboard filters', async () => {
+      await dashboardPage.addDashboardFilter(firstDashboardFilter);
+      await dashboardPage.addDashboardFilter(secondDashboardFilter);
+    });
+
+    await test.step('Verify dashboard filters were added', async () => {
+      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.filterLabel);
+      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.filterLabel);
+
+      await expect(firstFilter).toBeLeftOf(secondFilter);
+    });
+
+    await test.step('Move dashboard filter', async () => {
+      await dashboardPage.moveDashboardFilterRight(firstDashboardFilter.filterLabel);
+    });
+
+    await test.step('Verify the dashboard filter was moved', async () => {
+      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.filterLabel);
+      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.filterLabel);
+
+      await expect(firstFilter).toBeRightOf(secondFilter);
+    });
+  });
 });
