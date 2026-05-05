@@ -7,6 +7,7 @@ import { DashboardLinkModal } from '../../componentObjectModels/modals/dashboard
 import { ExportDashboardModal } from '../../componentObjectModels/modals/exportDashboardModal';
 import { PrintDashboardModal } from '../../componentObjectModels/modals/printDashboardModal';
 import { DashboardFilter } from '../../models/dashboardFilter';
+import { DashboardFilterCriteria, TextDashboardFilterCriteria } from '../../models/dashboardFilterCriteria';
 import { BasePage } from '../basePage';
 
 export class DashboardPage extends BasePage {
@@ -16,6 +17,7 @@ export class DashboardPage extends BasePage {
   private readonly addDashboardFilterButton: Locator;
   private readonly addOrEditDashboardFilterModal: AddOrEditDashboardFilterModal;
   private readonly moveFilterPathRegex: RegExp;
+  private readonly saveFilterDefaultsPathRegex: RegExp;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -30,6 +32,7 @@ export class DashboardPage extends BasePage {
     super(page);
     this.path = '/Dashboard';
     this.moveFilterPathRegex = /\/DashboardFilter\/\d+\/Move/;
+    this.saveFilterDefaultsPathRegex = /\/DashboardFilter\/\d+\/SaveAsDashboardDefault/;
     this.actionMenuButton = this.page.locator('#breadcrumb-action-menu-button');
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
@@ -127,6 +130,29 @@ export class DashboardPage extends BasePage {
     await this.addOrEditDashboardFilterModal.save();
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(2_000);
+  }
+
+  async applyFilterCriteria(filterCriteria: DashboardFilterCriteria) {
+    const filterLocator = this.getDashboardFilterByLabel(filterCriteria.filterLabel);
+    const filterSelection = filterLocator.locator('.dashboard-filter-selection');
+
+    await filterSelection.click();
+
+    const filterMenu = this.page.locator('.dashboard-filter-container:visible');
+    const ruleOperatorSelector = filterMenu.locator('.rule-operator:visible');
+    const applyButton = filterMenu.getByRole('button', { name: 'Apply' });
+
+    if (filterCriteria instanceof TextDashboardFilterCriteria) {
+      await ruleOperatorSelector.click();
+      await this.page.getByRole('option', { name: filterCriteria.operator }).click();
+      await applyButton.click();
+    }
+  }
+
+  async saveFilterCriteriaAsDefault() {
+    const response = this.page.waitForResponse(this.saveFilterDefaultsPathRegex);
+    await this.dashboardFilterBar.getByTitle('Save Filter Criteria as Dashboard Default').click();
+    await response;
   }
 
   async moveDashboardFilterRight(filterLabel: string) {

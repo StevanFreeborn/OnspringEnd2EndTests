@@ -7,6 +7,7 @@ import { createReportFixture } from '../../fixtures/report.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { TextDashboardFilter } from '../../models/dashboardFilter';
+import { TextDashboardFilterCriteria } from '../../models/dashboardFilterCriteria';
 import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
@@ -225,6 +226,66 @@ test.describe('dashboard filter', () => {
       const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.filterLabel);
 
       await expect(firstFilter).toBeRightOf(secondFilter);
+    });
+  });
+
+  test('Save default dashboard filter criteria for a dashboard', async ({
+    report,
+    appAdminPage,
+    sourceApp,
+    dashboardPage,
+    dashboard,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-755',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+    const filterCriteria = new TextDashboardFilterCriteria({
+      filterLabel: textDashboardFilter.filterLabel,
+      operator: 'Is Empty',
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Apply criteria to filter and save as dashboard default', async () => {
+      await dashboardPage.applyFilterCriteria(filterCriteria);
+      await dashboardPage.saveFilterCriteriaAsDefault();
+    });
+
+    await test.step('Navigate to the content tab', async () => {
+      await dashboardPage.sidebar.contentTab.click();
+    });
+
+    await test.step('Navigate back to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the saved default criteria is applied', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+
+      await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
     });
   });
 });
