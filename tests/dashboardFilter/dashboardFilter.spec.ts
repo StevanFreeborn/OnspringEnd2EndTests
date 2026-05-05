@@ -6,8 +6,11 @@ import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
-import { Report, SavedReportAsReportDataOnly } from '../../models/report';
+import { TextDashboardFilter } from '../../models/dashboardFilter';
+import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
+import { TextField } from '../../models/textField';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
 import { AnnotationType } from '../annotations';
@@ -15,12 +18,13 @@ import { Dashboard } from './../../models/dashboard';
 
 type DashboardFilterTestFixtures = {
   sourceApp: App;
-  report: Report;
+  report: SavedReport;
   container: Container;
   dashboard: Dashboard;
   adminHomePage: AdminHomePage;
   dashboardsAdminPage: DashboardsAdminPage;
   dashboardPage: DashboardPage;
+  appAdminPage: AppAdminPage;
 };
 
 const test = base.extend<DashboardFilterTestFixtures>({
@@ -60,6 +64,7 @@ const test = base.extend<DashboardFilterTestFixtures>({
   adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
   dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
   dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
+  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
 });
 
 test.describe('dashboard filter', () => {
@@ -79,6 +84,93 @@ test.describe('dashboard filter', () => {
 
     await test.step('Verify filter bar is present', async () => {
       await expect(dashboardPage.dashboardFilterBar).toBeVisible();
+    });
+  });
+
+  test('Add a dashboard filter', async ({ dashboard, dashboardPage, report, sourceApp, appAdminPage }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-752',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Verify dashboard filter was added', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+
+      await expect(filter).toBeVisible();
+    });
+  });
+
+  test('Update a dashboard filter', async ({ appAdminPage, sourceApp, dashboard, dashboardPage, report }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-753',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Verify dashboard filter was added', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+
+      await expect(filter).toBeVisible();
+    });
+
+    const existingLabel = textDashboardFilter.filterLabel;
+    textDashboardFilter.filterLabel = FakeDataFactory.createFakeDashboardFilterLabel();
+
+    await test.step('Edit the dashboard filter', async () => {
+      await dashboardPage.editDashboardFilterByLabel(existingLabel, textDashboardFilter);
+    });
+
+    await test.step('Verify the dashboard filter was edited', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+
+      await expect(filter).toBeVisible();
     });
   });
 });

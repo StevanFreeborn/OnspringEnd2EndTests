@@ -20,12 +20,18 @@ export const TEST_EMAIL_TEMPLATE_NAME = 'email-template-test';
 export const TEST_EMAIL_SYNC_NAME = 'email-sync-test';
 export const TEST_KEY_METRIC_NAME = 'key-metric-test';
 export const TEST_SLACK_MESSAGE_NAME = 'slack-message-test';
+export const TEST_DASHBOARD_FILTER_LABEL = 'dashboard-filter-test';
 
 export class FakeDataFactory {
   static createUniqueIdentifier() {
     const timestamp = new Date().getTime().toString();
     const id = faker.database.mongodbObjectId();
     return `${timestamp}-${id}`;
+  }
+
+  static createFakeDashboardFilterLabel(): string {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_DASHBOARD_FILTER_LABEL}`;
   }
 
   static createFakeKeyMetricName() {
