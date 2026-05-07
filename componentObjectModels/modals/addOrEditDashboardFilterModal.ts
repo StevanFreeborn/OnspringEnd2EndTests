@@ -38,7 +38,7 @@ export class AddOrEditDashboardFilterModal {
   }
 
   async fillOutForm(filter: DashboardFilter) {
-    await this.filterLabelInput.fill(filter.filterLabel);
+    await this.filterLabelInput.fill(filter.label);
     await this.selectDataType(filter.type);
 
     if (filter instanceof ReferenceDashboardFilter) {

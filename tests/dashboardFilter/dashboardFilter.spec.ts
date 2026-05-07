@@ -116,7 +116,7 @@ test.describe('dashboard filter', () => {
 
     const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const textDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
 
@@ -139,7 +139,7 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Verify dashboard filter was added', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
 
       await expect(filter).toBeVisible();
     });
@@ -153,7 +153,7 @@ test.describe('dashboard filter', () => {
 
     const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const textDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
 
@@ -176,20 +176,20 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Verify dashboard filter was added', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
 
       await expect(filter).toBeVisible();
     });
 
-    const existingLabel = textDashboardFilter.filterLabel;
-    textDashboardFilter.filterLabel = FakeDataFactory.createFakeDashboardFilterLabel();
+    const existingLabel = textDashboardFilter.label;
+    textDashboardFilter.label = FakeDataFactory.createFakeDashboardFilterLabel();
 
     await test.step('Edit the dashboard filter', async () => {
       await dashboardPage.editDashboardFilterByLabel(existingLabel, textDashboardFilter);
     });
 
     await test.step('Verify the dashboard filter was edited', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
 
       await expect(filter).toBeVisible();
     });
@@ -203,11 +203,11 @@ test.describe('dashboard filter', () => {
 
     const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const firstDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
     const secondDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
 
@@ -231,19 +231,19 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Verify dashboard filters were added', async () => {
-      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.filterLabel);
-      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.filterLabel);
+      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.label);
+      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.label);
 
       await expect(firstFilter).toBeLeftOf(secondFilter);
     });
 
     await test.step('Move dashboard filter', async () => {
-      await dashboardPage.moveDashboardFilterRight(firstDashboardFilter.filterLabel);
+      await dashboardPage.moveDashboardFilterRight(firstDashboardFilter.label);
     });
 
     await test.step('Verify the dashboard filter was moved', async () => {
-      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.filterLabel);
-      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.filterLabel);
+      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.label);
+      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.label);
 
       await expect(firstFilter).toBeRightOf(secondFilter);
     });
@@ -263,11 +263,11 @@ test.describe('dashboard filter', () => {
 
     const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const textDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
     const filterCriteria = new TextDashboardFilterCriteria({
-      filterLabel: textDashboardFilter.filterLabel,
+      filterLabel: textDashboardFilter.label,
       operator: 'Is Empty',
     });
 
@@ -303,7 +303,7 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Verify the saved default criteria is applied', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
 
       await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
     });
@@ -324,15 +324,15 @@ test.describe('dashboard filter', () => {
 
     const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
     const textDashboardFilter = new TextDashboardFilter({
-      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
       fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
     });
     const filterCriteria = new TextDashboardFilterCriteria({
-      filterLabel: textDashboardFilter.filterLabel,
+      filterLabel: textDashboardFilter.label,
       operator: 'Is Empty',
     });
     const endUserFilterCriteria = new TextDashboardFilterCriteria({
-      filterLabel: textDashboardFilter.filterLabel,
+      filterLabel: textDashboardFilter.label,
       operator: 'Is Not Empty',
     });
 
@@ -380,11 +380,58 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Verify the saved end user default criteria is applied', async () => {
-      const filter = testUserDashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+      const filter = testUserDashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
 
       await expect(filter).toHaveText(
         new RegExp(`${endUserFilterCriteria.filterLabel}\\s+${endUserFilterCriteria.operator}`)
       );
+    });
+  });
+
+  test('Delete a dashboard filter', async ({ report, appAdminPage, sourceApp, dashboardPage, dashboard }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-757',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Verify dashboard filter was added', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
+
+      await expect(filter).toBeVisible();
+    });
+
+    await test.step('Delete the dashboard filter', async () => {
+      await dashboardPage.deleteDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Verify the dashboard filter was deleted', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
+
+      await expect(filter).toBeHidden();
     });
   });
 });

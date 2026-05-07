@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { DeleteDashboardFilterDialog } from '../../componentObjectModels/dialogs/deleteDashboardFilterDialog';
 import { ExportUnderwayDialog } from '../../componentObjectModels/dialogs/reportExportUnderwayDialog';
 import { DashboardActionMenu } from '../../componentObjectModels/menus/dashboardActionMenu';
 import { AddOrEditDashboardFilterModal } from '../../componentObjectModels/modals/addOrEditDashboardFilterModal';
@@ -19,6 +20,7 @@ export class DashboardPage extends BasePage {
   private readonly moveFilterPathRegex: RegExp;
   private readonly saveFilterDefaultsPathRegex: RegExp;
   private readonly saveEndUserFilterDefaultsPathRegex: RegExp;
+  private readonly deleteDashboardFilterDialog: DeleteDashboardFilterDialog;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -48,6 +50,7 @@ export class DashboardPage extends BasePage {
     this.dashboardBreadcrumbTitle = this.page.locator('#dashboard-breadcrumbs .bcrumb-end');
     this.dashboardTitle = this.page.locator('#dashboard-title-container');
     this.dashboardContents = this.page.locator('#dashboard-contents');
+    this.deleteDashboardFilterDialog = new DeleteDashboardFilterDialog(this.page);
   }
 
   async goto(dashboardId?: number) {
@@ -139,6 +142,22 @@ export class DashboardPage extends BasePage {
     await editButton.click();
     await this.addOrEditDashboardFilterModal.fillOutForm(filter);
     await this.addOrEditDashboardFilterModal.save();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2_000);
+  }
+
+  async deleteDashboardFilter(filter: DashboardFilter) {
+    const filterLocator = this.getDashboardFilterByLabel(filter.label);
+    const menuButton = filterLocator.locator('.dashboard-filter-menu');
+
+    await menuButton.click();
+
+    const deleteButton = filterLocator.getByText('Delete');
+    await deleteButton.click();
+
+    await this.deleteDashboardFilterDialog.deleteButton.click();
+    await this.deleteDashboardFilterDialog.waitForDialogToBeDismissed();
+
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(2_000);
   }

@@ -6,18 +6,18 @@ export type DashboardFilterFieldMapping = {
 };
 
 type DashboardFilterObject = {
-  filterLabel: string;
+  label: string;
   type: DashboardFilterDataType;
   fieldMappings: DashboardFilterFieldMapping[];
 };
 
 export abstract class DashboardFilter {
-  filterLabel: string;
+  label: string;
   type: DashboardFilterDataType;
   fieldMappings: DashboardFilterFieldMapping[];
 
-  constructor({ filterLabel, type, fieldMappings }: DashboardFilterObject) {
-    this.filterLabel = filterLabel;
+  constructor({ label, type, fieldMappings }: DashboardFilterObject) {
+    this.label = label;
     this.type = type;
     this.fieldMappings = fieldMappings;
   }
@@ -26,32 +26,32 @@ export abstract class DashboardFilter {
 type DateTimeDashboardFilterObject = Omit<DashboardFilterObject, 'type'>;
 
 export class DateTimeDashboardFilter extends DashboardFilter {
-  constructor({ filterLabel, fieldMappings }: DateTimeDashboardFilterObject) {
-    super({ filterLabel, type: 'Date/Time', fieldMappings });
+  constructor({ label: filterLabel, fieldMappings }: DateTimeDashboardFilterObject) {
+    super({ label: filterLabel, type: 'Date/Time', fieldMappings });
   }
 }
 
 type ListDashboardFilterObject = Omit<DashboardFilterObject, 'type'>;
 
 export class ListDashboardFilter extends DashboardFilter {
-  constructor({ filterLabel, fieldMappings }: ListDashboardFilterObject) {
-    super({ filterLabel, type: 'List', fieldMappings });
+  constructor({ label: filterLabel, fieldMappings }: ListDashboardFilterObject) {
+    super({ label: filterLabel, type: 'List', fieldMappings });
   }
 }
 
 type NumberDashboardFilterObject = Omit<DashboardFilterObject, 'type'>;
 
 export class NumberDashboardFilter extends DashboardFilter {
-  constructor({ filterLabel, fieldMappings }: NumberDashboardFilterObject) {
-    super({ filterLabel, type: 'Number', fieldMappings });
+  constructor({ label: filterLabel, fieldMappings }: NumberDashboardFilterObject) {
+    super({ label: filterLabel, type: 'Number', fieldMappings });
   }
 }
 
 type TextDashboardFilterObject = Omit<DashboardFilterObject, 'type'>;
 
 export class TextDashboardFilter extends DashboardFilter {
-  constructor({ filterLabel, fieldMappings }: TextDashboardFilterObject) {
-    super({ filterLabel, type: 'Text', fieldMappings });
+  constructor({ label: filterLabel, fieldMappings }: TextDashboardFilterObject) {
+    super({ label: filterLabel, type: 'Text', fieldMappings });
   }
 }
 
@@ -62,8 +62,8 @@ type ReferenceDashboardFilterObject = Omit<DashboardFilterObject, 'type'> & {
 export class ReferenceDashboardFilter extends DashboardFilter {
   referencedApp: string;
 
-  constructor({ filterLabel, fieldMappings, referencedApp }: ReferenceDashboardFilterObject) {
-    super({ filterLabel, type: 'Text', fieldMappings });
+  constructor({ label: filterLabel, fieldMappings, referencedApp }: ReferenceDashboardFilterObject) {
+    super({ label: filterLabel, type: 'Text', fieldMappings });
     this.referencedApp = referencedApp;
   }
 }
