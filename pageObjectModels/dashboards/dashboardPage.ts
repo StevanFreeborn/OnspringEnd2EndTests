@@ -18,6 +18,7 @@ export class DashboardPage extends BasePage {
   private readonly addOrEditDashboardFilterModal: AddOrEditDashboardFilterModal;
   private readonly moveFilterPathRegex: RegExp;
   private readonly saveFilterDefaultsPathRegex: RegExp;
+  private readonly saveEndUserFilterDefaultsPathRegex: RegExp;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
   readonly printDashboardModal: PrintDashboardModal;
@@ -33,6 +34,7 @@ export class DashboardPage extends BasePage {
     this.path = '/Dashboard';
     this.moveFilterPathRegex = /\/DashboardFilter\/\d+\/Move/;
     this.saveFilterDefaultsPathRegex = /\/DashboardFilter\/\d+\/SaveAsDashboardDefault/;
+    this.saveEndUserFilterDefaultsPathRegex = /\/DashboardFilter\/\d+\/SaveAsUserDefault/;
     this.actionMenuButton = this.page.locator('#breadcrumb-action-menu-button');
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
@@ -101,6 +103,15 @@ export class DashboardPage extends BasePage {
   async toggleDashboardFilters() {
     await this.actionMenuButton.click();
     await this.actionMenu.toggleDashboardFilteringLink.click();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2_000);
+  }
+
+  async toggleEndUserDefaults() {
+    await this.actionMenuButton.click();
+    await this.actionMenu.toggleEndUserDefaultsLink.click();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2_000);
   }
 
   async addDashboardFilter(filter: DashboardFilter) {
@@ -152,6 +163,20 @@ export class DashboardPage extends BasePage {
   async saveFilterCriteriaAsDefault() {
     const response = this.page.waitForResponse(this.saveFilterDefaultsPathRegex);
     await this.dashboardFilterBar.getByTitle('Save Filter Criteria as Dashboard Default').click();
+    await response;
+  }
+
+  async saveFilterCriteriaAsDashboardDefault() {
+    const response = this.page.waitForResponse(this.saveFilterDefaultsPathRegex);
+    await this.dashboardFilterBar.locator('.dashboard-filter-admin-save-btn').click();
+    await this.dashboardFilterBar.getByText('Save Filter Criteria as Dashboard Default').click();
+    await response;
+  }
+
+  async saveFilterCriteriaAsEndUserDefault() {
+    const response = this.page.waitForResponse(this.saveEndUserFilterDefaultsPathRegex);
+    await this.dashboardFilterBar.locator('.dashboard-filter-admin-save-btn').click();
+    await this.dashboardFilterBar.getByText('Save Filter Criteria as My Default').click();
     await response;
   }
 

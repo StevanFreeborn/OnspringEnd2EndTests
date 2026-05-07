@@ -1,15 +1,18 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
+import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
+import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { TextDashboardFilter } from '../../models/dashboardFilter';
 import { TextDashboardFilterCriteria } from '../../models/dashboardFilterCriteria';
 import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
 import { TextField } from '../../models/textField';
+import { User, UserStatus } from '../../models/user';
 import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
@@ -19,6 +22,8 @@ import { Dashboard } from './../../models/dashboard';
 
 type DashboardFilterTestFixtures = {
   sourceApp: App;
+  testUser: User;
+  testUserPage: Page;
   report: SavedReport;
   container: Container;
   dashboard: Dashboard;
@@ -30,6 +35,21 @@ type DashboardFilterTestFixtures = {
 
 const test = base.extend<DashboardFilterTestFixtures>({
   sourceApp: app,
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
+    await createUserFixture(
+      {
+        browser,
+        sysAdminPage,
+        userStatus: UserStatus.Active,
+        sysAdmin: true,
+        roles: [],
+      },
+      use,
+      testInfo
+    );
+  },
+  testUserPage: async ({ browser, testUser }, use, testInfo) =>
+    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
   report: async ({ sysAdminPage, sourceApp }, use) =>
     await createReportFixture(
       {
@@ -286,6 +306,85 @@ test.describe('dashboard filter', () => {
       const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
 
       await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
+    });
+  });
+
+  test('Save end user default dashboard filter criteria for a dashboard', async ({
+    report,
+    appAdminPage,
+    sourceApp,
+    dashboardPage,
+    dashboard,
+    testUserPage,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-756',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      filterLabel: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+    const filterCriteria = new TextDashboardFilterCriteria({
+      filterLabel: textDashboardFilter.filterLabel,
+      operator: 'Is Empty',
+    });
+    const endUserFilterCriteria = new TextDashboardFilterCriteria({
+      filterLabel: textDashboardFilter.filterLabel,
+      operator: 'Is Not Empty',
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Enable saving end user defaults', async () => {
+      await dashboardPage.toggleEndUserDefaults();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Apply a dashboard default criteria to the dashboard', async () => {
+      await dashboardPage.applyFilterCriteria(filterCriteria);
+      await dashboardPage.saveFilterCriteriaAsDashboardDefault();
+    });
+
+    const testUserDashboardPage = new DashboardPage(testUserPage);
+
+    await test.step('Apply an end user default criteria to the dashboard', async () => {
+      await testUserDashboardPage.goto(dashboard.id);
+      await testUserDashboardPage.applyFilterCriteria(endUserFilterCriteria);
+      await testUserDashboardPage.saveFilterCriteriaAsEndUserDefault();
+    });
+
+    await test.step('Navigate to the content tab', async () => {
+      await testUserDashboardPage.sidebar.contentTab.click();
+    });
+
+    await test.step('Navigate back to the dashboard', async () => {
+      await testUserDashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Verify the saved end user default criteria is applied', async () => {
+      const filter = testUserDashboardPage.getDashboardFilterByLabel(textDashboardFilter.filterLabel);
+
+      await expect(filter).toHaveText(
+        new RegExp(`${endUserFilterCriteria.filterLabel}\\s+${endUserFilterCriteria.operator}`)
+      );
     });
   });
 });
