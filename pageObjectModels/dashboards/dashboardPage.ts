@@ -20,6 +20,7 @@ export class DashboardPage extends BasePage {
   private readonly moveFilterPathRegex: RegExp;
   private readonly saveFilterDefaultsPathRegex: RegExp;
   private readonly saveEndUserFilterDefaultsPathRegex: RegExp;
+  private readonly resetDashboardFiltersToDefaultPathRegex: RegExp;
   private readonly deleteDashboardFilterDialog: DeleteDashboardFilterDialog;
   readonly path: string;
   readonly dashboardDesigner: DashboardDesignerModal;
@@ -37,6 +38,7 @@ export class DashboardPage extends BasePage {
     this.moveFilterPathRegex = /\/DashboardFilter\/\d+\/Move/;
     this.saveFilterDefaultsPathRegex = /\/DashboardFilter\/\d+\/SaveAsDashboardDefault/;
     this.saveEndUserFilterDefaultsPathRegex = /\/DashboardFilter\/\d+\/SaveAsUserDefault/;
+    this.resetDashboardFiltersToDefaultPathRegex = /\/DashboardFilter\/\d+\/Reset/;
     this.actionMenuButton = this.page.locator('#breadcrumb-action-menu-button');
     this.actionMenu = new DashboardActionMenu(this.page.locator('#dashboard-action-menu'));
     this.dashboardDesigner = new DashboardDesignerModal(this.page);
@@ -210,6 +212,14 @@ export class DashboardPage extends BasePage {
     const moveResponse = this.page.waitForResponse(this.moveFilterPathRegex);
     await moveRightButton.click();
     await moveResponse;
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(2_000);
+  }
+
+  async resetDashboardFilterCriteria() {
+    const response = this.page.waitForResponse(this.resetDashboardFiltersToDefaultPathRegex);
+    await this.dashboardFilterBar.getByTitle('Restore Dashboard Default Filter Criteria').click();
+    await response;
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(2_000);
   }

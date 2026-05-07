@@ -434,4 +434,79 @@ test.describe('dashboard filter', () => {
       await expect(filter).toBeHidden();
     });
   });
+
+  test('Reset dashboard filters to dashboard defaults', async ({
+    report,
+    appAdminPage,
+    sourceApp,
+    dashboardPage,
+    dashboard,
+  }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-803',
+    });
+
+    const textField = new TextField({ name: FakeDataFactory.createFakeFieldName() });
+    const textDashboardFilter = new TextDashboardFilter({
+      label: FakeDataFactory.createFakeDashboardFilterLabel(),
+      fieldMappings: [{ dashboardObject: report.name, fields: [textField.name] }],
+    });
+    const filterCriteria = new TextDashboardFilterCriteria({
+      filterLabel: textDashboardFilter.label,
+      operator: 'Is Empty',
+    });
+    const differentCriteria = new TextDashboardFilterCriteria({
+      filterLabel: textDashboardFilter.label,
+      operator: 'Is Not Empty',
+    });
+
+    await test.step('Create the text field that will be mapped in the filter', async () => {
+      await appAdminPage.goto(sourceApp.id);
+      await appAdminPage.layoutTabButton.click();
+      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+    });
+
+    await test.step('Navigate to the dashboard', async () => {
+      await dashboardPage.goto(dashboard.id);
+    });
+
+    await test.step('Enable dashboard filters', async () => {
+      await dashboardPage.toggleDashboardFilters();
+    });
+
+    await test.step('Enable saving end user defaults', async () => {
+      await dashboardPage.toggleEndUserDefaults();
+    });
+
+    await test.step('Add a dashboard filter', async () => {
+      await dashboardPage.addDashboardFilter(textDashboardFilter);
+    });
+
+    await test.step('Apply criteria to filter and save as dashboard default', async () => {
+      await dashboardPage.applyFilterCriteria(filterCriteria);
+      await dashboardPage.saveFilterCriteriaAsDashboardDefault();
+    });
+
+    await test.step('Change the criteria applied to the filter and save as end user defaults', async () => {
+      await dashboardPage.applyFilterCriteria(differentCriteria);
+      await dashboardPage.saveFilterCriteriaAsEndUserDefault();
+    });
+
+    await test.step('Verify the criteria was changed', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
+
+      await expect(filter).toHaveText(new RegExp(`${differentCriteria.filterLabel}\\s+${differentCriteria.operator}`));
+    });
+
+    await test.step('Reset the criteria to the default', async () => {
+      await dashboardPage.resetDashboardFilterCriteria();
+    });
+
+    await test.step('Verify the criteria was reset', async () => {
+      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
+
+      await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
+    });
+  });
 });
