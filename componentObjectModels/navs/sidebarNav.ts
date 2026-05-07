@@ -7,6 +7,7 @@ export class SidebarNav {
   readonly page: Page;
   readonly usersFullName: Locator;
   readonly dashboardsTab: Locator;
+  readonly contentTab: Locator;
   readonly adminGearIcon: Locator;
   readonly pinnedContent: Locator;
   private readonly userImage: Locator;
@@ -18,6 +19,7 @@ export class SidebarNav {
     this.page = page;
     this.usersFullName = this.page.locator('#user-name');
     this.dashboardsTab = this.page.locator('#dashboard-tab');
+    this.contentTab = this.page.locator('#content-tab');
     this.adminGearIcon = this.page.locator('#admin-tab');
     this.pinnedContent = this.page.locator('#pinned-items');
     this.userImage = this.page.locator('#user-image');

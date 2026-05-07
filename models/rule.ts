@@ -1,14 +1,12 @@
 import { FieldType } from '../componentObjectModels/menus/addFieldTypeMenu';
-
-type NonValueOperator = 'Is Empty' | 'Is Not Empty' | 'Changed';
-type ChangeOperators = 'Changed To' | 'Changed From';
-type EqualityOperators = 'Equals' | 'Does Not Equal';
-
-type TextValueOperator = 'Starts With' | 'Contains' | 'Does Not Contain';
-
-type ListValueOperator = 'Contains Any' | 'Excludes Any';
-
-type AutoNumberOperator = 'Equals' | 'Does Not Equal' | 'Is Greater Than' | 'Is Less Than';
+import {
+  ChangeOperators,
+  EqualityOperators,
+  ListValueOperator,
+  NonValueOperator,
+  NumberOperator,
+  TextValueOperator,
+} from './operator';
 
 export abstract class Rule {
   readonly fieldName: string;
@@ -125,7 +123,7 @@ export class ListRuleWithValues extends Rule {
 }
 
 export class AutoNumberRuleWithValue extends Rule {
-  operator: Exclude<AutoNumberOperator, 'Is Between'>;
+  operator: Exclude<NumberOperator, 'Is Between'> | EqualityOperators;
   value: number;
 
   constructor({
@@ -134,7 +132,7 @@ export class AutoNumberRuleWithValue extends Rule {
     value,
   }: {
     fieldName: string;
-    operator: Exclude<AutoNumberOperator, 'Is Between'>;
+    operator: Exclude<NumberOperator, 'Is Between'> | EqualityOperators;
     value: number;
   }) {
     super({ fieldName, fieldType: 'Number' });
@@ -152,7 +150,7 @@ export class AutoNumberRuleWithValue extends Rule {
 }
 
 export class AutoNumberRuleWithRange extends Rule {
-  operator: Extract<AutoNumberOperator, 'Is Between'>;
+  operator: Extract<NumberOperator, 'Is Between'>;
   start: number;
   end: number;
 
@@ -163,7 +161,7 @@ export class AutoNumberRuleWithRange extends Rule {
     end,
   }: {
     fieldName: string;
-    operator: Extract<AutoNumberOperator, 'Is Between'>;
+    operator: Extract<NumberOperator, 'Is Between'>;
     start: number;
     end: number;
   }) {
