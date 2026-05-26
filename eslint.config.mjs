@@ -29,6 +29,7 @@ export default defineConfig([
     'eslint.config.mjs',
   ]),
   {
+    files: ['**/*.ts'],
     extends: compat.extends(
       'eslint:recommended',
       'plugin:@typescript-eslint/recommended',
@@ -45,7 +46,8 @@ export default defineConfig([
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
-        project: [tsconfigPath],
+        projectService: true,
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {
