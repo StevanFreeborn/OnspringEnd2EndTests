@@ -13,7 +13,7 @@
     "test:ui": "npx playwright test --ui",
     "test:env": "cross-replace cross-env TEST_ENV=$npm_config_target playwright test",
     "cleanup": "npx playwright test --project cleanup",
-    "lint": "tsc --noEmit && npx eslint . --ext [.ts,.js]",
+    "lint": "tsc --noEmit && npx eslint .",
     "lint:fix": "tsc --noEmit && npm run lint -- --fix",
     "format:test": "prettier . --check",
     "format:fix": "prettier . --write",
