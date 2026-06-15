@@ -173,22 +173,10 @@ jobs:
           pattern: all-blob-reports-*
           merge-multiple: true
           path: all-blob-reports
-      - name: List directories
-        run: ls -l
-      - name: List blob directory
-        run: ls -l all-blob-reports
       - name: Rename reports
         run: count=1; for file in $(find ./all-blob-reports -maxdepth 1 -type f -name "*.zip"); do mv "$file" "all-blob-reports/report-$count.zip"; count=$((count+1)); done
-      - name: List directories
-        run: ls -l
-      - name: List blob directory
-        run: ls -l all-blob-reports
       - name: Merge into HTML Report
         run: npx playwright merge-reports --reporter html ./all-blob-reports
-      - name: List directories
-        run: ls -l
-      - name: List blob directory
-        run: ls -l all-blob-reports
       - name: Upload HTML report
         uses: actions/upload-artifact@v7
         with:
