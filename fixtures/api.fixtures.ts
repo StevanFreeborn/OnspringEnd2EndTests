@@ -1,4 +1,4 @@
-import { APIRequestContext, APIResponse, expect, Page, Request, request } from '@playwright/test';
+import { APIRequestContext, APIResponse, expect, Page, Request, request, Tracing } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, ReadStream, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { env } from '../env';
@@ -60,10 +60,12 @@ class APIRequestContextDecorator implements APIRequestContext {
     callback: (response: APIResponse) => void | Promise<void>;
     condition: ((response: APIResponse) => boolean | Promise<boolean>) | undefined;
   }>;
+  tracing: Tracing;
 
   constructor(context: APIRequestContext) {
     this.context = context;
     this.responseCallbacks = [];
+    this.tracing = context.tracing;
   }
 
   private async handleResponse(response: APIResponse) {
