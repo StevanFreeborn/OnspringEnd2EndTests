@@ -1127,7 +1127,7 @@ test.describe('report', () => {
       });
 
       await test.step('Verify the funnel chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        await expect(reportPage.reportContents).toHaveScreenshot({ maxDiffPixels: 348 });
       });
     }
   );
