@@ -131,7 +131,7 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
       - name: Rename blob-reports
@@ -166,7 +166,7 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Download blob reports
         uses: actions/download-artifact@v8
         with:
@@ -212,7 +212,7 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Add test run result to Corp
         env:
           ONSPRING_CORP_API_KEY: ${{ secrets.ONSPRING_CORP_API_KEY }}
@@ -240,6 +240,6 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Run your tests
         run: npm run cleanup

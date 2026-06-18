@@ -902,10 +902,18 @@ test.describe('key metrics', () => {
   test(
     'Verify a donut gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({ sourceApp, addContentPage, editContentPage, dashboardsAdminPage, dashboard, dashboardPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-801',
+      });
+
+      await test.step('Create a content record in the source app', async () => {
+        await addContentPage.goto(sourceApp.id);
+        await addContentPage.saveRecordButton.click();
+        await addContentPage.page.waitForURL(editContentPage.pathRegex);
+        const recordId = editContentPage.getRecordIdFromUrl();
+        expect(recordId).toBeGreaterThan(0);
       });
 
       const keyMetric = new DonutGaugeKeyMetric({
@@ -922,7 +930,7 @@ test.describe('key metrics', () => {
         },
         totalSource: {
           type: 'Static',
-          totalValue: 10,
+          totalValue: 2,
         },
       });
       keyMetricsToDelete.push(keyMetric);
