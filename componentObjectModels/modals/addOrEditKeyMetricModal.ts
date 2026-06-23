@@ -166,10 +166,15 @@ export class AddOrEditKeyMetricModal {
     for (const range of ranges) {
       const addButton = this.valueRangesGrid.getByRole('button', { name: 'Add Value' });
       const lastRow = this.valueRangesGrid.locator('tbody tr').last();
-      const rangeStopInput = lastRow.locator('[data-field="rangeStop"] input:visible');
+      const rangeStopInputFirst = lastRow.locator('[data-field="rangeStop"] input').nth(0);
+      const rangeStopInputSecond = lastRow.locator('[data-field="rangeStop"] input').nth(1);
 
       await addButton.click();
-      await rangeStopInput.fill(range.rangeStop.toString());
+      await rangeStopInputFirst.waitFor();
+      await rangeStopInputFirst.click();
+      await rangeStopInputSecond.waitFor();
+      await rangeStopInputSecond.clear();
+      await rangeStopInputSecond.fill(range.rangeStop.toString());
     }
   }
 

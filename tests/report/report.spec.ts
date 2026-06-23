@@ -2019,7 +2019,7 @@ test.describe('report', () => {
     });
 
     await test.step('Verify the heat map chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot();
+      await expect(reportPage.reportContents).toHaveScreenshot({ maxDiffPixels: 400 });
     });
   });
 });

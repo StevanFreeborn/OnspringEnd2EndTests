@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Check and fix linting issues
         run: npm run lint:fix
       - name: Check and fix formatting issues

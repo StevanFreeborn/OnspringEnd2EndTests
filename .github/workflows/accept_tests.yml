@@ -140,7 +140,7 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Run your tests
         run: |
           echo "Running tests for ${{ matrix.project }} shard ${{ matrix.shard }}"
@@ -173,7 +173,7 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
-        run: npm ci
+        run: npm install
       - name: Download blob reports
         if: ${{ needs.run_tests.result != 'skipped' && needs.run_tests.result != 'cancelled' }}
         uses: actions/download-artifact@v8
@@ -258,6 +258,6 @@ jobs:
         with:
           node-version: lts/*
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Run your tests
         run: npm run cleanup

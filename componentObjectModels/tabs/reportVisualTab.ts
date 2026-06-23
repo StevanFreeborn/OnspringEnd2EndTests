@@ -198,6 +198,11 @@ export class ReportVisualTab {
   }
 
   async fillOutForm(report: Report) {
+    const page = this.displayTypeSelector.page();
+
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
+
     await this.selectDisplayType(report.displayType);
 
     if (report instanceof SavedReportAsReportDataOnly && report.relatedData.length === 0) {
@@ -241,8 +246,14 @@ export class ReportVisualTab {
           await sourceSelector.click();
           await this.frame.getByRole('option', { name: 'Use an existing chart report' }).click();
 
+          // eslint-disable-next-line playwright/no-wait-for-timeout
+          await page.waitForTimeout(1000);
+
           await appSelector.click();
           await this.frame.getByRole('option', { name: report.chart.lineChart.appName }).click();
+
+          // eslint-disable-next-line playwright/no-wait-for-timeout
+          await page.waitForTimeout(1000);
 
           await existingChartSelector.click();
           await this.frame.getByRole('option', { name: report.chart.lineChart.name }).click();
