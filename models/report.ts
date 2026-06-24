@@ -55,7 +55,7 @@ type ReportObject = {
 };
 
 export abstract class Report {
-  id?: number;
+  id: number;
   appName: string;
   displayType: ReportDisplayType;
   displayFields: DisplayField[];
@@ -67,6 +67,7 @@ export abstract class Report {
     displayFields = [],
     relatedData = [],
   }: ReportObject) {
+    this.id = 0;
     this.appName = appName;
     this.displayType = displayType;
     this.displayFields = displayFields;
