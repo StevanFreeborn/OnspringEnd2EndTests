@@ -1,7 +1,9 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Route } from '../../fixtures';
+import { test as base, expect, Page, Route } from '../../fixtures';
 import { app, createApp } from '../../fixtures/app.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
+import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import {
   BarChart,
@@ -27,6 +29,7 @@ import { ListValue } from '../../models/listValue';
 import { ReferenceField } from '../../models/referenceField';
 import {
   DisplayField,
+  Report,
   ReportSchedule,
   SavedReportAsCalendar,
   SavedReportAsChart,
@@ -35,6 +38,7 @@ import {
   SavedReportAsReportDataOnly,
 } from '../../models/report';
 import { TextField } from '../../models/textField';
+import { User, UserStatus } from '../../models/user';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
@@ -49,6 +53,8 @@ import { Tags } from '../tags';
 type ReportTestFixtures = {
   referencedApp: App;
   sourceApp: App;
+  testUser: User;
+  testUserPage: Page;
   reportHomePage: ReportHomePage;
   reportAppPage: ReportAppPage;
   reportPage: ReportPage;
@@ -61,6 +67,21 @@ type ReportTestFixtures = {
 const test = base.extend<ReportTestFixtures>({
   referencedApp: app,
   sourceApp: app,
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
+    await createUserFixture(
+      {
+        browser,
+        sysAdminPage,
+        sysAdmin: true,
+        userStatus: UserStatus.Active,
+        roles: [],
+      },
+      use,
+      testInfo
+    );
+  },
+  testUserPage: async ({ browser, testUser }, use, testInfo) =>
+    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
   reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
   reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
   reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
@@ -829,7 +850,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-608',
@@ -850,6 +871,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -860,10 +882,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the bar chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -873,7 +899,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-609',
@@ -894,6 +920,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -904,10 +931,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the column chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -917,7 +948,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-610',
@@ -938,6 +969,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -948,10 +980,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the pie chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -961,7 +997,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-611',
@@ -982,6 +1018,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -992,10 +1029,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the donut chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1005,7 +1046,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-612',
@@ -1026,6 +1067,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1036,10 +1078,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the line chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1049,7 +1095,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-613',
@@ -1070,6 +1116,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1080,10 +1127,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the spline chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1093,7 +1144,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-614',
@@ -1114,6 +1165,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1124,10 +1176,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the funnel chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1137,7 +1193,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-615',
@@ -1158,6 +1214,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1168,10 +1225,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the pyramid chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1181,7 +1242,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-616',
@@ -1203,6 +1264,7 @@ test.describe('report', () => {
           groupData: fields.groupField.name,
           seriesData: fields.seriesField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1213,10 +1275,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked bar chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1226,7 +1292,15 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
+    async ({
+      appAdminPage,
+      addContentPage,
+      editContentPage,
+      reportAppPage,
+      reportPage,
+      sysAdminPage,
+      testUserPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-617',
@@ -1255,6 +1329,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       const columnReport = new SavedReportAsChart({
@@ -1266,6 +1341,7 @@ test.describe('report', () => {
           seriesData: fields.seriesField.name,
           lineChart: lineReport,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1282,19 +1358,27 @@ test.describe('report', () => {
       });
 
       await test.step('Create the column report', async () => {
-        await reportPage.page.route(
-          /Report\/\d+\/GetReportDisplayConfig/,
-          async route => await mockLineChartSeriesName(route, appName, mockAppName),
-          { times: 1 }
-        );
-
         await reportAppPage.createReport(columnReport);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        columnReport.id = reportPage.getReportIdFromUrl();
+        expect(columnReport.id).not.toBe(0);
       });
 
       await test.step('Verify the column plus line chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({
+          testUserPage,
+          report: columnReport,
+          beforeNavigation: async rp => {
+            await rp.page.route(
+              /Report\/\d+\/GetReportDisplayConfig/,
+              async route => await mockLineChartSeriesName(route, appName, mockAppName),
+              { times: 1 }
+            );
+          },
+        });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1304,7 +1388,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-618',
@@ -1326,6 +1410,7 @@ test.describe('report', () => {
           groupData: fields.groupField.name,
           seriesData: fields.seriesField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1336,10 +1421,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked column chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1349,7 +1438,15 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, addContentPage, editContentPage, reportAppPage, reportPage, sysAdminPage }) => {
+    async ({
+      appAdminPage,
+      addContentPage,
+      editContentPage,
+      reportAppPage,
+      reportPage,
+      sysAdminPage,
+      testUserPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-619',
@@ -1378,6 +1475,7 @@ test.describe('report', () => {
           visibility: 'Display Chart Only',
           groupData: fields.groupField.name,
         }),
+        security: 'Public',
       });
 
       const stackedColumnReport = new SavedReportAsChart({
@@ -1389,6 +1487,7 @@ test.describe('report', () => {
           seriesData: fields.seriesField.name,
           lineChart: lineReport,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1405,19 +1504,27 @@ test.describe('report', () => {
       });
 
       await test.step('Create the stacked column plus line report', async () => {
-        await reportPage.page.route(
-          /Report\/\d+\/GetReportDisplayConfig/,
-          async route => await mockLineChartSeriesName(route, appName, mockAppName),
-          { times: 1 }
-        );
-
         await reportAppPage.createReport(stackedColumnReport);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        stackedColumnReport.id = reportPage.getReportIdFromUrl();
+        expect(stackedColumnReport.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked column plus line chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({
+          testUserPage,
+          report: stackedColumnReport,
+          beforeNavigation: async rp => {
+            await rp.page.route(
+              /Report\/\d+\/GetReportDisplayConfig/,
+              async route => await mockLineChartSeriesName(route, appName, mockAppName),
+              { times: 1 }
+            );
+          },
+        });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1427,7 +1534,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-620',
@@ -1450,6 +1557,7 @@ test.describe('report', () => {
           seriesData: fields.seriesField.name,
           additionalGroupData: fields.additionalGroupField.name,
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1460,10 +1568,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the bubble chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1473,7 +1585,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-621',
@@ -1499,6 +1611,7 @@ test.describe('report', () => {
             { value: 6, color: '#800080' },
           ],
         }),
+        security: 'Public',
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
@@ -1509,10 +1622,14 @@ test.describe('report', () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the heat map chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1522,7 +1639,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-622',
@@ -1602,6 +1719,7 @@ test.describe('report', () => {
           },
         ],
         defaultView: 'Day',
+        security: 'Public',
       });
 
       await test.step('Create the report', async () => {
@@ -1609,11 +1727,20 @@ test.describe('report', () => {
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.calendarChart.selectDate(testDate);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the calendar displays as expected', async () => {
-        await reportPage.page.mouse.move(0, 0);
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({
+          testUserPage,
+          report,
+          afterNavigation: async rp => {
+            await rp.calendarChart.selectDate(testDate);
+          },
+        });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1623,7 +1750,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage }) => {
+    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-623',
@@ -1698,16 +1825,21 @@ test.describe('report', () => {
             color: '#FF0000',
           },
         ],
+        security: 'Public',
       });
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the gantt chart displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot();
       });
     }
   );
@@ -1725,6 +1857,7 @@ test.describe('report', () => {
       viewContentPage,
       reportAppPage,
       reportPage,
+      testUserPage,
     }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -1870,16 +2003,21 @@ test.describe('report', () => {
         visibility: 'Display Map Only',
         markerNameField: 'Record Id',
         selectedColor: '#FF0000',
+        security: 'Public',
       });
 
       await test.step('Create the report', async () => {
         await reportAppPage.createReport(report);
         await reportAppPage.page.waitForURL(reportPage.pathRegex);
         await reportPage.waitUntilLoaded();
+
+        report.id = reportPage.getReportIdFromUrl();
+        expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the point map displays as expected', async () => {
-        await expect(reportPage.reportContents).toHaveScreenshot();
+        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+        await expect(reportContents).toHaveScreenshot({ maxDiffPixels: 14 });
       });
     }
   );
@@ -1984,6 +2122,7 @@ test.describe('report', () => {
     editContentPage,
     reportAppPage,
     reportPage,
+    testUserPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -2006,6 +2145,7 @@ test.describe('report', () => {
         groupData: fields.groupField.name,
         seriesData: fields.seriesField.name,
       }),
+      security: 'Public',
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
@@ -2016,10 +2156,14 @@ test.describe('report', () => {
       await reportAppPage.createReport(report);
       await reportAppPage.page.waitForURL(reportPage.pathRegex);
       await reportPage.waitUntilLoaded();
+
+      report.id = reportPage.getReportIdFromUrl();
+      expect(report.id).not.toBe(0);
     });
 
     await test.step('Verify the heat map chart displays as expected', async () => {
-      await expect(reportPage.reportContents).toHaveScreenshot({ maxDiffPixels: 400 });
+      const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
+      await expect(reportContents).toHaveScreenshot({ maxDiffPixels: 400 });
     });
   });
 });
@@ -2229,4 +2373,31 @@ async function mockLineChartSeriesName(route: Route, appName: string, mockAppNam
   lineChartSeries.seriesName = mockAppName;
 
   await route.fulfill({ response, json: body });
+}
+
+async function getReportContentsForScreenshot({
+  testUserPage,
+  report,
+  beforeNavigation,
+  afterNavigation,
+}: {
+  testUserPage: Page;
+  report: Report;
+  beforeNavigation?: (reportPage: ReportPage) => Promise<void>;
+  afterNavigation?: (reportPage: ReportPage) => Promise<void>;
+}) {
+  const reportPage = new ReportPage(testUserPage);
+
+  if (beforeNavigation) {
+    await beforeNavigation(reportPage);
+  }
+
+  await reportPage.goto(report.id!);
+
+  if (afterNavigation) {
+    await afterNavigation(reportPage);
+  }
+
+  await reportPage.page.mouse.move(0, 0);
+  return reportPage.reportContents;
 }

@@ -1,10 +1,11 @@
-import { expect } from '@playwright/test';
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base } from '../../fixtures';
+import { test as base, expect, Page } from '../../fixtures';
 import { createApp } from '../../fixtures/app.fixtures';
+import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
 import { createContainerFixture } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
+import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
 import { Container } from '../../models/container';
 import { Dashboard } from '../../models/dashboard';
@@ -18,6 +19,7 @@ import {
 } from '../../models/keyMetric';
 import { SavedReportAsReportDataOnly } from '../../models/report';
 import { TextField } from '../../models/textField';
+import { User, UserStatus } from '../../models/user';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
 import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
@@ -30,10 +32,12 @@ import { AddContentPage } from './../../pageObjectModels/content/addContentPage'
 import { EditContentPage } from './../../pageObjectModels/content/editContentPage';
 
 type KeyMetricTestFixtures = {
-  dashboardsAdminPage: DashboardsAdminPage;
   sourceApp: App;
   container: Container;
   dashboard: Dashboard;
+  testUser: User;
+  testUserPage: Page;
+  dashboardsAdminPage: DashboardsAdminPage;
   dashboardPage: DashboardPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
@@ -44,7 +48,6 @@ type KeyMetricTestFixtures = {
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
-  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
   sourceApp: async ({ sysAdminPage }, use) => {
     const app = await createApp(sysAdminPage);
     await use(app);
@@ -58,6 +61,22 @@ const test = base.extend<KeyMetricTestFixtures>({
       },
       use
     ),
+  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
+    await createUserFixture(
+      {
+        browser,
+        sysAdminPage,
+        sysAdmin: true,
+        userStatus: UserStatus.Active,
+        roles: [],
+      },
+      use,
+      testInfo
+    );
+  },
+  testUserPage: async ({ browser, testUser }, use, testInfo) =>
+    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  dashboardsAdminPage: async ({ testUserPage }, use) => await use(new DashboardsAdminPage(testUserPage)),
   dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
@@ -373,7 +392,7 @@ test.describe('key metrics', () => {
   test(
     'Verify an app/survey single value key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-779',
@@ -411,7 +430,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -428,6 +447,7 @@ test.describe('key metrics', () => {
       dashboardPage,
       addContentPage,
       editContentPage,
+      testUserPage,
     }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -509,7 +529,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -522,6 +542,7 @@ test.describe('key metrics', () => {
     dashboardsAdminPage,
     dashboard,
     dashboardPage,
+    testUserPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -573,7 +594,7 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Verify the key metric displays as expected', async () => {
-      const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+      const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
       await expect(keyMetricCard).toHaveScreenshot();
     });
   });
@@ -791,7 +812,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a bulb gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-799',
@@ -834,7 +855,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -843,7 +864,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a bar gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-800',
@@ -893,7 +914,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -902,7 +923,15 @@ test.describe('key metrics', () => {
   test(
     'Verify a donut gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, addContentPage, editContentPage, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({
+      sourceApp,
+      addContentPage,
+      editContentPage,
+      dashboardsAdminPage,
+      dashboard,
+      dashboardPage,
+      testUserPage,
+    }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-801',
@@ -957,7 +986,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -966,7 +995,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a dial gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-802',
@@ -1016,7 +1045,7 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(dashboardPage, keyMetric);
+        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
         await expect(keyMetricCard).toHaveScreenshot();
       });
     }
@@ -1024,10 +1053,14 @@ test.describe('key metrics', () => {
 });
 
 async function getKeyMetricForScreenshot(
-  dashboardPage: DashboardPage,
+  testUserPage: Page,
+  dashboard: Dashboard,
   keyMetric: KeyMetric,
   placeholderName: string = 'Key Metric'
 ) {
+  const dashboardPage = new DashboardPage(testUserPage);
+
+  await dashboardPage.goto(dashboard.id);
   const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
   const keyMetricTitle = keyMetricCard.locator('.title');
 
