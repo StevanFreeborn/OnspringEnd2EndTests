@@ -7,7 +7,7 @@ export class RoleAdminPermTab {
     this.adminReportsGrid = page
       .locator('section')
       .filter({
-        has: page.getByRole('heading', { name: 'Administration Reports' }),
+        has: page.getByRole('heading', { name: 'System Reports' }),
       })
       .getByRole('table');
   }
