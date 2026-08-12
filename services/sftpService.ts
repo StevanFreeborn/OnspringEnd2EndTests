@@ -33,16 +33,32 @@ export class SftpService {
   async uploadFile(sourcePath: string, remotePath: string) {
     const client = new Client();
 
-    await client.connect(this.config);
-    await client.put(sourcePath, remotePath);
-    await client.end();
+    try {
+      await client.connect(this.config);
+      await client.put(sourcePath, remotePath);
+    } catch (e) {
+      if (e instanceof Error) {
+        // eslint-disable-next-line no-console
+        console.error(e.message);
+      }
+    } finally {
+      await client.end();
+    }
   }
 
   async deleteFile(remotePath: string) {
     const client = new Client();
 
-    await client.connect(this.config);
-    await client.delete(remotePath);
-    await client.end();
+    try {
+      await client.connect(this.config);
+      await client.delete(remotePath);
+    } catch (e) {
+      if (e instanceof Error) {
+        // eslint-disable-next-line no-console
+        console.error(e.message);
+      }
+    } finally {
+      await client.end();
+    }
   }
 }
