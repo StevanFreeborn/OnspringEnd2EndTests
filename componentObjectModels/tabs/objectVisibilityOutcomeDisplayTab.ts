@@ -38,7 +38,10 @@ export class ObjectVisibilityOutcomeDisplayTab {
       hasText: section.name,
     });
 
-    await sectionLocator.hover();
-    await sectionLocator.getByRole('radio', { name: section.visibility }).click();
+    const displayModeMenu = sectionLocator.locator('.display-mode-menu', { hasText: 'Section Visibility' });
+
+    await sectionLocator.getByRole('button', { name: 'Section:' }).click();
+    await displayModeMenu.waitFor();
+    await displayModeMenu.getByText(section.visibility).click();
   }
 }
