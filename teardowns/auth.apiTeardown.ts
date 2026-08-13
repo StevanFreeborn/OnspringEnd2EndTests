@@ -23,4 +23,6 @@ teardown('Teardown after API tests', async ({ page, useCachedApiSetup }) => {
   await teardown.step('Perform api test cleanup', async () => {
     await performApiTestCleanup({ sysAdminPage: page, useCache: useCachedApiSetup });
   });
+
+  await page.close();
 });
