@@ -246,6 +246,7 @@ test.describe('secure file data connector', () => {
       startingOnDate: new Date(Date.now() + 2 * 60_000),
       frequency: 'Every Day',
       notificationUsers: [sysAdminUser.fullName],
+      fieldMapping: [{ [textField.name]: textField.name }],
     });
 
     connectorsToDelete.push(dataConnector.name);
