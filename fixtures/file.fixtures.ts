@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { FakeDataFactory } from '../factories/fakeDataFactory';
+import { RemoteTestFileService } from '../services/remoteTestFileService';
 
 type FileExtension = '.jpg' | '.txt';
 
@@ -54,13 +55,25 @@ export async function txtFile({}, use: (r: TestFile) => Promise<void>) {
   await use(testFile);
 }
 
-export async function large45mbTxtFile({}, use: (r: TestFile) => Promise<void>) {
-  const testFile = await getTestFileWithName('45mb.txt');
+export async function large149mbTxtFile(
+  { remoteTestFileService }: { remoteTestFileService: RemoteTestFileService },
+  use: (r: TestFile) => Promise<void>
+) {
+  const testFile = await remoteTestFileService.getTestFile(
+    '149mb.txt',
+    'https://share.stevanfreeborn.com/onspring-end-to-end-tests/149mb.txt'
+  );
   await use(testFile);
 }
 
-export async function large51mbTxtFile({}, use: (r: TestFile) => Promise<void>) {
-  const testFile = await getTestFileWithName('51mb.txt');
+export async function large151mbTxtFile(
+  { remoteTestFileService }: { remoteTestFileService: RemoteTestFileService },
+  use: (r: TestFile) => Promise<void>
+) {
+  const testFile = await remoteTestFileService.getTestFile(
+    '151mb.txt',
+    'https://share.stevanfreeborn.com/onspring-end-to-end-tests/151mb.txt'
+  );
   await use(testFile);
 }
 

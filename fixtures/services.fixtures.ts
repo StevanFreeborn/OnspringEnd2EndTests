@@ -3,6 +3,7 @@ import { DownloadService } from '../services/downloadService';
 import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { RemoteTestFileService } from '../services/remoteTestFileService';
 import { SftpService } from '../services/sftpService';
 import { SheetParser } from '../services/sheetParser';
 
@@ -32,6 +33,11 @@ export async function downloadService({}, use: (r: DownloadService) => Promise<v
 export async function sheetParser({}, use: (r: SheetParser) => Promise<void>) {
   const sheetParser = new SheetParser();
   await use(sheetParser);
+}
+
+export async function remoteTestFileService({}, use: (r: RemoteTestFileService) => Promise<void>) {
+  const remoteTestFileService = new RemoteTestFileService();
+  await use(remoteTestFileService);
 }
 
 export async function dynamicDocumentService({}, use: (r: DynamicDocumentService) => Promise<void>) {

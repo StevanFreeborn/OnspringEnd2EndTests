@@ -10,17 +10,19 @@ import { DownloadService } from '../services/downloadService';
 import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
 import { PdfParser } from '../services/pdfParser';
+import { RemoteTestFileService } from '../services/remoteTestFileService';
 import { SftpService } from '../services/sftpService';
 import { SheetParser } from '../services/sheetParser';
 import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
 import { createTestUserPageFixture, sysAdminPage } from './auth.fixtures';
-import { TestFile, jpgFile, large45mbTxtFile, large51mbTxtFile, txtFile } from './file.fixtures';
+import { TestFile, jpgFile, large149mbTxtFile, large151mbTxtFile, txtFile } from './file.fixtures';
 import { activeRoleWithPermissions } from './role.fixures';
 import {
   downloadService,
   dynamicDocumentService,
   pdfParser,
+  remoteTestFileService,
   sftpService,
   sheetParser,
   sysAdminEmailService,
@@ -47,11 +49,12 @@ type Fixtures = {
   sheetParser: SheetParser;
   downloadService: DownloadService;
   dynamicDocumentService: DynamicDocumentService;
+  remoteTestFileService: RemoteTestFileService;
   sftpService: SftpService;
   jpgFile: TestFile;
   txtFile: TestFile;
-  large45mbTxtFile: TestFile;
-  large51mbTxtFile: TestFile;
+  large149mbTxtFile: TestFile;
+  large151mbTxtFile: TestFile;
   apiURL: string;
   useCachedApiSetup: boolean;
 };
@@ -82,11 +85,12 @@ export const test = base.extend<Fixtures>({
   sheetParser: sheetParser,
   downloadService: downloadService,
   dynamicDocumentService: dynamicDocumentService,
+  remoteTestFileService: remoteTestFileService,
   sftpService: sftpService,
   jpgFile: jpgFile,
   txtFile: txtFile,
-  large45mbTxtFile: large45mbTxtFile,
-  large51mbTxtFile: large51mbTxtFile,
+  large149mbTxtFile: large149mbTxtFile,
+  large151mbTxtFile: large151mbTxtFile,
   apiURL: ['', { option: true }],
 });
 
