@@ -57,6 +57,8 @@ export class BaseLayoutSection {
   }
 
   async getDropzone(column: number, row: number) {
+    await this.section.waitFor();
+
     const numberOfColumns = await this.getNumberOfColumns();
     const numberOfRows = await this.getNumberOfRows(column);
 
