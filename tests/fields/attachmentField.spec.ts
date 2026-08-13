@@ -612,7 +612,7 @@ test.describe('attachment field', () => {
     app,
     addContentPage,
     editContentPage,
-    large45mbTxtFile,
+    large149mbTxtFile,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -649,7 +649,7 @@ test.describe('attachment field', () => {
         fieldType: 'Attachment',
       });
 
-      await attachmentField.addFile(large45mbTxtFile.path);
+      await attachmentField.addFile(large149mbTxtFile.path);
       await addContentPage.saveRecordButton.click();
       await addContentPage.page.waitForURL(editContentPage.pathRegex);
     });
@@ -662,7 +662,7 @@ test.describe('attachment field', () => {
         fieldType: 'Attachment',
       });
 
-      const attachment = attachmentField.attachmentGridBody.getByRole('row', { name: large45mbTxtFile.name });
+      const attachment = attachmentField.attachmentGridBody.getByRole('row', { name: large149mbTxtFile.name });
 
       await expect(attachment).toBeVisible();
     });
@@ -672,7 +672,7 @@ test.describe('attachment field', () => {
     appAdminPage,
     app,
     addContentPage,
-    large51mbTxtFile,
+    large151mbTxtFile,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -709,7 +709,7 @@ test.describe('attachment field', () => {
         fieldType: 'Attachment',
       });
 
-      await attachmentField.addFileWithoutWaitingForResponse(large51mbTxtFile.path);
+      await attachmentField.addFileWithoutWaitingForResponse(large151mbTxtFile.path);
     });
 
     await test.step('Verify the file upload fails', async () => {

@@ -372,7 +372,7 @@ test.describe('API v1', () => {
     test('it should return expected status code and data structure when uploading large file', async ({
       setup,
       request,
-      large45mbTxtFile,
+      large149mbTxtFile,
     }) => {
       let createdRecordId = 0;
 
@@ -396,14 +396,14 @@ test.describe('API v1', () => {
       });
 
       await test.step('Update the record with large attachment', async () => {
-        const file = await readFile(large45mbTxtFile.path);
+        const file = await readFile(large149mbTxtFile.path);
 
         const response = await request.post(
           `files/${setup.app.id}/${createdRecordId}/${setup.fields.attachmentsField.id}`,
           {
             data: file,
             params: {
-              fileName: large45mbTxtFile.name,
+              fileName: large149mbTxtFile.name,
               modifiedTime: new Date().toISOString(),
               fileNotes: 'Test file notes',
             },
@@ -426,7 +426,7 @@ test.describe('API v1', () => {
     test('it should return expected status code and data structure when uploading file that exceeds max size', async ({
       setup,
       request,
-      large51mbTxtFile,
+      large151mbTxtFile,
       environment,
     }) => {
       let createdRecordId = 0;
@@ -451,14 +451,14 @@ test.describe('API v1', () => {
       });
 
       await test.step('Attempt to update the record with large attachment', async () => {
-        const file = await readFile(large51mbTxtFile.path);
+        const file = await readFile(large151mbTxtFile.path);
 
         const response = await request.post(
           `files/${setup.app.id}/${createdRecordId}/${setup.fields.attachmentsField.id}`,
           {
             data: file,
             params: {
-              fileName: large51mbTxtFile.name,
+              fileName: large151mbTxtFile.name,
               modifiedTime: new Date().toISOString(),
               fileNotes: 'Test file notes',
             },
