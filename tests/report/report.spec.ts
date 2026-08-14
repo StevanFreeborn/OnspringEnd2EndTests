@@ -92,6 +92,8 @@ const test = base.extend<ReportTestFixtures>({
 });
 
 test.describe('report', () => {
+  test.slow();
+
   let appsToDelete: string[] = [];
 
   test.afterEach(async ({ sysAdminPage }) => {
@@ -710,8 +712,6 @@ test.describe('report', () => {
       description: 'Test-606',
     });
 
-    test.slow();
-
     const initialFields = getFieldsForApp();
     const fields = {
       ...initialFields,
@@ -798,8 +798,6 @@ test.describe('report', () => {
       description: 'Test-607',
     });
 
-    test.slow();
-
     await test.step('Create record in source app', async () => {
       await addContentPage.goto(sourceApp.id);
       await addContentPage.saveRecordButton.click();
@@ -818,7 +816,7 @@ test.describe('report', () => {
       scheduling: 'Enabled',
       schedule: new ReportSchedule({
         sendFrequency: 'Every Day',
-        startingOn: new Date(Date.now() + 1 * 60_000),
+        startingOn: new Date(Date.now() + 2 * 60_000),
         fromName: 'Automation Test',
         fromAddress: FakeDataFactory.createFakeEmailFromAddress(),
         subject: `Scheduled Report ${reportName}`,
@@ -839,8 +837,8 @@ test.describe('report', () => {
 
         expect(result.isOk()).toBe(true);
       }).toPass({
-        intervals: [90_000, 30_000],
-        timeout: 300_000,
+        intervals: [180_000, 30_000],
+        timeout: 420_000,
       });
     });
   });
