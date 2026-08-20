@@ -144,6 +144,8 @@ export class BaseLayoutTab extends LayoutItemCreator {
     const getLayoutDesignResponse = this.page.waitForResponse(this.getLayoutDesignPathRegex);
     await this.layoutsGrid.getByRole('row', { name: layoutName }).click();
     await getLayoutDesignResponse;
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(1000);
   }
 
   async addLayoutItemFromFieldsAndObjectsGrid(item: LayoutItem) {

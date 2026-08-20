@@ -38,8 +38,13 @@ export class ViewVersionHistoryModal {
 
     const fromFilterResponse = page.waitForResponse(res => {
       const requestData = res.request().postDataJSON();
-      const hasFromDate = requestData.fromDate !== undefined;
-      return res.url().match(this.filterPathRegex) !== null && res.request().method() === 'POST' && hasFromDate;
+      const hasFromDate = requestData?.fromDate !== undefined;
+      return (
+        res.url().match(this.filterPathRegex) !== null &&
+        res.status() === 200 &&
+        res.request().method() === 'POST' &&
+        hasFromDate
+      );
     });
 
     await this.fromDateField.enterDate(fromDate);
@@ -47,8 +52,13 @@ export class ViewVersionHistoryModal {
 
     const toFilterResponse = page.waitForResponse(res => {
       const requestData = res.request().postDataJSON();
-      const hasToDate = requestData.toDate !== undefined;
-      return res.url().match(this.filterPathRegex) !== null && res.request().method() === 'POST' && hasToDate;
+      const hasToDate = requestData?.toDate !== undefined;
+      return (
+        res.url().match(this.filterPathRegex) !== null &&
+        res.status() === 200 &&
+        res.request().method() === 'POST' &&
+        hasToDate
+      );
     });
 
     await this.toDateField.enterDate(toDate);
