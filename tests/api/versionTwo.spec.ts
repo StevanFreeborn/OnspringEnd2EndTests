@@ -926,9 +926,9 @@ test.describe('API v2', () => {
     test('it should return expected status code and data structure when uploading a large file', async ({
       setup,
       request,
-      large45mbTxtFile,
+      large149mbTxtFile,
     }) => {
-      const file = createReadStream(large45mbTxtFile.path);
+      const file = createReadStream(large149mbTxtFile.path);
       let createdRecordId = 0;
 
       await test.step('Create a record', async () => {
@@ -977,10 +977,10 @@ test.describe('API v2', () => {
     test('it should return expected status code when updating a record with an attachment that exceeds the size limit', async ({
       setup,
       request,
-      large51mbTxtFile,
+      large151mbTxtFile,
       environment,
     }) => {
-      const file = createReadStream(large51mbTxtFile.path);
+      const file = createReadStream(large151mbTxtFile.path);
       let createdRecordId = 0;
 
       await test.step('Create a record', async () => {
