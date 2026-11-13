@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { DualPaneSelector } from '../controls/dualPaneSelector';
 import { DashboardObjectItem } from '../../models/dashboardObjectItem';
+import { DualPaneSelector } from '../controls/dualPaneSelector';
 
 export abstract class AddOrEditDashboardObjectItemModal {
   private readonly viewSelector: Locator;
@@ -41,7 +41,7 @@ export abstract class AddOrEditDashboardObjectItemModal {
     await this.securityTabButton.click();
     await this.selectView(dashboardObjectItem.view);
 
-    if (dashboardObjectItem.view === 'Private by Role') {
+    if (dashboardObjectItem.view === 'Role-Based') {
       await this.rolesSelector.selectOptions(dashboardObjectItem.roles);
     }
   }

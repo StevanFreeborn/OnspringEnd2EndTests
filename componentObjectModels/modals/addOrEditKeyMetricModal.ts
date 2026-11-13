@@ -292,7 +292,7 @@ export class AddOrEditKeyMetricModal {
     await this.securityTabButton.click();
     await this.selectView(keyMetric.security.view);
 
-    if (keyMetric.security.view === 'Private by Role') {
+    if (keyMetric.security.view === 'Role-Based') {
       await this.rolesDualPaneSelector.selectOptions(keyMetric.security.roles);
     }
   }

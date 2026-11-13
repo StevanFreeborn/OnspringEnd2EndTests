@@ -2,7 +2,7 @@ import { Locator, Page } from '@playwright/test';
 import { Report, SavedReport, TempReport } from '../../models/report';
 
 type SchedulingStatus = 'Enabled' | 'Disabled';
-type Security = 'Private to me' | 'Private by Role' | 'Public';
+type Security = 'Private' | 'Role-Based' | 'Public';
 
 export class AddReportDialog {
   private readonly blankReportRadioButton: Locator;

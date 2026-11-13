@@ -21,7 +21,7 @@ type Security =
   | {
       view: 'Public';
     }
-  | { view: 'Private by Role'; roles: string[] };
+  | { view: 'Role-Based'; roles: string[] };
 
 type KeyMetricObject = {
   objectName: string;

@@ -129,7 +129,7 @@ export class ReportGeneralTab {
       await this.selectNumberDateFormat(report.schedule.numberDateFormat);
       await this.includeAllLevelsCheckbox.setChecked(report.schedule.includeAllLevels);
 
-      if (report.security !== 'Private to me') {
+      if (report.security !== 'Private') {
         await this.specificGroupsDualPaneSelector.selectOptions(report.schedule.specificGroups);
         await this.specificUsersDualPaneSelector.selectOptions(report.schedule.specificUsers);
       }

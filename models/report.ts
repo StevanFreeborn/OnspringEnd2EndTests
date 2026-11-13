@@ -1,7 +1,7 @@
 import { Chart, ChartDisplayOption, DisplayOptionLabel } from './chart';
 
 export type ReportSchedulingStatus = 'Enabled' | 'Disabled';
-type ReportSecurity = 'Private to me' | 'Private by Role' | 'Public';
+type ReportSecurity = 'Private' | 'Role-Based' | 'Public';
 type ReportDisplayType =
   | 'Display Report Data Only'
   | 'Display as a Chart'
@@ -204,7 +204,7 @@ export abstract class SavedReport extends Report {
     displayType,
     displayFields,
     relatedData,
-    security = 'Private to me',
+    security = 'Private',
     scheduling = 'Disabled',
     schedule,
   }: SavedReportObject) {
@@ -226,18 +226,18 @@ export abstract class SavedReport extends Report {
       }
 
       if (
-        this.security === 'Private to me' &&
+        this.security === 'Private' &&
         (this.schedule.specificGroups.length > 0 || this.schedule.specificUsers.length > 0)
       ) {
-        throw new Error('Specific groups and users cannot be provided when the report is private to me');
+        throw new Error('Specific groups and users cannot be provided when the report is private');
       }
 
       if (
-        this.security !== 'Private to me' &&
+        this.security !== 'Private' &&
         this.schedule.specificGroups.length === 0 &&
         this.schedule.specificUsers.length === 0
       ) {
-        throw new Error('Specific groups or users must be provided when the report is not private to me');
+        throw new Error('Specific groups or users must be provided when the report is not private');
       }
     }
   }

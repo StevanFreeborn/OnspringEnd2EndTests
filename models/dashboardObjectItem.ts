@@ -1,6 +1,6 @@
 type DashboardObjectItemType = 'App Search' | 'Create Content Links' | 'Formatted Text Block' | 'Web Page';
 
-type DashboardObjectItemViewSecurity = 'Public' | 'Private by Role';
+type DashboardObjectItemViewSecurity = 'Public' | 'Role-Based';
 
 export type DashboardObjectItemObject = {
   name: string;
