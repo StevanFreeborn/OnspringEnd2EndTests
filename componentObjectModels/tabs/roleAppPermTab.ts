@@ -55,7 +55,7 @@ class AppPermissionGrid {
     this.reportAdminPermissions = new AppPermissionRow(this.grid.getByRole('row', { name: 'Report Administrator' }));
     this.privateReportAdminPermissions = new AppPermissionRow(
       this.grid.getByRole('row', {
-        name: 'Private to me Reports',
+        name: 'Private Reports',
       })
     );
   }

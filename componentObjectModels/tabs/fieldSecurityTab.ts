@@ -16,7 +16,7 @@ export class FieldSecurityTab {
   async setPermissions(permissions: LayoutItemPermission[]) {
     if (permissions.length) {
       await this.viewSelect.click();
-      await this.frame.getByRole('option', { name: 'Private by Role' }).click();
+      await this.frame.getByRole('option', { name: 'Role-Based' }).click();
 
       for (const permission of permissions) {
         await this.permissionsGrid.getRolePermissionRow(permission.roleName).set(permission);

@@ -25,7 +25,7 @@ export class SectionLabelSecurityTab extends LayoutItemSecurityTab {
   async setPermissions(permissions: LayoutItemPermission[]): Promise<void> {
     if (permissions.length) {
       await this.viewSelect.click();
-      await this.page.getByRole('option', { name: 'Private by Role' }).click();
+      await this.page.getByRole('option', { name: 'Role-Based' }).click();
 
       await this.roleSelector.click();
 
