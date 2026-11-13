@@ -12,7 +12,7 @@ export class DataFileTab {
     this.saveImportFilePath = '/Admin/Integration/Import/SaveImportFiles';
     this.nameInput = page.getByLabel('Name');
     this.targetAppSelect = page.getByRole('listbox', { name: 'App/Survey' });
-    this.addNewFileLink = page.locator('.k-upload-button');
+    this.addNewFileLink = page.getByLabel('Add New File');
   }
 
   async selectTargetApp(appName: string) {
