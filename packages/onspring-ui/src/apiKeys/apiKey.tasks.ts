@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -86,8 +87,8 @@ export const ApiKeyTasks = {
       if (await actor.browse().isVisible(apiKeyRow)) {
         await actor.browse().hover(apiKeyRow);
         await actor.browse().click(ApiKeysPageTargets.deleteButtonInRow(name));
-        const deleteResponse = actor.page.waitForResponse(
-          r => r.url().match(ApiKeysPageTargets.deleteApiKeyPathRegex) !== null && r.status() === 200
+        const deleteResponse = actor.browse().waitForResponse(
+          (r: Response) => r.url().match(ApiKeysPageTargets.deleteApiKeyPathRegex) !== null && r.status() === 200
         );
         await actor.browse().click(DeleteDialogTargets.deleteButton);
         await deleteResponse;

@@ -2,6 +2,7 @@
 export * from './common/navs/adminNav.targets.js';
 export * from './common/dialogs/dialogs.targets.js';
 export * from './common/controls/dualPaneSelector.js';
+export * from './common/controls/referenceFieldGrid.js';
 
 // Feature domains
 export * from './apiKeys/apiKeys.targets.js';

@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { FakeDataFactory, Role, UserFactory } from '@stevanfreeborn/onspring-models';
 import {
   AdminTileTargets,
@@ -10,6 +11,7 @@ import {
   EditGeneralSettingsModalTargets,
   EditGeocodingSettingsModalTargets,
   GroupTasks,
+  OptionTargets,
   RoleTasks,
   UserTasks,
 } from '@stevanfreeborn/onspring-ui';
@@ -515,7 +517,7 @@ test.describe('app', () => {
     await test.step("Update the app's primary sort field", async () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Record Id' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).isVisible();
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).hasText('Ascending');
@@ -549,10 +551,10 @@ test.describe('app', () => {
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.selectorCloseButton);
 
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Record Id' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.secondarySortSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Created Date' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Created Date'));
 
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).isVisible();
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).hasText('Ascending');
@@ -583,14 +585,14 @@ test.describe('app', () => {
     await test.step("Change the app's administration permissions to private", async () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Private' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Private'));
 
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isVisible();
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isVisible();
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isVisible();
 
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
-      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Verify app's administration permissions were set to private", async () => {
@@ -714,22 +716,22 @@ test.describe('app', () => {
     await test.step("Change the app's administration permissions to private", async () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Private' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Private'));
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
-      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Change the app's administration permissions to public", async () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
-      await sysAdminActor.page.getByRole('option', { name: 'Public' }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName('Public'));
 
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isHidden();
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isHidden();
       await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isHidden();
 
       await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
-      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Verify app's administration permissions were set to public", async () => {
@@ -772,16 +774,16 @@ test.describe('app', () => {
       await sysAdminActor.browse().check(EditGeocodingSettingsModalTargets.geocodingDataGrid).isVisible();
 
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
-      await sysAdminActor.page.getByRole('option', { name: addressFieldName }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName(addressFieldName));
 
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.citySelect);
-      await sysAdminActor.page.getByRole('option', { name: cityFieldName }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName(cityFieldName));
 
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.stateSelect);
-      await sysAdminActor.page.getByRole('option', { name: stateFieldName }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName(stateFieldName));
 
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.zipSelect);
-      await sysAdminActor.page.getByRole('option', { name: zipFieldName }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName(zipFieldName));
 
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
@@ -835,7 +837,7 @@ test.describe('app', () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTabButton);
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeocodingSettingsLink);
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
-      await sysAdminActor.page.getByRole('option', { name: secondAddressFieldName }).click();
+      await sysAdminActor.browse().click(OptionTargets.byName(secondAddressFieldName));
       await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
 
@@ -942,8 +944,8 @@ test.describe('app', () => {
       await sysAdminActor.browse().check(DeleteAppDialogTargets.confirmationInput).hasValue('OK');
       await sysAdminActor.browse().check(DeleteAppDialogTargets.deleteButton).isEnabled();
 
-      const deleteResponse = sysAdminActor.page.waitForResponse(
-        r => r.url().includes('/Delete') && r.status() === 200
+      const deleteResponse = sysAdminActor.browse().waitForResponse(
+        (r: Response) => r.url().includes('/Delete') && r.status() === 200
       );
       await sysAdminActor.browse().click(DeleteAppDialogTargets.deleteButton);
       await deleteResponse;

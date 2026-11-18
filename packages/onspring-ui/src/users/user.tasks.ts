@@ -1,7 +1,8 @@
+import { Response } from '@playwright/test';
 import { User, UserStatus } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { ReferenceFieldGridControl } from '../common/controls/referenceFieldGrid.js';
+import { ReferenceFieldGrid } from '../common/controls/referenceFieldGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import {
@@ -13,8 +14,8 @@ import {
 
 export const UserTasks = {
   goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getUsersResponse = actor.page.waitForResponse(
-      r => r.url().includes(UsersPageTargets.getUsersPath) && r.status() === 200
+    const getUsersResponse = actor.browse().waitForResponse(
+      (r: Response) => r.url().includes(UsersPageTargets.getUsersPath) && r.status() === 200
     );
     await actor.browse().goto(UsersPageTargets.route);
     await getUsersResponse;
@@ -30,12 +31,12 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
     await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddUserPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
   },
 
   createViaHeader: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -49,12 +50,12 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
     await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddUserPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
   },
 
   createViaSecurityTile: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -71,12 +72,12 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
     await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddUserPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
   },
 
   createFromGrid: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -89,12 +90,12 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
     await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddUserPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
   },
 
   copy: (sourceUsername: string, copiedUsername: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -103,22 +104,22 @@ export const UserTasks = {
     await actor.browse().hover(row);
     await actor.browse().click(UsersPageTargets.copyButtonInRow(sourceUsername));
 
-    await actor.page.waitForURL(CopyUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(CopyUserPageTargets.pathRegex);
     await actor.browse().type(CopyUserPageTargets.generalTab.usernameInput, copiedUsername);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(CopyUserPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
   },
 
   updateStatus: (status: UserStatus): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(EditUserPageTargets.generalTab.statusButton(status));
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(EditUserPageTargets.saveRecordButton);
     await saveResponse;
@@ -126,14 +127,16 @@ export const UserTasks = {
 
   assignRole: (roleName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(EditUserPageTargets.securityTabButton);
-    await ReferenceFieldGridControl.selectRecord(
-      EditUserPageTargets.securityTab.rolesReferenceGrid.control(actor.page),
-      roleName,
-      'checkbox'
+    await actor.attemptsTo(
+      ReferenceFieldGrid.selectRecord({
+        gridTarget: EditUserPageTargets.securityTab.rolesReferenceGrid.control,
+        searchTerm: roleName,
+        controlType: 'checkbox',
+      })
     );
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(EditUserPageTargets.saveRecordButton);
     await saveResponse;
@@ -141,14 +144,16 @@ export const UserTasks = {
 
   assignGroup: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(EditUserPageTargets.securityTabButton);
-    await ReferenceFieldGridControl.selectRecord(
-      EditUserPageTargets.securityTab.groupsReferenceGrid.control(actor.page),
-      groupName,
-      'checkbox'
+    await actor.attemptsTo(
+      ReferenceFieldGrid.selectRecord({
+        gridTarget: EditUserPageTargets.securityTab.groupsReferenceGrid.control,
+        searchTerm: groupName,
+        controlType: 'checkbox',
+      })
     );
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(EditUserPageTargets.saveRecordButton);
     await saveResponse;
@@ -165,8 +170,8 @@ export const UserTasks = {
       if (isVisible) {
         await actor.browse().hover(row);
         await actor.browse().click(UsersPageTargets.deleteButtonInRow(username));
-        const deleteResponse = actor.page.waitForResponse(
-          r => UsersPageTargets.deleteUserPathRegex.test(r.url()) && r.status() === 200
+        const deleteResponse = actor.browse().waitForResponse(
+          (r: Response) => UsersPageTargets.deleteUserPathRegex.test(r.url()) && r.status() === 200
         );
         await actor.browse().click(DeleteDialogTargets.deleteButton);
         await deleteResponse;

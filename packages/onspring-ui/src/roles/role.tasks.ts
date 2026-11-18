@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { Role } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
@@ -12,8 +13,8 @@ import {
 
 export const RoleTasks = {
   goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getRolesResponse = actor.page.waitForResponse(
-      r => r.url().includes(RolesSecurityPageTargets.getRolesPath) && r.status() === 200
+    const getRolesResponse = actor.browse().waitForResponse(
+      (r: Response) => r.url().includes(RolesSecurityPageTargets.getRolesPath) && r.status() === 200
     );
     await actor.browse().goto(RolesSecurityPageTargets.route);
     await getRolesResponse;
@@ -35,31 +36,30 @@ export const RoleTasks = {
       await actor.browse().click(AddRolePageTargets.appPermissionsTabButton);
 
       for (const appPerm of role.appPermissions) {
-        const filterInput = AddRolePageTargets.appPermTab.filterByInput(actor.page);
-        await filterInput.clear();
-        await filterInput.pressSequentially(appPerm.appName, { delay: 150 });
+        await actor.browse().type(AddRolePageTargets.appPermTab.filterByInput, appPerm.appName);
 
-        const grid = AddRolePageTargets.appPermTab.appSectionGrid(appPerm.appName)(actor.page);
-        if (await grid.isHidden()) {
+        const gridTarget = AddRolePageTargets.appPermTab.appSectionGrid(appPerm.appName);
+        const isGridVisible = await actor.browse().isVisible(gridTarget);
+        if (!isGridVisible) {
           await actor.browse().click(AddRolePageTargets.appPermTab.appSectionHeading(appPerm.appName));
         }
 
         if (appPerm.contentRecords.read) {
-          const readCheckbox = AddRolePageTargets.appPermTab.permissionCheckbox(
+          const readCheckboxTarget = AddRolePageTargets.appPermTab.permissionCheckbox(
             appPerm.appName,
             'Content Records',
             'read'
-          )(actor.page);
-          await readCheckbox.setChecked(true);
+          );
+          await actor.browse().checkControl(readCheckboxTarget);
         }
       }
     }
 
-    const editPageUrlWait = actor.page.waitForURL(AddRolePageTargets.editPathRegex);
+    const editPageUrlWait = actor.browse().waitForUrl(AddRolePageTargets.editPathRegex);
     await actor.browse().click(AddRolePageTargets.saveRecordButton);
     await editPageUrlWait;
 
-    const urlParts = actor.page.url().split('/');
+    const urlParts = actor.browse().url().split('/');
     const roleId = parseInt(urlParts[urlParts.length - 2]);
     role.id = roleId;
   },
@@ -74,7 +74,7 @@ export const RoleTasks = {
     await actor.browse().click(AddRolePageTargets.statusToggle);
     await actor.browse().click(AddRolePageTargets.statusToggle);
 
-    const editPageUrlWait = actor.page.waitForURL(AddRolePageTargets.editPathRegex);
+    const editPageUrlWait = actor.browse().waitForUrl(AddRolePageTargets.editPathRegex);
     await actor.browse().click(AddRolePageTargets.saveRecordButton);
     await editPageUrlWait;
   },
@@ -90,7 +90,7 @@ export const RoleTasks = {
     await actor.browse().click(AddRolePageTargets.statusToggle);
     await actor.browse().click(AddRolePageTargets.statusToggle);
 
-    const editPageUrlWait = actor.page.waitForURL(AddRolePageTargets.editPathRegex);
+    const editPageUrlWait = actor.browse().waitForUrl(AddRolePageTargets.editPathRegex);
     await actor.browse().click(AddRolePageTargets.saveRecordButton);
     await editPageUrlWait;
   },
@@ -102,14 +102,14 @@ export const RoleTasks = {
     await actor.browse().click(AddRolePageTargets.statusToggle);
     await actor.browse().click(AddRolePageTargets.statusToggle);
 
-    const editPageUrlWait = actor.page.waitForURL(AddRolePageTargets.editPathRegex);
+    const editPageUrlWait = actor.browse().waitForUrl(AddRolePageTargets.editPathRegex);
     await actor.browse().click(AddRolePageTargets.saveRecordButton);
     await editPageUrlWait;
   },
 
   save: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const saveResponse = actor.page.waitForResponse(
-      r => r.url().match(EditRolePageTargets.pathRegex) !== null && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => r.url().match(EditRolePageTargets.pathRegex) !== null && r.status() === 200
     );
     await actor.browse().click(EditRolePageTargets.saveRecordButton);
     await saveResponse;
@@ -124,7 +124,7 @@ export const RoleTasks = {
     await actor.browse().check(CopyRolePageTargets.generalTab.nameInput).hasValue(sourceRoleName);
     await actor.browse().type(CopyRolePageTargets.generalTab.nameInput, copiedRoleName);
 
-    const navWait = actor.page.waitForURL(EditRolePageTargets.pathRegex);
+    const navWait = actor.browse().waitForUrl(EditRolePageTargets.pathRegex);
     await actor.browse().click(CopyRolePageTargets.saveRecordButton);
     await navWait;
   },
@@ -140,8 +140,8 @@ export const RoleTasks = {
       if (isVisible) {
         await actor.browse().hover(row);
         await actor.browse().click(RolesSecurityPageTargets.deleteButtonInRow(roleName));
-        const deleteResponse = actor.page.waitForResponse(
-          r => r.url().match(RolesSecurityPageTargets.deleteRolePathRegex) !== null && r.status() === 200
+        const deleteResponse = actor.browse().waitForResponse(
+          (r: Response) => r.url().match(RolesSecurityPageTargets.deleteRolePathRegex) !== null && r.status() === 200
         );
         await actor.browse().click(DeleteDialogTargets.deleteButton);
         await deleteResponse;

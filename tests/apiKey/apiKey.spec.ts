@@ -382,7 +382,7 @@ test.describe('API Key', () => {
       await sysAdminActor.browse().click(ApiKeysPageTargets.deleteButtonInRow(apiKeyName));
       await sysAdminActor.browse().check(DeleteDialogTargets.deleteButton).isVisible();
 
-      const deleteResponse = sysAdminActor.page.waitForResponse(ApiKeysPageTargets.deleteApiKeyPathRegex);
+      const deleteResponse = sysAdminActor.browse().waitForResponse(ApiKeysPageTargets.deleteApiKeyPathRegex);
       await sysAdminActor.browse().click(DeleteDialogTargets.deleteButton);
       await deleteResponse;
       await sysAdminActor.browse().waitForDetached(DeleteDialogTargets.dialog, DeleteDialogTargets.overlay);

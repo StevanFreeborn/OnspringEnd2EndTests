@@ -3,7 +3,7 @@ import { Ability, Actor } from '@stevanfreeborn/screenplay';
 
 export type Target = Locator | ((page: Page) => Locator);
 
-function resolveTarget(page: Page, target: Target): Locator {
+export function resolveTarget(page: Page, target: Target): Locator {
   return typeof target === 'function' ? target(page) : target;
 }
 
@@ -65,6 +65,26 @@ export class BrowserActions {
     return this.page.waitForResponse(urlOrPredicate);
   }
 
+  url(): string {
+    return this.page.url();
+  }
+
+  async waitForUrl(url: string | RegExp): Promise<void> {
+    await this.page.waitForURL(url);
+  }
+
+  async waitForState(
+    target: Target,
+    state: 'visible' | 'hidden' | 'attached' | 'detached'
+  ): Promise<void> {
+    await resolveTarget(this.page, target).waitFor({ state });
+  }
+
+  async waitForTimeout(ms: number): Promise<void> {
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(ms);
+  }
+
   async isVisible(target: Target): Promise<boolean> {
     return resolveTarget(this.page, target).isVisible();
   }
@@ -112,6 +132,10 @@ export class BrowserActions {
 
   check(target: Target): TargetAssertions {
     return new TargetAssertions(resolveTarget(this.page, target));
+  }
+
+  locator(target: Target): Locator {
+    return resolveTarget(this.page, target);
   }
 
   checkPage(): PageAssertions {
@@ -179,7 +203,7 @@ export class PageAssertions {
  * An Actor equipped with the ability to browse the web.
  */
 export class WebActor extends Actor {
-  readonly page: Page;
+  private readonly page: Page;
   private readonly browserActions: BrowserActions;
 
   constructor(name: string, page: Page) {

@@ -93,6 +93,7 @@ export const EditGeneralSettingsModalTargets = {
   apiSavesCheckbox: (page: Page) => page.getByLabel('API Saves', { exact: true }),
   systemSavesCheckbox: (page: Page) => page.getByLabel('System Saves', { exact: true }),
   concurrentEditAlertStatusSwitch: (page: Page) => page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch'),
+  concurrentEditAlertStatusToggle: (page: Page) => page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch').locator('span').nth(3),
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
 };
 
@@ -107,6 +108,10 @@ export const EditDisplaySettingsModalTargets = {
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
   unselectedDisplayOption: (field: string) => (page: Page) => page.locator(`.selector-control .unselected-pane li:has-text("${field}")`),
   selectorCloseButton: (page: Page) => page.locator('.selector-control:not(.invisible)').getByTitle('Close').first(),
+};
+
+export const OptionTargets = {
+  byName: (name: string) => (page: Page) => page.getByRole('option', { name }),
 };
 
 export const EditAdminSettingsModalTargets = {
@@ -144,13 +149,15 @@ export const AppLayoutTabTargets = {
   addOrEditPathRegex: /\/Admin\/App\/\d+\/Field\/(AddUsingSettings|\d+\/Edit)/,
 
   fieldModal: {
-    frame: (page: Page, frameNumber: number = 0) => page.frameLocator('iframe').nth(frameNumber),
-    nameInput: (page: Page, frameNumber: number = 0) =>
+    frame: (frameNumber: number = 0) => (page: Page) => page.frameLocator('iframe').nth(frameNumber),
+    nameInput: (frameNumber: number = 0) => (page: Page) =>
       page.frameLocator('iframe').nth(frameNumber).getByLabel('Field', { exact: true }),
-    securityTabButton: (page: Page, frameNumber: number = 0) =>
+    securityTabButton: (frameNumber: number = 0) => (page: Page) =>
       page.frameLocator('iframe').nth(frameNumber).getByRole('tab', { name: 'Security' }),
-    securityViewSelect: (page: Page, frameNumber: number = 0) =>
+    securityViewSelect: (frameNumber: number = 0) => (page: Page) =>
       page.frameLocator('iframe').nth(frameNumber).getByRole('listbox', { name: 'View' }),
+    securityOption: (optionName: string, frameNumber: number = 0) => (page: Page) =>
+      page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: optionName }),
     saveButton: (page: Page) =>
       page.getByRole('button', { name: 'Save', exact: true }).last(),
   },

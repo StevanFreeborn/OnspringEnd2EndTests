@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
@@ -11,8 +12,8 @@ import {
 
 export const GroupTasks = {
   goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getGroupsResponse = actor.page.waitForResponse(
-      r => r.url().includes(GroupsPageTargets.getGroupsPath) && r.status() === 200
+    const getGroupsResponse = actor.browse().waitForResponse(
+      (r: Response) => r.url().includes(GroupsPageTargets.getGroupsPath) && r.status() === 200
     );
     await actor.browse().goto(GroupsPageTargets.route);
     await getGroupsResponse;
@@ -22,12 +23,12 @@ export const GroupTasks = {
     await actor.browse().goto(AddGroupPageTargets.route);
     await actor.browse().type(AddGroupPageTargets.nameInput, groupName);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddGroupPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditGroupPageTargets.pathRegex);
   },
 
   createViaHeader: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -37,12 +38,12 @@ export const GroupTasks = {
 
     await actor.browse().type(AddGroupPageTargets.nameInput, groupName);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddGroupPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditGroupPageTargets.pathRegex);
   },
 
   createViaSecurityTile: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -55,12 +56,12 @@ export const GroupTasks = {
 
     await actor.browse().type(AddGroupPageTargets.nameInput, groupName);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddGroupPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditGroupPageTargets.pathRegex);
   },
 
   createFromGrid: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -69,12 +70,12 @@ export const GroupTasks = {
 
     await actor.browse().type(AddGroupPageTargets.nameInput, groupName);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AddGroupPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditGroupPageTargets.pathRegex);
   },
 
   copy: (sourceGroupName: string, copiedGroupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -83,22 +84,22 @@ export const GroupTasks = {
     await actor.browse().hover(row);
     await actor.browse().click(GroupsPageTargets.copyButtonInRow(sourceGroupName));
 
-    await actor.page.waitForURL(CopyGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(CopyGroupPageTargets.pathRegex);
     await actor.browse().type(CopyGroupPageTargets.nameInput, copiedGroupName);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(CopyGroupPageTargets.saveRecordButton);
     await saveResponse;
-    await actor.page.waitForURL(EditGroupPageTargets.pathRegex);
+    await actor.browse().waitForUrl(EditGroupPageTargets.pathRegex);
   },
 
   updateDescription: (description: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().type(EditGroupPageTargets.descriptionEditor, description);
 
-    const saveResponse = actor.page.waitForResponse(
-      r => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    const saveResponse = actor.browse().waitForResponse(
+      (r: Response) => EditGroupPageTargets.pathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(EditGroupPageTargets.saveRecordButton);
     await saveResponse;
@@ -115,8 +116,8 @@ export const GroupTasks = {
       if (isVisible) {
         await actor.browse().hover(row);
         await actor.browse().click(GroupsPageTargets.deleteButtonInRow(groupName));
-        const deleteResponse = actor.page.waitForResponse(
-          r => GroupsPageTargets.deleteGroupPathRegex.test(r.url()) && r.status() === 200
+        const deleteResponse = actor.browse().waitForResponse(
+          (r: Response) => GroupsPageTargets.deleteGroupPathRegex.test(r.url()) && r.status() === 200
         );
         await actor.browse().click(DeleteDialogTargets.deleteButton);
         await deleteResponse;

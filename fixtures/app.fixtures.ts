@@ -45,7 +45,7 @@ export async function createAppWithActor(
   appName: string = FakeDataFactory.createFakeAppName()
 ): Promise<App> {
   await actor.attemptsTo(AppTasks.create(appName));
-  const url = actor.page.url();
+  const url = actor.browse().url();
   const urlParts = url.split('/');
   const appId = parseInt(urlParts[urlParts.length - 1]);
   return new App({ id: appId, name: appName });

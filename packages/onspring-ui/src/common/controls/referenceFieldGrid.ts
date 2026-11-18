@@ -1,32 +1,38 @@
-import { Locator } from '@playwright/test';
+import { Task } from '@stevanfreeborn/screenplay';
+import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 
-export const ReferenceFieldGridControl = {
-  selectRecord: async (
-    controlLocator: Locator,
-    searchTerm: string,
-    controlType: 'checkbox' | 'radio' = 'checkbox'
-  ): Promise<void> => {
-    const page = controlLocator.page();
-    const filterInput = controlLocator.getByPlaceholder('Select Related');
-    const searchResults = page.locator('.grid-search-results:visible');
+export interface SelectReferenceGridRecordOptions {
+  gridTarget: Target;
+  searchTerm: string;
+  controlType?: 'checkbox' | 'radio';
+}
+
+export const ReferenceFieldGrid = {
+  selectRecord: ({
+    gridTarget,
+    searchTerm,
+    controlType = 'checkbox',
+  }: SelectReferenceGridRecordOptions): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     const editReferenceSearchListPathRegex = /\/Content\/[0-9]+\/[0-9]+\/EditReferenceSearchList/;
+    const gridLocator = actor.browse().locator(gridTarget);
+    const filterInput = gridLocator.getByPlaceholder('Select Related');
 
-    const clickResponse = page.waitForResponse(editReferenceSearchListPathRegex);
+    const clickResponse = actor.browse().waitForResponse(editReferenceSearchListPathRegex);
     await filterInput.click();
     await clickResponse;
 
-    const searchResponse = page.waitForResponse(editReferenceSearchListPathRegex);
+    const searchResponse = actor.browse().waitForResponse(editReferenceSearchListPathRegex);
     await filterInput.pressSequentially(searchTerm, { delay: 125 });
     await searchResponse;
 
+    const searchResults = actor.browse().locator((page) => page.locator('.grid-search-results:visible'));
     const searchResultRow = searchResults.getByRole('row', { name: searchTerm });
     const scrollableElement = searchResults.locator('.k-grid-content.k-auto-scrollable').first();
 
     let isVisible = await searchResultRow.isVisible();
     while (!isVisible) {
       await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await page.waitForTimeout(500);
+      await actor.browse().waitForTimeout(500);
       isVisible = await searchResultRow.isVisible();
     }
 

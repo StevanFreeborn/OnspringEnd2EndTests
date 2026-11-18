@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -13,13 +14,14 @@ import {
   EditGeneralSettingsModalTargets,
   EditGeocodingSettingsModalTargets,
   EditNotesSettingsModalTargets,
+  OptionTargets,
 } from './apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
 
 export const AppTasks = {
   goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getAppsListResponse = actor.page.waitForResponse(
-      r => r.url().includes(AppsPageTargets.getAppsListPath) && r.status() === 200
+    const getAppsListResponse = actor.browse().waitForResponse(
+      (r: Response) => r.url().includes(AppsPageTargets.getAppsListPath) && r.status() === 200
     );
     await actor.browse().goto(AppsPageTargets.route);
     await getAppsListResponse;
@@ -32,7 +34,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
     await actor.browse().type(CreateAppModalTargets.nameInput, appName);
 
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -45,7 +47,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
     await actor.browse().type(CreateAppModalTargets.nameInput, appName);
 
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -58,7 +60,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
     await actor.browse().type(CreateAppModalTargets.nameInput, appName);
 
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -75,7 +77,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
 
     await actor.browse().check(CreateAppModalTargets.nameInput).hasValue(copyAppName);
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -92,7 +94,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
 
     await actor.browse().check(CreateAppModalTargets.nameInput).hasValue(copyAppName);
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -108,7 +110,7 @@ export const AppTasks = {
     await actor.browse().click(CreateAppDialogTargets.continueButton);
 
     await actor.browse().check(CreateAppModalTargets.nameInput).hasValue(copyAppName);
-    const navPromise = actor.page.waitForURL(AppDetailTargets.pathRegex);
+    const navPromise = actor.browse().waitForUrl(AppDetailTargets.pathRegex);
     await actor.browse().click(CreateAppModalTargets.saveButton);
     await navPromise;
   },
@@ -154,10 +156,10 @@ export const AppTasks = {
 
   updateConcurrentEditAlert: (enable: boolean): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
-    const switchTarget = EditGeneralSettingsModalTargets.concurrentEditAlertStatusSwitch(actor.page);
-    const currentChecked = (await switchTarget.getAttribute('aria-checked')) === 'true';
+    const switchTarget = EditGeneralSettingsModalTargets.concurrentEditAlertStatusSwitch;
+    const currentChecked = (await actor.browse().locator(switchTarget).getAttribute('aria-checked')) === 'true';
     if (currentChecked !== enable) {
-      await switchTarget.locator('span').nth(3).click();
+      await actor.browse().click(EditGeneralSettingsModalTargets.concurrentEditAlertStatusToggle);
     }
     await actor.browse().click(EditGeneralSettingsModalTargets.saveButton);
   },
@@ -165,14 +167,14 @@ export const AppTasks = {
   updateDisplayLinkField: (fieldName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
     await actor.browse().click(EditDisplaySettingsModalTargets.displayLinkSelect);
-    await actor.page.getByRole('option', { name: fieldName }).click();
+    await actor.browse().click(OptionTargets.byName(fieldName));
     await actor.browse().click(EditDisplaySettingsModalTargets.saveButton);
   },
 
   updateIntegrationLinkField: (fieldName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
     await actor.browse().click(EditDisplaySettingsModalTargets.integrationLinkSelect);
-    await actor.page.getByRole('option', { name: fieldName }).click();
+    await actor.browse().click(OptionTargets.byName(fieldName));
     await actor.browse().click(EditDisplaySettingsModalTargets.saveButton);
   },
 
@@ -187,21 +189,21 @@ export const AppTasks = {
   updatePrimarySortField: (fieldName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
     await actor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
-    await actor.page.getByRole('option', { name: fieldName }).click();
+    await actor.browse().click(OptionTargets.byName(fieldName));
     await actor.browse().click(EditDisplaySettingsModalTargets.saveButton);
   },
 
   updateSecondarySortField: (fieldName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
     await actor.browse().click(EditDisplaySettingsModalTargets.secondarySortSelect);
-    await actor.page.getByRole('option', { name: fieldName }).click();
+    await actor.browse().click(OptionTargets.byName(fieldName));
     await actor.browse().click(EditDisplaySettingsModalTargets.saveButton);
   },
 
   setAdminPermissions: (permissionType: 'Public' | 'Private', options?: { user?: string; role?: string; group?: string }): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
     await actor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
-    await actor.page.getByRole('option', { name: permissionType }).click();
+    await actor.browse().click(OptionTargets.byName(permissionType));
 
     if (options?.user) {
       await actor.attemptsTo(DualPaneSelector.selectOption(EditAdminSettingsModalTargets.usersSelector, options.user));
@@ -214,7 +216,7 @@ export const AppTasks = {
     }
 
     await actor.browse().click(EditAdminSettingsModalTargets.saveButton);
-    await EditAdminSettingsModalTargets.modal(actor.page).waitFor({ state: 'hidden' });
+    await actor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
   },
 
   updateNotes: (notes: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -234,23 +236,23 @@ export const AppTasks = {
     await actor.browse().click(AppLayoutTabTargets.addFieldButton);
     await actor.browse().click(AppLayoutTabTargets.addLayoutItemMenu('Text'));
 
-    const addItemResponse = actor.page.waitForResponse(
-      r => AppLayoutTabTargets.addItemPathRegex.test(r.url()) && r.status() === 200
+    const addItemResponse = actor.browse().waitForResponse(
+      (r: Response) => AppLayoutTabTargets.addItemPathRegex.test(r.url()) && r.status() === 200
     );
     await actor.browse().click(AppLayoutTabTargets.addLayoutItemDialogContinueButton);
     await addItemResponse;
 
     const modal = AppLayoutTabTargets.fieldModal;
-    await modal.nameInput(actor.page).fill(fieldName);
+    await actor.browse().fill(modal.nameInput(), fieldName);
 
-    await modal.securityTabButton(actor.page).click();
-    await modal.securityViewSelect(actor.page).click();
-    await modal.frame(actor.page).getByRole('option', { name: 'Public' }).click();
+    await actor.browse().click(modal.securityTabButton());
+    await actor.browse().click(modal.securityViewSelect());
+    await actor.browse().click(modal.securityOption('Public'));
 
-    const saveFieldResponse = actor.page.waitForResponse(
-      r => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200
+    const saveFieldResponse = actor.browse().waitForResponse(
+      (r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200
     );
-    await modal.saveButton(actor.page).click();
+    await actor.browse().click(modal.saveButton);
     await saveFieldResponse;
   },
 
@@ -271,16 +273,16 @@ export const AppTasks = {
     await actor.browse().check(EditGeocodingSettingsModalTargets.geocodingDataGrid).isVisible();
 
     await actor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
-    await actor.page.getByRole('option', { name: mapping.address }).click();
+    await actor.browse().click(OptionTargets.byName(mapping.address));
 
     await actor.browse().click(EditGeocodingSettingsModalTargets.citySelect);
-    await actor.page.getByRole('option', { name: mapping.city }).click();
+    await actor.browse().click(OptionTargets.byName(mapping.city));
 
     await actor.browse().click(EditGeocodingSettingsModalTargets.stateSelect);
-    await actor.page.getByRole('option', { name: mapping.state }).click();
+    await actor.browse().click(OptionTargets.byName(mapping.state));
 
     await actor.browse().click(EditGeocodingSettingsModalTargets.zipSelect);
-    await actor.page.getByRole('option', { name: mapping.zip }).click();
+    await actor.browse().click(OptionTargets.byName(mapping.zip));
 
     await actor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
   },
@@ -297,8 +299,8 @@ export const AppTasks = {
         await actor.browse().hover(row);
         await actor.browse().click(AppsPageTargets.deleteButtonInRow(appName));
         await actor.browse().type(DeleteAppDialogTargets.confirmationInput, 'OK');
-        const deleteResponse = actor.page.waitForResponse(
-          r => r.url().includes('/Delete') && r.status() === 200
+        const deleteResponse = actor.browse().waitForResponse(
+          (r: Response) => r.url().includes('/Delete') && r.status() === 200
         );
         await actor.browse().click(DeleteAppDialogTargets.deleteButton);
         await deleteResponse;
