@@ -1,0 +1,35 @@
+{
+  "name": "@stevanfreeborn/testing-services",
+  "version": "0.1.0",
+  "description": "Reusable testing services and utilities (Email, SFTP, PDF, Sheet, Cloudflare) for E2E automation.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "playwright",
+    "services"
+  ],
+  "author": "stevan freeborn",
+  "license": "MIT"
+}
