@@ -1,4 +1,4 @@
-import { FakeDataFactory, Role, UserFactory } from '@stevanfreeborn/onspring-models';
+import { FakeDataFactory, Role } from '@stevanfreeborn/onspring-models';
 import {
   EditUserPageTargets,
   GroupTasks,
@@ -29,7 +29,7 @@ test.describe('User', () => {
       description: 'Test-668',
     });
 
-    const newUser = UserFactory.createNewUser('Active');
+    const newUser = FakeDataFactory.createFakeUser('Active');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
@@ -54,7 +54,7 @@ test.describe('User', () => {
       description: 'Test-669',
     });
 
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
@@ -79,7 +79,7 @@ test.describe('User', () => {
       description: 'Test-670',
     });
 
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
@@ -102,7 +102,7 @@ test.describe('User', () => {
       description: 'Test-785',
     });
 
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     const copiedUserUsername = `${newUser.username} (Copy)`;
     usersToDelete.push(newUser.username);
     usersToDelete.push(copiedUserUsername);
@@ -131,7 +131,7 @@ test.describe('User', () => {
       description: 'Test-674',
     });
 
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user to update', async () => {
@@ -154,7 +154,7 @@ test.describe('User', () => {
     });
 
     const roleName = FakeDataFactory.createFakeRoleName();
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the role to assign to the user', async () => {
@@ -186,7 +186,7 @@ test.describe('User', () => {
     });
 
     const groupName = FakeDataFactory.createFakeGroupName();
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the group to assign to the user', async () => {
@@ -217,7 +217,7 @@ test.describe('User', () => {
       description: 'Test-675',
     });
 
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     const userRow = UsersPageTargets.rowByName(newUser.username);
 
     await test.step('Create user to delete', async () => {
@@ -238,4 +238,6 @@ test.describe('User', () => {
     });
   });
 });
+
+
 
