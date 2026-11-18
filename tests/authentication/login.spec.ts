@@ -1,138 +1,130 @@
-import { Page, test as base, expect } from '@playwright/test';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { UserFactory } from '../../factories/userFactory';
+import { Page } from '@playwright/test';
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import {
+  AuthTasks,
+  DashboardTargets,
+  LoginPageTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { test as baseTest } from '../../fixtures';
 import { errorResponseHandler } from '../../fixtures/auth.fixtures';
-import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
 
 type LoginTestFixtures = {
   page: Page;
-  loginPage: LoginPage;
-  dashboardPage: DashboardPage;
+  userActor: WebActor;
 };
 
-const test = base.extend<LoginTestFixtures>({
+const test = baseTest.extend<LoginTestFixtures>({
   page: async ({ page }, use) => {
     page.on('response', errorResponseHandler);
     await use(page);
   },
-  loginPage: async ({ page }, use) => {
-    const loginPage = new LoginPage(page);
-    await use(loginPage);
-  },
-  dashboardPage: async ({ page }, use) => {
-    const dashboardPage = new DashboardPage(page);
-    await use(dashboardPage);
+  userActor: async ({ page }, use) => {
+    const actor = WebActor.using('User', page);
+    await use(actor);
   },
 });
 
 test.describe('login', () => {
-  test('user can login using valid username and password.', async ({ loginPage, dashboardPage }) => {
-    const user = UserFactory.createSysAdminUser();
-
+  test('user can login using valid username and password.', async ({ userActor, sysAdminUser }) => {
     await test.step('Navigate to login page.', async () => {
-      await loginPage.goto();
+      await userActor.attemptsTo(AuthTasks.gotoLogin());
     });
 
     await test.step('Enter username and password.', async () => {
-      await loginPage.enterUsername(user.username);
-      await loginPage.enterPassword(user.password);
+      await userActor.attemptsTo(AuthTasks.enterUsername(sysAdminUser.username));
+      await userActor.attemptsTo(AuthTasks.enterPassword(sysAdminUser.password));
     });
 
     await test.step('Click login button.', async () => {
-      await loginPage.clickLoginButton();
-      // Login will fail randomly across different browsers
-      // when initially inputting correct password. Almost
-      // as if the password gets cleared right before posting
-      // the login form.
-      // TODO: Re-evaluate
-      const currentUrl = loginPage.page.url();
+      await userActor.attemptsTo(AuthTasks.clickLogin());
 
+      // Login may fail intermittently across different browsers
+      // when initially inputting correct password (transient clearing).
+      const currentUrl = userActor.browse().url();
       // eslint-disable-next-line playwright/no-conditional-in-test
-      if (currentUrl.includes(loginPage.path)) {
-        await loginPage.enterPassword(user.password);
-        await loginPage.clickLoginButton();
+      if (currentUrl.includes(LoginPageTargets.route)) {
+        await userActor.attemptsTo(AuthTasks.enterPassword(sysAdminUser.password));
+        await userActor.attemptsTo(AuthTasks.clickLogin());
       }
     });
 
     await test.step('Verify user is logged in.', async () => {
-      await expect(dashboardPage.page).toHaveURL(new RegExp(dashboardPage.path));
-      await expect(dashboardPage.sidebar.usersFullName).toHaveText(user.fullName);
+      await userActor.browse().checkPage().hasUrl(DashboardTargets.pathRegex);
+      await userActor.browse().check(DashboardTargets.usersFullName).hasText(sysAdminUser.fullName);
     });
   });
 
-  test('user cannot login using invalid username.', async ({ loginPage }) => {
-    const user = UserFactory.createSysAdminUser();
+  test('user cannot login using invalid username.', async ({ userActor, sysAdminUser }) => {
     const fakeUsername = FakeDataFactory.createFakeUsername();
 
     await test.step('Navigate to login page.', async () => {
-      await loginPage.goto();
+      await userActor.attemptsTo(AuthTasks.gotoLogin());
     });
 
     await test.step('Enter username and password.', async () => {
-      await loginPage.enterUsername(fakeUsername);
-      await loginPage.enterPassword(user.password);
+      await userActor.attemptsTo(AuthTasks.enterUsername(fakeUsername));
+      await userActor.attemptsTo(AuthTasks.enterPassword(sysAdminUser.password));
     });
 
     await test.step('Click login button.', async () => {
-      await loginPage.clickLoginButton();
+      await userActor.attemptsTo(AuthTasks.clickLogin());
     });
 
     await test.step('Verify user is not logged in.', async () => {
-      await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
-      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
+      await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 
-  test('user cannot login using invalid password.', async ({ loginPage }) => {
-    const user = UserFactory.createSysAdminUser();
+  test('user cannot login using invalid password.', async ({ userActor, sysAdminUser }) => {
     const fakePassword = FakeDataFactory.createFakePassword();
 
     await test.step('Navigate to login page.', async () => {
-      await loginPage.goto();
+      await userActor.attemptsTo(AuthTasks.gotoLogin());
     });
 
     await test.step('Enter username and password.', async () => {
-      await loginPage.enterUsername(user.username);
-      await loginPage.enterPassword(fakePassword);
+      await userActor.attemptsTo(AuthTasks.enterUsername(sysAdminUser.username));
+      await userActor.attemptsTo(AuthTasks.enterPassword(fakePassword));
     });
 
     await test.step('Click login button.', async () => {
-      await loginPage.clickLoginButton();
+      await userActor.attemptsTo(AuthTasks.clickLogin());
     });
 
     await test.step('Verify user is not logged in.', async () => {
-      await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
-      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
+      await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 
-  test('user cannot login using invalid username and password.', async ({ loginPage }) => {
+  test('user cannot login using invalid username and password.', async ({ userActor }) => {
     const fakeUsername = FakeDataFactory.createFakeUsername();
     const fakePassword = FakeDataFactory.createFakePassword();
 
     await test.step('Navigate to login page.', async () => {
-      await loginPage.goto();
+      await userActor.attemptsTo(AuthTasks.gotoLogin());
     });
 
     await test.step('Enter username and password.', async () => {
-      await loginPage.enterUsername(fakeUsername);
-      await loginPage.enterPassword(fakePassword);
+      await userActor.attemptsTo(AuthTasks.enterUsername(fakeUsername));
+      await userActor.attemptsTo(AuthTasks.enterPassword(fakePassword));
     });
 
     await test.step('Click login button.', async () => {
-      await loginPage.clickLoginButton();
+      await userActor.attemptsTo(AuthTasks.clickLogin());
     });
 
     await test.step('Verify user is not logged in.', async () => {
-      await expect(loginPage.page).toHaveURL(new RegExp(loginPage.path));
-      await expect(loginPage.validationErrors).toHaveText(LoginPage.invalidCredentialError.text);
-      await expect(loginPage.validationErrors).toHaveCSS('color', LoginPage.invalidCredentialError.color);
-      await expect(loginPage.validationErrors).toHaveCSS('font-weight', LoginPage.invalidCredentialError.fontWeight);
+      await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 });

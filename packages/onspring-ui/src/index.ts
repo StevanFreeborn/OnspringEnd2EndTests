@@ -17,3 +17,5 @@ export * from './users/users.targets.js';
 export * from './users/user.tasks.js';
 export * from './sharedLists/sharedLists.targets.js';
 export * from './sharedLists/sharedList.tasks.js';
+export * from './authentication/auth.targets.js';
+export * from './authentication/auth.tasks.js';

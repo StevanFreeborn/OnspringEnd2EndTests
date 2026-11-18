@@ -189,6 +189,10 @@ export class TargetAssertions {
   async hasAttribute(name: string, value: string | RegExp): Promise<void> {
     await expect(this.locator).toHaveAttribute(name, value);
   }
+
+  async hasCSS(name: string, value: string | RegExp): Promise<void> {
+    await expect(this.locator).toHaveCSS(name, value);
+  }
 }
 
 export class PageAssertions {
