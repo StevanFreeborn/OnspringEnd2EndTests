@@ -1,5 +1,4 @@
 import { Locator, Page } from '@playwright/test';
-import { User } from '../../models/user';
 
 export class LoginPage {
   static readonly invalidCredentialError = {
@@ -40,7 +39,7 @@ export class LoginPage {
     await this.loginButton.click();
   }
 
-  async login(user: User) {
+  async login(user: { username: string; password: string }) {
     await this.goto();
     await this.enterUsername(user.username);
     await this.enterPassword(user.password);

@@ -1,5 +1,4 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { UserFactory } from '../../factories/userFactory';
 import { test as base, expect } from '../../fixtures';
 import { Role } from '../../models/role';
 import { TextField } from '../../models/textField';
@@ -810,7 +809,7 @@ test.describe('survey supporting data app', () => {
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = FakeDataFactory.createFakeUser(UserStatus.Inactive);
     surveysToDelete.push(surveyName);
     const usersToDelete = [newUser.username];
 

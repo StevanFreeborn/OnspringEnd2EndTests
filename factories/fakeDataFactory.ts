@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { env } from '../env';
+import { User, UserStatus } from '../models/user';
 
 export const TEST_APP_NAME = 'app-test';
 export const TEST_SURVEY_NAME = 'survey-test';
@@ -203,5 +204,17 @@ export class FakeDataFactory {
 
   static createFakeDocumentName() {
     return `${this.createUniqueIdentifier()}-document-test`;
+  }
+
+  static createFakeUser(status: UserStatus = UserStatus.Active, sysAdmin: boolean = false): User {
+    return new User({
+      firstName: this.createFakeFirstName(),
+      lastName: this.createFakeLastName(),
+      email: this.createFakeUserEmail(),
+      username: this.createFakeUsername(),
+      password: this.createFakePassword(),
+      status,
+      sysAdmin,
+    });
   }
 }

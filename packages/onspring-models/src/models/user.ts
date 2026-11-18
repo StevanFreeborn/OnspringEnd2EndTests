@@ -1,7 +1,19 @@
 export type UserStatus = 'Active' | 'Inactive' | 'Locked';
 
+export type UserObject = {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  password: string;
+  status?: UserStatus;
+  roles?: string[];
+  sysAdmin?: boolean;
+};
+
 export class User {
-  id: number = 0;
+  id: number;
   readonly firstName: string;
   readonly lastName: string;
   readonly email: string;
@@ -13,16 +25,18 @@ export class User {
   readonly sysAdmin: boolean;
   authStoragePath?: string;
 
-  constructor(
-    firstName: string,
-    lastName: string,
-    email: string,
-    username: string,
-    password: string,
-    status: UserStatus = 'Active',
-    roles: string[] = [],
-    sysAdmin: boolean = false
-  ) {
+  constructor({
+    id = 0,
+    firstName,
+    lastName,
+    email,
+    username,
+    password,
+    status = 'Active',
+    roles = [],
+    sysAdmin = false,
+  }: UserObject) {
+    this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.email = email;
@@ -34,3 +48,4 @@ export class User {
     this.sysAdmin = sysAdmin;
   }
 }
+

@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { FakeDataFactory, Role, UserFactory } from '@stevanfreeborn/onspring-models';
+import { FakeDataFactory, Role } from '@stevanfreeborn/onspring-models';
 import {
   AdminTileTargets,
   AppDetailTargets,
@@ -607,7 +607,7 @@ test.describe('app', () => {
     });
 
     const appName = FakeDataFactory.createFakeAppName();
-    const newUser = UserFactory.createNewUser('Inactive');
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
     appsToDelete.push(appName);
     const usersToDelete = [newUser.username];
 

@@ -1,5 +1,6 @@
 import { expect, test as setupBase } from '@playwright/test';
-import { UserFactory } from '../factories/userFactory';
+import { User } from '@stevanfreeborn/onspring-models';
+import { env } from '../env';
 import { ApiTestOptions } from '../fixtures';
 import { performApiTestsSetup } from '../fixtures/api.fixtures';
 import { LoginPage } from '../pageObjectModels/authentication/loginPage';
@@ -14,7 +15,15 @@ setup('Setup before API tests', async ({ page, useCachedApiSetup }) => {
 
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
-  const sysAdminUser = UserFactory.createSysAdminUser();
+  const sysAdminUser = new User({
+    firstName: env.SYS_ADMIN_FIRST_NAME,
+    lastName: env.SYS_ADMIN_LAST_NAME,
+    email: env.SYS_ADMIN_EMAIL,
+    username: env.SYS_ADMIN_USERNAME,
+    password: env.SYS_ADMIN_PASSWORD,
+    status: 'Active',
+    sysAdmin: true,
+  });
 
   await setup.step('Login as system administrator', async () => {
     await loginPage.login(sysAdminUser);

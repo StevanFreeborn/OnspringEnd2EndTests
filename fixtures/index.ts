@@ -1,6 +1,5 @@
 import { Page, test as base } from '@playwright/test';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { UserFactory } from '../factories/userFactory';
 import { App } from '../models/app';
 import { Role } from '../models/role';
 import { Survey } from '../models/survey';
@@ -80,7 +79,18 @@ export const test = base.extend<Fixtures>({
     getEnvironment: () => env.TEST_ENV,
     isFedspring: () => env.TEST_ENV === 'FEDSPRING_IST',
   },
-  sysAdminUser: UserFactory.createSysAdminUser(),
+  sysAdminUser: async ({}, use) => {
+    const adminUser = new User({
+      firstName: env.SYS_ADMIN_FIRST_NAME,
+      lastName: env.SYS_ADMIN_LAST_NAME,
+      email: env.SYS_ADMIN_EMAIL,
+      username: env.SYS_ADMIN_USERNAME,
+      password: env.SYS_ADMIN_PASSWORD,
+      status: 'Active',
+      sysAdmin: true,
+    });
+    await use(adminUser);
+  },
   sysAdminPage: sysAdminPage,
   sysAdminActor: async ({ sysAdminPage }, use) => {
     const actor = WebActor.using('SysAdmin', sysAdminPage);
@@ -121,5 +131,6 @@ export { expect } from './matchers.fixtures';
 export { AppFixture, AppFixtureBuilder } from './app.fixtures';
 export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
 export { SharedListFixture, SharedListFixtureBuilder, sharedList } from './sharedList.fixtures';
+export { UserFixture, UserFixtureBuilder, user } from './user.fixtures';
 
 export * from '@playwright/test';
