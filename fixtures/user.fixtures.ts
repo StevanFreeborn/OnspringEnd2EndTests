@@ -1,8 +1,9 @@
 import { Browser, Page, TestInfo } from '@playwright/test';
+import { FakeDataFactory, User, UserStatus } from '@stevanfreeborn/onspring-models';
+import { UserTasks } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import path from 'path';
-import { UserFactory } from '../factories/userFactory';
 import { Role } from '../models/role';
-import { User, UserStatus } from '../models/user';
 import { LoginPage } from '../pageObjectModels/authentication/loginPage';
 import { DashboardPage } from '../pageObjectModels/dashboards/dashboardPage';
 import { AddUserAdminPage } from '../pageObjectModels/users/addUserAdminPage';
@@ -10,6 +11,49 @@ import { EditUserAdminPage } from '../pageObjectModels/users/editUserAdminPage';
 import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityAdminPage';
 import { AUTH_DIR } from '../playwright.config';
 import { errorResponseHandler, pageErrorHandler } from './auth.fixtures';
+
+export class UserFixtureBuilder {
+  private status: UserStatus = 'Active';
+  private sysAdmin: boolean = false;
+  private roles: string[] = [];
+
+  withStatus(status: UserStatus): this {
+    this.status = status;
+    return this;
+  }
+
+  withSysAdmin(sysAdmin: boolean): this {
+    this.sysAdmin = sysAdmin;
+    return this;
+  }
+
+  withRole(role: string): this {
+    this.roles.push(role);
+    return this;
+  }
+
+  build() {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (user: User) => Promise<void>) => {
+      const user = FakeDataFactory.createFakeUser(this.status, this.sysAdmin);
+      user.roles.push(...this.roles);
+
+      await sysAdminActor.attemptsTo(UserTasks.create(user));
+      try {
+        await use(user);
+      } finally {
+        await sysAdminActor.attemptsTo(UserTasks.deleteUsers([user.username]));
+      }
+    };
+  }
+}
+
+export class UserFixture {
+  static create(): UserFixtureBuilder {
+    return new UserFixtureBuilder();
+  }
+}
+
+export const user = UserFixture.create().build();
 
 export async function activeUserWithRole(
   { browser, sysAdminPage, role }: { browser: Browser; sysAdminPage: Page; role: Role },
@@ -19,7 +63,7 @@ export async function activeUserWithRole(
   const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
   const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
   const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
-  const user = UserFactory.createNewUser(UserStatus.Active);
+  const user = FakeDataFactory.createFakeUser('Active');
   user.roles.push(role.name);
 
   await addUserAdminPage.goto();
@@ -65,7 +109,7 @@ export async function createUserFixture(
   const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
   const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
   const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
-  const user = UserFactory.createNewUser(userStatus, sysAdmin);
+  const user = FakeDataFactory.createFakeUser(userStatus, sysAdmin);
   user.roles.push(...roles);
 
   await addUserAdminPage.goto();
@@ -76,7 +120,7 @@ export async function createUserFixture(
   await editUserAdminPage.saveUser();
   user.id = editUserAdminPage.getUserIdFromUrl();
 
-  if (user.status === UserStatus.Active) {
+  if (user.status === 'Active') {
     const userAuthStoragePath = await logUserIn({ browser, user, testInfo });
     user.authStoragePath = userAuthStoragePath;
   }
