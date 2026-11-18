@@ -1,60 +1,34 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { UserFactory } from '../../factories/userFactory';
-import { test as base, expect } from '../../fixtures';
-import { Role } from '../../models/role';
-import { TextField } from '../../models/textField';
-import { UserStatus } from '../../models/user';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
-import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
-import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
-import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
-import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
-import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPage';
-import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
+import { FakeDataFactory, Role, UserFactory, UserStatus } from '@stevanfreeborn/onspring-models';
+import {
+  AdminTileTargets,
+  AppDetailTargets,
+  AppsPageTargets,
+  AppTasks,
+  DeleteAppDialogTargets,
+  EditAdminSettingsModalTargets,
+  EditDisplaySettingsModalTargets,
+  EditGeneralSettingsModalTargets,
+  EditGeocodingSettingsModalTargets,
+  GroupTasks,
+  RoleTasks,
+  UserTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-
-type AppTestFixtures = {
-  adminHomePage: AdminHomePage;
-  appsAdminPage: AppsAdminPage;
-  appAdminPage: AppAdminPage;
-};
-
-const test = base.extend<AppTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    await use(adminHomePage);
-  },
-  appsAdminPage: async ({ sysAdminPage }, use) => {
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    await use(appsAdminPage);
-  },
-  appAdminPage: async ({ sysAdminPage }, use) => {
-    const appAdminPage = new AppAdminPage(sysAdminPage);
-    await use(appAdminPage);
-  },
-});
 
 test.describe('app', () => {
   let appsToDelete: string[] = [];
 
-  test.beforeEach(async ({ adminHomePage }) => {
-    await adminHomePage.goto();
+  test.beforeEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.browse().goto('/Admin/Home');
   });
 
-  test.afterEach(async ({ appsAdminPage }) => {
-    await appsAdminPage.deleteApps(appsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(AppTasks.deleteApps(appsToDelete));
     appsToDelete = [];
   });
 
-  test('Create an app via the create button on the header of on the admin home page', async ({
-    adminHomePage,
-    appAdminPage,
-  }) => {
+  test('Create an app via the create button on the header of on the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-1',
@@ -64,18 +38,17 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app', async () => {
-      await adminHomePage.createAppUsingHeaderCreateButton(appName);
+      await sysAdminActor.attemptsTo(AppTasks.createViaHeader(appName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(appName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(appName);
     });
   });
 
   test('Create an app via the create button on the Apps tile on the admin home page', async ({
-    adminHomePage,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -86,19 +59,17 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app', async () => {
-      await adminHomePage.createAppUsingAppTileButton(appName);
+      await sysAdminActor.attemptsTo(AppTasks.createViaTile(appName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(appName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(appName);
     });
   });
 
   test('Create an app via the Create App button on the Apps admin page', async ({
-    adminHomePage,
-    appsAdminPage,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -109,22 +80,21 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Navigate to the Apps admin page', async () => {
-      await adminHomePage.appTileLink.click();
+      await sysAdminActor.browse().click(AdminTileTargets.appTileLink);
     });
 
     await test.step('Create the app', async () => {
-      await appsAdminPage.createApp(appName);
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(appName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(appName);
     });
   });
 
   test('Create a copy of an app via the create button on the header of the admin home page', async ({
-    adminHomePage,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -137,43 +107,25 @@ test.describe('app', () => {
     appsToDelete.push(expectedAppCopyName);
 
     await test.step('Create the app to be copied', async () => {
-      await adminHomePage.createAppUsingHeaderCreateButton(appName);
+      await sysAdminActor.attemptsTo(AppTasks.createViaHeader(appName));
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await appAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the copy of the app', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.adminNav.adminCreateButton.hover();
-
-      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
-
-      await adminHomePage.adminNav.appCreateMenuOption.click();
-
-      await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
-
-      await adminHomePage.createAppDialog.copyFromRadioButton.click();
-      await adminHomePage.createAppDialog.copyFromDropdown.click();
-      await adminHomePage.createAppDialog.getAppToCopy(appName).click();
-      await adminHomePage.createAppDialog.continueButton.click();
-
-      await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
-      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
-
-      await adminHomePage.createAppModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.copyViaHeader(appName, expectedAppCopyName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedAppCopyName);
     });
   });
 
   test('Create a copy of an app via the create button on the Apps tile on the admin home page', async ({
-    adminHomePage,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -186,45 +138,25 @@ test.describe('app', () => {
     appsToDelete.push(expectedAppCopyName);
 
     await test.step('Create the app to be copied', async () => {
-      await adminHomePage.createAppUsingAppTileButton(appName);
+      await sysAdminActor.attemptsTo(AppTasks.createViaTile(appName));
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await appAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the copy of the app', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.appTileLink.hover();
-
-      await expect(adminHomePage.appTileCreateButton).toBeVisible();
-
-      await adminHomePage.appTileCreateButton.click();
-
-      await expect(adminHomePage.createAppDialog.copyFromRadioButton).toBeVisible();
-
-      await adminHomePage.createAppDialog.copyFromRadioButton.click();
-      await adminHomePage.createAppDialog.copyFromDropdown.click();
-      await adminHomePage.createAppDialog.getAppToCopy(appName).click();
-      await adminHomePage.createAppDialog.continueButton.click();
-
-      await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
-
-      await expect(adminHomePage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
-
-      await adminHomePage.createAppModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.copyViaTile(appName, expectedAppCopyName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedAppCopyName);
     });
   });
 
   test('Create a copy of an app via the Create App button on the Apps admin page', async ({
-    adminHomePage,
-    appsAdminPage,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -237,44 +169,28 @@ test.describe('app', () => {
     appsToDelete.push(expectedAppCopyName);
 
     await test.step('Navigate to the Apps admin page', async () => {
-      await adminHomePage.appTileLink.click();
+      await sysAdminActor.browse().click(AdminTileTargets.appTileLink);
     });
 
     await test.step('Create the app to be copied', async () => {
-      await appsAdminPage.page.waitForLoadState();
-      await appsAdminPage.createApp(appName);
-      await appAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step('Navigate back to apps admin page', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.appTileLink.click();
+      await sysAdminActor.attemptsTo(AppTasks.goto());
     });
 
     await test.step('Create the copy of the app', async () => {
-      await appsAdminPage.page.waitForLoadState();
-      await appsAdminPage.createAppButton.click();
-
-      await expect(appsAdminPage.createAppDialog.copyFromRadioButton).toBeVisible();
-
-      await appsAdminPage.createAppDialog.copyFromRadioButton.click();
-      await appsAdminPage.createAppDialog.copyFromDropdown.click();
-      await appsAdminPage.createAppDialog.getAppToCopy(appName).click();
-      await appsAdminPage.createAppDialog.continueButton.click();
-
-      await expect(adminHomePage.createAppModal.nameInput).toBeVisible();
-      await expect(appsAdminPage.createAppModal.nameInput).toHaveValue(expectedAppCopyName);
-
-      await appsAdminPage.createAppModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.copyFromGrid(appName, expectedAppCopyName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(appAdminPage.page).toHaveURL(appAdminPage.pathRegex);
-      await expect(appAdminPage.generalTab.name).toHaveText(expectedAppCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(AppDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedAppCopyName);
     });
   });
 
-  test("Update an app's name", async ({ appAdminPage, adminHomePage }) => {
+  test("Update an app's name", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-7',
@@ -285,24 +201,19 @@ test.describe('app', () => {
     appsToDelete.push(updatedAppName);
 
     await test.step('Create the app whose name will be updated', async () => {
-      await adminHomePage.createApp(appName);
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step("Update the app's name", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.nameInput).toHaveValue(appName);
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.nameInput.fill(updatedAppName);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateName(updatedAppName));
     });
 
     await test.step("Verify app's name was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.name).toHaveText(updatedAppName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(updatedAppName);
     });
   });
 
-  test('Disable an app', async ({ adminHomePage, appAdminPage }) => {
+  test('Disable an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-8',
@@ -312,34 +223,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app to be disabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.disable());
     });
 
     await test.step('Verify app was disabled correctly', async () => {
-      await expect(appAdminPage.generalTab.status).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
   });
 
-  test('Enable an app', async ({ adminHomePage, appAdminPage }) => {
+  test('Enable an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-9',
@@ -349,54 +246,25 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app to be enabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
 
     await test.step('Disable the app', async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-
-      await expect(appAdminPage.generalTab.status).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.disable());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
 
     await test.step('Enable the app', async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.enable());
     });
 
     await test.step('Verify app was enabled correctly', async () => {
-      await expect(appAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
   });
 
-  test("Update an app's description.", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's description.", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-10',
@@ -407,25 +275,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose description will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.description).toHaveText('');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.description).hasText('');
     });
 
     await test.step("Update the app's description", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor).toHaveText('');
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateDescription(updatedDescription));
     });
 
     await test.step("Verify app's description was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.description).toHaveText(updatedDescription);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.description).hasText(updatedDescription);
     });
   });
 
-  test("Disable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+  test("Disable an app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-11',
@@ -435,38 +298,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be disabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('disabled'));
     });
 
     await test.step("Verify app's content versioning was disabled correctly", async () => {
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Disabled');
     });
   });
 
-  test("Enable an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+  test("Enable an app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-12',
@@ -476,45 +321,25 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be enabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('disabled'));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Disabled');
     });
 
     await test.step("Enable the app's content versioning", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('enabled'));
     });
 
     await test.step("Verify app's content versioning was enabled correctly", async () => {
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
     });
   });
 
-  test("Change the save types of an app's content versioning", async ({ adminHomePage, appAdminPage }) => {
+  test("Change the save types of an app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-13',
@@ -524,41 +349,35 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose content versioning will be changed', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the app's content versioning", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch).hasAttribute('aria-checked', 'true');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isVisible();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.directUserSavesCheckbox).isChecked();
 
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.indirectUserSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.apiSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.systemSavesCheckbox);
 
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.indirectUserSavesCheckbox).isChecked();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.apiSavesCheckbox).isChecked();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.systemSavesCheckbox).isChecked();
 
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox.check();
-      await appAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox.check();
-      await appAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox.check();
-
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
-      await expect(appAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
-
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify app's content versioning was changed correctly", async () => {
-      await expect(appAdminPage.generalTab.contentVersionStatus).toHaveText(
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText(
         'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
       );
     });
   });
 
-  test("Disable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
+  test("Disable an app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-14',
@@ -568,22 +387,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose concurrent edit alert will be disabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(false));
     });
 
     await test.step("Verify app's concurrent edit alert was disabled correctly", async () => {
-      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Disabled');
     });
   });
 
-  test("Enable an app's concurrent edit alert", async ({ adminHomePage, appAdminPage }) => {
+  test("Enable an app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-15',
@@ -593,29 +410,25 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose concurrent edit alert will be enabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
 
     await test.step("Disable the app's concurrent edit alert", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(false));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Disabled');
     });
 
     await test.step("Enable the app's concurrent edit alert", async () => {
-      await appAdminPage.generalTab.editGeneralSettingsLink.click();
-      await appAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(true));
     });
 
     await test.step("Verify app's concurrent edit alert was enabled correctly", async () => {
-      await expect(appAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
   });
 
-  test("Update an app's display link field", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's display link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-16',
@@ -625,23 +438,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose display link field will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.displayLink).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayLink).hasText('Record Id');
     });
 
     await test.step("Update the app's display link field", async () => {
-      await appAdminPage.generalTab.editDisplaySettingsLink.click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.displayLinkSelect.click();
-      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateDisplayLinkField('Created Date'));
     });
 
     await test.step("Verify app's display link field was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.displayLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayLink).hasText('Created Date');
     });
   });
 
-  test("Update an app's integration link field", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's integration link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-17',
@@ -651,23 +461,20 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose integration link field will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.integrationLink).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.integrationLink).hasText('Record Id');
     });
 
     await test.step("Update the app's integration link field", async () => {
-      await appAdminPage.generalTab.editDisplaySettingsLink.click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.integrationLinkSelect.click();
-      await appAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateIntegrationLinkField('Created Date'));
     });
 
     await test.step("Verify app's integration link field was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.integrationLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.integrationLink).hasText('Created Date');
     });
   });
 
-  test("Update an app's display fields", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's display fields", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-18',
@@ -677,23 +484,21 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose display fields will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.displayFields).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText('Record Id');
     });
 
     await test.step("Update the app's display fields", async () => {
-      await appAdminPage.generalTab.editDisplaySettingsLink.click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await appAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.addDisplayField('Created Date'));
     });
 
     await test.step("Verify app's display fields were updated correctly", async () => {
-      await expect(appAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
-      await expect(appAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText(/Record Id/);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText(/Created Date/);
     });
   });
 
-  test("Update an app's primary sort field", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's primary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-19',
@@ -703,26 +508,27 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose primary sort field will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.sort).toHaveText('None');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('None');
     });
 
     await test.step("Update the app's primary sort field", async () => {
-      await appAdminPage.generalTab.editDisplaySettingsLink.click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Record Id' }).click();
 
-      await expect(appAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
-      await expect(appAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toHaveText('Ascending');
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).isVisible();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).hasText('Ascending');
 
-      await appAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify app's primary sort field was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('Record Id (Ascending)');
     });
   });
 
-  test("Update an app's secondary sort field", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's secondary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-20',
@@ -732,32 +538,35 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose secondary sort field will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.sort).toHaveText('None');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('None');
     });
 
     await test.step("Update the app's secondary sort field", async () => {
-      await appAdminPage.generalTab.editDisplaySettingsLink.click();
-      await appAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await appAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.displayFieldsSelect);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.unselectedDisplayOption('Created Date'));
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.selectorCloseButton);
 
-      await appAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Record Id' }).click();
 
-      await expect(appAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toBeVisible();
-      await expect(appAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toHaveText(
-        'Ascending'
-      );
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.secondarySortSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Created Date' }).click();
 
-      await appAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).isVisible();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).hasText('Ascending');
+
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify app's secondary sort field was updated correctly", async () => {
-      await expect(appAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
-      await expect(appAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText(/Record Id \(Ascending\)/);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText(/Created Date \(Ascending\)/);
     });
   });
 
-  test("Change an app's administration permissions to private", async ({ adminHomePage, appAdminPage }) => {
+  test("Change an app's administration permissions to private", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-21',
@@ -767,31 +576,29 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
 
     await test.step("Change the app's administration permissions to private", async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Private' }).click();
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isVisible();
 
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
     });
 
     await test.step("Verify app's administration permissions were set to private", async () => {
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
     });
   });
 
-  test('Give app administration permissions to specific users', async ({
-    adminHomePage,
-    sysAdminPage,
-    appAdminPage,
-  }) => {
+  test('Give app administration permissions to specific users', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-22',
@@ -803,39 +610,28 @@ test.describe('app', () => {
     const usersToDelete = [newUser.username];
 
     await test.step('Create user that will be given admin permissions', async () => {
-      const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
-      const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
-      await addUserAdminPage.addUser(newUser);
-      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
-      await adminHomePage.createApp(appName);
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step('Give app admin permissions to user', async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-      await appAdminPage.generalTab.editAdminSettingsModal.selectUser(newUser.fullName);
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { user: newUser.fullName }));
     });
 
     await test.step('Verify app admin permissions were given to user', async () => {
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.generalTab.adminUsers).toHaveText(newUser.fullName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminUsers).hasText(newUser.fullName);
     });
 
     await test.step('Delete user', async () => {
-      const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
-      await usersSecurityAdminPage.deleteUsers(usersToDelete);
+      await sysAdminActor.attemptsTo(UserTasks.deleteUsers(usersToDelete));
     });
   });
 
-  test('Give app administration permissions to specific roles', async ({
-    adminHomePage,
-    sysAdminPage,
-    appAdminPage,
-  }) => {
+  test('Give app administration permissions to specific roles', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-23',
@@ -847,42 +643,28 @@ test.describe('app', () => {
     const rolesToDelete = [roleName];
 
     await test.step('Create role that will be given admin permissions', async () => {
-      const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
-      const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-      await addRoleAdminPage.addRole(new Role({ name: roleName }));
-      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(RoleTasks.create(new Role({ name: roleName })));
     });
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
-      await adminHomePage.createApp(appName);
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step('Give app admin permissions to role', async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
-
-      await appAdminPage.generalTab.editAdminSettingsModal.selectRole(roleName);
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { role: roleName }));
     });
 
     await test.step('Verify app admin permissions were given to role', async () => {
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.generalTab.adminRoles).toHaveText(roleName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminRoles).hasText(roleName);
     });
 
     await test.step('Delete role', async () => {
-      const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
-      await roleSecurityAdminPage.deleteRoles(rolesToDelete);
+      await sysAdminActor.attemptsTo(RoleTasks.deleteRoles(rolesToDelete));
     });
   });
 
-  test('Give app administration permissions to specific groups', async ({
-    adminHomePage,
-    sysAdminPage,
-    appAdminPage,
-  }) => {
+  test('Give app administration permissions to specific groups', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-24',
@@ -894,38 +676,28 @@ test.describe('app', () => {
     const groupsToDelete = [groupName];
 
     await test.step('Create group that will be given admin permissions', async () => {
-      const addGroupAdminPage = new AddGroupAdminPage(sysAdminPage);
-      const editGroupAdminPage = new EditGroupAdminPage(sysAdminPage);
-      await addGroupAdminPage.addGroup(groupName);
-      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(GroupTasks.create(groupName));
     });
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
-      await adminHomePage.createApp(appName);
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
     });
 
     await test.step('Give app admin permissions to group', async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
-
-      await appAdminPage.generalTab.editAdminSettingsModal.selectGroup(groupName);
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { group: groupName }));
     });
 
     await test.step('Verify app admin permissions were given to group', async () => {
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(appAdminPage.generalTab.adminGroups).toHaveText(groupName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminGroups).hasText(groupName);
     });
 
     await test.step('Delete group', async () => {
-      const groupSecurityAdminPage = new GroupsSecurityAdminPage(sysAdminPage);
-      await groupSecurityAdminPage.deleteGroups(groupsToDelete);
+      await sysAdminActor.attemptsTo(GroupTasks.deleteGroups(groupsToDelete));
     });
   });
 
-  test("Change an app's administration permissions to public", async ({ adminHomePage, appAdminPage }) => {
+  test("Change an app's administration permissions to public", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-25',
@@ -935,33 +707,37 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose administration permissions will be changed', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
 
     await test.step("Change the app's administration permissions to private", async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Private' }).click();
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
     });
 
     await test.step("Change the app's administration permissions to public", async () => {
-      await appAdminPage.generalTab.editAdminSettingsLink.click();
-      await appAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Public');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.page.getByRole('option', { name: 'Public' }).click();
 
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeHidden();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeHidden();
-      await expect(appAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isHidden();
 
-      await appAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await EditAdminSettingsModalTargets.modal(sysAdminActor.page).waitFor({ state: 'hidden' });
     });
 
     await test.step("Verify app's administration permissions were set to public", async () => {
-      await expect(appAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
   });
 
-  test('Enable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+  test('Enable geocoding for an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-26',
@@ -978,43 +754,49 @@ test.describe('app', () => {
     const fieldNames = [addressFieldName, cityFieldName, stateFieldName, zipFieldName];
 
     await test.step('Create app whose geocoding will be enabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Create fields for geocoding mapping', async () => {
-      await appAdminPage.layoutTabButton.click();
-
       for (const name of fieldNames) {
-        await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: name }));
+        await sysAdminActor.attemptsTo(AppTasks.addTextField(name));
       }
     });
 
     await test.step('Enable geocoding for app', async () => {
-      await appAdminPage.generalTabButton.click();
-      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await appAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTabButton);
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeocodingSettingsLink);
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.statusToggle);
 
-      await expect(appAdminPage.generalTab.editGeocodingSettingsModal.geocodingDataGrid).toBeVisible();
+      await sysAdminActor.browse().check(EditGeocodingSettingsModalTargets.geocodingDataGrid).isVisible();
 
-      await appAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(addressFieldName);
-      await appAdminPage.generalTab.editGeocodingSettingsModal.selectCityField(cityFieldName);
-      await appAdminPage.generalTab.editGeocodingSettingsModal.selectStateField(stateFieldName);
-      await appAdminPage.generalTab.editGeocodingSettingsModal.selectZipField(zipFieldName);
-      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
+      await sysAdminActor.page.getByRole('option', { name: addressFieldName }).click();
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.citySelect);
+      await sysAdminActor.page.getByRole('option', { name: cityFieldName }).click();
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.stateSelect);
+      await sysAdminActor.page.getByRole('option', { name: stateFieldName }).click();
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.zipSelect);
+      await sysAdminActor.page.getByRole('option', { name: zipFieldName }).click();
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
 
     await test.step('Verify geocoding was enabled correctly', async () => {
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
-      await expect(appAdminPage.generalTab.geocodingData.grid).toBeVisible();
-      await expect(appAdminPage.generalTab.geocodingData.address).toHaveText(addressFieldName);
-      await expect(appAdminPage.generalTab.geocodingData.city).toHaveText(cityFieldName);
-      await expect(appAdminPage.generalTab.geocodingData.state).toHaveText(stateFieldName);
-      await expect(appAdminPage.generalTab.geocodingData.zip).toHaveText(zipFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isVisible();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingAddress).hasText(addressFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingCity).hasText(cityFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingState).hasText(stateFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingZip).hasText(zipFieldName);
     });
   });
 
-  test("Update an app's geocoding field mapping", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's geocoding field mapping", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-27',
@@ -1030,41 +812,41 @@ test.describe('app', () => {
     const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
 
     await test.step('Create app whose geocode mapping will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Enable geocoding for app', async () => {
-      await appAdminPage.enableGeocoding({
-        address: new TextField({ name: addressFieldName }),
-        city: new TextField({ name: cityFieldName }),
-        state: new TextField({ name: stateFieldName }),
-        zip: new TextField({ name: zipFieldName }),
-      });
-    });
-
-    await test.step('Create field to update geocoding mapping', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(
-        new TextField({ name: secondAddressFieldName })
+      await sysAdminActor.attemptsTo(
+        AppTasks.enableGeocoding({
+          address: addressFieldName,
+          city: cityFieldName,
+          state: stateFieldName,
+          zip: zipFieldName,
+        })
       );
     });
 
+    await test.step('Create field to update geocoding mapping', async () => {
+      await sysAdminActor.attemptsTo(AppTasks.addTextField(secondAddressFieldName));
+    });
+
     await test.step('Update geocoding field mapping', async () => {
-      await appAdminPage.generalTabButton.click();
-      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await appAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(secondAddressFieldName);
-      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTabButton);
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeocodingSettingsLink);
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
+      await sysAdminActor.page.getByRole('option', { name: secondAddressFieldName }).click();
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
 
     await test.step('Verify geocoding was updated correctly', async () => {
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
-      await expect(appAdminPage.generalTab.geocodingData.grid).toBeVisible();
-      await expect(appAdminPage.generalTab.geocodingData.address).toHaveText(secondAddressFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isVisible();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingAddress).hasText(secondAddressFieldName);
     });
   });
 
-  test('Disable geocoding for an app', async ({ adminHomePage, appAdminPage }) => {
+  test('Disable geocoding for an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-28',
@@ -1078,32 +860,32 @@ test.describe('app', () => {
     const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
 
     await test.step('Create app whose geocoding will be disabled', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Enable geocoding for app', async () => {
-      await appAdminPage.enableGeocoding({
-        address: new TextField({ name: addressFieldName }),
-        city: new TextField({ name: cityFieldName }),
-        state: new TextField({ name: stateFieldName }),
-        zip: new TextField({ name: zipFieldName }),
-      });
+      await sysAdminActor.attemptsTo(
+        AppTasks.enableGeocoding({
+          address: addressFieldName,
+          city: cityFieldName,
+          state: stateFieldName,
+          zip: zipFieldName,
+        })
+      );
     });
 
     await test.step('Disable geocoding for app', async () => {
-      await appAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await appAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
-      await appAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.disableGeocoding());
     });
 
     await test.step('Verify geocoding was disabled correctly', async () => {
-      await expect(appAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
-      await expect(appAdminPage.generalTab.geocodingData.grid).toBeHidden();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isHidden();
     });
   });
 
-  test("Update an app's app notes", async ({ adminHomePage, appAdminPage }) => {
+  test("Update an app's app notes", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-29',
@@ -1114,71 +896,62 @@ test.describe('app', () => {
     appsToDelete.push(appName);
 
     await test.step('Create the app whose app notes will be updated', async () => {
-      await adminHomePage.createApp(appName);
-      await expect(appAdminPage.generalTab.notes).toHaveText('');
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.notes).hasText('');
     });
 
     await test.step("Update the app's app notes", async () => {
-      await appAdminPage.generalTab.editNotesSettingLink.click();
-
-      await expect(appAdminPage.generalTab.editNotesSettingsModal.notesEditor).toHaveText('');
-
-      await appAdminPage.generalTab.editNotesSettingsModal.notesEditor.fill(note);
-      await appAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateNotes(note));
     });
 
     await test.step("Verify app's app notes were updated correctly", async () => {
-      await expect(appAdminPage.generalTab.notes).toHaveText(note);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.notes).hasText(note);
     });
   });
 
-  test('Delete an app', async ({ adminHomePage, appsAdminPage, appAdminPage }) => {
+  test('Delete an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-782',
     });
 
     const appName = FakeDataFactory.createFakeAppName();
-    const appRow = appsAdminPage.appGrid.getByRole('row', { name: appName }).first();
-    const appDeleteButton = appRow.getByTitle('Delete App');
+    const appRow = AppsPageTargets.rowByName(appName);
+    const deleteButton = AppsPageTargets.deleteButtonInRow(appName);
 
     await test.step('Navigate to the Apps admin page', async () => {
-      await adminHomePage.appTileLink.click();
+      await sysAdminActor.browse().click(AdminTileTargets.appTileLink);
     });
 
     await test.step('Create the app to be deleted', async () => {
-      await appsAdminPage.createApp(appName);
-      await appAdminPage.page.waitForLoadState();
-      await appAdminPage.closeButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.create(appName));
+      await sysAdminActor.browse().click(AppDetailTargets.closeButton);
     });
 
     await test.step('Navigate to apps admin page', async () => {
-      await appsAdminPage.goto();
-      await expect(appRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.goto());
+      await sysAdminActor.browse().check(appRow).isVisible();
     });
 
     await test.step('Delete the app', async () => {
-      await appRow.hover();
+      await sysAdminActor.browse().hover(appRow);
+      await sysAdminActor.browse().click(deleteButton);
 
-      await appDeleteButton.click();
+      await sysAdminActor.browse().check(DeleteAppDialogTargets.confirmationInput).isVisible();
+      await sysAdminActor.browse().type(DeleteAppDialogTargets.confirmationInput, 'OK');
+      await sysAdminActor.browse().check(DeleteAppDialogTargets.confirmationInput).hasValue('OK');
+      await sysAdminActor.browse().check(DeleteAppDialogTargets.deleteButton).isEnabled();
 
-      await expect(appsAdminPage.deleteAppDialog.confirmationInput).toBeVisible();
-
-      await appsAdminPage.deleteAppDialog.confirmationInput.pressSequentially('OK', {
-        delay: 100,
-      });
-
-      await expect(appsAdminPage.deleteAppDialog.confirmationInput).toHaveValue('OK');
-      await expect(appsAdminPage.deleteAppDialog.deleteButton).toBeEnabled();
-
-      const deleteResponse = appsAdminPage.page.waitForResponse(appsAdminPage.deleteAppPathRegex);
-      await appsAdminPage.deleteAppDialog.deleteButton.click();
+      const deleteResponse = sysAdminActor.page.waitForResponse(
+        r => r.url().includes('/Delete') && r.status() === 200
+      );
+      await sysAdminActor.browse().click(DeleteAppDialogTargets.deleteButton);
       await deleteResponse;
-      await appsAdminPage.deleteAppDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.browse().waitForDetached(DeleteAppDialogTargets.dialog);
     });
 
     await test.step('Verify app was deleted correctly', async () => {
-      await expect(appRow).not.toBeAttached();
+      await sysAdminActor.browse().check(appRow).isNotAttached();
     });
   });
 });

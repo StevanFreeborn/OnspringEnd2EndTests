@@ -1,0 +1,40 @@
+{
+  "name": "@stevanfreeborn/onspring-ui",
+  "version": "0.1.0",
+  "description": "Onspring UI locators, fluent Screenplay Tasks, and Questions for Playwright.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@stevanfreeborn/onspring-models": "^1.0.0",
+    "@stevanfreeborn/screenplay": "^0.1.0",
+    "@stevanfreeborn/screenplay-playwright": "^0.1.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "keywords": [
+    "onspring",
+    "screenplay",
+    "playwright",
+    "testing"
+  ],
+  "author": "stevan freeborn",
+  "license": "MIT"
+}

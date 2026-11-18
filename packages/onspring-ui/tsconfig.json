@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../screenplay" },
+    { "path": "../screenplay-playwright" },
+    { "path": "../onspring-models" }
+  ]
+}

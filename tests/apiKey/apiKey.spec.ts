@@ -1,69 +1,46 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createRoleFixture } from '../../fixtures/role.fixures';
-import { App } from '../../models/app';
-import { AppPermission, Permission, Role } from '../../models/role';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { ApiKeyAdminPage } from '../../pageObjectModels/apiKeys/apiKeyAdminPage';
-import { ApiKeysAdminPage } from '../../pageObjectModels/apiKeys/apiKeysAdminPage';
+import {
+  ApiKeyDetailTargets,
+  ApiKeysPageTargets,
+  ApiKeyTasks,
+  DeleteDialogTargets,
+  SidebarNavTargets,
+} from '@stevanfreeborn/onspring-ui';
+import '@stevanfreeborn/screenplay-playwright';
+import { App, AppPermission, FakeDataFactory, Permission, Role } from '@stevanfreeborn/onspring-models';
+import { AppFixture, RoleFixture, test as base, expect } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type ApiKeyTestFixtures = {
-  adminHomePage: AdminHomePage;
-  apiKeysAdminPage: ApiKeysAdminPage;
-  apiKeyAdminPage: ApiKeyAdminPage;
   app: App;
   role: Role;
 };
 
 const test = base.extend<ApiKeyTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    await use(adminHomePage);
-  },
-  apiKeysAdminPage: async ({ sysAdminPage }, use) => {
-    const apiKeysAdminPage = new ApiKeysAdminPage(sysAdminPage);
-    await use(apiKeysAdminPage);
-  },
-  apiKeyAdminPage: async ({ sysAdminPage }, use) => {
-    const apiKeyAdminPage = new ApiKeyAdminPage(sysAdminPage);
-    await use(apiKeyAdminPage);
-  },
-  app: app,
-  role: async ({ sysAdminPage, app }, use) => {
-    await createRoleFixture(
-      {
-        sysAdminPage,
-        roleStatus: 'Active',
-        appPermissions: [
-          new AppPermission({
-            appName: app.name,
-            contentRecords: new Permission({ read: true }),
-          }),
-        ],
-      },
-      use
-    );
-  },
+  app: AppFixture.create().build(),
+  role: RoleFixture.create()
+    .withStatus('Active')
+    .withAppPermissions(({ app }) => [
+      new AppPermission({
+        appName: app!.name,
+        contentRecords: new Permission({ read: true }),
+      }),
+    ])
+    .build(),
 });
 
 test.describe('API Key', () => {
   let apiKeysToDelete: string[] = [];
 
-  test.beforeEach(async ({ adminHomePage }) => {
-    await adminHomePage.goto();
+  test.beforeEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.browse().goto('/Admin/Home');
   });
 
-  test.afterEach(async ({ apiKeysAdminPage }) => {
-    await apiKeysAdminPage.deleteApiKeys(apiKeysToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(ApiKeyTasks.deleteKeys(apiKeysToDelete));
     apiKeysToDelete = [];
   });
 
-  test('Create an API Key via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    apiKeyAdminPage,
-  }) => {
+  test('Create an API Key via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-266',
@@ -73,18 +50,17 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Create the api key', async () => {
-      await adminHomePage.createApiKeyUsingHeaderCreateButton(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(apiKeyName));
     });
 
     await test.step('Verify the api key was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyName);
     });
   });
 
   test('Create an API Key via the create button on the Security tile on the admin home page', async ({
-    adminHomePage,
-    apiKeyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -95,19 +71,16 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Create the api key', async () => {
-      await adminHomePage.createApiKeyUsingSecurityTileButton(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaSecurityTile(apiKeyName));
     });
 
     await test.step('Verify the api key was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyName);
     });
   });
 
-  test('Create an API Key via the Create API Key button on the API key home page', async ({
-    apiKeysAdminPage,
-    apiKeyAdminPage,
-  }) => {
+  test('Create an API Key via the Create API Key button on the API key home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-267',
@@ -117,22 +90,21 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Navigate to the api key admin page', async () => {
-      await apiKeysAdminPage.goto();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.gotoGrid());
     });
 
     await test.step('Create the api key', async () => {
-      await apiKeysAdminPage.createApiKey(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createFromGrid(apiKeyName));
     });
 
     await test.step('Verify the api key was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyName);
     });
   });
 
   test('Create a copy of an API Key via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    apiKeyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -144,39 +116,26 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(appName, apiKeyCopyName);
 
     await test.step('Create the api key to be copied', async () => {
-      await adminHomePage.createApiKey(appName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(appName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await apiKeyAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().click(SidebarNavTargets.adminGearIcon);
     });
 
     await test.step('Create the copy of the api key', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.adminNav.adminCreateButton.hover();
-
-      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
-
-      await adminHomePage.adminNav.apiKeyCreateMenuOption.click();
-
-      await expect(adminHomePage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
-
-      await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
-      await adminHomePage.createApiKeyDialog.copyFromDropdown.click();
-      await adminHomePage.createApiKeyDialog.getApiKeyToCopy(appName).click();
-      await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
-      await adminHomePage.createApiKeyDialog.saveButton.click();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.copyViaHeader(appName, apiKeyCopyName));
     });
 
     await test.step('Verify the api key was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyCopyName);
     });
   });
 
   test('Create a copy of an API Key via the create button on the Security tile on the admin home page', async ({
-    adminHomePage,
-    apiKeyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -188,40 +147,26 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName, apiKeyCopyName);
 
     await test.step('Create the api key to be copied', async () => {
-      await adminHomePage.createApiKeyUsingSecurityTileButton(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaSecurityTile(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await apiKeyAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().click(SidebarNavTargets.adminGearIcon);
     });
 
     await test.step('Create the copy of the api key', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.securityTileLink.hover();
-
-      await expect(adminHomePage.securityTileCreateButton).toBeVisible();
-
-      await adminHomePage.securityTileCreateButton.click();
-
-      await expect(adminHomePage.securityCreateMenu).toBeVisible();
-
-      await adminHomePage.securityCreateMenu.getByText('API Key').click();
-      await adminHomePage.createApiKeyDialog.copyFromRadioButton.click();
-      await adminHomePage.createApiKeyDialog.copyFromDropdown.click();
-      await adminHomePage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
-      await adminHomePage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
-      await adminHomePage.createApiKeyDialog.saveButton.click();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.copyViaSecurityTile(apiKeyName, apiKeyCopyName));
     });
 
     await test.step('Verify the app was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyCopyName);
     });
   });
 
   test('Create a copy of an API Key via the Create API Key button on the Api Key home page', async ({
-    apiKeysAdminPage,
-    apiKeyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -233,37 +178,29 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName, apiKeyCopyName);
 
     await test.step('Navigate to the api key admin page', async () => {
-      await apiKeysAdminPage.goto();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.gotoGrid());
     });
 
     await test.step('Create the api key to be copied', async () => {
-      await apiKeysAdminPage.createApiKey(apiKeyName);
-      await apiKeysAdminPage.page.waitForURL(apiKeyAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createFromGrid(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Navigate back to api keys admin page', async () => {
-      await apiKeysAdminPage.goto();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.gotoGrid());
     });
 
     await test.step('Create the copy of the api key', async () => {
-      await apiKeysAdminPage.createApiKeyButton.click();
-
-      await expect(apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton).toBeVisible();
-
-      await apiKeysAdminPage.createApiKeyDialog.copyFromRadioButton.click();
-      await apiKeysAdminPage.createApiKeyDialog.copyFromDropdown.click();
-      await apiKeysAdminPage.createApiKeyDialog.getApiKeyToCopy(apiKeyName).click();
-      await apiKeysAdminPage.createApiKeyDialog.nameInput.fill(apiKeyCopyName);
-      await apiKeysAdminPage.createApiKeyDialog.saveButton.click();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.copyFromGrid(apiKeyName, apiKeyCopyName));
     });
 
     await test.step('Verify the api key was created correctly', async () => {
-      await expect(apiKeyAdminPage.page).toHaveURL(apiKeyAdminPage.pathRegex);
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(apiKeyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(apiKeyCopyName);
     });
   });
 
-  test('Update an API Key', async ({ role, adminHomePage, apiKeyAdminPage }) => {
+  test('Update an API Key', async ({ role, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-270',
@@ -275,25 +212,25 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Create the api key to be updated', async () => {
-      await adminHomePage.createApiKey(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Update the api key', async () => {
-      await apiKeyAdminPage.generalTab.nameInput.fill(updatedName);
-      await apiKeyAdminPage.generalTab.descriptionEditor.fill(updatedDescription);
-      await apiKeyAdminPage.generalTab.selectRole(role.name);
-      await apiKeyAdminPage.save();
+      await sysAdminActor.browse().type(ApiKeyDetailTargets.generalTab.nameInput, updatedName);
+      await sysAdminActor.browse().type(ApiKeyDetailTargets.generalTab.descriptionEditor, updatedDescription);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.assignRole(role.name), ApiKeyTasks.save());
     });
 
     await test.step('Verify the api key was updated correctly', async () => {
-      await apiKeyAdminPage.page.reload();
-      await expect(apiKeyAdminPage.generalTab.nameInput).toHaveValue(updatedName);
-      await expect(apiKeyAdminPage.generalTab.descriptionEditor).toHaveText(updatedDescription);
-      await expect(apiKeyAdminPage.generalTab.roleSelect).toHaveText(role.name);
+      await sysAdminActor.browse().reload();
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.nameInput).hasValue(updatedName);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.descriptionEditor).hasText(updatedDescription);
+      await sysAdminActor.browse().check(ApiKeyDetailTargets.generalTab.roleSelect).hasText(role.name);
     });
   });
 
-  test('Enable an API Key', async ({ app, role, adminHomePage, apiKeyAdminPage, request }) => {
+  test('Enable an API Key', async ({ app, role, sysAdminActor, request }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-272',
@@ -305,25 +242,30 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Create the api key to be enabled', async () => {
-      await adminHomePage.createApiKey(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Collect the base url and api key', async () => {
-      await apiKeyAdminPage.devInfoTabButton.click();
-      baseUrl = (await apiKeyAdminPage.devInfoTab.apiUrl.innerText()).trim();
-      apiKey = (await apiKeyAdminPage.devInfoTab.apiKey.innerText()).trim();
+      await sysAdminActor.browse().click(ApiKeyDetailTargets.devInfoTabButton);
+      baseUrl = await sysAdminActor.browse().getText(ApiKeyDetailTargets.devInfoTab.apiUrl);
+      apiKey = await sysAdminActor.browse().getText(ApiKeyDetailTargets.devInfoTab.apiKey);
     });
 
     await test.step('Assign the api key a role', async () => {
-      await apiKeyAdminPage.generalTabButton.click();
-      await apiKeyAdminPage.generalTab.selectRole(role.name);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.assignRole(role.name));
     });
 
     await test.step('Disable the api key', async () => {
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
-      await apiKeyAdminPage.generalTab.statusToggle.click();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
-      await apiKeyAdminPage.save();
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'true');
+      await sysAdminActor.attemptsTo(ApiKeyTasks.toggleStatus(), ApiKeyTasks.save());
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
     });
 
     await test.step('Verify the api key is disabled', async () => {
@@ -332,22 +274,30 @@ test.describe('API Key', () => {
     });
 
     await test.step('Enable the api key', async () => {
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
-      await apiKeyAdminPage.generalTab.statusToggle.click();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
-      await apiKeyAdminPage.save();
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
+      await sysAdminActor.attemptsTo(ApiKeyTasks.toggleStatus(), ApiKeyTasks.save());
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'true');
     });
 
     await test.step('Verify the api key was enabled', async () => {
-      await apiKeyAdminPage.page.reload();
+      await sysAdminActor.browse().reload();
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
 
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'true');
       expect(getAppResponse.status()).toBe(200);
     });
   });
 
-  test('Disable an API Key', async ({ app, role, adminHomePage, apiKeyAdminPage, request }) => {
+  test('Disable an API Key', async ({ app, role, sysAdminActor, request }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-271',
@@ -359,79 +309,87 @@ test.describe('API Key', () => {
     apiKeysToDelete.push(apiKeyName);
 
     await test.step('Create the api key to be disabled', async () => {
-      await adminHomePage.createApiKey(apiKeyName);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Collect the base url and api key', async () => {
-      await apiKeyAdminPage.devInfoTabButton.click();
-      baseUrl = (await apiKeyAdminPage.devInfoTab.apiUrl.innerText()).trim();
-      apiKey = (await apiKeyAdminPage.devInfoTab.apiKey.innerText()).trim();
+      await sysAdminActor.browse().click(ApiKeyDetailTargets.devInfoTabButton);
+      baseUrl = await sysAdminActor.browse().getText(ApiKeyDetailTargets.devInfoTab.apiUrl);
+      apiKey = await sysAdminActor.browse().getText(ApiKeyDetailTargets.devInfoTab.apiKey);
     });
 
     await test.step('Assign the api key a role', async () => {
-      await apiKeyAdminPage.generalTabButton.click();
-      await apiKeyAdminPage.generalTab.selectRole(role.name);
-      await apiKeyAdminPage.save();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.assignRole(role.name), ApiKeyTasks.save());
     });
 
     await test.step('Verify the api key is enabled', async () => {
-      await apiKeyAdminPage.page.reload();
+      await sysAdminActor.browse().reload();
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
 
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'true');
       expect(getAppResponse.status()).toBe(200);
     });
 
     await test.step('Disable the api key', async () => {
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'true');
-      await apiKeyAdminPage.generalTab.statusToggle.click();
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
-      await apiKeyAdminPage.save();
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'true');
+      await sysAdminActor.attemptsTo(ApiKeyTasks.toggleStatus(), ApiKeyTasks.save());
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
     });
 
     await test.step('Verify the api key was disabled', async () => {
-      await apiKeyAdminPage.page.reload();
+      await sysAdminActor.browse().reload();
       const getAppResponse = await request.get(`${baseUrl}/apps/id/${app.id}`, { headers: { 'x-apikey': apiKey } });
 
-      await expect(apiKeyAdminPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', 'false');
+      await sysAdminActor
+        .browse()
+        .check(ApiKeyDetailTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
       expect(getAppResponse.status()).toBe(401);
     });
   });
 
-  test('Delete an API Key', async ({ adminHomePage, apiKeysAdminPage, apiKeyAdminPage }) => {
+  test('Delete an API Key', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-273',
     });
 
     const apiKeyName = FakeDataFactory.createFakeApiKeyName();
-    const apiKeyRow = apiKeysAdminPage.apiKeyGrid.getByRole('row', { name: apiKeyName });
-    const apiKeyDeleteButton = apiKeyRow.getByTitle('Delete API Key');
 
     await test.step('Create the api key to be deleted', async () => {
-      await adminHomePage.createApiKey(apiKeyName);
-      await adminHomePage.page.waitForURL(apiKeyAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(ApiKeyTasks.createViaHeader(apiKeyName));
+      await sysAdminActor.browse().checkPage().hasUrl(ApiKeyDetailTargets.pathRegex);
     });
 
     await test.step('Navigate to the api keys admin page', async () => {
-      await apiKeysAdminPage.goto();
-      await expect(apiKeyRow).toBeVisible();
+      await sysAdminActor.attemptsTo(ApiKeyTasks.gotoGrid());
+      await sysAdminActor.browse().check(ApiKeysPageTargets.rowByName(apiKeyName)).isVisible();
     });
 
     await test.step('Delete the api key', async () => {
-      await apiKeyRow.hover();
-      await apiKeyDeleteButton.click();
+      const apiKeyRow = ApiKeysPageTargets.rowByName(apiKeyName);
+      await sysAdminActor.browse().hover(apiKeyRow);
+      await sysAdminActor.browse().click(ApiKeysPageTargets.deleteButtonInRow(apiKeyName));
+      await sysAdminActor.browse().check(DeleteDialogTargets.deleteButton).isVisible();
 
-      await expect(apiKeysAdminPage.deleteApiKeyDialog.deleteButton).toBeVisible();
-
-      const deleteResponse = apiKeysAdminPage.page.waitForResponse(apiKeysAdminPage.deleteApiKeyPathRegex);
-      await apiKeysAdminPage.deleteApiKeyDialog.deleteButton.click();
+      const deleteResponse = sysAdminActor.page.waitForResponse(ApiKeysPageTargets.deleteApiKeyPathRegex);
+      await sysAdminActor.browse().click(DeleteDialogTargets.deleteButton);
       await deleteResponse;
-      await apiKeysAdminPage.deleteApiKeyDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.browse().waitForDetached(DeleteDialogTargets.dialog, DeleteDialogTargets.overlay);
     });
 
     await test.step('Verify the api key was deleted correctly', async () => {
-      await expect(apiKeyRow).not.toBeAttached();
+      await sysAdminActor.browse().check(ApiKeysPageTargets.rowByName(apiKeyName)).isNotAttached();
     });
   });
 });

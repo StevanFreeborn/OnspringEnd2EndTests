@@ -1,0 +1,34 @@
+import { Locator, Page } from '@playwright/test';
+
+export const UsersPageTargets = {
+  route: '/Admin/Security/User',
+  getUsersPath: '/Admin/Security/User/UserList',
+  deleteUserPathRegex: /\/Admin\/Security\/User\/\d+\/Delete/,
+  createUserButton: (page: Page): Locator => page.getByRole('button', { name: 'Create User' }),
+  userGrid: (page: Page): Locator => page.locator('#grid'),
+  rowByName: (username: string) => (page: Page): Locator =>
+    page.locator('#grid').getByRole('row', { name: username }).first(),
+  deleteButtonInRow: (username: string) => (page: Page): Locator =>
+    page.locator('#grid').getByRole('row', { name: username }).first().getByTitle('Delete User'),
+};
+
+export const AddUserPageTargets = {
+  route: '/Admin/Security/User/Add',
+  generalTabButton: (page: Page): Locator => page.locator('#tab-strip-0').getByText('General'),
+  securityTabButton: (page: Page): Locator => page.locator('#tab-strip-0').getByText('Security'),
+  firstNameInput: (page: Page): Locator => page.locator('.data-FirstName input'),
+  lastNameInput: (page: Page): Locator => page.locator('.data-LastName input'),
+  usernameInput: (page: Page): Locator => page.locator('.data-Username input'),
+  emailInput: (page: Page): Locator => page.locator('.data-EmailAddress input'),
+  activeStatusButton: (page: Page): Locator =>
+    page.getByRole('button', { name: 'Active', exact: true }),
+  inactiveStatusButton: (page: Page): Locator =>
+    page.getByRole('button', { name: 'Inactive' }),
+  lockedStatusButton: (page: Page): Locator =>
+    page.getByRole('button', { name: 'Locked' }),
+  saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
+};
+
+export const EditUserPageTargets = {
+  pathRegex: /\/Admin\/Security\/User\/\d+\/Edit/,
+};
