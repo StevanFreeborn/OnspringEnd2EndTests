@@ -19,3 +19,5 @@ export * from './sharedLists/sharedLists.targets.js';
 export * from './sharedLists/sharedList.tasks.js';
 export * from './authentication/auth.targets.js';
 export * from './authentication/auth.tasks.js';
+export * from './containers/containers.targets.js';
+export * from './containers/container.tasks.js';

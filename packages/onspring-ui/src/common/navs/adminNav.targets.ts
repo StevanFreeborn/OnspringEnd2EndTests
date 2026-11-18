@@ -36,4 +36,15 @@ export const AdminTileTargets = {
       has: page.locator('.title:has-text("Lists")'),
     }),
   listTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Lists'),
+
+  dashboardTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Dashboards")'),
+    }),
+  dashboardTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Dashboards'),
+  dashboardCreateMenu: (page: Page): Locator => page.locator('[data-create-menu-for="card-create-button-Dashboards"]'),
+  dashboardMenuOption:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.locator('[data-create-menu-for="card-create-button-Dashboards"]').getByText(name),
 };
