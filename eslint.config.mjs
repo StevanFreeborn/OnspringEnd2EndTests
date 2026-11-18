@@ -26,6 +26,7 @@ export default defineConfig([
     '**/playwright-report',
     '**/test-results',
     '**/scripts',
+    '**/dist',
     'eslint.config.mjs',
   ]),
   {
@@ -55,6 +56,26 @@ export default defineConfig([
       'playwright/no-networkidle': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       'no-fallthrough': 'error',
+      'playwright/expect-expect': [
+        'warn',
+        {
+          assertFunctionNames: [
+            'expect',
+            'isVisible',
+            'isHidden',
+            'isAttached',
+            'isNotAttached',
+            'isChecked',
+            'isNotChecked',
+            'isEnabled',
+            'isDisabled',
+            'hasValue',
+            'hasText',
+            'hasAttribute',
+            'hasUrl',
+          ],
+        },
+      ],
     },
   },
 ]);

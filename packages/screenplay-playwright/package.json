@@ -1,0 +1,38 @@
+{
+  "name": "@stevanfreeborn/screenplay-playwright",
+  "version": "0.1.0",
+  "description": "Playwright adapter for @stevanfreeborn/screenplay with fluent Interactions and Questions.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@stevanfreeborn/screenplay": "^0.1.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "keywords": [
+    "screenplay",
+    "playwright",
+    "testing",
+    "automation"
+  ],
+  "author": "stevan freeborn",
+  "license": "MIT"
+}

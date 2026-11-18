@@ -1,0 +1,32 @@
+{
+  "name": "@stevanfreeborn/screenplay",
+  "version": "0.1.0",
+  "description": "A lightweight, zero-dependency TypeScript implementation of the Screenplay Pattern.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "screenplay",
+    "testing",
+    "bdd",
+    "automation"
+  ],
+  "author": "stevan freeborn",
+  "license": "MIT"
+}
