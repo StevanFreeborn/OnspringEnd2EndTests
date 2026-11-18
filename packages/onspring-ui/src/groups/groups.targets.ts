@@ -10,6 +10,8 @@ export const GroupsPageTargets = {
     page.locator('#grid').getByRole('row', { name: groupName }).first(),
   deleteButtonInRow: (groupName: string) => (page: Page): Locator =>
     page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Delete Group'),
+  copyButtonInRow: (groupName: string) => (page: Page): Locator =>
+    page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Copy Group'),
 };
 
 export const AddGroupPageTargets = {
@@ -20,4 +22,13 @@ export const AddGroupPageTargets = {
 
 export const EditGroupPageTargets = {
   pathRegex: /\/Admin\/Security\/Group\/\d+\/Edit/,
+  nameInput: (page: Page): Locator => page.locator('.data-Name input'),
+  descriptionEditor: (page: Page): Locator => page.locator('.data-Description .content-area.mce-content-body'),
+  saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
+};
+
+export const CopyGroupPageTargets = {
+  pathRegex: /\/Admin\/Security\/Group\/\d+\/Copy/,
+  nameInput: (page: Page): Locator => page.locator('.data-Name input'),
+  saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
 };

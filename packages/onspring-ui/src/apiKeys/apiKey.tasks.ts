@@ -86,7 +86,11 @@ export const ApiKeyTasks = {
       if (await actor.browse().isVisible(apiKeyRow)) {
         await actor.browse().hover(apiKeyRow);
         await actor.browse().click(ApiKeysPageTargets.deleteButtonInRow(name));
+        const deleteResponse = actor.page.waitForResponse(
+          r => r.url().match(ApiKeysPageTargets.deleteApiKeyPathRegex) !== null && r.status() === 200
+        );
         await actor.browse().click(DeleteDialogTargets.deleteButton);
+        await deleteResponse;
         await actor.browse().waitForDetached(DeleteDialogTargets.dialog, DeleteDialogTargets.overlay);
       }
     }

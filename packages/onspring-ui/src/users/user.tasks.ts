@@ -1,8 +1,15 @@
 import { User, UserStatus } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ReferenceFieldGridControl } from '../common/controls/referenceFieldGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
-import { AddUserPageTargets, EditUserPageTargets, UsersPageTargets } from './users.targets.js';
+import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
+import {
+  AddUserPageTargets,
+  CopyUserPageTargets,
+  EditUserPageTargets,
+  UsersPageTargets,
+} from './users.targets.js';
 
 export const UserTasks = {
   goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
@@ -13,7 +20,7 @@ export const UserTasks = {
     await getUsersResponse;
   },
 
-  create: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+  create: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().goto(AddUserPageTargets.route);
     await actor.browse().click(AddUserPageTargets.generalTabButton);
 
@@ -22,7 +29,7 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
 
-    switch (user.status) {
+    switch (status) {
       case UserStatus.Active:
         await actor.browse().click(AddUserPageTargets.activeStatusButton);
         break;
@@ -42,6 +49,149 @@ export const UserTasks = {
     await actor.browse().click(AddUserPageTargets.saveRecordButton);
     await saveResponse;
     await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+  },
+
+  createViaHeader: (user: User, status: UserStatus = UserStatus.Active): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.browse().hover(AdminNavTargets.adminCreateButton);
+    await actor.browse().check(AdminNavTargets.adminCreateMenu).isVisible();
+    await actor.browse().click(AdminNavTargets.menuOption('User'));
+
+    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+
+    if (status === UserStatus.Active) {
+      await actor.browse().click(AddUserPageTargets.activeStatusButton);
+    } else if (status === UserStatus.Inactive) {
+      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
+    } else if (status === UserStatus.Locked) {
+      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
+    }
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(AddUserPageTargets.saveRecordButton);
+    await saveResponse;
+    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+  },
+
+  createViaSecurityTile: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.browse().hover(AdminTileTargets.securityTileLink);
+    await actor.browse().check(AdminTileTargets.securityTileCreateButton).isVisible();
+    await actor.browse().click(AdminTileTargets.securityTileCreateButton);
+
+    await actor.browse().check(AdminTileTargets.securityCreateMenu).isVisible();
+    await actor.browse().click(AdminTileTargets.securityMenuOption('User'));
+
+    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+
+    if (status === UserStatus.Active) {
+      await actor.browse().click(AddUserPageTargets.activeStatusButton);
+    } else if (status === UserStatus.Inactive) {
+      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
+    } else if (status === UserStatus.Locked) {
+      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
+    }
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(AddUserPageTargets.saveRecordButton);
+    await saveResponse;
+    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+  },
+
+  createFromGrid: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.attemptsTo(UserTasks.goto());
+    await actor.browse().click(UsersPageTargets.createUserButton);
+
+    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+
+    if (status === UserStatus.Active) {
+      await actor.browse().click(AddUserPageTargets.activeStatusButton);
+    } else if (status === UserStatus.Inactive) {
+      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
+    } else if (status === UserStatus.Locked) {
+      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
+    }
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(AddUserPageTargets.saveRecordButton);
+    await saveResponse;
+    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+  },
+
+  copy: (sourceUsername: string, copiedUsername: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.attemptsTo(UserTasks.goto());
+    const row = UsersPageTargets.rowByName(sourceUsername);
+    await actor.browse().hover(row);
+    await actor.browse().click(UsersPageTargets.copyButtonInRow(sourceUsername));
+
+    await actor.page.waitForURL(CopyUserPageTargets.pathRegex);
+    await actor.browse().type(CopyUserPageTargets.generalTab.usernameInput, copiedUsername);
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(CopyUserPageTargets.saveRecordButton);
+    await saveResponse;
+    await actor.page.waitForURL(EditUserPageTargets.pathRegex);
+  },
+
+  updateStatus: (status: UserStatus): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    if (status === UserStatus.Active) {
+      await actor.browse().click(EditUserPageTargets.generalTab.activeStatusButton);
+    } else if (status === UserStatus.Inactive) {
+      await actor.browse().click(EditUserPageTargets.generalTab.inactiveStatusButton);
+    } else if (status === UserStatus.Locked) {
+      await actor.browse().click(EditUserPageTargets.generalTab.lockedStatusButton);
+    }
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(EditUserPageTargets.saveRecordButton);
+    await saveResponse;
+  },
+
+  assignRole: (roleName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.browse().click(EditUserPageTargets.securityTabButton);
+    await ReferenceFieldGridControl.selectRecord(
+      EditUserPageTargets.securityTab.rolesReferenceGrid.control(actor.page),
+      roleName,
+      'checkbox'
+    );
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(EditUserPageTargets.saveRecordButton);
+    await saveResponse;
+  },
+
+  assignGroup: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.browse().click(EditUserPageTargets.securityTabButton);
+    await ReferenceFieldGridControl.selectRecord(
+      EditUserPageTargets.securityTab.groupsReferenceGrid.control(actor.page),
+      groupName,
+      'checkbox'
+    );
+
+    const saveResponse = actor.page.waitForResponse(
+      r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
+    );
+    await actor.browse().click(EditUserPageTargets.saveRecordButton);
+    await saveResponse;
   },
 
   deleteUsers: (usernames: string[]): Task<WebActor> => async (actor: WebActor): Promise<void> => {
