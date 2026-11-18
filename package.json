@@ -4,7 +4,11 @@
   "description": "A suite of automated web app tests for the Onspring platform.",
   "main": "index.js",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui",
     "test": "npx playwright test",
     "test:pwservice": "npx playwright test --config=playwright.service.config.ts",
     "test:chrome": "npx playwright test --project chrome",

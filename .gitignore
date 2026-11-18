@@ -19,3 +19,5 @@ downloads/
 dynamic-documents/
 apiSetupResults/
 fixtures/testFiles/remote/
+**/dist/
+*.tsbuildinfo
