@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { UserStatus } from '@stevanfreeborn/onspring-models';
 
 export const UsersPageTargets = {
   route: '/Admin/Security/User',
@@ -22,6 +23,8 @@ export const AddUserPageTargets = {
   lastNameInput: (page: Page): Locator => page.locator('.data-LastName input'),
   usernameInput: (page: Page): Locator => page.locator('.data-Username input'),
   emailInput: (page: Page): Locator => page.locator('.data-EmailAddress input'),
+  statusButton: (status: UserStatus) => (page: Page): Locator =>
+    page.getByRole('button', { name: status, exact: status === 'Active' }),
   activeStatusButton: (page: Page): Locator =>
     page.getByRole('button', { name: 'Active', exact: true }),
   inactiveStatusButton: (page: Page): Locator =>
@@ -41,6 +44,8 @@ export const EditUserPageTargets = {
     lastNameInput: (page: Page): Locator => page.locator('.data-LastName input'),
     usernameInput: (page: Page): Locator => page.locator('.data-Username input'),
     emailInput: (page: Page): Locator => page.locator('.data-EmailAddress input'),
+    statusButton: (status: UserStatus) => (page: Page): Locator =>
+      page.getByRole('button', { name: status, exact: status === 'Active' }),
     activeStatusButton: (page: Page): Locator =>
       page.getByRole('button', { name: 'Active', exact: true }),
     inactiveStatusButton: (page: Page): Locator =>

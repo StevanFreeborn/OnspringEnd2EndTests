@@ -1,8 +1,4 @@
-export enum UserStatus {
-  Active = 'Active',
-  Inactive = 'Inactive',
-  Locked = 'Locked',
-}
+export type UserStatus = 'Active' | 'Inactive' | 'Locked';
 
 export class User {
   id: number = 0;
@@ -23,7 +19,7 @@ export class User {
     email: string,
     username: string,
     password: string,
-    status: UserStatus,
+    status: UserStatus = 'Active',
     roles: string[] = [],
     sysAdmin: boolean = false
   ) {

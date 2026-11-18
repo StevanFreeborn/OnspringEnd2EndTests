@@ -20,7 +20,7 @@ export const UserTasks = {
     await getUsersResponse;
   },
 
-  create: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+  create: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().goto(AddUserPageTargets.route);
     await actor.browse().click(AddUserPageTargets.generalTabButton);
 
@@ -28,20 +28,7 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
     await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-
-    switch (status) {
-      case UserStatus.Active:
-        await actor.browse().click(AddUserPageTargets.activeStatusButton);
-        break;
-      case UserStatus.Inactive:
-        await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
-        break;
-      case UserStatus.Locked:
-        await actor.browse().click(AddUserPageTargets.lockedStatusButton);
-        break;
-      default:
-        break;
-    }
+    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
     const saveResponse = actor.page.waitForResponse(
       r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
@@ -51,7 +38,7 @@ export const UserTasks = {
     await actor.page.waitForURL(EditUserPageTargets.pathRegex);
   },
 
-  createViaHeader: (user: User, status: UserStatus = UserStatus.Active): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+  createViaHeader: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().hover(AdminNavTargets.adminCreateButton);
     await actor.browse().check(AdminNavTargets.adminCreateMenu).isVisible();
     await actor.browse().click(AdminNavTargets.menuOption('User'));
@@ -60,14 +47,7 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
     await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-
-    if (status === UserStatus.Active) {
-      await actor.browse().click(AddUserPageTargets.activeStatusButton);
-    } else if (status === UserStatus.Inactive) {
-      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
-    } else if (status === UserStatus.Locked) {
-      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
-    }
+    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
     const saveResponse = actor.page.waitForResponse(
       r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
@@ -77,7 +57,7 @@ export const UserTasks = {
     await actor.page.waitForURL(EditUserPageTargets.pathRegex);
   },
 
-  createViaSecurityTile: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+  createViaSecurityTile: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.browse().hover(AdminTileTargets.securityTileLink);
     await actor.browse().check(AdminTileTargets.securityTileCreateButton).isVisible();
     await actor.browse().click(AdminTileTargets.securityTileCreateButton);
@@ -89,14 +69,7 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
     await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-
-    if (status === UserStatus.Active) {
-      await actor.browse().click(AddUserPageTargets.activeStatusButton);
-    } else if (status === UserStatus.Inactive) {
-      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
-    } else if (status === UserStatus.Locked) {
-      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
-    }
+    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
     const saveResponse = actor.page.waitForResponse(
       r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
@@ -106,7 +79,7 @@ export const UserTasks = {
     await actor.page.waitForURL(EditUserPageTargets.pathRegex);
   },
 
-  createFromGrid: (user: User, status: UserStatus = UserStatus.Inactive): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+  createFromGrid: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.attemptsTo(UserTasks.goto());
     await actor.browse().click(UsersPageTargets.createUserButton);
 
@@ -114,14 +87,7 @@ export const UserTasks = {
     await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
     await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
     await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-
-    if (status === UserStatus.Active) {
-      await actor.browse().click(AddUserPageTargets.activeStatusButton);
-    } else if (status === UserStatus.Inactive) {
-      await actor.browse().click(AddUserPageTargets.inactiveStatusButton);
-    } else if (status === UserStatus.Locked) {
-      await actor.browse().click(AddUserPageTargets.lockedStatusButton);
-    }
+    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
     const saveResponse = actor.page.waitForResponse(
       r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
@@ -149,13 +115,7 @@ export const UserTasks = {
   },
 
   updateStatus: (status: UserStatus): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    if (status === UserStatus.Active) {
-      await actor.browse().click(EditUserPageTargets.generalTab.activeStatusButton);
-    } else if (status === UserStatus.Inactive) {
-      await actor.browse().click(EditUserPageTargets.generalTab.inactiveStatusButton);
-    } else if (status === UserStatus.Locked) {
-      await actor.browse().click(EditUserPageTargets.generalTab.lockedStatusButton);
-    }
+    await actor.browse().click(EditUserPageTargets.generalTab.statusButton(status));
 
     const saveResponse = actor.page.waitForResponse(
       r => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200

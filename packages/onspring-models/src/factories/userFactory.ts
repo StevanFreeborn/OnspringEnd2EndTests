@@ -23,10 +23,10 @@ export class UserFactory {
     const username = this.config.sysAdminUsername ?? FakeDataFactory.createFakeUsername();
     const password = this.config.sysAdminPassword ?? FakeDataFactory.createFakePassword();
 
-    return new User(firstName, lastName, email, username, password, UserStatus.Active);
+    return new User(firstName, lastName, email, username, password, 'Active');
   }
 
-  static createNewUser(status: UserStatus, sysAdmin: boolean = false) {
+  static createNewUser(status: UserStatus = 'Inactive', sysAdmin: boolean = false) {
     const firstName = FakeDataFactory.createFakeFirstName();
     const lastName = FakeDataFactory.createFakeLastName();
     const email = FakeDataFactory.createFakeUserEmail();

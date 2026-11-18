@@ -1,4 +1,4 @@
-import { FakeDataFactory, Role, UserFactory, UserStatus } from '@stevanfreeborn/onspring-models';
+import { FakeDataFactory, Role, UserFactory } from '@stevanfreeborn/onspring-models';
 import {
   EditUserPageTargets,
   GroupTasks,
@@ -29,11 +29,11 @@ test.describe('User', () => {
       description: 'Test-668',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Active');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.createViaHeader(newUser, UserStatus.Active));
+      await sysAdminActor.attemptsTo(UserTasks.createViaHeader(newUser));
     });
 
     await test.step('Verify user is created correctly', async () => {
@@ -42,7 +42,7 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.activeStatusButton).hasAttribute('class', /active-status/);
+      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
     });
   });
 
@@ -54,11 +54,11 @@ test.describe('User', () => {
       description: 'Test-669',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.createViaSecurityTile(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.createViaSecurityTile(newUser));
     });
 
     await test.step('Verify user is created correctly', async () => {
@@ -67,7 +67,7 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.inactiveStatusButton).hasAttribute('class', /active-status/);
+      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
     });
   });
 
@@ -79,11 +79,11 @@ test.describe('User', () => {
       description: 'Test-670',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.createFromGrid(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.createFromGrid(newUser));
     });
 
     await test.step('Verify user is created correctly', async () => {
@@ -92,7 +92,7 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.inactiveStatusButton).hasAttribute('class', /active-status/);
+      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
     });
   });
 
@@ -102,13 +102,13 @@ test.describe('User', () => {
       description: 'Test-785',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     const copiedUserUsername = `${newUser.username} (Copy)`;
     usersToDelete.push(newUser.username);
     usersToDelete.push(copiedUserUsername);
 
     await test.step('Create the user to copy', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.create(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Copy the user', async () => {
@@ -121,7 +121,7 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(copiedUserUsername);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.inactiveStatusButton).hasAttribute('class', /active-status/);
+      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
     });
   });
 
@@ -131,19 +131,19 @@ test.describe('User', () => {
       description: 'Test-674',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the user to update', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.create(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Update the user', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.updateStatus(UserStatus.Locked));
+      await sysAdminActor.attemptsTo(UserTasks.updateStatus('Locked'));
     });
 
     await test.step('Verify user is updated correctly', async () => {
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lockedStatusButton).hasAttribute('class', /active-status/);
+      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton('Locked')).hasAttribute('class', /active-status/);
     });
   });
 
@@ -154,7 +154,7 @@ test.describe('User', () => {
     });
 
     const roleName = FakeDataFactory.createFakeRoleName();
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the role to assign to the user', async () => {
@@ -162,7 +162,7 @@ test.describe('User', () => {
     });
 
     await test.step('Create the user to assign the role to', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.create(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Assign the role to the user', async () => {
@@ -186,7 +186,7 @@ test.describe('User', () => {
     });
 
     const groupName = FakeDataFactory.createFakeGroupName();
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     usersToDelete.push(newUser.username);
 
     await test.step('Create the group to assign to the user', async () => {
@@ -194,7 +194,7 @@ test.describe('User', () => {
     });
 
     await test.step('Create the user to assign the group to', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.create(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Assign the group to the user', async () => {
@@ -217,11 +217,11 @@ test.describe('User', () => {
       description: 'Test-675',
     });
 
-    const newUser = UserFactory.createNewUser(UserStatus.Inactive);
+    const newUser = UserFactory.createNewUser('Inactive');
     const userRow = UsersPageTargets.rowByName(newUser.username);
 
     await test.step('Create user to delete', async () => {
-      await sysAdminActor.attemptsTo(UserTasks.create(newUser, UserStatus.Inactive));
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
     await test.step('Navigate to users security admin page', async () => {
@@ -238,3 +238,4 @@ test.describe('User', () => {
     });
   });
 });
+
