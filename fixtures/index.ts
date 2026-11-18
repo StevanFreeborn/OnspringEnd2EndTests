@@ -1,4 +1,5 @@
 import { Page, test as base } from '@playwright/test';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { UserFactory } from '../factories/userFactory';
 import { App } from '../models/app';
 import { Role } from '../models/role';
@@ -17,7 +18,7 @@ import { env } from './../env';
 import { app, appAdminPage } from './app.fixtures';
 import { createTestUserPageFixture, sysAdminPage } from './auth.fixtures';
 import { TestFile, jpgFile, large149mbTxtFile, large151mbTxtFile, txtFile } from './file.fixtures';
-import { activeRoleWithPermissions } from './role.fixures';
+import { activeRoleWithPermissions } from './role.fixtures';
 import {
   downloadService,
   dynamicDocumentService,
@@ -44,6 +45,7 @@ type Fixtures = {
   environment: Environment;
   sysAdminUser: User;
   sysAdminPage: Page;
+  sysAdminActor: WebActor;
   sysAdminEmail: EmailService;
   pdfParser: PdfParser;
   sheetParser: SheetParser;
@@ -80,6 +82,10 @@ export const test = base.extend<Fixtures>({
   },
   sysAdminUser: UserFactory.createSysAdminUser(),
   sysAdminPage: sysAdminPage,
+  sysAdminActor: async ({ sysAdminPage }, use) => {
+    const actor = WebActor.using('SysAdmin', sysAdminPage);
+    await use(actor);
+  },
   sysAdminEmail: sysAdminEmailService,
   pdfParser: pdfParser,
   sheetParser: sheetParser,
@@ -112,5 +118,7 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
 });
 
 export { expect } from './matchers.fixtures';
+export { AppFixture, AppFixtureBuilder } from './app.fixtures';
+export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
 
 export * from '@playwright/test';
