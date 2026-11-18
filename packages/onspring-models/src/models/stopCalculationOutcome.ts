@@ -1,0 +1,22 @@
+import { Outcome, OutcomeObject } from './outcome.js';
+
+type StopCalculationOutcomeObject = Omit<OutcomeObject, 'type'> & {
+  fieldsToStop?: string[];
+};
+
+export class StopCalculationOutcome extends Outcome {
+  fieldsToStop: string[];
+
+  constructor({ status, description, fieldsToStop = [] }: StopCalculationOutcomeObject) {
+    super({ type: 'Stop Calculation', status, description });
+    this.fieldsToStop = fieldsToStop;
+  }
+
+  clone(): StopCalculationOutcome {
+    return new StopCalculationOutcome({
+      status: this.status,
+      description: this.description,
+      fieldsToStop: [...this.fieldsToStop],
+    });
+  }
+}

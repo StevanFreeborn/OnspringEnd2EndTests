@@ -1,0 +1,15 @@
+{
+  "name": "@stevanfreeborn/onspring-models",
+  "version": "1.0.0",
+  "description": "Domain models and test data factories for Onspring test automation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1"
+  }
+}
