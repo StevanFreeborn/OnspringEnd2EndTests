@@ -1,7 +1,7 @@
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
-import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { container } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { App } from '../../models/app';
 import { AppSearch } from '../../models/appSearch';
@@ -30,7 +30,7 @@ type DashboardObjectTestFixtures = {
 const test = base.extend<DashboardObjectTestFixtures>({
   dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
   sourceApp: app,
-  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  container: container,
   dashboard: async ({ sysAdminPage, container }, use) =>
     await createDashboardFixture(
       {

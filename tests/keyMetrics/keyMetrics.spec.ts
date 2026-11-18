@@ -3,7 +3,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect, Page } from '../../fixtures';
 import { createApp } from '../../fixtures/app.fixtures';
 import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { container } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
 import { App } from '../../models/app';
@@ -52,7 +52,7 @@ const test = base.extend<KeyMetricTestFixtures>({
     const app = await createApp(sysAdminPage);
     await use(app);
   },
-  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  container: container,
   dashboard: async ({ sysAdminPage, container }, use) =>
     await createDashboardFixture(
       {

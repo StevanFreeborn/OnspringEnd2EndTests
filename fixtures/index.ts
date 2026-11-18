@@ -132,5 +132,6 @@ export { AppFixture, AppFixtureBuilder } from './app.fixtures';
 export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
 export { SharedListFixture, SharedListFixtureBuilder, sharedList } from './sharedList.fixtures';
 export { UserFixture, UserFixtureBuilder, user } from './user.fixtures';
+export { ContainerFixture, ContainerFixtureBuilder, container } from './container.fixtures';
 
 export * from '@playwright/test';

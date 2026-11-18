@@ -2,7 +2,7 @@ import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect, Page } from '../../fixtures';
 import { app } from '../../fixtures/app.fixtures';
 import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createContainerFixture } from '../../fixtures/container.fixtures';
+import { container } from '../../fixtures/container.fixtures';
 import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
 import { createReportFixture } from '../../fixtures/report.fixtures';
 import { createUserFixture } from '../../fixtures/user.fixtures';
@@ -63,7 +63,7 @@ const test = base.extend<DashboardFilterTestFixtures>({
       },
       use
     ),
-  container: async ({ sysAdminPage }, use) => await createContainerFixture({ sysAdminPage }, use),
+  container: container,
   dashboard: async ({ sysAdminPage, container, report }, use) =>
     await createDashboardFixture(
       {
