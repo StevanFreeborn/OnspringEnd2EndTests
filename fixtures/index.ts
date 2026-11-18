@@ -120,5 +120,6 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
 export { expect } from './matchers.fixtures';
 export { AppFixture, AppFixtureBuilder } from './app.fixtures';
 export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
+export { SharedListFixture, SharedListFixtureBuilder, sharedList } from './sharedList.fixtures';
 
 export * from '@playwright/test';

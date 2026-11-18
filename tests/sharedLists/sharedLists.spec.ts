@@ -1,34 +1,22 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { SharedList } from '../../models/sharedList';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { EditSharedListPage } from '../../pageObjectModels/sharedLists/editSharedListPage';
-import { SharedListAdminPage } from '../../pageObjectModels/sharedLists/sharedListAdminPage';
+import { FakeDataFactory, SharedList } from '@stevanfreeborn/onspring-models';
+import {
+  EditSharedListPageTargets,
+  SharedListsPageTargets,
+  SharedListTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-
-type SharedListTestFixtures = {
-  adminHomePage: AdminHomePage;
-  editListPage: EditSharedListPage;
-  sharedListAdminPage: SharedListAdminPage;
-};
-
-const test = base.extend<SharedListTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  editListPage: async ({ sysAdminPage }, use) => await use(new EditSharedListPage(sysAdminPage)),
-  sharedListAdminPage: async ({ sysAdminPage }, use) => await use(new SharedListAdminPage(sysAdminPage)),
-});
 
 test.describe('shared lists', () => {
   let listsToDelete: string[] = [];
 
-  test.afterEach(async ({ sharedListAdminPage }) => {
-    await sharedListAdminPage.deleteLists(listsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SharedListTasks.deleteLists(listsToDelete));
     listsToDelete = [];
   });
 
   test('Create a shared list via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -39,22 +27,20 @@ test.describe('shared lists', () => {
     listsToDelete.push(listName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the shared list', async () => {
-      await adminHomePage.createListUsingHeaderCreateButton(listName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.createViaHeader(listName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listName);
     });
   });
 
   test('Create a shared list via the create button on the Lists tile on the admin home page', async ({
-    adminHomePage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -65,22 +51,20 @@ test.describe('shared lists', () => {
     listsToDelete.push(listName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the shared list', async () => {
-      await adminHomePage.createListUsingListTileButton(listName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.createViaTile(listName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listName);
     });
   });
 
   test('Create a shared list via the "Create List" button on the shared list home page', async ({
-    sharedListAdminPage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -91,22 +75,20 @@ test.describe('shared lists', () => {
     listsToDelete.push(listName);
 
     await test.step('Navigate to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Create the shared list', async () => {
-      await sharedListAdminPage.createList(listName);
-      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.create(listName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listName);
     });
   });
 
   test('Create a copy of a shared list via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -118,31 +100,28 @@ test.describe('shared lists', () => {
     listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create list to copy', async () => {
-      await adminHomePage.createListUsingHeaderCreateButton(listToCopyName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.createViaHeader(listToCopyName));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create a copy of the shared list', async () => {
-      await adminHomePage.createListCopyUsingHeaderCreateButton(listToCopyName, listCopyName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.copyViaHeader(listToCopyName, listCopyName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listCopyName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listCopyName);
     });
   });
 
   test('Create a copy of a shared list via the create button on the Lists tile on the admin home page', async ({
-    adminHomePage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -154,31 +133,28 @@ test.describe('shared lists', () => {
     listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create list to copy', async () => {
-      await adminHomePage.createListUsingListTileButton(listToCopyName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.createViaTile(listToCopyName));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create a copy of the shared list', async () => {
-      await adminHomePage.createListCopyUsingListTileButton(listToCopyName, listCopyName);
-      await adminHomePage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.copyViaTile(listToCopyName, listCopyName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listCopyName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listCopyName);
     });
   });
 
   test('Create a copy of a shared list via the "Create List" button on the shared list home page', async ({
-    sharedListAdminPage,
-    editListPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -190,29 +166,27 @@ test.describe('shared lists', () => {
     listsToDelete.push(listToCopyName, listCopyName);
 
     await test.step('Navigate to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Create list to copy', async () => {
-      await sharedListAdminPage.createList(listToCopyName);
-      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.create(listToCopyName));
     });
 
     await test.step('Navigate back to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Create a copy of the shared list', async () => {
-      await sharedListAdminPage.createListCopy(listToCopyName, listCopyName);
-      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.copyFromGrid(listToCopyName, listCopyName));
     });
 
     await test.step('Verify the shared list was created', async () => {
-      await expect(editListPage.generalTab.nameInput).toHaveValue(listCopyName);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(listCopyName);
     });
   });
 
-  test('Update a shared list', async ({ sharedListAdminPage, editListPage }) => {
+  test('Update a shared list', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-643',
@@ -230,65 +204,55 @@ test.describe('shared lists', () => {
     listsToDelete.push(list.name);
 
     await test.step('Navigate to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Create a shared list', async () => {
-      await sharedListAdminPage.createList(list.name);
-      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.create(list.name));
     });
 
     await test.step('Update the shared list', async () => {
-      await editListPage.updateList(list);
-      await editListPage.save();
+      await sysAdminActor.attemptsTo(SharedListTasks.update(list));
     });
 
     await test.step('Verify the shared list was updated', async () => {
-      await editListPage.page.reload();
-      await expect(editListPage.generalTab.nameInput).toHaveValue(list.name);
-      await expect(editListPage.generalTab.descriptionEditor).toHaveText(expectedDescription);
-      await expect(editListPage.generalTab.statusSwitch).toHaveAttribute('aria-checked', expectedStatus.toString());
+      await sysAdminActor.browse().reload();
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(list.name);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.descriptionEditor).hasText(expectedDescription);
+      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.statusSwitch).hasAttribute('aria-checked', expectedStatus.toString());
     });
   });
 
-  test('Delete a shared list', async ({ sharedListAdminPage, editListPage }) => {
+  test('Delete a shared list', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-644',
     });
 
     const listToDeleteName = FakeDataFactory.createFakeListName();
-    const listRow = sharedListAdminPage.listsGrid.getByRole('row', { name: listToDeleteName }).first();
-    const listDeleteButton = listRow.getByTitle('Delete List');
+    const listRow = SharedListsPageTargets.rowByName(listToDeleteName);
 
     await test.step('Navigate to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Create the list to delete', async () => {
-      await sharedListAdminPage.createList(listToDeleteName);
-      await sharedListAdminPage.page.waitForURL(editListPage.pathRegex);
+      await sysAdminActor.attemptsTo(SharedListTasks.create(listToDeleteName));
     });
 
     await test.step('Navigate back to the shared list home page', async () => {
-      await sharedListAdminPage.goto();
+      await sysAdminActor.attemptsTo(SharedListTasks.goto());
     });
 
     await test.step('Delete the list', async () => {
-      await listRow.hover();
+      await sysAdminActor.browse().hover(listRow);
+      await sysAdminActor.browse().click(SharedListsPageTargets.deleteButtonInRow(listToDeleteName));
 
-      await listDeleteButton.click();
-
-      const deleteSharedListResponse = sharedListAdminPage.page.waitForResponse(
-        sharedListAdminPage.deleteListPathRegex
-      );
-      await sharedListAdminPage.deleteListDialog.deleteButton.click();
-      await deleteSharedListResponse;
-      await sharedListAdminPage.deleteListDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.attemptsTo(SharedListTasks.deleteLists([listToDeleteName]));
     });
 
     await test.step('Verify the list was deleted', async () => {
-      await expect(listRow).not.toBeAttached();
+      await sysAdminActor.browse().check(listRow).isNotAttached();
     });
   });
 });

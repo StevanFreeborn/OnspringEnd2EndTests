@@ -30,4 +30,10 @@ export const AdminTileTargets = {
     (name: string) =>
     (page: Page): Locator =>
       page.locator('[data-create-menu-for="card-create-button-Security"]').getByText(name),
+
+  listTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Lists")'),
+    }),
+  listTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Lists'),
 };

@@ -15,3 +15,5 @@ export * from './roles/roles.targets.js';
 export * from './roles/role.tasks.js';
 export * from './users/users.targets.js';
 export * from './users/user.tasks.js';
+export * from './sharedLists/sharedLists.targets.js';
+export * from './sharedLists/sharedList.tasks.js';
