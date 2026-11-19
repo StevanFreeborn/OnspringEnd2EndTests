@@ -5,8 +5,7 @@ export const EmailSendingDomainPageTargets = {
   route: '/Admin/EmailSendingDomain',
   getListPagePath: '/Admin/EmailSendingDomain/GetListPage',
   grid: (page: Page): Locator => page.locator('#grid'),
-  gridScrollableContent: (page: Page): Locator =>
-    page.locator('#grid .k-grid-content.k-auto-scrollable').first(),
+  gridScrollableContent: (page: Page): Locator => page.locator('#grid .k-grid-content.k-auto-scrollable').first(),
   gridPagerInfo: (page: Page): Locator => page.locator('#grid .k-pager-info').first(),
   createButton: (page: Page): Locator => page.getByRole('button', { name: 'Create Email Sending Domain' }),
   domainInput: (page: Page): Locator => page.locator('input#Domain'),
@@ -17,25 +16,16 @@ export const EmailSendingDomainPageTargets = {
   deleteButtonInRow:
     (domain: string): Target =>
     (page: Page): Locator =>
-      page
-        .locator('#grid')
-        .getByRole('row', { name: domain })
-        .first()
-        .getByTitle('Delete Email Sending Domain'),
+      page.locator('#grid').getByRole('row', { name: domain }).first().getByTitle('Delete Email Sending Domain'),
 };
 
 export const EditEmailSendingDomainPageTargets = {
   pathRegex: /Admin\/EmailSendingDomain\/\d+\/Details/,
-  domainName: (page: Page): Locator =>
-    page.locator('.label:has-text("Domain") + .data .data-text-only'),
-  dnsRecordsGrid: (page: Page): Locator =>
-    page.locator('.label:has-text("DNS Records") + .data .grid'),
-  ownershipRow: (page: Page): Locator =>
-    page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(1),
-  dkimRow: (page: Page): Locator =>
-    page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(2),
-  returnPathRow: (page: Page): Locator =>
-    page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(3),
+  domainName: (page: Page): Locator => page.locator('.label:has-text("Domain") + .data .data-text-only'),
+  dnsRecordsGrid: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid'),
+  ownershipRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(1),
+  dkimRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(2),
+  returnPathRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(3),
   recordTypeRow:
     (recordType: 'ownership' | 'dkim' | 'returnPath'): Target =>
     (page: Page): Locator => {

@@ -11,23 +11,14 @@ export class EmailSyncFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (emailSyncName: string) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (emailSyncName: string) => Promise<void>) => {
       const emailSyncName = this.name ?? FakeDataFactory.createFakeEmailSyncName();
-      await sysAdminActor.attemptsTo(
-        EmailSyncTasks.goto(),
-        EmailSyncTasks.create(emailSyncName)
-      );
+      await sysAdminActor.attemptsTo(EmailSyncTasks.goto(), EmailSyncTasks.create(emailSyncName));
 
       try {
         await use(emailSyncName);
       } finally {
-        await sysAdminActor.attemptsTo(
-          EmailSyncTasks.goto(),
-          EmailSyncTasks.deleteEmailSync(emailSyncName)
-        );
+        await sysAdminActor.attemptsTo(EmailSyncTasks.goto(), EmailSyncTasks.deleteEmailSync(emailSyncName));
       }
     };
   }

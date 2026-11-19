@@ -11,10 +11,7 @@ export class EmailTemplateFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (template: EmailTemplate) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (template: EmailTemplate) => Promise<void>) => {
       const templateName = this.name ?? FakeDataFactory.createFakeEmailTemplateName();
       await sysAdminActor.attemptsTo(EmailTemplateTasks.create(templateName));
       const template = new EmailTemplate({ name: templateName });

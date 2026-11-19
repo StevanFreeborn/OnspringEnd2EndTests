@@ -11,13 +11,17 @@ import {
 } from './containers.targets.js';
 
 export const ContainerTasks = {
-  goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getListPageResponse = actor.browse().waitForResponse(
-      (r: Response) => r.url().includes(ContainersPageTargets.getListPagePath) && r.status() === 200
-    );
-    await actor.browse().goto(ContainersPageTargets.route);
-    await getListPageResponse;
-  },
+  goto:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const getListPageResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => r.url().includes(ContainersPageTargets.getListPagePath) && r.status() === 200
+        );
+      await actor.browse().goto(ContainersPageTargets.route);
+      await getListPageResponse;
+    },
 
   create:
     (name: string): Task<WebActor> =>
@@ -78,10 +82,12 @@ export const ContainerTasks = {
     async (actor: WebActor): Promise<void> => {
       await actor.browse().type(EditContainerPageTargets.nameInput, newName);
 
-      const saveResponse = actor.browse().waitForResponse(
-        (r: Response) =>
-          EditContainerPageTargets.pathRegex.test(r.url()) && r.request().method() === 'POST' && r.status() === 200
-      );
+      const saveResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) =>
+            EditContainerPageTargets.pathRegex.test(r.url()) && r.request().method() === 'POST' && r.status() === 200
+        );
       await actor.browse().click(EditContainerPageTargets.saveChangesButton);
       await saveResponse;
     },
@@ -100,9 +106,11 @@ export const ContainerTasks = {
           await actor.browse().hover(row);
           await actor.browse().click(ContainersPageTargets.deleteButtonInRow(name));
 
-          const deleteResponse = actor.browse().waitForResponse(
-            (r: Response) => ContainersPageTargets.deleteContainerPathRegex.test(r.url()) && r.status() === 200
-          );
+          const deleteResponse = actor
+            .browse()
+            .waitForResponse(
+              (r: Response) => ContainersPageTargets.deleteContainerPathRegex.test(r.url()) && r.status() === 200
+            );
           await actor.browse().click(DeleteDialogTargets.deleteButton);
           await deleteResponse;
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);

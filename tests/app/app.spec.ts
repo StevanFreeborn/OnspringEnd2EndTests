@@ -49,9 +49,7 @@ test.describe('app', () => {
     });
   });
 
-  test('Create an app via the create button on the Apps tile on the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create an app via the create button on the Apps tile on the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-2',
@@ -70,9 +68,7 @@ test.describe('app', () => {
     });
   });
 
-  test('Create an app via the Create App button on the Apps admin page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create an app via the Create App button on the Apps admin page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-3',
@@ -157,9 +153,7 @@ test.describe('app', () => {
     });
   });
 
-  test('Create a copy of an app via the Create App button on the Apps admin page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a copy of an app via the Create App button on the Apps admin page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-6',
@@ -301,7 +295,10 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be disabled', async () => {
       await sysAdminActor.attemptsTo(AppTasks.create(appName));
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
@@ -324,7 +321,10 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be enabled', async () => {
       await sysAdminActor.attemptsTo(AppTasks.create(appName));
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the app's content versioning", async () => {
@@ -337,7 +337,10 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's content versioning was enabled correctly", async () => {
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
   });
 
@@ -352,12 +355,18 @@ test.describe('app', () => {
 
     await test.step('Create the app whose content versioning will be changed', async () => {
       await sysAdminActor.attemptsTo(AppTasks.create(appName));
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Enabled - Direct User Saves');
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the app's content versioning", async () => {
       await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
-      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch).hasAttribute('aria-checked', 'true');
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'true');
       await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isVisible();
       await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.directUserSavesCheckbox).isChecked();
 
@@ -373,9 +382,10 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's content versioning was changed correctly", async () => {
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText(
-        'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
-      );
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves');
     });
   });
 
@@ -495,8 +505,14 @@ test.describe('app', () => {
     });
 
     await test.step("Verify app's display fields were updated correctly", async () => {
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText(/Record Id/);
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText(/Created Date/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Record Id/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Created Date/);
     });
   });
 
@@ -520,7 +536,10 @@ test.describe('app', () => {
       await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).isVisible();
-      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).hasText('Ascending');
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.primarySortDirectionSelect)
+        .hasText('Ascending');
 
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
@@ -557,14 +576,23 @@ test.describe('app', () => {
       await sysAdminActor.browse().click(OptionTargets.byName('Created Date'));
 
       await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).isVisible();
-      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).hasText('Ascending');
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect)
+        .hasText('Ascending');
 
       await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify app's secondary sort field was updated correctly", async () => {
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText(/Record Id \(Ascending\)/);
-      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText(/Created Date \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Record Id \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Created Date \(Ascending\)/);
     });
   });
 
@@ -944,9 +972,9 @@ test.describe('app', () => {
       await sysAdminActor.browse().check(DeleteAppDialogTargets.confirmationInput).hasValue('OK');
       await sysAdminActor.browse().check(DeleteAppDialogTargets.deleteButton).isEnabled();
 
-      const deleteResponse = sysAdminActor.browse().waitForResponse(
-        (r: Response) => r.url().includes('/Delete') && r.status() === 200
-      );
+      const deleteResponse = sysAdminActor
+        .browse()
+        .waitForResponse((r: Response) => r.url().includes('/Delete') && r.status() === 200);
       await sysAdminActor.browse().click(DeleteAppDialogTargets.deleteButton);
       await deleteResponse;
       await sysAdminActor.browse().waitForDetached(DeleteAppDialogTargets.dialog);

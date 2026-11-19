@@ -20,9 +20,7 @@ test.describe('container', () => {
     containersToBeDeleted = [];
   });
 
-  test('Create a container via the create button in the header of the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a container via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-292',

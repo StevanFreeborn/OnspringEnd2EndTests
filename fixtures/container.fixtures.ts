@@ -11,10 +11,7 @@ export class ContainerFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (container: Container) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (container: Container) => Promise<void>) => {
       const containerName = this.name ?? FakeDataFactory.createFakeContainerName();
       await sysAdminActor.attemptsTo(ContainerTasks.create(containerName));
       const container = new Container({ name: containerName });

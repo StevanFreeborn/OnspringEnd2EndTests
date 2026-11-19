@@ -24,7 +24,7 @@ Actor ("Who")
 ### Core Primitives
 
 | Primitive     | Role                                                            | Signature                                                                              |
-|:--------------|:----------------------------------------------------------------|:---------------------------------------------------------------------------------------|
+| :------------ | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
 | **Actor**     | The persona running the test. Holds state and abilities.        | `actor.attemptsTo(...tasks)`<br>`actor.asks(question)`<br>`actor.browse()`             |
 | **Ability**   | Gives the actor access to an automation tool. Wraps the driver. | `BrowseTheWeb.using(page)`                                                             |
 | **Task**      | A business action or command causing a state change.            | `type Task<TActor> = (actor: TActor) => Promise<void>`                                 |
@@ -97,8 +97,10 @@ Targets resolve locators from a `Page`. If a target needs arguments, accept thos
 const row = (page: Page, name: string) => page.getByRole('row', { name });
 
 // Good: Curried function returning Target
-const row = (name: string): Target => (page: Page) =>
-  page.getByRole('row', { name });
+const row =
+  (name: string): Target =>
+  (page: Page) =>
+    page.getByRole('row', { name });
 
 // Usage
 await actor.browse().click(Targets.row('Example'));
@@ -125,8 +127,10 @@ When values map to labels or buttons, use string union types instead of enums:
 export type Status = 'Active' | 'Inactive' | 'Draft';
 
 // Targets can use the value directly
-const statusButton = (status: Status): Target => (page: Page) =>
-  page.getByRole('button', { name: status });
+const statusButton =
+  (status: Status): Target =>
+  (page: Page) =>
+    page.getByRole('button', { name: status });
 ```
 
 ## Fixtures

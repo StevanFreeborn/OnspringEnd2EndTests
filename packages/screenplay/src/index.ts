@@ -64,9 +64,7 @@ export class Actor {
   usesAbility<T extends Ability>(abilityType: AbilityType<T>): T {
     const ability = this.abilities.get(abilityType);
     if (!ability) {
-      throw new Error(
-        `Actor "${this.name}" does not have the ability "${abilityType.name}".`
-      );
+      throw new Error(`Actor "${this.name}" does not have the ability "${abilityType.name}".`);
     }
     return ability as T;
   }

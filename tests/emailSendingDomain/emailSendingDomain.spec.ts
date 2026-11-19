@@ -62,10 +62,7 @@ test.describe(
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await sysAdminActor
-          .browse()
-          .check(EditEmailSendingDomainPageTargets.domainName)
-          .hasText(emailSendingDomain);
+        await sysAdminActor.browse().check(EditEmailSendingDomainPageTargets.domainName).hasText(emailSendingDomain);
       });
     });
 
@@ -90,10 +87,7 @@ test.describe(
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await sysAdminActor
-          .browse()
-          .check(EditEmailSendingDomainPageTargets.domainName)
-          .hasText(emailSendingDomain);
+        await sysAdminActor.browse().check(EditEmailSendingDomainPageTargets.domainName).hasText(emailSendingDomain);
       });
     });
 
@@ -117,10 +111,7 @@ test.describe(
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await sysAdminActor
-          .browse()
-          .check(EditEmailSendingDomainPageTargets.domainName)
-          .hasText(emailSendingDomain);
+        await sysAdminActor.browse().check(EditEmailSendingDomainPageTargets.domainName).hasText(emailSendingDomain);
       });
     });
 
@@ -212,10 +203,7 @@ test.describe(
       });
 
       await test.step('Verify the email sending domain was deleted', async () => {
-        await sysAdminActor
-          .browse()
-          .check(EmailSendingDomainPageTargets.rowByName(emailSendingDomain))
-          .isNotAttached();
+        await sysAdminActor.browse().check(EmailSendingDomainPageTargets.rowByName(emailSendingDomain)).isNotAttached();
       });
     });
   }

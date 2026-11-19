@@ -5,178 +5,193 @@ import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { ReferenceFieldGrid } from '../common/controls/referenceFieldGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
-import {
-  AddUserPageTargets,
-  CopyUserPageTargets,
-  EditUserPageTargets,
-  UsersPageTargets,
-} from './users.targets.js';
+import { AddUserPageTargets, CopyUserPageTargets, EditUserPageTargets, UsersPageTargets } from './users.targets.js';
 
 export const UserTasks = {
-  goto: (): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    const getUsersResponse = actor.browse().waitForResponse(
-      (r: Response) => r.url().includes(UsersPageTargets.getUsersPath) && r.status() === 200
-    );
-    await actor.browse().goto(UsersPageTargets.route);
-    await getUsersResponse;
-  },
+  goto:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const getUsersResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => r.url().includes(UsersPageTargets.getUsersPath) && r.status() === 200);
+      await actor.browse().goto(UsersPageTargets.route);
+      await getUsersResponse;
+    },
 
-  create: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().goto(AddUserPageTargets.route);
-    await actor.browse().click(AddUserPageTargets.generalTabButton);
+  create:
+    (user: User): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(AddUserPageTargets.route);
+      await actor.browse().click(AddUserPageTargets.generalTabButton);
 
-    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
-    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
-    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
-    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
+      await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+      await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+      await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+      await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+      await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(AddUserPageTargets.saveRecordButton);
-    await saveResponse;
-    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AddUserPageTargets.saveRecordButton);
+      await saveResponse;
+      await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
+    },
 
-  createViaHeader: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().hover(AdminNavTargets.adminCreateButton);
-    await actor.browse().check(AdminNavTargets.adminCreateMenu).isVisible();
-    await actor.browse().click(AdminNavTargets.menuOption('User'));
+  createViaHeader:
+    (user: User): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().hover(AdminNavTargets.adminCreateButton);
+      await actor.browse().check(AdminNavTargets.adminCreateMenu).isVisible();
+      await actor.browse().click(AdminNavTargets.menuOption('User'));
 
-    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
-    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
-    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
-    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
+      await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+      await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+      await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+      await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+      await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(AddUserPageTargets.saveRecordButton);
-    await saveResponse;
-    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AddUserPageTargets.saveRecordButton);
+      await saveResponse;
+      await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
+    },
 
-  createViaSecurityTile: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().hover(AdminTileTargets.securityTileLink);
-    await actor.browse().check(AdminTileTargets.securityTileCreateButton).isVisible();
-    await actor.browse().click(AdminTileTargets.securityTileCreateButton);
+  createViaSecurityTile:
+    (user: User): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().hover(AdminTileTargets.securityTileLink);
+      await actor.browse().check(AdminTileTargets.securityTileCreateButton).isVisible();
+      await actor.browse().click(AdminTileTargets.securityTileCreateButton);
 
-    await actor.browse().check(AdminTileTargets.securityCreateMenu).isVisible();
-    await actor.browse().click(AdminTileTargets.securityMenuOption('User'));
+      await actor.browse().check(AdminTileTargets.securityCreateMenu).isVisible();
+      await actor.browse().click(AdminTileTargets.securityMenuOption('User'));
 
-    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
-    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
-    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
-    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
+      await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+      await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+      await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+      await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+      await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(AddUserPageTargets.saveRecordButton);
-    await saveResponse;
-    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AddUserPageTargets.saveRecordButton);
+      await saveResponse;
+      await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
+    },
 
-  createFromGrid: (user: User): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.attemptsTo(UserTasks.goto());
-    await actor.browse().click(UsersPageTargets.createUserButton);
+  createFromGrid:
+    (user: User): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(UserTasks.goto());
+      await actor.browse().click(UsersPageTargets.createUserButton);
 
-    await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
-    await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
-    await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
-    await actor.browse().type(AddUserPageTargets.emailInput, user.email);
-    await actor.browse().click(AddUserPageTargets.statusButton(user.status));
+      await actor.browse().type(AddUserPageTargets.firstNameInput, user.firstName);
+      await actor.browse().type(AddUserPageTargets.lastNameInput, user.lastName);
+      await actor.browse().type(AddUserPageTargets.usernameInput, user.username);
+      await actor.browse().type(AddUserPageTargets.emailInput, user.email);
+      await actor.browse().click(AddUserPageTargets.statusButton(user.status));
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(AddUserPageTargets.saveRecordButton);
-    await saveResponse;
-    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AddUserPageTargets.saveRecordButton);
+      await saveResponse;
+      await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
+    },
 
-  copy: (sourceUsername: string, copiedUsername: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.attemptsTo(UserTasks.goto());
-    const row = UsersPageTargets.rowByName(sourceUsername);
-    await actor.browse().hover(row);
-    await actor.browse().click(UsersPageTargets.copyButtonInRow(sourceUsername));
+  copy:
+    (sourceUsername: string, copiedUsername: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(UserTasks.goto());
+      const row = UsersPageTargets.rowByName(sourceUsername);
+      await actor.browse().hover(row);
+      await actor.browse().click(UsersPageTargets.copyButtonInRow(sourceUsername));
 
-    await actor.browse().waitForUrl(CopyUserPageTargets.pathRegex);
-    await actor.browse().type(CopyUserPageTargets.generalTab.usernameInput, copiedUsername);
+      await actor.browse().waitForUrl(CopyUserPageTargets.pathRegex);
+      await actor.browse().type(CopyUserPageTargets.generalTab.usernameInput, copiedUsername);
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(CopyUserPageTargets.saveRecordButton);
-    await saveResponse;
-    await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(CopyUserPageTargets.saveRecordButton);
+      await saveResponse;
+      await actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
+    },
 
-  updateStatus: (status: UserStatus): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().click(EditUserPageTargets.generalTab.statusButton(status));
+  updateStatus:
+    (status: UserStatus): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(EditUserPageTargets.generalTab.statusButton(status));
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(EditUserPageTargets.saveRecordButton);
-    await saveResponse;
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(EditUserPageTargets.saveRecordButton);
+      await saveResponse;
+    },
 
-  assignRole: (roleName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().click(EditUserPageTargets.securityTabButton);
-    await actor.attemptsTo(
-      ReferenceFieldGrid.selectRecord({
-        gridTarget: EditUserPageTargets.securityTab.rolesReferenceGrid.control,
-        searchTerm: roleName,
-        controlType: 'checkbox',
-      })
-    );
+  assignRole:
+    (roleName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(EditUserPageTargets.securityTabButton);
+      await actor.attemptsTo(
+        ReferenceFieldGrid.selectRecord({
+          gridTarget: EditUserPageTargets.securityTab.rolesReferenceGrid.control,
+          searchTerm: roleName,
+          controlType: 'checkbox',
+        })
+      );
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(EditUserPageTargets.saveRecordButton);
-    await saveResponse;
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(EditUserPageTargets.saveRecordButton);
+      await saveResponse;
+    },
 
-  assignGroup: (groupName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    await actor.browse().click(EditUserPageTargets.securityTabButton);
-    await actor.attemptsTo(
-      ReferenceFieldGrid.selectRecord({
-        gridTarget: EditUserPageTargets.securityTab.groupsReferenceGrid.control,
-        searchTerm: groupName,
-        controlType: 'checkbox',
-      })
-    );
+  assignGroup:
+    (groupName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(EditUserPageTargets.securityTabButton);
+      await actor.attemptsTo(
+        ReferenceFieldGrid.selectRecord({
+          gridTarget: EditUserPageTargets.securityTab.groupsReferenceGrid.control,
+          searchTerm: groupName,
+          controlType: 'checkbox',
+        })
+      );
 
-    const saveResponse = actor.browse().waitForResponse(
-      (r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200
-    );
-    await actor.browse().click(EditUserPageTargets.saveRecordButton);
-    await saveResponse;
-  },
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => EditUserPageTargets.pathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(EditUserPageTargets.saveRecordButton);
+      await saveResponse;
+    },
 
-  deleteUsers: (usernames: string[]): Task<WebActor> => async (actor: WebActor): Promise<void> => {
-    if (usernames.length === 0) return;
+  deleteUsers:
+    (usernames: string[]): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (usernames.length === 0) return;
 
-    await actor.attemptsTo(UserTasks.goto());
+      await actor.attemptsTo(UserTasks.goto());
 
-    for (const username of usernames) {
-      const row = UsersPageTargets.rowByName(username);
-      const isVisible = await actor.browse().isVisible(row);
-      if (isVisible) {
-        await actor.browse().hover(row);
-        await actor.browse().click(UsersPageTargets.deleteButtonInRow(username));
-        const deleteResponse = actor.browse().waitForResponse(
-          (r: Response) => UsersPageTargets.deleteUserPathRegex.test(r.url()) && r.status() === 200
-        );
-        await actor.browse().click(DeleteDialogTargets.deleteButton);
-        await deleteResponse;
-        await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
+      for (const username of usernames) {
+        const row = UsersPageTargets.rowByName(username);
+        const isVisible = await actor.browse().isVisible(row);
+        if (isVisible) {
+          await actor.browse().hover(row);
+          await actor.browse().click(UsersPageTargets.deleteButtonInRow(username));
+          const deleteResponse = actor
+            .browse()
+            .waitForResponse((r: Response) => UsersPageTargets.deleteUserPathRegex.test(r.url()) && r.status() === 200);
+          await actor.browse().click(DeleteDialogTargets.deleteButton);
+          await deleteResponse;
+          await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
+        }
       }
-    }
-  },
+    },
 };

@@ -1,15 +1,5 @@
-import {
-  App,
-  EmailSync,
-  FakeDataFactory,
-  TextField,
-} from '@stevanfreeborn/onspring-models';
-import {
-  AppTasks,
-  EditEmailSyncPageTargets,
-  EmailSyncPageTargets,
-  EmailSyncTasks,
-} from '@stevanfreeborn/onspring-ui';
+import { App, EmailSync, FakeDataFactory, TextField } from '@stevanfreeborn/onspring-models';
+import { AppTasks, EditEmailSyncPageTargets, EmailSyncPageTargets, EmailSyncTasks } from '@stevanfreeborn/onspring-ui';
 import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
@@ -25,16 +15,11 @@ test.describe('email sync', () => {
   let emailSyncsToDelete: string[] = [];
 
   test.afterEach(async ({ sysAdminActor }) => {
-    await sysAdminActor.attemptsTo(
-      EmailSyncTasks.goto(),
-      EmailSyncTasks.deleteEmailSyncs(emailSyncsToDelete)
-    );
+    await sysAdminActor.attemptsTo(EmailSyncTasks.goto(), EmailSyncTasks.deleteEmailSyncs(emailSyncsToDelete));
     emailSyncsToDelete = [];
   });
 
-  test('Create an Email Sync via the create button in the header of the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create an Email Sync via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-372',
@@ -53,10 +38,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was created successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncName);
     });
   });
 
@@ -81,10 +63,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was created successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncName);
     });
   });
 
@@ -109,10 +88,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('verify the email was created successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncName);
     });
   });
 
@@ -142,17 +118,12 @@ test.describe('email sync', () => {
     });
 
     await test.step('Create the email sync copy', async () => {
-      await sysAdminActor.attemptsTo(
-        EmailSyncTasks.createCopyViaHeader(emailSyncToCopyName, emailSyncCopyName)
-      );
+      await sysAdminActor.attemptsTo(EmailSyncTasks.createCopyViaHeader(emailSyncToCopyName, emailSyncCopyName));
       await sysAdminActor.browse().checkPage().hasUrl(EditEmailSyncPageTargets.pathRegex);
     });
 
     await test.step('Verify the email sync copy was created successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncCopyName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncCopyName);
     });
   });
 
@@ -182,17 +153,12 @@ test.describe('email sync', () => {
     });
 
     await test.step('Create the email sync copy', async () => {
-      await sysAdminActor.attemptsTo(
-        EmailSyncTasks.createCopyViaTile(emailSyncToCopyName, emailSyncCopyName)
-      );
+      await sysAdminActor.attemptsTo(EmailSyncTasks.createCopyViaTile(emailSyncToCopyName, emailSyncCopyName));
       await sysAdminActor.browse().checkPage().hasUrl(EditEmailSyncPageTargets.pathRegex);
     });
 
     await test.step('Verify the email sync copy was created successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncCopyName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncCopyName);
     });
   });
 
@@ -222,17 +188,12 @@ test.describe('email sync', () => {
     });
 
     await test.step('Create a copy of the email sync', async () => {
-      await sysAdminActor.attemptsTo(
-        EmailSyncTasks.createCopy(emailSyncToCopyName, emailSyncCopyName)
-      );
+      await sysAdminActor.attemptsTo(EmailSyncTasks.createCopy(emailSyncToCopyName, emailSyncCopyName));
       await sysAdminActor.browse().checkPage().hasUrl(EditEmailSyncPageTargets.pathRegex);
     });
 
     await test.step('Verify the email sync was copied successfully', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.nameInput)
-        .hasValue(emailSyncCopyName);
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.nameInput).hasValue(emailSyncCopyName);
     });
   });
 
@@ -254,10 +215,7 @@ test.describe('email sync', () => {
     emailSyncsToDelete.push(emailSync.name);
 
     await test.step('Add text field for use in data mapping', async () => {
-      await sysAdminActor.attemptsTo(
-        AppTasks.gotoApp(app.id),
-        AppTasks.addTextField(textField.name)
-      );
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the email syncs admin page', async () => {
@@ -270,18 +228,12 @@ test.describe('email sync', () => {
     });
 
     await test.step('Update the email sync', async () => {
-      await sysAdminActor.attemptsTo(
-        EmailSyncTasks.update(emailSync),
-        EmailSyncTasks.save()
-      );
+      await sysAdminActor.attemptsTo(EmailSyncTasks.update(emailSync), EmailSyncTasks.save());
     });
 
     await test.step('Verify the email sync was updated', async () => {
       await sysAdminActor.browse().reload();
-      await sysAdminActor
-        .browse()
-        .check(EditEmailSyncPageTargets.dataSyncTab.emailKeyInput)
-        .isDisabled();
+      await sysAdminActor.browse().check(EditEmailSyncPageTargets.dataSyncTab.emailKeyInput).isDisabled();
       await sysAdminActor
         .browse()
         .check(EditEmailSyncPageTargets.dataSyncTab.emailKeyInput)
@@ -315,10 +267,7 @@ test.describe('email sync', () => {
     });
 
     await test.step('Verify the email sync was deleted', async () => {
-      await sysAdminActor
-        .browse()
-        .check(EmailSyncPageTargets.rowByName(emailSyncName))
-        .isNotAttached();
+      await sysAdminActor.browse().check(EmailSyncPageTargets.rowByName(emailSyncName)).isNotAttached();
     });
   });
 });

@@ -6,8 +6,7 @@ export const RolesSecurityPageTargets = {
   deleteRolePathRegex: /\/Admin\/Security\/Role\/\d+\/Delete/,
   createRoleButton: (page: Page) => page.getByRole('button', { name: 'Create Role' }),
   roleGrid: (page: Page) => page.locator('#grid'),
-  rowByName: (roleName: string) => (page: Page) =>
-    page.locator('#grid').getByRole('row', { name: roleName }).first(),
+  rowByName: (roleName: string) => (page: Page) => page.locator('#grid').getByRole('row', { name: roleName }).first(),
   deleteButtonInRow: (roleName: string) => (page: Page) =>
     page.locator('#grid').getByRole('row', { name: roleName }).first().getByTitle('Delete Role'),
   copyButtonInRow: (roleName: string) => (page: Page) =>
@@ -47,15 +46,17 @@ export const AddRolePageTargets = {
         .first()
         .locator('table')
         .getByRole('row', { name: rowName }),
-    permissionCheckbox: (appName: string, rowName: string, permType: 'create' | 'read' | 'update' | 'delete' | 'enabled') => (page: Page) =>
-      page
-        .locator('section.section')
-        .filter({ has: page.locator('h1').filter({ hasText: appName }) })
-        .first()
-        .locator('table')
-        .getByRole('row', { name: rowName })
-        .locator(`[data-permission-type="${permType}"]`)
-        .first(),
+    permissionCheckbox:
+      (appName: string, rowName: string, permType: 'create' | 'read' | 'update' | 'delete' | 'enabled') =>
+      (page: Page) =>
+        page
+          .locator('section.section')
+          .filter({ has: page.locator('h1').filter({ hasText: appName }) })
+          .first()
+          .locator('table')
+          .getByRole('row', { name: rowName })
+          .locator(`[data-permission-type="${permType}"]`)
+          .first(),
   },
 };
 

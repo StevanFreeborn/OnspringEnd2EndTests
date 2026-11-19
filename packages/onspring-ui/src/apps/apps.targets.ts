@@ -9,8 +9,7 @@ export const AppsPageTargets = {
   getAppsListPath: '/Admin/App/AppsListRead',
   createAppButton: (page: Page) => page.locator('.create-button'),
   appGrid: (page: Page) => page.locator('#grid'),
-  rowByName: (appName: string) => (page: Page) =>
-    page.locator('#grid').getByRole('row', { name: appName }).first(),
+  rowByName: (appName: string) => (page: Page) => page.locator('#grid').getByRole('row', { name: appName }).first(),
   deleteButtonInRow: (appName: string) => (page: Page) =>
     page.locator('#grid').getByRole('row', { name: appName }).first().getByTitle('Delete App'),
 };
@@ -52,17 +51,24 @@ export const AppDetailTargets = {
     sort: (page: Page) => page.locator(createSettingSelector('Sort')),
     notes: (page: Page) => page.locator(createSettingSelector('Notes')),
     adminPermissions: (page: Page) =>
-      page.locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) }).locator(createSettingSelector('Administration Permissions')),
+      page
+        .locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) })
+        .locator(createSettingSelector('Administration Permissions')),
     adminUsers: (page: Page) =>
-      page.locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) }).locator(createSettingSelector('Users')),
+      page
+        .locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) })
+        .locator(createSettingSelector('Users')),
     adminRoles: (page: Page) =>
-      page.locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) }).locator(createSettingSelector('Roles')),
+      page
+        .locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) })
+        .locator(createSettingSelector('Roles')),
     adminGroups: (page: Page) =>
-      page.locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) }).locator(createSettingSelector('Groups')),
+      page
+        .locator('.section', { has: page.getByRole('heading', { name: 'Administration Settings' }) })
+        .locator(createSettingSelector('Groups')),
     geocodingStatus: (page: Page) =>
       page.locator('section > h1:has-text("Geocoding") + div').locator(createSettingSelector('Status')),
-    geocodingGrid: (page: Page) =>
-      page.locator(createSettingSelector('Geocoding Data')),
+    geocodingGrid: (page: Page) => page.locator(createSettingSelector('Geocoding Data')),
     geocodingAddress: (page: Page) =>
       page.locator(createSettingSelector('Geocoding Data')).locator(createSettingSelector('Street Address')),
     geocodingCity: (page: Page) =>
@@ -73,8 +79,10 @@ export const AppDetailTargets = {
       page.locator(createSettingSelector('Geocoding Data')).locator(createSettingSelector('Zip/Postal Code')),
 
     editGeneralSettingsLink: (page: Page) => page.locator('a[data-dialog-name="EditGeneralSettings"]'),
-    editDisplaySettingsLink: (page: Page) => page.getByRole('heading', { name: 'Edit Display Settings' }).getByRole('link'),
-    editAdminSettingsLink: (page: Page) => page.getByRole('heading', { name: 'Edit Administration Settings' }).getByRole('link'),
+    editDisplaySettingsLink: (page: Page) =>
+      page.getByRole('heading', { name: 'Edit Display Settings' }).getByRole('link'),
+    editAdminSettingsLink: (page: Page) =>
+      page.getByRole('heading', { name: 'Edit Administration Settings' }).getByRole('link'),
     editGeocodingSettingsLink: (page: Page) => page.getByRole('heading', { name: 'Edit Geocoding' }).getByRole('link'),
     editNotesSettingLink: (page: Page) => page.getByRole('heading', { name: 'Edit Notes' }).getByRole('link'),
   },
@@ -86,14 +94,17 @@ export const EditGeneralSettingsModalTargets = {
   statusSwitch: (page: Page) => page.getByRole('switch', { name: 'Status' }),
   statusToggle: (page: Page) => page.getByRole('switch', { name: 'Status' }).locator('span').nth(3),
   contentVersionStatusSwitch: (page: Page) => page.getByRole('switch', { name: 'Content Versioning' }),
-  contentVersionStatusToggle: (page: Page) => page.getByRole('switch', { name: 'Content Versioning' }).locator('span').nth(3),
+  contentVersionStatusToggle: (page: Page) =>
+    page.getByRole('switch', { name: 'Content Versioning' }).locator('span').nth(3),
   contentVersionTypes: (page: Page) => page.locator('#versioning-types'),
   directUserSavesCheckbox: (page: Page) => page.getByLabel('Direct User Saves', { exact: true }),
   indirectUserSavesCheckbox: (page: Page) => page.getByLabel('Indirect User Saves', { exact: true }),
   apiSavesCheckbox: (page: Page) => page.getByLabel('API Saves', { exact: true }),
   systemSavesCheckbox: (page: Page) => page.getByLabel('System Saves', { exact: true }),
-  concurrentEditAlertStatusSwitch: (page: Page) => page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch'),
-  concurrentEditAlertStatusToggle: (page: Page) => page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch').locator('span').nth(3),
+  concurrentEditAlertStatusSwitch: (page: Page) =>
+    page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch'),
+  concurrentEditAlertStatusToggle: (page: Page) =>
+    page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch').locator('span').nth(3),
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
 };
 
@@ -102,11 +113,14 @@ export const EditDisplaySettingsModalTargets = {
   integrationLinkSelect: (page: Page) => page.getByRole('listbox', { name: 'Integration Link Field' }),
   displayFieldsSelect: (page: Page) => page.locator('.selector-select-list'),
   primarySortSelect: (page: Page) => page.locator('td.label:has-text("Primary Sort") + td>div').first(),
-  primarySortDirectionSelect: (page: Page) => page.locator('td.label:has-text("Primary Sort") + td>div>span:nth-child(2)').first(),
+  primarySortDirectionSelect: (page: Page) =>
+    page.locator('td.label:has-text("Primary Sort") + td>div>span:nth-child(2)').first(),
   secondarySortSelect: (page: Page) => page.locator('td.label:has-text("Secondary Sort") + td>div').first(),
-  secondarySortDirectionSelect: (page: Page) => page.locator('td.label:has-text("Secondary Sort") + td>div>span:nth-child(2)').first(),
+  secondarySortDirectionSelect: (page: Page) =>
+    page.locator('td.label:has-text("Secondary Sort") + td>div>span:nth-child(2)').first(),
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
-  unselectedDisplayOption: (field: string) => (page: Page) => page.locator(`.selector-control .unselected-pane li:has-text("${field}")`),
+  unselectedDisplayOption: (field: string) => (page: Page) =>
+    page.locator(`.selector-control .unselected-pane li:has-text("${field}")`),
   selectorCloseButton: (page: Page) => page.locator('.selector-control:not(.invisible)').getByTitle('Close').first(),
 };
 
@@ -116,11 +130,18 @@ export const OptionTargets = {
 
 export const EditAdminSettingsModalTargets = {
   modal: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }),
-  adminPermissionsSelect: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }).getByRole('listbox', { name: 'Administration Permissions' }),
-  usersSelector: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Users") + .data'),
-  groupsSelector: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Groups") + .data'),
-  rolesSelector: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Roles") + .data'),
-  saveButton: (page: Page) => page.getByRole('dialog', { name: /administration settings/i }).getByRole('button', { name: 'Save' }),
+  adminPermissionsSelect: (page: Page) =>
+    page
+      .getByRole('dialog', { name: /administration settings/i })
+      .getByRole('listbox', { name: 'Administration Permissions' }),
+  usersSelector: (page: Page) =>
+    page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Users") + .data'),
+  groupsSelector: (page: Page) =>
+    page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Groups") + .data'),
+  rolesSelector: (page: Page) =>
+    page.getByRole('dialog', { name: /administration settings/i }).locator('.label:has-text("Roles") + .data'),
+  saveButton: (page: Page) =>
+    page.getByRole('dialog', { name: /administration settings/i }).getByRole('button', { name: 'Save' }),
 };
 
 export const EditGeocodingSettingsModalTargets = {
@@ -143,23 +164,31 @@ export const AppLayoutTabTargets = {
   addFieldButton: (page: Page) => page.getByText('Add Field'),
   addLayoutItemMenu: (itemType: string) => (page: Page) =>
     page.locator('[data-add-menu="layout-item"]').first().getByText(itemType, { exact: true }),
-  addLayoutItemDialogContinueButton: (page: Page) =>
-    page.getByRole('button', { name: 'Continue' }),
+  addLayoutItemDialogContinueButton: (page: Page) => page.getByRole('button', { name: 'Continue' }),
   addItemPathRegex: /\/Admin\/App\/\d+\/(LayoutObject|Field)\/Add(TextObject|UsingSettings|LabelObject)/,
   addOrEditPathRegex: /\/Admin\/App\/\d+\/Field\/(AddUsingSettings|\d+\/Edit)/,
 
   fieldModal: {
-    frame: (frameNumber: number = 0) => (page: Page) => page.frameLocator('iframe').nth(frameNumber),
-    nameInput: (frameNumber: number = 0) => (page: Page) =>
-      page.frameLocator('iframe').nth(frameNumber).getByLabel('Field', { exact: true }),
-    securityTabButton: (frameNumber: number = 0) => (page: Page) =>
-      page.frameLocator('iframe').nth(frameNumber).getByRole('tab', { name: 'Security' }),
-    securityViewSelect: (frameNumber: number = 0) => (page: Page) =>
-      page.frameLocator('iframe').nth(frameNumber).getByRole('listbox', { name: 'View' }),
-    securityOption: (optionName: string, frameNumber: number = 0) => (page: Page) =>
-      page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: optionName }),
-    saveButton: (page: Page) =>
-      page.getByRole('button', { name: 'Save', exact: true }).last(),
+    frame:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber),
+    nameInput:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByLabel('Field', { exact: true }),
+    securityTabButton:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('tab', { name: 'Security' }),
+    securityViewSelect:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('listbox', { name: 'View' }),
+    securityOption:
+      (optionName: string, frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: optionName }),
+    saveButton: (page: Page) => page.getByRole('button', { name: 'Save', exact: true }).last(),
   },
 };
-

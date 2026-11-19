@@ -37,7 +37,10 @@ test.describe('Role', () => {
     await test.step('Verify the role is created correctly', async () => {
       await sysAdminActor.browse().checkPage().hasUrl(EditRolePageTargets.pathRegex);
       await sysAdminActor.browse().check(EditRolePageTargets.generalTab.nameInput).hasValue(roleName);
-      await sysAdminActor.browse().check(EditRolePageTargets.generalTab.statusSwitch).hasAttribute('aria-checked', 'false');
+      await sysAdminActor
+        .browse()
+        .check(EditRolePageTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
     });
   });
 
@@ -57,7 +60,10 @@ test.describe('Role', () => {
     await test.step('Verify the role is created correctly', async () => {
       await sysAdminActor.browse().checkPage().hasUrl(EditRolePageTargets.pathRegex);
       await sysAdminActor.browse().check(EditRolePageTargets.generalTab.nameInput).hasValue(roleName);
-      await sysAdminActor.browse().check(EditRolePageTargets.generalTab.statusSwitch).hasAttribute('aria-checked', 'false');
+      await sysAdminActor
+        .browse()
+        .check(EditRolePageTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
     });
   });
 
@@ -82,7 +88,10 @@ test.describe('Role', () => {
     await test.step('Verify the role is created correctly', async () => {
       await sysAdminActor.browse().checkPage().hasUrl(EditRolePageTargets.pathRegex);
       await sysAdminActor.browse().check(EditRolePageTargets.generalTab.nameInput).hasValue(roleName);
-      await sysAdminActor.browse().check(EditRolePageTargets.generalTab.statusSwitch).hasAttribute('aria-checked', 'false');
+      await sysAdminActor
+        .browse()
+        .check(EditRolePageTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', 'false');
     });
   });
 

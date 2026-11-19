@@ -1,11 +1,5 @@
 import { FakeDataFactory, Role } from '@stevanfreeborn/onspring-models';
-import {
-  EditUserPageTargets,
-  GroupTasks,
-  RoleTasks,
-  UsersPageTargets,
-  UserTasks,
-} from '@stevanfreeborn/onspring-ui';
+import { EditUserPageTargets, GroupTasks, RoleTasks, UsersPageTargets, UserTasks } from '@stevanfreeborn/onspring-ui';
 import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
@@ -21,9 +15,7 @@ test.describe('User', () => {
     usersToDelete = [];
   });
 
-  test('Create a User via the create button in the header of the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a User via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-668',
@@ -42,13 +34,14 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
+      await sysAdminActor
+        .browse()
+        .check(EditUserPageTargets.generalTab.statusButton(newUser.status))
+        .hasAttribute('class', /active-status/);
     });
   });
 
-  test('Create a User via the create button on the Security tile on the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a User via the create button on the Security tile on the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-669',
@@ -67,13 +60,14 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
+      await sysAdminActor
+        .browse()
+        .check(EditUserPageTargets.generalTab.statusButton(newUser.status))
+        .hasAttribute('class', /active-status/);
     });
   });
 
-  test('Create a User via the Create User button on the user home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a User via the Create User button on the user home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-670',
@@ -92,7 +86,10 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(newUser.username);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
+      await sysAdminActor
+        .browse()
+        .check(EditUserPageTargets.generalTab.statusButton(newUser.status))
+        .hasAttribute('class', /active-status/);
     });
   });
 
@@ -121,7 +118,10 @@ test.describe('User', () => {
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.lastNameInput).hasValue(newUser.lastName);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.usernameInput).hasValue(copiedUserUsername);
       await sysAdminActor.browse().check(EditUserPageTargets.generalTab.emailInput).hasValue(newUser.email);
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton(newUser.status)).hasAttribute('class', /active-status/);
+      await sysAdminActor
+        .browse()
+        .check(EditUserPageTargets.generalTab.statusButton(newUser.status))
+        .hasAttribute('class', /active-status/);
     });
   });
 
@@ -143,7 +143,10 @@ test.describe('User', () => {
     });
 
     await test.step('Verify user is updated correctly', async () => {
-      await sysAdminActor.browse().check(EditUserPageTargets.generalTab.statusButton('Locked')).hasAttribute('class', /active-status/);
+      await sysAdminActor
+        .browse()
+        .check(EditUserPageTargets.generalTab.statusButton('Locked'))
+        .hasAttribute('class', /active-status/);
     });
   });
 
@@ -238,6 +241,3 @@ test.describe('User', () => {
     });
   });
 });
-
-
-

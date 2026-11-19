@@ -1,9 +1,5 @@
 import { FakeDataFactory, SharedList } from '@stevanfreeborn/onspring-models';
-import {
-  EditSharedListPageTargets,
-  SharedListsPageTargets,
-  SharedListTasks,
-} from '@stevanfreeborn/onspring-ui';
+import { EditSharedListPageTargets, SharedListsPageTargets, SharedListTasks } from '@stevanfreeborn/onspring-ui';
 import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
@@ -15,9 +11,7 @@ test.describe('shared lists', () => {
     listsToDelete = [];
   });
 
-  test('Create a shared list via the create button in the header of the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a shared list via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-637',
@@ -63,9 +57,7 @@ test.describe('shared lists', () => {
     });
   });
 
-  test('Create a shared list via the "Create List" button on the shared list home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a shared list via the "Create List" button on the shared list home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-639',
@@ -218,8 +210,14 @@ test.describe('shared lists', () => {
     await test.step('Verify the shared list was updated', async () => {
       await sysAdminActor.browse().reload();
       await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.nameInput).hasValue(list.name);
-      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.descriptionEditor).hasText(expectedDescription);
-      await sysAdminActor.browse().check(EditSharedListPageTargets.generalTab.statusSwitch).hasAttribute('aria-checked', expectedStatus.toString());
+      await sysAdminActor
+        .browse()
+        .check(EditSharedListPageTargets.generalTab.descriptionEditor)
+        .hasText(expectedDescription);
+      await sysAdminActor
+        .browse()
+        .check(EditSharedListPageTargets.generalTab.statusSwitch)
+        .hasAttribute('aria-checked', expectedStatus.toString());
     });
   });
 

@@ -1,10 +1,6 @@
 import { Page } from '@playwright/test';
 import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
-import {
-  AuthTasks,
-  DashboardTargets,
-  LoginPageTargets,
-} from '@stevanfreeborn/onspring-ui';
+import { AuthTasks, DashboardTargets, LoginPageTargets } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { test as baseTest } from '../../fixtures';
 import { errorResponseHandler } from '../../fixtures/auth.fixtures';
@@ -73,9 +69,18 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 
@@ -97,9 +102,18 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 
@@ -122,9 +136,18 @@ test.describe('login', () => {
 
     await test.step('Verify user is not logged in.', async () => {
       await userActor.browse().checkPage().hasUrl(LoginPageTargets.pathRegex);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasText(LoginPageTargets.invalidCredentialErrorMessage);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
-      await userActor.browse().check(LoginPageTargets.validationErrors).hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasText(LoginPageTargets.invalidCredentialErrorMessage);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('color', LoginPageTargets.invalidCredentialErrorColor);
+      await userActor
+        .browse()
+        .check(LoginPageTargets.validationErrors)
+        .hasCSS('font-weight', LoginPageTargets.invalidCredentialErrorFontWeight);
     });
   });
 });

@@ -18,10 +18,7 @@ export class AppFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (r: App) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (r: App) => Promise<void>) => {
       const appName = this.name ?? FakeDataFactory.createFakeAppName();
       const app = await createAppWithActor(sysAdminActor, appName);
 

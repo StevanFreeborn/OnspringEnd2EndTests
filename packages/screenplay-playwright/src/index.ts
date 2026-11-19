@@ -73,10 +73,7 @@ export class BrowserActions {
     await this.page.waitForURL(url);
   }
 
-  async waitForState(
-    target: Target,
-    state: 'visible' | 'hidden' | 'attached' | 'detached'
-  ): Promise<void> {
+  async waitForState(target: Target, state: 'visible' | 'hidden' | 'attached' | 'detached'): Promise<void> {
     await resolveTarget(this.page, target).waitFor({ state });
   }
 
@@ -98,9 +95,7 @@ export class BrowserActions {
   }
 
   async waitForDetached(...targets: Target[]): Promise<void> {
-    await Promise.all(
-      targets.map(t => resolveTarget(this.page, t).waitFor({ state: 'detached' }))
-    );
+    await Promise.all(targets.map(t => resolveTarget(this.page, t).waitFor({ state: 'detached' })));
   }
 
   async click(target: Target): Promise<void> {
@@ -236,10 +231,7 @@ export interface RetryOptions {
  */
 export const Retry = {
   until:
-    <TActor extends Actor = WebActor>(
-      tasks: Task<TActor> | Task<TActor>[],
-      options?: RetryOptions
-    ): Task<TActor> =>
+    <TActor extends Actor = WebActor>(tasks: Task<TActor> | Task<TActor>[], options?: RetryOptions): Task<TActor> =>
     async (actor: TActor): Promise<void> => {
       const taskList = Array.isArray(tasks) ? tasks : [tasks];
       await expect(async () => {
@@ -251,4 +243,3 @@ export const Retry = {
 };
 
 export { Ability, AbilityType, Actor, Question, Task } from '@stevanfreeborn/screenplay';
-

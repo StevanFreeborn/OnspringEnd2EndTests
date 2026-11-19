@@ -21,9 +21,7 @@ test.describe('Group', () => {
     groupsToDelete = [];
   });
 
-  test('Create a Group via the create button in the header of the admin home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a Group via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-494',
@@ -63,9 +61,7 @@ test.describe('Group', () => {
     });
   });
 
-  test('Create a Group via the Create Group button on the group home page', async ({
-    sysAdminActor,
-  }) => {
+  test('Create a Group via the Create Group button on the group home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-496',

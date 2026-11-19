@@ -6,12 +6,18 @@ export const GroupsPageTargets = {
   deleteGroupPathRegex: /\/Admin\/Security\/Group\/\d+\/Delete/,
   createGroupButton: (page: Page): Locator => page.getByRole('button', { name: 'Create Group' }),
   groupsGrid: (page: Page): Locator => page.locator('#grid'),
-  rowByName: (groupName: string) => (page: Page): Locator =>
-    page.locator('#grid').getByRole('row', { name: groupName }).first(),
-  deleteButtonInRow: (groupName: string) => (page: Page): Locator =>
-    page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Delete Group'),
-  copyButtonInRow: (groupName: string) => (page: Page): Locator =>
-    page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Copy Group'),
+  rowByName:
+    (groupName: string) =>
+    (page: Page): Locator =>
+      page.locator('#grid').getByRole('row', { name: groupName }).first(),
+  deleteButtonInRow:
+    (groupName: string) =>
+    (page: Page): Locator =>
+      page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Delete Group'),
+  copyButtonInRow:
+    (groupName: string) =>
+    (page: Page): Locator =>
+      page.locator('#grid').getByRole('row', { name: groupName }).first().getByTitle('Copy Group'),
 };
 
 export const AddGroupPageTargets = {

@@ -4,7 +4,8 @@ import { DnsRecordInfo, EmailSendingDomainDnsRecords } from './emailSendingDomai
 import { EditEmailSendingDomainPageTargets } from './emailSendingDomain.targets.js';
 
 export const EmailSendingDomainQuestions = {
-  dnsRecords: (): Question<WebActor, EmailSendingDomainDnsRecords> =>
+  dnsRecords:
+    (): Question<WebActor, EmailSendingDomainDnsRecords> =>
     async (actor: WebActor): Promise<EmailSendingDomainDnsRecords> => {
       const extractRecord = async (rowTarget: Target): Promise<DnsRecordInfo> => {
         const row = actor.browse().locator(rowTarget);

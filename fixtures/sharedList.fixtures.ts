@@ -23,10 +23,7 @@ export class SharedListFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (list: SharedList) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (list: SharedList) => Promise<void>) => {
       const listName = this.name ?? FakeDataFactory.createFakeListName();
       const list = new SharedList({
         name: listName,

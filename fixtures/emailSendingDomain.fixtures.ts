@@ -11,10 +11,7 @@ export class EmailSendingDomainFixtureBuilder {
   }
 
   build() {
-    return async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (domain: string) => Promise<void>
-    ) => {
+    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (domain: string) => Promise<void>) => {
       const emailDomain = this.domain ?? FakeDataFactory.createFakeCustomEmailSendingDomain();
       await sysAdminActor.attemptsTo(EmailSendingDomainTasks.create(emailDomain));
 
