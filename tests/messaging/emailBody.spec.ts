@@ -1,46 +1,43 @@
 import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { EmailBody } from '../../models/emailBody';
-import { TextRuleWithValue } from '../../models/rule';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { TextField } from '../../models/textField';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
+import {
+  App,
+  EmailBody,
+  FakeDataFactory,
+  SimpleRuleLogic,
+  TextField,
+  TextRuleWithValue,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppDetailTargets,
+  AppMessagingTabTargets,
+  AppTasks,
+  ContentRecordTargets,
+  EditEmailBodyPageTargets,
+  EmailBodyAdminPageTargets,
+  EmailBodyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base, expect } from '../../fixtures';
 import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
 import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
 import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
-import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
 import { AnnotationType } from '../annotations';
 
 type EmailBodyTestFixtures = {
   targetApp: App;
-  adminHomePage: AdminHomePage;
   appAdminPage: AppAdminPage;
-  editEmailBodyPage: EditEmailBodyPage;
-  emailBodyAdminPage: EmailBodyAdminPage;
   addContentPage: AddContentPage;
   editContentPage: EditContentPage;
 };
 
 const test = base.extend<EmailBodyTestFixtures>({
-  targetApp: app,
-  adminHomePage: async ({ sysAdminPage }, use) => use(new AdminHomePage(sysAdminPage)),
+  targetApp: AppFixture.create().build(),
   appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
-  editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
-  emailBodyAdminPage: async ({ sysAdminPage }, use) => use(new EmailBodyAdminPage(sysAdminPage)),
   addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),
   editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
 });
 
 test.describe('email body', () => {
-  test("Add Email Body to an app from an app's Messaging tab", async ({
-    targetApp,
-    appAdminPage,
-    editEmailBodyPage,
-  }) => {
+  test("Add Email Body to an app from an app's Messaging tab", async ({ targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-209',
@@ -49,28 +46,24 @@ test.describe('email body', () => {
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step('Navigate to the messaging tab', async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the email body was created', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyName);
     });
   });
 
-  test("Create a copy of an Email Body on an app from an app's Messaging tab", async ({
-    targetApp,
-    appAdminPage,
-    editEmailBodyPage,
-  }) => {
+  test("Create a copy of an Email Body on an app from an app's Messaging tab", async ({ targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-210',
@@ -80,38 +73,34 @@ test.describe('email body', () => {
     const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step("Navigate to the app's admin page", async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step("Navigate to the app's Messaging tab", async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body to be copied', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step("Navigate back to the app's messaging tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create a copy of the email body', async () => {
-      await appAdminPage.messagingTab.createEmailBodyCopy(emailBodyName, emailBodyCopyName);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createCopyFromAppMessagingTab(emailBodyName, emailBodyCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the Email Body was created', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyCopyName);
     });
   });
 
-  test('Add Email Body to an app from the Create button in the admin header', async ({
-    targetApp,
-    adminHomePage,
-    editEmailBodyPage,
-  }) => {
+  test('Add Email Body to an app from the Create button in the admin header', async ({ targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-211',
@@ -120,23 +109,22 @@ test.describe('email body', () => {
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email body', async () => {
-      await adminHomePage.createEmailBodyUsingHeaderCreateButton(targetApp.name, emailBodyName);
-      await adminHomePage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createViaHeader(targetApp.name, emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the email body was created', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyName);
     });
   });
 
   test('Create a copy of an Email Body on an app from the Create button in the admin header', async ({
     targetApp,
-    adminHomePage,
-    editEmailBodyPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -147,31 +135,33 @@ test.describe('email body', () => {
     const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email body to be copied', async () => {
-      await adminHomePage.createEmailBodyUsingHeaderCreateButton(targetApp.name, emailBodyName);
-      await adminHomePage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createViaHeader(targetApp.name, emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Copy the email body', async () => {
-      await adminHomePage.createEmailBodyCopyUsingHeaderCreateButton(targetApp.name, emailBodyName, emailBodyCopyName);
+      await sysAdminActor.attemptsTo(
+        EmailBodyTasks.createCopyViaHeader(targetApp.name, emailBodyName, emailBodyCopyName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the email body was copied', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyCopyName);
     });
   });
 
   test('Add Email Body to an app from the Create Email Body button on the email body page', async ({
     targetApp,
-    emailBodyAdminPage,
-    editEmailBodyPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -181,23 +171,22 @@ test.describe('email body', () => {
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step('Navigate to email body admin page', async () => {
-      await emailBodyAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.goto());
     });
 
     await test.step('Create the email body', async () => {
-      await emailBodyAdminPage.createEmailBody(targetApp.name, emailBodyName);
-      await emailBodyAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAdminPage(targetApp.name, emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the email body was created', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyName);
     });
   });
 
   test('Create a copy of an Email Body on an app from the Create Email Body button on the email body page', async ({
     targetApp,
-    emailBodyAdminPage,
-    editEmailBodyPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -208,34 +197,37 @@ test.describe('email body', () => {
     const emailBodyCopyName = FakeDataFactory.createFakeEmailBodyName();
 
     await test.step('Navigate to the email body admin page', async () => {
-      await emailBodyAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.goto());
     });
 
     await test.step('Create the email body to be copied', async () => {
-      await emailBodyAdminPage.createEmailBody(targetApp.name, emailBodyName);
-      await emailBodyAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAdminPage(targetApp.name, emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the email body admin page', async () => {
-      await emailBodyAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.goto());
     });
 
     await test.step('Copy the email body', async () => {
-      await emailBodyAdminPage.createEmailBodyCopy(targetApp.name, emailBodyName, emailBodyCopyName);
+      await sysAdminActor.attemptsTo(
+        EmailBodyTasks.createCopyFromAdminPage(targetApp.name, emailBodyName, emailBodyCopyName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Verify the email body was copied', async () => {
-      await expect(editEmailBodyPage.generalTab.nameInput).toHaveValue(emailBodyCopyName);
+      await sysAdminActor.browse().check(EditEmailBodyPageTargets.generalTab.nameInput).hasValue(emailBodyCopyName);
     });
   });
 
   test("Update an Email Body's configurations on an app from an app's Messaging tab", async ({
     targetApp,
     appAdminPage,
-    editEmailBodyPage,
     addContentPage,
     editContentPage,
     sysAdminEmail,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -269,11 +261,11 @@ test.describe('email body', () => {
     });
 
     await test.step("Navigate to the app's home page", async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.layoutTabButton);
     });
 
     await test.step('Create a field and add to app layout', async () => {
@@ -290,30 +282,26 @@ test.describe('email body', () => {
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body to update', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBody.name);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBody.name));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step("Navigate back to the app's messaging tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Open email body to update', async () => {
-      const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBody.name });
-
-      await emailBodyRow.hover();
-      await emailBodyRow.getByTitle('Edit Email Body').click();
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.openForEditFromAppMessagingTab(emailBody.name));
     });
 
     await test.step('Update the email body', async () => {
-      await editEmailBodyPage.updateEmailBody(emailBody);
-      await editEmailBodyPage.save();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.update(emailBody), EmailBodyTasks.save());
     });
 
     await test.step('Add a content record that satisfies send logic', async () => {
@@ -327,8 +315,9 @@ test.describe('email body', () => {
 
       await editableTextField.fill(rule.value);
 
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      const navPromise = sysAdminActor.browse().waitForUrl(editContentPage.pathRegex);
+      await sysAdminActor.browse().click(ContentRecordTargets.saveRecordButton);
+      await navPromise;
     });
 
     await test.step('Verify the email body was updated', async () => {
@@ -352,11 +341,10 @@ test.describe('email body', () => {
   test("Update an Email Body's configurations on an app from the Email Body page", async ({
     targetApp,
     appAdminPage,
-    editEmailBodyPage,
-    emailBodyAdminPage,
     addContentPage,
     editContentPage,
     sysAdminEmail,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -390,11 +378,11 @@ test.describe('email body', () => {
     });
 
     await test.step("Navigate to the app's home page", async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.layoutTabButton);
     });
 
     await test.step('Create a field and add to the app layout', async () => {
@@ -411,29 +399,25 @@ test.describe('email body', () => {
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body to update', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBody.name);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBody.name));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Navigate to the email bodies admin page', async () => {
-      await emailBodyAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.goto());
     });
 
     await test.step('Open email body to update', async () => {
-      const emailBodyRow = emailBodyAdminPage.emailBodyGrid.getByRole('row', { name: emailBody.name });
-
-      await emailBodyRow.hover();
-      await emailBodyRow.getByTitle('Edit Email Body').click();
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.openForEditFromAdminPage(emailBody.name));
     });
 
     await test.step('Update the email body', async () => {
-      await editEmailBodyPage.updateEmailBody(emailBody);
-      await editEmailBodyPage.save();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.update(emailBody), EmailBodyTasks.save());
     });
 
     await test.step('Add a content record that satisfies send logic', async () => {
@@ -447,8 +431,9 @@ test.describe('email body', () => {
 
       await editableTextField.fill(rule.value);
 
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      const navPromise = sysAdminActor.browse().waitForUrl(editContentPage.pathRegex);
+      await sysAdminActor.browse().click(ContentRecordTargets.saveRecordButton);
+      await navPromise;
     });
 
     await test.step('Verify the email body was updated', async () => {
@@ -469,83 +454,72 @@ test.describe('email body', () => {
     });
   });
 
-  test("Delete an Email Body from an app's Messaging tab", async ({ targetApp, appAdminPage, editEmailBodyPage }) => {
+  test("Delete an Email Body from an app's Messaging tab", async ({ targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-217',
     });
 
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
-    const emailBodyRow = appAdminPage.messagingTab.emailBodyGrid.getByRole('row', { name: emailBodyName });
 
     await test.step("Navigate to the app's admin page", async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body to delete', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the app messaging tab', async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Delete the email body', async () => {
-      await emailBodyRow.hover();
-      await emailBodyRow.getByTitle('Delete Email Body').click();
-      await appAdminPage.messagingTab.deleteEmailBodyDialog.deleteButton.click();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.deleteFromAppMessagingTab(emailBodyName));
     });
 
     await test.step('Verify the email body was deleted', async () => {
-      await expect(emailBodyRow).not.toBeAttached();
+      await sysAdminActor.browse().check(AppMessagingTabTargets.rowByName(emailBodyName)).isNotAttached();
     });
   });
 
-  test('Delete an Email Body from the Email Body page', async ({
-    targetApp,
-    appAdminPage,
-    editEmailBodyPage,
-    emailBodyAdminPage,
-  }) => {
+  test('Delete an Email Body from the Email Body page', async ({ targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-218',
     });
 
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
-    const emailBodyRow = emailBodyAdminPage.emailBodyGrid.getByRole('row', { name: emailBodyName });
 
     await test.step("Navigate to the app's admin page", async () => {
-      await appAdminPage.goto(targetApp.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id));
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
-      await appAdminPage.messagingTabButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.messagingTabButton);
     });
 
     await test.step('Create the email body to delete', async () => {
-      await appAdminPage.messagingTab.createEmailBody(emailBodyName);
-      await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailBodyTasks.createFromAppMessagingTab(emailBodyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditEmailBodyPageTargets.pathRegex);
     });
 
     await test.step('Navigate to the email bodies admin page', async () => {
-      await emailBodyAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.goto());
     });
 
     await test.step('Delete the email body', async () => {
-      await emailBodyRow.hover();
-      await emailBodyRow.getByTitle('Delete Email Body').click();
-      await emailBodyAdminPage.deleteEmailBodyDialog.deleteButton.click();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.deleteFromAdminPage(emailBodyName));
     });
 
     await test.step('Verify the email body was deleted', async () => {
-      await expect(emailBodyRow).not.toBeAttached();
+      await sysAdminActor.browse().check(EmailBodyAdminPageTargets.rowByName(emailBodyName)).isNotAttached();
     });
   });
 });
