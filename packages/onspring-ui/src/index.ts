@@ -21,3 +21,5 @@ export * from './authentication/auth.targets.js';
 export * from './authentication/auth.tasks.js';
 export * from './containers/containers.targets.js';
 export * from './containers/container.tasks.js';
+export * from './emailTemplates/emailTemplates.targets.js';
+export * from './emailTemplates/emailTemplate.tasks.js';

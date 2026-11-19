@@ -47,4 +47,15 @@ export const AdminTileTargets = {
     (name: string) =>
     (page: Page): Locator =>
       page.locator('[data-create-menu-for="card-create-button-Dashboards"]').getByText(name),
+
+  messagingTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Messaging")'),
+    }),
+  messagingTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Messaging'),
+  messagingCreateMenu: (page: Page): Locator => page.locator('[data-create-menu-for="card-create-button-Messaging"]'),
+  messagingMenuOption:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.locator('[data-create-menu-for="card-create-button-Messaging"]').getByText(name),
 };
