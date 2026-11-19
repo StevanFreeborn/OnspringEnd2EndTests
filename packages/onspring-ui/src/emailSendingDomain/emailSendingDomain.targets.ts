@@ -26,6 +26,16 @@ export const EditEmailSendingDomainPageTargets = {
   ownershipRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(1),
   dkimRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(2),
   returnPathRow: (page: Page): Locator => page.locator('.label:has-text("DNS Records") + .data .grid tbody tr').nth(3),
+  recordCell:
+    (recordType: 'ownership' | 'dkim' | 'returnPath', cellIndex: number): Target =>
+    (page: Page): Locator => {
+      const rowIndex = recordType === 'ownership' ? 1 : recordType === 'dkim' ? 2 : 3;
+      return page
+        .locator('.label:has-text("DNS Records") + .data .grid tbody tr')
+        .nth(rowIndex)
+        .locator('td')
+        .nth(cellIndex);
+    },
   recordTypeRow:
     (recordType: 'ownership' | 'dkim' | 'returnPath'): Target =>
     (page: Page): Locator => {

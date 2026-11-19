@@ -17,6 +17,7 @@ import {
   OptionTargets,
 } from './apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 
 export const AppTasks = {
   goto:
@@ -194,11 +195,13 @@ export const AppTasks = {
     (enable: boolean): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
-      const switchTarget = EditGeneralSettingsModalTargets.concurrentEditAlertStatusSwitch;
-      const currentChecked = (await actor.browse().locator(switchTarget).getAttribute('aria-checked')) === 'true';
-      if (currentChecked !== enable) {
-        await actor.browse().click(EditGeneralSettingsModalTargets.concurrentEditAlertStatusToggle);
-      }
+      await actor.attemptsTo(
+        StatusSwitchTasks.setAriaSwitch({
+          switchTarget: EditGeneralSettingsModalTargets.concurrentEditAlertStatusSwitch,
+          toggleTarget: EditGeneralSettingsModalTargets.concurrentEditAlertStatusToggle,
+          enabled: enable,
+        })
+      );
       await actor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     },
 

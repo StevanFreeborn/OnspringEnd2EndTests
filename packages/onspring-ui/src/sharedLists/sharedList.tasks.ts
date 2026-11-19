@@ -2,6 +2,7 @@ import { Response } from '@playwright/test';
 import { SharedList } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { EditSharedListPageTargets, SharedListsPageTargets } from './sharedLists.targets.js';
@@ -136,15 +137,13 @@ export const SharedListTasks = {
       await actor.browse().type(EditSharedListPageTargets.generalTab.nameInput, list.name);
       await actor.browse().type(EditSharedListPageTargets.generalTab.descriptionEditor, list.description);
 
-      const currentAriaChecked = await actor
-        .browse()
-        .locator(EditSharedListPageTargets.generalTab.statusSwitch)
-        .getAttribute('aria-checked');
-      const isCurrentlyChecked = currentAriaChecked === 'true';
-
-      if (list.status !== isCurrentlyChecked) {
-        await actor.browse().click(EditSharedListPageTargets.generalTab.statusToggle);
-      }
+      await actor.attemptsTo(
+        StatusSwitchTasks.setAriaSwitch({
+          switchTarget: EditSharedListPageTargets.generalTab.statusSwitch,
+          toggleTarget: EditSharedListPageTargets.generalTab.statusToggle,
+          enabled: list.status,
+        })
+      );
 
       const saveResponse = actor
         .browse()

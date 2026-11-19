@@ -105,6 +105,10 @@ export const EditEmailBodyPageTargets = {
     ruleContainer: (page: Page): Locator => page.locator('.label:has-text("Send Logic") + .data .rule-config'),
     fieldSelector: (page: Page): Locator =>
       page.locator('.label:has-text("Send Logic") + .data .rule-config .field .onx-selector'),
+    fieldTreeItem:
+      (name: string) =>
+      (page: Page): Locator =>
+        page.getByRole('treeitem', { name }).getByText(name),
     ruleOperatorSelect: (page: Page): Locator =>
       page.locator('.label:has-text("Send Logic") + .data .rule-config .rule-operator[role="listbox"]'),
     ruleOperatorOption:

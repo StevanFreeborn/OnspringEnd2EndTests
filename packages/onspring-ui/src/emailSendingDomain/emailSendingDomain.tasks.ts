@@ -1,6 +1,7 @@
 import { Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { EditEmailSendingDomainPageTargets, EmailSendingDomainPageTargets } from './emailSendingDomain.targets.js';
@@ -58,31 +59,11 @@ export const EmailSendingDomainTasks = {
       await actor.browse().waitForUrl(EditEmailSendingDomainPageTargets.pathRegex);
     },
 
-  scrollAllIntoView:
-    (): Task<WebActor> =>
-    async (actor: WebActor): Promise<void> => {
-      const pagerInfoText = await actor.browse().locator(EmailSendingDomainPageTargets.gridPagerInfo).innerText();
-      const totalNumOfItems = parseInt(pagerInfoText.trim().split(' ')[0], 10);
-
-      if (Number.isNaN(totalNumOfItems)) {
-        return;
-      }
-
-      const gridRows = actor.browse().locator(EmailSendingDomainPageTargets.grid).getByRole('row');
-      let itemRowsCount = await gridRows.count();
-      const scrollableElement = actor.browse().locator(EmailSendingDomainPageTargets.gridScrollableContent);
-
-      while (itemRowsCount < totalNumOfItems) {
-        const scrollResponse = actor
-          .browse()
-          .waitForResponse(
-            (r: Response) => r.url().includes(EmailSendingDomainPageTargets.getListPagePath) && r.status() === 200
-          );
-        await scrollableElement.evaluate((el: HTMLElement) => (el.scrollTop = el.scrollHeight));
-        await scrollResponse;
-        itemRowsCount = await gridRows.count();
-      }
-    },
+  scrollAllIntoView: (): Task<WebActor> =>
+    KendoGridTasks.scrollAllIntoView({
+      grid: EmailSendingDomainPageTargets.grid,
+      getListPagePath: EmailSendingDomainPageTargets.getListPagePath,
+    }),
 
   deleteEmailSendingDomain:
     (domain: string): Task<WebActor> =>

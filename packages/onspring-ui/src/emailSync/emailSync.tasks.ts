@@ -2,6 +2,8 @@ import { Response } from '@playwright/test';
 import { EmailSync } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { EditEmailSyncPageTargets, EmailSyncPageTargets } from './emailSync.targets.js';
@@ -111,18 +113,16 @@ export const EmailSyncTasks = {
       await actor.browse().fill(EditEmailSyncPageTargets.dataSyncTab.nameInput, emailSync.name);
 
       await actor.browse().click(EditEmailSyncPageTargets.dataSyncTab.appOrSurveySelector);
-      await actor.browse().click(page => page.getByRole('option', { name: emailSync.appOrSurvey }));
+      await actor.browse().click(EditEmailSyncPageTargets.optionByName(emailSync.appOrSurvey));
 
       await actor.browse().type(EditEmailSyncPageTargets.dataSyncTab.emailKeyInput, emailSync.emailKey);
 
-      const statusSwitchContainer = EditEmailSyncPageTargets.dataSyncTab.statusSwitch;
-      const switchLocator = actor.browse().locator(statusSwitchContainer).locator('.k-switch');
-      const switchClass = (await switchLocator.getAttribute('class')) || '';
-      const isCurrentlyOn = switchClass.includes('k-switch-on');
-
-      if (emailSync.status !== isCurrentlyOn) {
-        await switchLocator.click();
-      }
+      await actor.attemptsTo(
+        StatusSwitchTasks.setKendoSwitch({
+          switchTarget: EditEmailSyncPageTargets.dataSyncTab.statusSwitchToggle,
+          enabled: emailSync.status,
+        })
+      );
 
       // Data Mapping Tab
       await actor.browse().click(EditEmailSyncPageTargets.dataMappingTabButton);
@@ -131,25 +131,24 @@ export const EmailSyncTasks = {
         if (!value) continue;
 
         const mappedItemTarget: Target = EditEmailSyncPageTargets.dataMappingTab.mappedItem(value);
-        const mappedItem = actor.browse().locator(mappedItemTarget);
-        const mappedText = await mappedItem.textContent();
+        const mappedText = await actor.browse().textContent(mappedItemTarget);
 
         if (mappedText === key) continue;
 
         const sourceTarget: Target = EditEmailSyncPageTargets.dataMappingTab.sourceField(key);
         const dropZoneTarget: Target = EditEmailSyncPageTargets.dataMappingTab.targetDropZone(value);
 
-        await actor.browse().locator(dropZoneTarget).scrollIntoViewIfNeeded();
-        await actor.browse().locator(sourceTarget).dragTo(actor.browse().locator(dropZoneTarget));
+        await actor.browse().scrollIntoView(dropZoneTarget);
+        await actor.browse().dragTo(sourceTarget, dropZoneTarget);
       }
 
       // Data Sync Settings Tab
       await actor.browse().click(EditEmailSyncPageTargets.dataSyncSettingsTabButton);
       await actor.browse().click(EditEmailSyncPageTargets.dataSyncSettingsTab.syncTypeSelector);
-      await actor.browse().click(page => page.getByRole('option', { name: emailSync.syncType }));
+      await actor.browse().click(EditEmailSyncPageTargets.optionByName(emailSync.syncType));
 
       await actor.browse().click(EditEmailSyncPageTargets.dataSyncSettingsTab.messagingSelector);
-      await actor.browse().click(page => page.getByRole('option', { name: emailSync.messaging }));
+      await actor.browse().click(EditEmailSyncPageTargets.optionByName(emailSync.messaging));
     },
 
   save:
@@ -165,27 +164,11 @@ export const EmailSyncTasks = {
       await saveResponse;
     },
 
-  scrollAllIntoView:
-    (): Task<WebActor> =>
-    async (actor: WebActor): Promise<void> => {
-      const pager = actor.browse().locator(EmailSyncPageTargets.pagerInfo);
-      const pagerText = await pager.first().innerText();
-      const totalNum = parseInt(pagerText.trim().split(' ')[0], 10);
-
-      if (Number.isNaN(totalNum)) {
-        return;
-      }
-
-      const rows = actor.browse().locator(EmailSyncPageTargets.grid).getByRole('row');
-      const count = await rows.count();
-
-      if (count < totalNum) {
-        const scrollable = actor.browse().locator(EmailSyncPageTargets.scrollingContent).first();
-        await scrollable.evaluate((el: HTMLElement) => {
-          el.scrollTop = el.scrollHeight;
-        });
-      }
-    },
+  scrollAllIntoView: (): Task<WebActor> =>
+    KendoGridTasks.scrollAllIntoView({
+      grid: EmailSyncPageTargets.grid,
+      getListPagePath: EmailSyncPageTargets.getEmailSyncsPath,
+    }),
 
   deleteEmailSync:
     (name: string): Task<WebActor> =>

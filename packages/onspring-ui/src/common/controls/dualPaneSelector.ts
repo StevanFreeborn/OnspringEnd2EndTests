@@ -1,37 +1,54 @@
-import { FrameLocator } from '@playwright/test';
+import { FrameLocator, Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
-import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+
+const dualPaneTargets = {
+  selectList:
+    (containerTarget: Target): Target =>
+    (page: Page) =>
+      resolveTarget(page, containerTarget).locator('.selector-select-list, .selector-selected-list'),
+  selectedList:
+    (containerTarget: Target): Target =>
+    (page: Page) =>
+      resolveTarget(page, containerTarget).locator('.selector-selected-list'),
+  popup: (frame?: FrameLocator): Target =>
+    frame ? frame.locator('.selector-control:visible') : (page: Page) => page.locator('.selector-control:visible'),
+  unselectedOption:
+    (option: string, frame?: FrameLocator): Target =>
+    (page: Page) =>
+      resolveTarget(page, dualPaneTargets.popup(frame)).locator('.unselected-pane').getByText(option, { exact: true }),
+  selectedOption:
+    (option: string, frame?: FrameLocator): Target =>
+    (page: Page) =>
+      resolveTarget(page, dualPaneTargets.popup(frame)).locator('.selected-pane').getByText(option, { exact: true }),
+  closeButton:
+    (frame?: FrameLocator): Target =>
+    (page: Page) =>
+      resolveTarget(page, dualPaneTargets.popup(frame)).getByTitle('Close'),
+};
 
 export const DualPaneSelector = {
   selectOption:
     (containerTarget: Target, option: string, frame?: FrameLocator): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      const container = actor.browse().locator(containerTarget);
-      const selectedList = container.locator('.selector-select-list, .selector-selected-list');
-      const isAlreadySelected = (await selectedList.innerText()).includes(option);
-      if (!isAlreadySelected) {
-        await container.click();
-        const popup = frame
-          ? frame.locator('.selector-control:visible')
-          : actor.browse().locator(page => page.locator('.selector-control:visible'));
-        await popup.locator('.unselected-pane').getByText(option, { exact: true }).click();
-        await popup.getByTitle('Close').click();
+      const selectedText = await actor.browse().getText(dualPaneTargets.selectList(containerTarget));
+
+      if (!selectedText.includes(option)) {
+        await actor.browse().click(containerTarget);
+        await actor.browse().click(dualPaneTargets.unselectedOption(option, frame));
+        await actor.browse().click(dualPaneTargets.closeButton(frame));
       }
     },
 
   unselectOption:
     (containerTarget: Target, option: string, frame?: FrameLocator): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      const container = actor.browse().locator(containerTarget);
-      const selectedList = container.locator('.selector-selected-list');
-      const isSelected = (await selectedList.innerText()).includes(option);
-      if (isSelected) {
-        await container.click();
-        const popup = frame
-          ? frame.locator('.selector-control:visible')
-          : actor.browse().locator(page => page.locator('.selector-control:visible'));
-        await popup.locator('.selected-pane').getByText(option, { exact: true }).click();
-        await popup.getByTitle('Close').click();
+      const selectedText = await actor.browse().getText(dualPaneTargets.selectedList(containerTarget));
+
+      if (selectedText.includes(option)) {
+        await actor.browse().click(containerTarget);
+        await actor.browse().click(dualPaneTargets.selectedOption(option, frame));
+        await actor.browse().click(dualPaneTargets.closeButton(frame));
       }
     },
 };

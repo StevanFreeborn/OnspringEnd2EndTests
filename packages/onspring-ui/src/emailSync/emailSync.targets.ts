@@ -23,6 +23,10 @@ export const EmailSyncPageTargets = {
 export const EditEmailSyncPageTargets = {
   pathRegex: /\/Admin\/Integration\/EmailSync\/\d+\/Edit/,
   saveChangesLink: (page: Page): Locator => page.getByRole('link', { name: 'Save Changes' }),
+  optionByName:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.getByRole('option', { name }),
 
   dataSyncTabButton: (page: Page): Locator => page.getByRole('tab', { name: 'Data Sync', exact: true }),
   dataMappingTabButton: (page: Page): Locator => page.getByRole('tab', { name: 'Data Mapping' }),
@@ -34,6 +38,7 @@ export const EditEmailSyncPageTargets = {
       page.locator('.label:has-text("App/Survey") + .data').getByRole('listbox'),
     emailKeyInput: (page: Page): Locator => page.locator('.label:has-text("Email Key") + .data').getByRole('textbox'),
     statusSwitch: (page: Page): Locator => page.locator('.label:has-text("Status") + .data'),
+    statusSwitchToggle: (page: Page): Locator => page.locator('.label:has-text("Status") + .data .k-switch'),
   },
 
   dataMappingTab: {

@@ -2,6 +2,7 @@ import { Response } from '@playwright/test';
 import { EmailTemplate } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { EditEmailTemplatePageTargets, EmailTemplatesPageTargets } from './emailTemplates.targets.js';
@@ -114,16 +115,13 @@ export const EmailTemplateTasks = {
       await actor.browse().fill(EditEmailTemplatePageTargets.nameInput, template.name);
       await actor.browse().fill(EditEmailTemplatePageTargets.descriptionEditor, template.description);
 
-      const statusChecked = await actor
-        .browse()
-        .locator(EditEmailTemplatePageTargets.statusSwitch)
-        .getAttribute('aria-checked');
-
-      if (template.status && statusChecked === 'false') {
-        await actor.browse().click(EditEmailTemplatePageTargets.statusToggle);
-      } else if (!template.status && statusChecked === 'true') {
-        await actor.browse().click(EditEmailTemplatePageTargets.statusToggle);
-      }
+      await actor.attemptsTo(
+        StatusSwitchTasks.setAriaSwitch({
+          switchTarget: EditEmailTemplatePageTargets.statusSwitch,
+          toggleTarget: EditEmailTemplatePageTargets.statusToggle,
+          enabled: template.status,
+        })
+      );
 
       const saveResponse = actor
         .browse()

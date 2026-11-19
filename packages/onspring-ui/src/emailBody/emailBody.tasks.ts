@@ -3,6 +3,7 @@ import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { AppMessagingTabTargets } from '../apps/apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets } from '../common/navs/adminNav.targets.js';
 import { EditEmailBodyPageTargets, EmailBodyAdminPageTargets } from './emailBody.targets.js';
@@ -126,12 +127,13 @@ export const EmailBodyTasks = {
       await actor.browse().fill(EditEmailBodyPageTargets.generalTab.nameInput, emailBody.name);
 
       if (emailBody.status) {
-        const switchLocator = actor.browse().locator(EditEmailBodyPageTargets.generalTab.statusSwitch);
-        const checked = await switchLocator.getAttribute('aria-checked');
-
-        if (checked === 'false') {
-          await actor.browse().click(EditEmailBodyPageTargets.generalTab.statusToggle);
-        }
+        await actor.attemptsTo(
+          StatusSwitchTasks.setAriaSwitch({
+            switchTarget: EditEmailBodyPageTargets.generalTab.statusSwitch,
+            toggleTarget: EditEmailBodyPageTargets.generalTab.statusToggle,
+            enabled: true,
+          })
+        );
       }
 
       // Contents Tab
@@ -155,14 +157,14 @@ export const EmailBodyTasks = {
       await actor.browse().fill(EditEmailBodyPageTargets.senderTab.fromNameInput, emailBody.fromName);
       const [username, domain] = emailBody.fromAddress.split('@');
       await actor.browse().fill(EditEmailBodyPageTargets.senderTab.fromAddressLocalPartInput, username);
-      const domainSelect = actor.browse().locator(EditEmailBodyPageTargets.senderTab.fromAddressDomainSelect);
-      const isDomainSelectVisible = await domainSelect.isVisible();
+      const domainSelect = EditEmailBodyPageTargets.senderTab.fromAddressDomainSelect;
+      const isDomainSelectVisible = await actor.browse().isVisible(domainSelect);
 
       if (isDomainSelectVisible) {
-        const text = await domainSelect.innerText();
+        const text = await actor.browse().getText(domainSelect);
 
         if (!text.includes(domain)) {
-          await domainSelect.click();
+          await actor.browse().click(domainSelect);
           await actor.browse().click(EditEmailBodyPageTargets.senderTab.fromAddressDomainOption(domain));
         }
       }
@@ -175,9 +177,7 @@ export const EmailBodyTasks = {
           if (rule instanceof TextRuleWithValue) {
             // Select field
             await actor.browse().click(EditEmailBodyPageTargets.rulesTab.fieldSelector);
-            await actor
-              .browse()
-              .click(page => page.getByRole('treeitem', { name: rule.fieldName }).getByText(rule.fieldName));
+            await actor.browse().click(EditEmailBodyPageTargets.rulesTab.fieldTreeItem(rule.fieldName));
             // Select operator
             await actor.browse().click(EditEmailBodyPageTargets.rulesTab.ruleOperatorSelect);
             await actor.browse().click(EditEmailBodyPageTargets.rulesTab.ruleOperatorOption(rule.operator));
