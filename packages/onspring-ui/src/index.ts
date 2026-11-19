@@ -23,3 +23,7 @@ export * from './containers/containers.targets.js';
 export * from './containers/container.tasks.js';
 export * from './emailTemplates/emailTemplates.targets.js';
 export * from './emailTemplates/emailTemplate.tasks.js';
+export * from './emailSendingDomain/emailSendingDomain.targets.js';
+export * from './emailSendingDomain/emailSendingDomain.tasks.js';
+export * from './emailSendingDomain/emailSendingDomain.questions.js';
+export * from './emailSendingDomain/emailSendingDomain.types.js';
