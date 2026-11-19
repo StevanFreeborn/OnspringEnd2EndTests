@@ -70,4 +70,16 @@ export const AdminTileTargets = {
     (name: string) =>
     (page: Page): Locator =>
       page.locator('[data-create-menu-for="card-create-button-InstanceConfig"]').getByText(name),
+
+  integrationTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Integration")'),
+    }),
+  integrationTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Integration'),
+  integrationCreateMenu: (page: Page): Locator =>
+    page.locator('[data-create-menu-for="card-create-button-Integration"]'),
+  integrationMenuOption:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.locator('[data-create-menu-for="card-create-button-Integration"]').getByText(name),
 };

@@ -27,6 +27,10 @@ export const AppTasks = {
     await getAppsListResponse;
   },
 
+  gotoApp: (appId: number): Task<WebActor> => async (actor: WebActor): Promise<void> => {
+    await actor.browse().goto(`/Admin/App/${appId}`);
+  },
+
   create: (appName: string): Task<WebActor> => async (actor: WebActor): Promise<void> => {
     await actor.attemptsTo(AppTasks.goto());
     await actor.browse().click(AppsPageTargets.createAppButton);

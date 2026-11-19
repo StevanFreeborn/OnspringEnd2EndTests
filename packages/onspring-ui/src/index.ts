@@ -27,3 +27,5 @@ export * from './emailSendingDomain/emailSendingDomain.targets.js';
 export * from './emailSendingDomain/emailSendingDomain.tasks.js';
 export * from './emailSendingDomain/emailSendingDomain.questions.js';
 export * from './emailSendingDomain/emailSendingDomain.types.js';
+export * from './emailSync/emailSync.targets.js';
+export * from './emailSync/emailSync.tasks.js';
