@@ -40,3 +40,5 @@ export * from './sendingNumber/sendingNumber.tasks.js';
 export * from './sendingNumber/sendingNumber.questions.js';
 export * from './textMessage/textMessage.targets.js';
 export * from './textMessage/textMessage.tasks.js';
+export * from './slackMessage/slackMessage.targets.js';
+export * from './slackMessage/slackMessage.tasks.js';

@@ -178,6 +178,15 @@ export const AppMessagingTabTargets = {
     page.locator('#grid-text-messages').getByRole('row', { name }).getByTitle('Delete Text Message'),
   editTextMessageButtonInRow: (name: string) => (page: Page) =>
     page.locator('#grid-text-messages').getByRole('row', { name }).getByTitle('Edit Text Message'),
+
+  addSlackMessageLink: (page: Page) => page.getByRole('link', { name: 'Add Slack Message' }),
+  slackMessageGrid: (page: Page) => page.locator('#grid-slack-messages'),
+  slackMessageRowByName: (name: string) => (page: Page) =>
+    page.locator('#grid-slack-messages').getByRole('row', { name }),
+  deleteSlackMessageButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Delete Slack Message'),
+  editSlackMessageButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Edit Slack Message'),
 };
 
 export const AppLayoutTabTargets = {

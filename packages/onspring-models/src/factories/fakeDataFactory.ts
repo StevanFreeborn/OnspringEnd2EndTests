@@ -101,6 +101,11 @@ export class FakeDataFactory {
     return `${uniqueId}-${TEST_TEXT_MESSAGE_NAME}`;
   }
 
+  static createFakeSlackMessageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_SLACK_MESSAGE_NAME}`;
+  }
+
   static createFakeDataConnectorName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_CONNECTOR_NAME}`;
