@@ -1,25 +1,22 @@
+import {
+  EditEmailSendingDomainPageTargets,
+  EmailSendingDomainPageTargets,
+  EmailSendingDomainQuestions,
+  EmailSendingDomainTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { Retry } from '@stevanfreeborn/screenplay-playwright';
 import { env } from '../../env';
 import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { EditEmailSendingDomainPage } from '../../pageObjectModels/emailSendingDomain/editEmailSendingDomainPage';
-import { EmailSendingDomainAdminPage } from '../../pageObjectModels/emailSendingDomain/emailSendingDomainAdminPage';
 import { AddDnsRecordsResponse, CloudflareService, IDnsService } from '../../services/cloudflareService';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
 
 type EmailSendingDomainTestFixtures = {
-  adminHomePage: AdminHomePage;
-  editEmailSendingDomainPage: EditEmailSendingDomainPage;
-  emailSendingDomainAdminPage: EmailSendingDomainAdminPage;
   dnsService: IDnsService;
 };
 
 const test = base.extend<EmailSendingDomainTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  editEmailSendingDomainPage: async ({ sysAdminPage }, use) => await use(new EditEmailSendingDomainPage(sysAdminPage)),
-  emailSendingDomainAdminPage: async ({ sysAdminPage }, use) =>
-    await use(new EmailSendingDomainAdminPage(sysAdminPage)),
   dnsService: async ({}, use) => await use(new CloudflareService(env.CLOUDFLARE_ZONE_ID!, env.CLOUDFLARE_API_KEY!)),
 });
 
@@ -36,15 +33,16 @@ test.describe(
       test.skip(environment.isFedspring(), 'This feature is not applicable to the FEDSPRING environment');
     });
 
-    test.afterEach(async ({ emailSendingDomainAdminPage }) => {
-      await emailSendingDomainAdminPage.goto();
-      await emailSendingDomainAdminPage.deleteEmailSendingDomains(emailSendingDomainsToDelete);
+    test.afterEach(async ({ sysAdminActor }) => {
+      await sysAdminActor.attemptsTo(
+        EmailSendingDomainTasks.goto(),
+        EmailSendingDomainTasks.deleteEmailSendingDomains(emailSendingDomainsToDelete)
+      );
       emailSendingDomainsToDelete = [];
     });
 
     test('Create an Email Sending Domain via the create button on the header of the admin home page', async ({
-      adminHomePage,
-      editEmailSendingDomainPage,
+      sysAdminActor,
     }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -55,22 +53,24 @@ test.describe(
       emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the admin home page', async () => {
-        await adminHomePage.goto();
+        await sysAdminActor.browse().goto('/Admin/Home');
       });
 
       await test.step('Create an email sending domain', async () => {
-        await adminHomePage.createEmailSendingDomainUsingHeaderCreateButton(emailSendingDomain);
-        await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.createViaHeader(emailSendingDomain));
+        await sysAdminActor.browse().checkPage().hasUrl(EditEmailSendingDomainPageTargets.pathRegex);
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+        await sysAdminActor
+          .browse()
+          .check(EditEmailSendingDomainPageTargets.domainName)
+          .hasText(emailSendingDomain);
       });
     });
 
     test('Create an Email Sending Domain via the create button on the Instance tile on the admin home page', async ({
-      adminHomePage,
-      editEmailSendingDomainPage,
+      sysAdminActor,
     }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -81,22 +81,24 @@ test.describe(
       emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the admin home page', async () => {
-        await adminHomePage.goto();
+        await sysAdminActor.browse().goto('/Admin/Home');
       });
 
       await test.step('Create an email sending domain', async () => {
-        await adminHomePage.createEmailSendingDomainUsingInstanceTileCreateButton(emailSendingDomain);
-        await adminHomePage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.createViaTile(emailSendingDomain));
+        await sysAdminActor.browse().checkPage().hasUrl(EditEmailSendingDomainPageTargets.pathRegex);
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+        await sysAdminActor
+          .browse()
+          .check(EditEmailSendingDomainPageTargets.domainName)
+          .hasText(emailSendingDomain);
       });
     });
 
     test('Create an Email Sending Domain via the "Create Email Sending Domain" button on the email sending domain home page', async ({
-      emailSendingDomainAdminPage,
-      editEmailSendingDomainPage,
+      sysAdminActor,
     }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
@@ -107,23 +109,22 @@ test.describe(
       emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the email sending domain home page', async () => {
-        await emailSendingDomainAdminPage.goto();
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.goto());
       });
 
       await test.step('Create an email sending domain', async () => {
-        await emailSendingDomainAdminPage.createEmailSendingDomain(emailSendingDomain);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.create(emailSendingDomain));
       });
 
       await test.step('Verify the email sending domain was created', async () => {
-        await expect(editEmailSendingDomainPage.name()).toHaveText(emailSendingDomain);
+        await sysAdminActor
+          .browse()
+          .check(EditEmailSendingDomainPageTargets.domainName)
+          .hasText(emailSendingDomain);
       });
     });
 
-    test('Setup an verify an email sending domain', async ({
-      emailSendingDomainAdminPage,
-      editEmailSendingDomainPage,
-      dnsService,
-    }) => {
+    test('Setup an verify an email sending domain', async ({ sysAdminActor, dnsService }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-370',
@@ -136,50 +137,46 @@ test.describe(
       emailSendingDomainsToDelete.push(emailSendingDomain);
 
       await test.step('Navigate to the email sending domain admin page', async () => {
-        await emailSendingDomainAdminPage.goto();
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.goto());
       });
 
       await test.step('Create an email sending domain', async () => {
-        await emailSendingDomainAdminPage.createEmailSendingDomain(emailSendingDomain);
-        await emailSendingDomainAdminPage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.create(emailSendingDomain));
+        await sysAdminActor.browse().checkPage().hasUrl(EditEmailSendingDomainPageTargets.pathRegex);
       });
 
       await test.step('Create DNS records for the email sending domain', async () => {
-        const dnsRecords = await editEmailSendingDomainPage.dnsRecords();
+        const dnsRecords = await sysAdminActor.asks(EmailSendingDomainQuestions.dnsRecords());
         dnsRecordIds = await dnsService.addDnsRecordsForCustomDomain(dnsRecords);
         expect(dnsRecordIds).not.toBeNull();
       });
 
       await test.step('Wait for 30 seconds before making first verification attempts', async () => {
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await editEmailSendingDomainPage.page.waitForTimeout(30_000);
+        await sysAdminActor.browse().waitForTimeout(30_000);
       });
 
       await test.step('Verify the ownership record', async () => {
-        await expect(async () => {
-          const result = await editEmailSendingDomainPage.verifyOwnershipRecord();
-          expect(result).toBe(true);
-        }).toPass({
-          intervals: [30_000],
-        });
+        await sysAdminActor.attemptsTo(
+          Retry.until(EmailSendingDomainTasks.verifyRecord('ownership'), {
+            intervals: [30_000],
+          })
+        );
       });
 
       await test.step('Verify the DKIM record', async () => {
-        await expect(async () => {
-          const result = await editEmailSendingDomainPage.verifyDkimRecord();
-          expect(result).toBe(true);
-        }).toPass({
-          intervals: [30_000],
-        });
+        await sysAdminActor.attemptsTo(
+          Retry.until(EmailSendingDomainTasks.verifyRecord('dkim'), {
+            intervals: [30_000],
+          })
+        );
       });
 
       await test.step('Verify the Return Path record', async () => {
-        await expect(async () => {
-          const result = await editEmailSendingDomainPage.verifyReturnPathRecord();
-          expect(result).toBe(true);
-        }).toPass({
-          intervals: [30_000],
-        });
+        await sysAdminActor.attemptsTo(
+          Retry.until(EmailSendingDomainTasks.verifyRecord('returnPath'), {
+            intervals: [30_000],
+          })
+        );
       });
 
       await test.step('Delete the DNS records created', async () => {
@@ -189,10 +186,7 @@ test.describe(
       });
     });
 
-    test('Delete a custom email sending domain', async ({
-      emailSendingDomainAdminPage,
-      editEmailSendingDomainPage,
-    }) => {
+    test('Delete a custom email sending domain', async ({ sysAdminActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-371',
@@ -201,25 +195,27 @@ test.describe(
       const emailSendingDomain = FakeDataFactory.createFakeCustomEmailSendingDomain();
 
       await test.step('Navigate to the email sending domain admin page', async () => {
-        await emailSendingDomainAdminPage.goto();
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.goto());
       });
 
       await test.step('Create an email sending domain to delete', async () => {
-        await emailSendingDomainAdminPage.createEmailSendingDomain(emailSendingDomain);
-        await emailSendingDomainAdminPage.page.waitForURL(editEmailSendingDomainPage.pathRegex);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.create(emailSendingDomain));
+        await sysAdminActor.browse().checkPage().hasUrl(EditEmailSendingDomainPageTargets.pathRegex);
       });
 
       await test.step('Navigate back to the email sending domain admin page', async () => {
-        await emailSendingDomainAdminPage.goto();
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.goto());
       });
 
       await test.step('Delete the email sending domain', async () => {
-        await emailSendingDomainAdminPage.deleteEmailSendingDomain(emailSendingDomain);
+        await sysAdminActor.attemptsTo(EmailSendingDomainTasks.deleteEmailSendingDomain(emailSendingDomain));
       });
 
       await test.step('Verify the email sending domain was deleted', async () => {
-        const row = await emailSendingDomainAdminPage.getEmailSendingDomainRowByName(emailSendingDomain);
-        await expect(row).toBeHidden();
+        await sysAdminActor
+          .browse()
+          .check(EmailSendingDomainPageTargets.rowByName(emailSendingDomain))
+          .isNotAttached();
       });
     });
   }
