@@ -143,5 +143,6 @@ export { EmailSyncFixture, EmailSyncFixtureBuilder, emailSync } from './emailSyn
 export { EmailBodyFixture, EmailBodyFixtureBuilder } from './emailBody.fixtures';
 export { SendingNumberFixture, SendingNumberFixtureBuilder, sendingNumber } from './sendingNumber.fixtures';
 export { TextMessageFixture, TextMessageFixtureBuilder } from './textMessage.fixtures';
+export { SlackMessageFixture, SlackMessageFixtureBuilder } from './slackMessage.fixtures';
 
 export * from '@playwright/test';
