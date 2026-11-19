@@ -2,6 +2,11 @@ import { Locator, Page } from '@playwright/test';
 
 export const CreateDialogTargets = {
   nameInput: (page: Page): Locator => page.locator('input#Name'),
+  appSelect: (page: Page): Locator => page.getByRole('listbox', { name: 'App/Survey' }),
+  appOption:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.getByRole('option', { name }),
   saveButton: (page: Page): Locator => page.getByRole('button', { name: 'Save' }),
   continueButton: (page: Page): Locator => page.getByRole('button', { name: 'Continue' }),
   copyFromRadioButton: (page: Page): Locator => page.getByText('Copy from'),

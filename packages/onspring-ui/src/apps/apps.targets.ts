@@ -38,6 +38,7 @@ export const AppDetailTargets = {
   closeButton: (page: Page) => page.locator('a:has-text("Close")'),
   generalTabButton: (page: Page) => page.getByRole('tab', { name: 'General' }),
   layoutTabButton: (page: Page) => page.getByRole('tab', { name: 'Layout' }),
+  messagingTabButton: (page: Page) => page.getByRole('tab', { name: 'Messaging' }),
 
   generalTab: {
     name: (page: Page) => page.locator(createSettingSelector('Name')),
@@ -160,7 +161,51 @@ export const EditNotesSettingsModalTargets = {
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
 };
 
+export const AppMessagingTabTargets = {
+  addEmailBodyLink: (page: Page) => page.getByRole('link', { name: 'Add Email Body' }),
+  emailBodyGrid: (page: Page) => page.locator('#grid-emails'),
+  rowByName: (name: string) => (page: Page) => page.locator('#grid-emails').getByRole('row', { name }),
+  deleteButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-emails').getByRole('row', { name }).getByTitle('Delete Email Body'),
+  editButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-emails').getByRole('row', { name }).getByTitle('Edit Email Body'),
+};
+
 export const AppLayoutTabTargets = {
+  layoutsGrid: (page: Page) => page.locator('#layout-grid, .layouts-grid, #grid'),
+  layoutRowByName: (name: string) => (page: Page) =>
+    page.locator('#layout-grid, .layouts-grid, #grid').getByRole('row', { name }),
+  getLayoutDesignPathRegex: /\/Admin\/App\/Layout\/\d+\/Design/,
+
+  designer: {
+    modal: (page: Page) => page.locator('#layout-designer-modal, .layout-designer-modal, #designer'),
+    fieldsTabButton: (page: Page) =>
+      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: 'Fields' }),
+    objectsTabButton: (page: Page) =>
+      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: 'Objects' }),
+    addFieldButton: (page: Page) =>
+      page
+        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
+        .getByRole('button', { name: 'Add Field' }),
+    fieldFromBank: (fieldName: string) => (page: Page) =>
+      page
+        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
+        .locator(`.field-bank .draggable:has-text("${fieldName}"), .fields-list .draggable:has-text("${fieldName}")`),
+    tabByName: (tabName: string) => (page: Page) =>
+      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: tabName }),
+    itemDropzone: (params: { tabName: string; sectionName: string; column: number; row: number }) => (page: Page) =>
+      page
+        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
+        .locator(
+          `[data-tab-name="${params.tabName}"] [data-section-name="${params.sectionName}"] .dropzone, [data-tab-name="${params.tabName}"] [data-section-name="${params.sectionName}"] .layout-item-dropzone`
+        )
+        .first(),
+    saveAndCloseButton: (page: Page) =>
+      page
+        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
+        .getByRole('button', { name: 'Save & Close' }),
+  },
+
   addFieldButton: (page: Page) => page.getByText('Add Field'),
   addLayoutItemMenu: (itemType: string) => (page: Page) =>
     page.locator('[data-add-menu="layout-item"]').first().getByText(itemType, { exact: true }),
