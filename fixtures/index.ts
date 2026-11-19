@@ -134,5 +134,10 @@ export { SharedListFixture, SharedListFixtureBuilder, sharedList } from './share
 export { UserFixture, UserFixtureBuilder, user } from './user.fixtures';
 export { ContainerFixture, ContainerFixtureBuilder, container } from './container.fixtures';
 export { EmailTemplateFixture, EmailTemplateFixtureBuilder, emailTemplate } from './emailTemplate.fixtures';
+export {
+  EmailSendingDomainFixture,
+  EmailSendingDomainFixtureBuilder,
+  emailSendingDomain,
+} from './emailSendingDomain.fixtures';
 
 export * from '@playwright/test';
