@@ -169,6 +169,15 @@ export const AppMessagingTabTargets = {
     page.locator('#grid-emails').getByRole('row', { name }).getByTitle('Delete Email Body'),
   editButtonInRow: (name: string) => (page: Page) =>
     page.locator('#grid-emails').getByRole('row', { name }).getByTitle('Edit Email Body'),
+
+  addTextMessageLink: (page: Page) => page.getByRole('link', { name: 'Add Text Message' }),
+  textMessageGrid: (page: Page) => page.locator('#grid-text-messages'),
+  textMessageRowByName: (name: string) => (page: Page) =>
+    page.locator('#grid-text-messages').getByRole('row', { name }),
+  deleteTextMessageButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-text-messages').getByRole('row', { name }).getByTitle('Delete Text Message'),
+  editTextMessageButtonInRow: (name: string) => (page: Page) =>
+    page.locator('#grid-text-messages').getByRole('row', { name }).getByTitle('Edit Text Message'),
 };
 
 export const AppLayoutTabTargets = {

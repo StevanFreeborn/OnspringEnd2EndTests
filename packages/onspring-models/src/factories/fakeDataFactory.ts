@@ -12,6 +12,7 @@ export const TEST_DATA_IMPORT_NAME = 'data-import-test';
 export const TEST_EMAIL_BODY_NAME = 'email-body-test';
 export const TEST_LIST_NAME = 'list-test';
 export const TEST_SENDING_NUMBER_NAME = 'sending-number-test';
+export const TEST_TEXT_MESSAGE_NAME = 'text-message-test';
 export const TEST_CONNECTOR_NAME = 'connector-test';
 export const TEST_DASHBOARD_NAME = 'dashboard-test';
 export const TEST_DASHBOARD_OBJECT_NAME = 'object-test';
@@ -93,6 +94,11 @@ export class FakeDataFactory {
   static createFakeSendingNumberName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_SENDING_NUMBER_NAME}`;
+  }
+
+  static createFakeTextMessageName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_TEXT_MESSAGE_NAME}`;
   }
 
   static createFakeDataConnectorName() {
