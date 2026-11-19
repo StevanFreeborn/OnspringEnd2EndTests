@@ -25,9 +25,10 @@ Actor ("Who")
 
 | Primitive     | Role                                                            | Signature                                                                              |
 |:--------------|:----------------------------------------------------------------|:---------------------------------------------------------------------------------------|
-| **Actor**     | The persona running the test. Holds state and abilities.        | `actor.attemptsTo(...tasks)`<br>`actor.browse()`                                       |
+| **Actor**     | The persona running the test. Holds state and abilities.        | `actor.attemptsTo(...tasks)`<br>`actor.asks(question)`<br>`actor.browse()`             |
 | **Ability**   | Gives the actor access to an automation tool. Wraps the driver. | `BrowseTheWeb.using(page)`                                                             |
-| **Task**      | A business action or workflow.                                  | `type Task<TActor> = (actor: TActor) => Promise<void>`                                 |
+| **Task**      | A business action or command causing a state change.            | `type Task<TActor> = (actor: TActor) => Promise<void>`                                 |
+| **Question**  | A query retrieving data or inspecting application state.        | `type Question<TActor, TAnswer> = (actor: TActor) => Promise<TAnswer>`                 |
 | **Target**    | A function resolving a locator from a page.                     | `type Target = Locator \| ((page: Page) => Locator)`                                   |
 | **Action**    | A low-level browser interaction on the ability.                 | `actor.browse().click(target)`<br>`actor.browse().type(target, val)`                   |
 | **Assertion** | Web-first, retrying validations via Playwright matchers.        | `actor.browse().check(target).isVisible()`<br>`actor.browse().checkPage().hasUrl(...)` |
@@ -40,6 +41,9 @@ Playwright locators already auto-wait, and its `expect` matchers already retry. 
 
 1. Low-level actions live directly on the ability: `actor.browse().click(target)`.
 2. Assertions wrap Playwright's `expect` matchers directly: `actor.browse().check(target)...`.
+3. Commands that cause state changes are modeled as `Task<TActor>` and performed via `actor.attemptsTo(...)`.
+4. Retrying task sequences (e.g. eventual consistency verification loops) are wrapped using `Retry.until(tasks, options)`.
+5. Queries that extract values from the UI for external use (e.g. reading DNS keys for an external API) are modeled as `Question<TActor, TAnswer>` and asked via `actor.asks(...)`.
 
 ## System Layers
 

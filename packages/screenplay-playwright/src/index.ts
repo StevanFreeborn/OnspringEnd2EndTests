@@ -1,5 +1,5 @@
 import { expect, Locator, Page, Response } from '@playwright/test';
-import { Ability, Actor } from '@stevanfreeborn/screenplay';
+import { Ability, Actor, Task } from '@stevanfreeborn/screenplay';
 
 export type Target = Locator | ((page: Page) => Locator);
 
@@ -225,3 +225,30 @@ export class WebActor extends Actor {
     return this.browserActions;
   }
 }
+
+export interface RetryOptions {
+  intervals?: number[];
+  timeout?: number;
+}
+
+/**
+ * Task wrapper that retries tasks using Playwright's expect.toPass until they succeed or timeout.
+ */
+export const Retry = {
+  until:
+    <TActor extends Actor = WebActor>(
+      tasks: Task<TActor> | Task<TActor>[],
+      options?: RetryOptions
+    ): Task<TActor> =>
+    async (actor: TActor): Promise<void> => {
+      const taskList = Array.isArray(tasks) ? tasks : [tasks];
+      await expect(async () => {
+        for (const task of taskList) {
+          await task(actor);
+        }
+      }).toPass(options);
+    },
+};
+
+export { Ability, AbilityType, Actor, Question, Task } from '@stevanfreeborn/screenplay';
+

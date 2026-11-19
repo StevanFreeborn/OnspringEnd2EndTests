@@ -12,10 +12,16 @@ export interface Ability {
 export type AbilityType<T extends Ability = Ability> = Function & { prototype: T };
 
 /**
- * A reusable task that an Actor can perform.
+ * A reusable task that an Actor can perform to cause a state change or side effect.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Task<TActor = any> = (actor: TActor) => Promise<void>;
+
+/**
+ * A question that queries information from the application state without causing side effects.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Question<TActor = any, TAnswer = any> = (actor: TActor) => Promise<TAnswer>;
 
 /**
  * Represents a user or system interacting with the application under test.
@@ -73,5 +79,12 @@ export class Actor {
     for (const task of tasks) {
       await task(this);
     }
+  }
+
+  /**
+   * Asks a Question to retrieve information from the application.
+   */
+  async asks<TAnswer>(question: Question<this, TAnswer>): Promise<TAnswer> {
+    return await question(this);
   }
 }
