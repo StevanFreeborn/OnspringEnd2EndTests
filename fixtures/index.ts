@@ -139,5 +139,6 @@ export {
   EmailSendingDomainFixtureBuilder,
   emailSendingDomain,
 } from './emailSendingDomain.fixtures';
+export { EmailSyncFixture, EmailSyncFixtureBuilder, emailSync } from './emailSync.fixtures';
 
 export * from '@playwright/test';
