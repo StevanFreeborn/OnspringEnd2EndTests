@@ -1,34 +1,22 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { EmailTemplate } from '../../models/emailTemplate';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { EditEmailTemplatePage } from '../../pageObjectModels/messaging/editEmailTemplatePage';
-import { EmailTemplateAdminPage } from '../../pageObjectModels/messaging/emailTemplateAdminPage';
+import { EmailTemplate, FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import {
+  EditEmailTemplatePageTargets,
+  EmailTemplatesPageTargets,
+  EmailTemplateTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-
-type EmailTemplateTestFixtures = {
-  adminHomePage: AdminHomePage;
-  editEmailTemplatePage: EditEmailTemplatePage;
-  emailTemplateAdminPage: EmailTemplateAdminPage;
-};
-
-const test = base.extend<EmailTemplateTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  editEmailTemplatePage: async ({ sysAdminPage }, use) => await use(new EditEmailTemplatePage(sysAdminPage)),
-  emailTemplateAdminPage: async ({ sysAdminPage }, use) => await use(new EmailTemplateAdminPage(sysAdminPage)),
-});
 
 test.describe('email template', () => {
   let emailTemplatesToDelete: string[] = [];
 
-  test.afterEach(async ({ emailTemplateAdminPage }) => {
-    await emailTemplateAdminPage.deleteTemplates(emailTemplatesToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(EmailTemplateTasks.deleteTemplates(emailTemplatesToDelete));
     emailTemplatesToDelete = [];
   });
 
   test('Create an Email Template via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -39,22 +27,20 @@ test.describe('email template', () => {
     emailTemplatesToDelete.push(emailTemplateName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email template', async () => {
-      await adminHomePage.createEmailTemplateUsingHeaderCreateButton(emailTemplateName);
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.createViaHeader(emailTemplateName));
     });
 
     await test.step('Verify the email template is created', async () => {
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateName);
     });
   });
 
   test('Create an Email Template via the create button on the Messaging tile on the admin home page', async ({
-    adminHomePage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -65,22 +51,20 @@ test.describe('email template', () => {
     emailTemplatesToDelete.push(emailTemplateName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email template using the Messaging tile', async () => {
-      await adminHomePage.createEmailTemplateUsingMessagingTile(emailTemplateName);
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.createViaTile(emailTemplateName));
     });
 
     await test.step('Verify the email template is created', async () => {
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateName);
     });
   });
 
   test('Create an Email Template via the "Create Email Template" button on the email template home page', async ({
-    emailTemplateAdminPage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -91,22 +75,20 @@ test.describe('email template', () => {
     emailTemplatesToDelete.push(emailTemplateName);
 
     await test.step('Navigate to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Create the email template', async () => {
-      await emailTemplateAdminPage.createTemplate(emailTemplateName);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.create(emailTemplateName));
     });
 
     await test.step('Verify the email template is created', async () => {
-      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateName);
     });
   });
 
   test('Create a copy of an Email Template via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -119,31 +101,28 @@ test.describe('email template', () => {
     emailTemplatesToDelete.push(emailTemplateCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email template to copy', async () => {
-      await adminHomePage.createEmailTemplateUsingHeaderCreateButton(emailTemplateName);
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.createViaHeader(emailTemplateName));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create a copy of the email template', async () => {
-      await adminHomePage.createEmailTemplateCopyUsingHeaderCreateButton(emailTemplateName, emailTemplateCopyName);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.copyViaHeader(emailTemplateName, emailTemplateCopyName));
     });
 
     await test.step('Verify the email template is copied', async () => {
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateCopyName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateCopyName);
     });
   });
 
   test('Create a copy of an Email Template via the create button on the Messaging tile on the admin home page', async ({
-    adminHomePage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -152,33 +131,32 @@ test.describe('email template', () => {
 
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
     const emailTemplateCopyName = FakeDataFactory.createFakeEmailTemplateName();
+    emailTemplatesToDelete.push(emailTemplateName);
+    emailTemplatesToDelete.push(emailTemplateCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the email template to copy', async () => {
-      await adminHomePage.createEmailTemplateUsingMessagingTile(emailTemplateName);
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.createViaTile(emailTemplateName));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create a copy of the email template using the Messaging tile', async () => {
-      await adminHomePage.createEmailTemplateCopyUsingMessagingTile(emailTemplateName, emailTemplateCopyName);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.copyViaTile(emailTemplateName, emailTemplateCopyName));
     });
 
     await test.step('Verify the email template is copied', async () => {
-      await adminHomePage.page.waitForURL(editEmailTemplatePage.pathRegex);
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateCopyName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateCopyName);
     });
   });
 
   test('Create a copy of an Email Template via the "Create Email Template" button on the email templates home page.', async ({
-    emailTemplateAdminPage,
-    editEmailTemplatePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -191,60 +169,61 @@ test.describe('email template', () => {
     emailTemplatesToDelete.push(emailTemplateCopyName);
 
     await test.step('Navigate to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Create the email template to copy', async () => {
-      await emailTemplateAdminPage.createTemplate(emailTemplateName);
-      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.create(emailTemplateName));
     });
 
     await test.step('Navigate back to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Create a copy of the email template', async () => {
-      await emailTemplateAdminPage.createTemplateCopy(emailTemplateName, emailTemplateCopyName);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.copy(emailTemplateName, emailTemplateCopyName));
     });
 
     await test.step('Verify the email template is copied', async () => {
-      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplateCopyName);
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(emailTemplateCopyName);
     });
   });
 
-  test('Update an email template', async ({ emailTemplateAdminPage, editEmailTemplatePage }) => {
+  test('Update an email template', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-386',
     });
 
-    const emailTemplate = new EmailTemplate({
-      name: FakeDataFactory.createFakeEmailTemplateName(),
-    });
+    const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
+    const updatedName = `${emailTemplateName} Updated`;
+    emailTemplatesToDelete.push(updatedName);
 
     await test.step('Navigate to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Create an email template to update', async () => {
-      await emailTemplateAdminPage.createTemplate(emailTemplate.name);
-      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.create(emailTemplateName));
     });
 
     await test.step('Update the email template', async () => {
-      emailTemplate.name = `${emailTemplate.name} Updated`;
-      await editEmailTemplatePage.updateTemplate(emailTemplate);
-      await editEmailTemplatePage.save();
+      await sysAdminActor.attemptsTo(
+        EmailTemplateTasks.update(
+          new EmailTemplate({
+            name: updatedName,
+          })
+        )
+      );
     });
 
     await test.step('Verify the email template is updated', async () => {
-      await editEmailTemplatePage.page.reload();
-      await expect(editEmailTemplatePage.generalTab.nameInput).toHaveValue(emailTemplate.name);
+      await sysAdminActor.browse().reload();
+      await sysAdminActor.browse().check(EditEmailTemplatePageTargets.nameInput).hasValue(updatedName);
     });
   });
 
-  test('Delete an email template', async ({ emailTemplateAdminPage, editEmailTemplatePage }) => {
+  test('Delete an email template', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-387',
@@ -253,26 +232,24 @@ test.describe('email template', () => {
     const emailTemplateName = FakeDataFactory.createFakeEmailTemplateName();
 
     await test.step('Navigate to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Create an email template to delete', async () => {
-      await emailTemplateAdminPage.createTemplate(emailTemplateName);
-      await emailTemplateAdminPage.page.waitForURL(editEmailTemplatePage.pathRegex);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.create(emailTemplateName));
     });
 
     await test.step('Navigate back to the email template admin page', async () => {
-      await emailTemplateAdminPage.goto();
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.goto());
     });
 
     await test.step('Delete the email template', async () => {
-      await emailTemplateAdminPage.deleteTemplate(emailTemplateName);
+      await sysAdminActor.attemptsTo(EmailTemplateTasks.deleteTemplates([emailTemplateName]));
     });
 
     await test.step('Verify the email template is deleted', async () => {
-      const row = emailTemplateAdminPage.getRowByName(emailTemplateName);
-
-      await expect(row).toBeHidden();
+      const row = EmailTemplatesPageTargets.rowByName(emailTemplateName);
+      await sysAdminActor.browse().check(row).isHidden();
     });
   });
 });
