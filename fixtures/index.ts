@@ -142,5 +142,6 @@ export {
 export { EmailSyncFixture, EmailSyncFixtureBuilder, emailSync } from './emailSync.fixtures';
 export { EmailBodyFixture, EmailBodyFixtureBuilder } from './emailBody.fixtures';
 export { SendingNumberFixture, SendingNumberFixtureBuilder, sendingNumber } from './sendingNumber.fixtures';
+export { TextMessageFixture, TextMessageFixtureBuilder } from './textMessage.fixtures';
 
 export * from '@playwright/test';
