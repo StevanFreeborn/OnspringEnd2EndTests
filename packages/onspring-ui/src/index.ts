@@ -2,7 +2,9 @@
 export * from './common/navs/adminNav.targets.js';
 export * from './common/dialogs/dialogs.targets.js';
 export * from './common/controls/dualPaneSelector.js';
+export * from './common/controls/kendoGrid.js';
 export * from './common/controls/referenceFieldGrid.js';
+export * from './common/controls/statusSwitch.js';
 
 // Feature domains
 export * from './apiKeys/apiKeys.targets.js';
@@ -33,3 +35,6 @@ export * from './emailBody/emailBody.targets.js';
 export * from './emailBody/emailBody.tasks.js';
 export * from './content/content.targets.js';
 export * from './content/content.tasks.js';
+export * from './sendingNumber/sendingNumber.targets.js';
+export * from './sendingNumber/sendingNumber.tasks.js';
+export * from './sendingNumber/sendingNumber.questions.js';
