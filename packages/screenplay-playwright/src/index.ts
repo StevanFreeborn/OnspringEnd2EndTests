@@ -37,7 +37,7 @@ export class BrowseTheWeb implements Ability {
 }
 
 export class BrowserActions {
-  readonly page: Page;
+  private readonly page: Page;
 
   constructor(page: Page) {
     this.page = page;
@@ -73,8 +73,12 @@ export class BrowserActions {
     await this.page.waitForURL(url);
   }
 
-  async waitForState(target: Target, state: 'visible' | 'hidden' | 'attached' | 'detached'): Promise<void> {
-    await resolveTarget(this.page, target).waitFor({ state });
+  async waitForState(
+    target: Target,
+    state: 'visible' | 'hidden' | 'attached' | 'detached',
+    options?: { timeout?: number }
+  ): Promise<void> {
+    await resolveTarget(this.page, target).waitFor({ state, ...options });
   }
 
   async waitForTimeout(ms: number): Promise<void> {
@@ -84,6 +88,33 @@ export class BrowserActions {
 
   async isVisible(target: Target): Promise<boolean> {
     return resolveTarget(this.page, target).isVisible();
+  }
+
+  async isVisibleWithin(target: Target, timeout: number): Promise<boolean> {
+    return resolveTarget(this.page, target)
+      .waitFor({ state: 'visible', timeout })
+      .then(() => true)
+      .catch(() => false);
+  }
+
+  async isDisabled(target: Target): Promise<boolean> {
+    return resolveTarget(this.page, target).isDisabled();
+  }
+
+  async setChecked(target: Target, checked: boolean): Promise<void> {
+    await resolveTarget(this.page, target).setChecked(checked);
+  }
+
+  async getAttribute(target: Target, name: string): Promise<string | null> {
+    return resolveTarget(this.page, target).getAttribute(name);
+  }
+
+  async textContent(target: Target): Promise<string | null> {
+    return resolveTarget(this.page, target).textContent();
+  }
+
+  async count(target: Target): Promise<number> {
+    return resolveTarget(this.page, target).count();
   }
 
   async checkControl(target: Target): Promise<void> {
@@ -106,10 +137,12 @@ export class BrowserActions {
     await resolveTarget(this.page, target).hover();
   }
 
-  async type(target: Target, value: string): Promise<void> {
+  async type(target: Target, value: string, options?: { delay?: number; clear?: boolean }): Promise<void> {
     const loc = resolveTarget(this.page, target);
-    await loc.clear();
-    await loc.pressSequentially(value, { delay: 100 });
+    if (options?.clear !== false) {
+      await loc.clear();
+    }
+    await loc.pressSequentially(value, { delay: options?.delay ?? 100 });
   }
 
   async fill(target: Target, value: string): Promise<void> {
@@ -120,6 +153,20 @@ export class BrowserActions {
     await resolveTarget(this.page, target).selectOption({ label });
   }
 
+  async scrollToBottom(target: Target): Promise<void> {
+    await resolveTarget(this.page, target).evaluate((el: HTMLElement) => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }
+
+  async scrollIntoView(target: Target): Promise<void> {
+    await resolveTarget(this.page, target).scrollIntoViewIfNeeded();
+  }
+
+  async dragTo(source: Target, destination: Target): Promise<void> {
+    await resolveTarget(this.page, source).dragTo(resolveTarget(this.page, destination));
+  }
+
   async getText(target: Target): Promise<string> {
     const text = await resolveTarget(this.page, target).innerText();
     return text.trim();
@@ -127,10 +174,6 @@ export class BrowserActions {
 
   check(target: Target): TargetAssertions {
     return new TargetAssertions(resolveTarget(this.page, target));
-  }
-
-  locator(target: Target): Locator {
-    return resolveTarget(this.page, target);
   }
 
   checkPage(): PageAssertions {

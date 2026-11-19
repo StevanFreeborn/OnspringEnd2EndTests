@@ -39,11 +39,11 @@ Classical Screenplay creates separate classes for every action (`Click.on(...)`)
 
 Playwright locators already auto-wait, and its `expect` matchers already retry. We keep the design lean:
 
-1. Low-level actions live directly on the ability: `actor.browse().click(target)`.
+1. Low-level actions and primitive single-target reads (`isVisible`, `isDisabled`, `getAttribute`, `getText`, `textContent`, `count`, `isVisibleWithin`) live directly on the ability: `actor.browse().click(target)`, `actor.browse().isDisabled(target)`. Domain tasks and questions use these ability primitives for internal UI mechanics rather than reaching for raw Playwright locators.
 2. Assertions wrap Playwright's `expect` matchers directly: `actor.browse().check(target)...`.
 3. Commands that cause state changes are modeled as `Task<TActor>` and performed via `actor.attemptsTo(...)`.
 4. Retrying task sequences (e.g. eventual consistency verification loops) are wrapped using `Retry.until(tasks, options)`.
-5. Queries that extract values from the UI for external use (e.g. reading DNS keys for an external API) are modeled as `Question<TActor, TAnswer>` and asked via `actor.asks(...)`.
+5. Queries that extract domain values or application state for specs, fixtures, or external services (e.g. reading DNS keys for Cloudflare or extracting the created record ID) are modeled as `Question<TActor, TAnswer>` and asked via `actor.asks(...)`.
 
 ## System Layers
 
@@ -78,14 +78,16 @@ Dependencies flow down, never up:
 
 ### Encapsulate the Driver
 
-The driver (`Page`) is private to `BrowseTheWeb`. Specs and tasks never touch it directly.
+Both Playwright's `Page` and raw `Locator` instances are encapsulated behind `BrowseTheWeb` / `BrowserActions` (no `.page` or `.locator()` escape hatches). Specs and fixtures only use `actor.attemptsTo(...)`, `actor.asks(...)`, and `actor.browse().check(...)`. Tasks and questions interact through `actor.browse()` primitives, and all selector expressions stay inside `*.targets.ts` (or private control targets under `common/controls/`).
 
 ```typescript
-// Bad: Leaks the driver
+// Bad: Leaks the driver or raw locator
 await actor.page.click('#save');
+const rows = actor.browse().locator(Targets.grid).getByRole('row');
 
 // Good: Uses the ability and a target
 await actor.browse().click(Targets.saveButton);
+const rowCount = await actor.browse().count(Targets.gridRows);
 ```
 
 ### Curry Parameterized Targets
@@ -108,13 +110,13 @@ await actor.browse().click(Targets.row('Example'));
 
 ### Treat Complex Widgets as Tasks
 
-Do not build stateful component objects. Write reusable controls as tasks:
+Do not build stateful component objects. Write reusable controls as tasks under `common/controls/` (for example: `DualPaneSelector`, `ReferenceFieldGrid`, `KendoGridTasks`, `StatusSwitchTasks`):
 
 ```typescript
 await actor.attemptsTo(
-  GridControl.selectRow({
+  KendoGridTasks.scrollAllIntoView({
     grid: Targets.grid,
-    label: 'Example',
+    getListPagePath: Targets.getListPagePath,
   })
 );
 ```
