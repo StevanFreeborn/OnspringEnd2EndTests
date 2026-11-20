@@ -37,6 +37,12 @@ export const AddUserPageTargets = {
   inactiveStatusButton: (page: Page): Locator => page.getByRole('button', { name: 'Inactive' }),
   lockedStatusButton: (page: Page): Locator => page.getByRole('button', { name: 'Locked' }),
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
+  securityTab: {
+    rolesReferenceGrid: {
+      control: (page: Page): Locator => page.locator('.data-Roles div.onx-reference-grid'),
+    },
+    sysAdminCheckbox: (page: Page): Locator => page.getByRole('checkbox', { name: /system administrator/i }),
+  },
 };
 
 export const EditUserPageTargets = {
@@ -80,6 +86,14 @@ export const EditUserPageTargets = {
         (groupName: string) =>
         (page: Page): Locator =>
           page.locator('.data-Groups div.onx-reference-grid').getByRole('grid').getByRole('row', { name: groupName }),
+    },
+    sysAdminCheckbox: (page: Page): Locator => page.getByRole('checkbox', { name: /system administrator/i }),
+    changePasswordLink: (page: Page): Locator => page.getByRole('link', { name: 'Change Password' }),
+    changePasswordDialog: {
+      newPasswordInput: (page: Page): Locator =>
+        page.frameLocator('iframe').getByLabel('New Password', { exact: true }),
+      verifyPasswordInput: (page: Page): Locator => page.frameLocator('iframe').getByLabel('Verify New Password'),
+      saveButton: (page: Page): Locator => page.getByRole('button', { name: 'Save' }),
     },
   },
 };

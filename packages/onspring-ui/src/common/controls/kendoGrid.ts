@@ -19,7 +19,11 @@ const kendoGridTargets = {
   rows:
     (grid: Target): Target =>
     (page: Page) =>
-      resolveTarget(page, grid).getByRole('row'),
+      resolveTarget(page, grid).locator('.k-grid-content.k-auto-scrollable').first().getByRole('row'),
+  firstRow:
+    (grid: Target): Target =>
+    (page: Page) =>
+      resolveTarget(page, grid).locator('.k-grid-content.k-auto-scrollable').first().getByRole('row').first(),
 };
 
 export const KendoGridTasks = {
@@ -36,20 +40,32 @@ export const KendoGridTasks = {
       const pagerInfoText = await actor.browse().getText(pagerInfo);
       const totalNumOfItems = parseInt(pagerInfoText.split(' ')[0], 10);
 
-      if (Number.isNaN(totalNumOfItems)) {
+      if (Number.isNaN(totalNumOfItems) || totalNumOfItems === 0) {
         return;
       }
+
+      await actor.browse().isVisibleWithin(kendoGridTargets.firstRow(grid), 5000);
 
       const rows = kendoGridTargets.rows(grid);
       const scrollableContent = kendoGridTargets.scrollableContent(grid);
       let itemRowsCount = await actor.browse().count(rows);
 
       while (itemRowsCount < totalNumOfItems) {
+        if (!(await actor.browse().canScrollDown(scrollableContent))) {
+          break;
+        }
+
         const scrollResponse = actor
           .browse()
-          .waitForResponse((r: Response) => r.url().includes(getListPagePath) && r.status() === 200);
+          .waitForResponse((r: Response) => r.url().includes(getListPagePath) && r.status() === 200, { timeout: 5000 })
+          .catch(() => null);
         await actor.browse().scrollToBottom(scrollableContent);
-        await scrollResponse;
+        const response = await scrollResponse;
+
+        if (!response) {
+          break;
+        }
+
         itemRowsCount = await actor.browse().count(rows);
       }
     },

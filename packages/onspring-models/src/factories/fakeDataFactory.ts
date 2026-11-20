@@ -21,6 +21,7 @@ export const TEST_EMAIL_SYNC_NAME = 'email-sync-test';
 export const TEST_KEY_METRIC_NAME = 'key-metric-test';
 export const TEST_SLACK_MESSAGE_NAME = 'slack-message-test';
 export const TEST_DASHBOARD_FILTER_LABEL = 'dashboard-filter-test';
+export const TEST_REPORT_NAME = 'report-test';
 
 export type FakeDataConfig = {
   defaultEmailSendingDomain?: string;
@@ -109,6 +110,11 @@ export class FakeDataFactory {
   static createFakeDataConnectorName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_CONNECTOR_NAME}`;
+  }
+
+  static createFakeReportName() {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_REPORT_NAME}`;
   }
 
   static createFakeEmailTemplateName() {

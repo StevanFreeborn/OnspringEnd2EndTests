@@ -1,4 +1,4 @@
-import { FrameLocator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 
@@ -11,44 +11,60 @@ const dualPaneTargets = {
     (containerTarget: Target): Target =>
     (page: Page) =>
       resolveTarget(page, containerTarget).locator('.selector-selected-list'),
-  popup: (frame?: FrameLocator): Target =>
-    frame ? frame.locator('.selector-control:visible') : (page: Page) => page.locator('.selector-control:visible'),
+  popup:
+    (frameSelector?: string): Target =>
+    (page: Page) =>
+      frameSelector
+        ? page.frameLocator(frameSelector).locator('.selector-control:visible')
+        : page.locator('.selector-control:visible'),
   unselectedOption:
-    (option: string, frame?: FrameLocator): Target =>
+    (option: string, frameSelector?: string): Target =>
     (page: Page) =>
-      resolveTarget(page, dualPaneTargets.popup(frame)).locator('.unselected-pane').getByText(option, { exact: true }),
+      resolveTarget(page, dualPaneTargets.popup(frameSelector))
+        .locator('.unselected-pane')
+        .getByText(option, { exact: true }),
   selectedOption:
-    (option: string, frame?: FrameLocator): Target =>
+    (option: string, frameSelector?: string): Target =>
     (page: Page) =>
-      resolveTarget(page, dualPaneTargets.popup(frame)).locator('.selected-pane').getByText(option, { exact: true }),
+      resolveTarget(page, dualPaneTargets.popup(frameSelector))
+        .locator('.selected-pane')
+        .getByText(option, { exact: true }),
   closeButton:
-    (frame?: FrameLocator): Target =>
+    (frameSelector?: string): Target =>
     (page: Page) =>
-      resolveTarget(page, dualPaneTargets.popup(frame)).getByTitle('Close'),
+      resolveTarget(page, dualPaneTargets.popup(frameSelector)).getByTitle('Close'),
 };
 
 export const DualPaneSelector = {
   selectOption:
-    (containerTarget: Target, option: string, frame?: FrameLocator): Task<WebActor> =>
+    (containerTarget: Target, option: string, frameSelector?: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const selectedText = await actor.browse().getText(dualPaneTargets.selectList(containerTarget));
 
       if (!selectedText.includes(option)) {
         await actor.browse().click(containerTarget);
-        await actor.browse().click(dualPaneTargets.unselectedOption(option, frame));
-        await actor.browse().click(dualPaneTargets.closeButton(frame));
+        await actor.browse().click(dualPaneTargets.unselectedOption(option, frameSelector));
+        await actor.browse().click(dualPaneTargets.closeButton(frameSelector));
+      }
+    },
+
+  selectOptions:
+    (containerTarget: Target, options: string[], frameSelector?: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      for (const option of options) {
+        await actor.attemptsTo(DualPaneSelector.selectOption(containerTarget, option, frameSelector));
       }
     },
 
   unselectOption:
-    (containerTarget: Target, option: string, frame?: FrameLocator): Task<WebActor> =>
+    (containerTarget: Target, option: string, frameSelector?: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const selectedText = await actor.browse().getText(dualPaneTargets.selectedList(containerTarget));
 
       if (selectedText.includes(option)) {
         await actor.browse().click(containerTarget);
-        await actor.browse().click(dualPaneTargets.selectedOption(option, frame));
-        await actor.browse().click(dualPaneTargets.closeButton(frame));
+        await actor.browse().click(dualPaneTargets.selectedOption(option, frameSelector));
+        await actor.browse().click(dualPaneTargets.closeButton(frameSelector));
       }
     },
 };

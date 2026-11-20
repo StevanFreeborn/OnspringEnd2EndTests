@@ -10,7 +10,49 @@ export const AdminNavTargets = {
 };
 
 export const SidebarNavTargets = {
+  usersFullName: (page: Page): Locator => page.locator('#user-name'),
+  dashboardsTab: (page: Page): Locator => page.locator('#dashboard-tab'),
+  contentTab: (page: Page): Locator => page.locator('#content-tab'),
   adminGearIcon: (page: Page): Locator => page.locator('#admin-tab'),
+  pinnedContent: (page: Page): Locator => page.locator('#pinned-items'),
+  userImage: (page: Page): Locator => page.locator('#user-image'),
+  userMenu: (page: Page): Locator => page.locator('#user-menu'),
+  profileLink: (page: Page): Locator => page.locator('#user-menu').getByText('Profile'),
+  preferencesLink: (page: Page): Locator => page.locator('#user-menu').getByText('Preferences'),
+  logoutLink: (page: Page): Locator => page.locator('#user-menu').getByText('Log Out'),
+  containerLink:
+    (containerName: string) =>
+    (page: Page): Locator =>
+      page.locator('#container-list').getByRole('link', { name: containerName }),
+};
+
+export const UserPreferencesModalTargets = {
+  modal: (page: Page): Locator => page.getByRole('dialog', { name: 'User Preferences' }),
+  defaultDashboardPlaceholder: (page: Page): Locator =>
+    page
+      .getByRole('dialog', { name: 'User Preferences' })
+      .frameLocator('iframe')
+      .locator('.label:has-text("My Default Dashboard") + .text'),
+  defaultDashboardMethodSelector: (page: Page): Locator =>
+    page
+      .getByRole('dialog', { name: 'User Preferences' })
+      .frameLocator('iframe')
+      .locator('.label:has-text("My Default Dashboard") + .data')
+      .getByRole('listbox'),
+  defaultDashboardSelector: (page: Page): Locator =>
+    page
+      .getByRole('dialog', { name: 'User Preferences' })
+      .frameLocator('iframe')
+      .locator('[data-dashboard-row]')
+      .getByRole('listbox'),
+  optionByName:
+    (name: string) =>
+    (page: Page): Locator =>
+      page.getByRole('dialog', { name: 'User Preferences' }).frameLocator('iframe').getByRole('option', { name }),
+  saveButton: (page: Page): Locator =>
+    page.getByRole('dialog', { name: 'User Preferences' }).getByRole('button', { name: 'Save' }),
+  cancelButton: (page: Page): Locator =>
+    page.getByRole('dialog', { name: 'User Preferences' }).getByRole('button', { name: 'Cancel' }),
 };
 
 export const AdminTileTargets = {
