@@ -1,4 +1,4 @@
-import { expect, Locator, Page, Response } from '@playwright/test';
+import { Download, expect, Locator, Page, Response } from '@playwright/test';
 import { Ability, Actor, Task } from '@stevanfreeborn/screenplay';
 
 export type Target = Locator | ((page: Page) => Locator);
@@ -60,9 +60,10 @@ export class BrowserActions {
   }
 
   async waitForResponse(
-    urlOrPredicate: string | RegExp | ((response: Response) => boolean | Promise<boolean>)
+    urlOrPredicate: string | RegExp | ((response: Response) => boolean | Promise<boolean>),
+    options?: { timeout?: number }
   ): Promise<Response> {
-    return this.page.waitForResponse(urlOrPredicate);
+    return this.page.waitForResponse(urlOrPredicate, options);
   }
 
   url(): string {
@@ -153,6 +154,12 @@ export class BrowserActions {
     await resolveTarget(this.page, target).selectOption({ label });
   }
 
+  async canScrollDown(target: Target): Promise<boolean> {
+    return resolveTarget(this.page, target).evaluate(
+      (el: HTMLElement) => el.scrollHeight - el.clientHeight - el.scrollTop > 1
+    );
+  }
+
   async scrollToBottom(target: Target): Promise<void> {
     await resolveTarget(this.page, target).evaluate((el: HTMLElement) => {
       el.scrollTop = el.scrollHeight;
@@ -170,6 +177,47 @@ export class BrowserActions {
   async getText(target: Target): Promise<string> {
     const text = await resolveTarget(this.page, target).innerText();
     return text.trim();
+  }
+
+  async blur(target: Target): Promise<void> {
+    await resolveTarget(this.page, target).blur();
+  }
+
+  async getAttributes(target: Target, name: string): Promise<(string | null)[]> {
+    return resolveTarget(this.page, target).evaluateAll(
+      (elements, attr) => elements.map(el => el.getAttribute(attr)),
+      name
+    );
+  }
+
+  async dragWithMouse(source: Target, destination: Target, dropIndicator?: Target): Promise<void> {
+    await resolveTarget(this.page, source).hover();
+    await this.page.mouse.down();
+    await resolveTarget(this.page, destination).hover();
+    if (dropIndicator) {
+      await resolveTarget(this.page, dropIndicator).waitFor({ state: 'visible' });
+    }
+    await this.page.mouse.up();
+  }
+
+  async postForm(
+    url: string,
+    form: Record<string, string | number | boolean>
+  ): Promise<{ headers: Record<string, string>; body: Uint8Array }> {
+    const response = await this.page.request.post(url, { form });
+    const headers = response.headers();
+    const body = await response.body();
+    return { headers, body };
+  }
+
+  async setContent(html: string): Promise<void> {
+    await this.page.setContent(html);
+  }
+
+  async clickAndWaitForDownload(target: Target): Promise<Download> {
+    const downloadPromise = this.page.waitForEvent('download');
+    await resolveTarget(this.page, target).click();
+    return downloadPromise;
   }
 
   check(target: Target): TargetAssertions {
