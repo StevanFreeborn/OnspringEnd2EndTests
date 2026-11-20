@@ -221,7 +221,7 @@ export class BrowserActions {
   }
 
   check(target: Target): TargetAssertions {
-    return new TargetAssertions(resolveTarget(this.page, target));
+    return new TargetAssertions(this.page, resolveTarget(this.page, target));
   }
 
   checkPage(): PageAssertions {
@@ -229,8 +229,18 @@ export class BrowserActions {
   }
 }
 
+type BoundingBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export class TargetAssertions {
-  constructor(private readonly locator: Locator) {}
+  constructor(
+    private readonly page: Page,
+    private readonly locator: Locator
+  ) {}
 
   async isVisible(): Promise<void> {
     await expect(this.locator).toBeVisible();
@@ -278,6 +288,44 @@ export class TargetAssertions {
 
   async hasCSS(name: string, value: string | RegExp): Promise<void> {
     await expect(this.locator).toHaveCSS(name, value);
+  }
+
+  private async assertRelativePosition(
+    other: Target,
+    relation: string,
+    predicate: (main: BoundingBox, relative: BoundingBox) => boolean,
+    options?: { timeout?: number }
+  ): Promise<void> {
+    const otherLocator = resolveTarget(this.page, other);
+    await expect
+      .poll(
+        async () => {
+          const mainBox = await this.locator.boundingBox();
+          const relativeBox = await otherLocator.boundingBox();
+          return mainBox !== null && relativeBox !== null && predicate(mainBox, relativeBox);
+        },
+        {
+          message: `${this.locator.toString()} to be ${relation} ${otherLocator.toString()}`,
+          timeout: options?.timeout,
+        }
+      )
+      .toBeTruthy();
+  }
+
+  async isLeftOf(other: Target, options?: { timeout?: number }): Promise<void> {
+    await this.assertRelativePosition(other, 'left of', (a, b) => a.x + a.width <= b.x, options);
+  }
+
+  async isRightOf(other: Target, options?: { timeout?: number }): Promise<void> {
+    await this.assertRelativePosition(other, 'right of', (a, b) => a.x >= b.x + b.width, options);
+  }
+
+  async isAbove(other: Target, options?: { timeout?: number }): Promise<void> {
+    await this.assertRelativePosition(other, 'above', (a, b) => a.y + a.height <= b.y, options);
+  }
+
+  async isBelow(other: Target, options?: { timeout?: number }): Promise<void> {
+    await this.assertRelativePosition(other, 'below', (a, b) => a.y >= b.y + b.height, options);
   }
 }
 
