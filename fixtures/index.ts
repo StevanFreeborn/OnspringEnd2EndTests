@@ -128,6 +128,7 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
 });
 
 export { expect } from './matchers.fixtures';
+export { ActorFixture, ActorFixtureBuilder, createAuthenticatedActor } from './auth.fixtures';
 export { AppFixture, AppFixtureBuilder } from './app.fixtures';
 export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
 export { SharedListFixture, SharedListFixtureBuilder, sharedList } from './sharedList.fixtures';
@@ -144,5 +145,7 @@ export { EmailBodyFixture, EmailBodyFixtureBuilder } from './emailBody.fixtures'
 export { SendingNumberFixture, SendingNumberFixtureBuilder, sendingNumber } from './sendingNumber.fixtures';
 export { TextMessageFixture, TextMessageFixtureBuilder } from './textMessage.fixtures';
 export { SlackMessageFixture, SlackMessageFixtureBuilder } from './slackMessage.fixtures';
+export { DashboardFixture, DashboardFixtureBuilder } from './dashboard.fixtures';
+export { ReportFixture, ReportFixtureBuilder } from './report.fixtures';
 
 export * from '@playwright/test';

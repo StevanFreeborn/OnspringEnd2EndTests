@@ -1,9 +1,9 @@
 import { Browser, Page, TestInfo } from '@playwright/test';
-import { FakeDataFactory, User, UserStatus } from '@stevanfreeborn/onspring-models';
-import { UserTasks } from '@stevanfreeborn/onspring-ui';
+import { FakeDataFactory, Role, User, UserStatus } from '@stevanfreeborn/onspring-models';
+import { UserQuestions, UserTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import path from 'path';
-import { Role } from '../models/role';
+import { Role as LegacyRole } from '../models/role';
 import { LoginPage } from '../pageObjectModels/authentication/loginPage';
 import { DashboardPage } from '../pageObjectModels/dashboards/dashboardPage';
 import { AddUserAdminPage } from '../pageObjectModels/users/addUserAdminPage';
@@ -12,10 +12,11 @@ import { UsersSecurityAdminPage } from '../pageObjectModels/users/usersSecurityA
 import { AUTH_DIR } from '../playwright.config';
 import { errorResponseHandler, pageErrorHandler } from './auth.fixtures';
 
-export class UserFixtureBuilder {
+export class UserFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sysAdminActor: WebActor }> {
   private status: UserStatus = 'Active';
   private sysAdmin: boolean = false;
   private roles: string[] = [];
+  private rolesFactory?: (deps: { role: Role }) => string[];
 
   withStatus(status: UserStatus): this {
     this.status = status;
@@ -32,18 +33,53 @@ export class UserFixtureBuilder {
     return this;
   }
 
-  build() {
-    return async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (user: User) => Promise<void>) => {
-      const user = FakeDataFactory.createFakeUser(this.status, this.sysAdmin);
-      user.roles.push(...this.roles);
+  withRoles(roles: string[]): this;
+  withRoles(factory: (deps: { role: Role }) => string[]): UserFixtureBuilder<TDeps & { role: Role }>;
+  withRoles(
+    rolesOrFactory: string[] | ((deps: { role: Role }) => string[])
+  ): this | UserFixtureBuilder<TDeps & { role: Role }> {
+    if (Array.isArray(rolesOrFactory)) {
+      this.roles.push(...rolesOrFactory);
+      return this;
+    }
 
-      await sysAdminActor.attemptsTo(UserTasks.create(user));
-      try {
-        await use(user);
-      } finally {
-        await sysAdminActor.attemptsTo(UserTasks.deleteUsers([user.username]));
-      }
-    };
+    this.rolesFactory = rolesOrFactory;
+    return this as unknown as UserFixtureBuilder<TDeps & { role: Role }>;
+  }
+
+  private async runFixture(
+    sysAdminActor: WebActor,
+    roles: string[],
+    use: (user: User) => Promise<void>
+  ): Promise<void> {
+    const user = FakeDataFactory.createFakeUser(this.status, this.sysAdmin);
+    user.roles.push(...roles);
+
+    await sysAdminActor.attemptsTo(UserTasks.create(user), UserTasks.changePassword(user.password));
+    user.id = await sysAdminActor.asks(UserQuestions.currentId());
+
+    try {
+      await use(user);
+    } finally {
+      await sysAdminActor.attemptsTo(UserTasks.deleteUsers([user.username]));
+    }
+  }
+
+  build(): (deps: TDeps, use: (user: User) => Promise<void>) => Promise<void> {
+    if (this.rolesFactory) {
+      const rolesFactory = this.rolesFactory;
+      return (async (
+        { sysAdminActor, role }: { sysAdminActor: WebActor; role: Role },
+        use: (user: User) => Promise<void>
+      ) => {
+        const dynamicRoles = rolesFactory({ role });
+        await this.runFixture(sysAdminActor, [...this.roles, ...dynamicRoles], use);
+      }) as unknown as (deps: TDeps, use: (user: User) => Promise<void>) => Promise<void>;
+    }
+
+    return (async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (user: User) => Promise<void>) => {
+      await this.runFixture(sysAdminActor, [...this.roles], use);
+    }) as (deps: TDeps, use: (user: User) => Promise<void>) => Promise<void>;
   }
 }
 
@@ -56,7 +92,7 @@ export class UserFixture {
 export const user = UserFixture.create().build();
 
 export async function activeUserWithRole(
-  { browser, sysAdminPage, role }: { browser: Browser; sysAdminPage: Page; role: Role },
+  { browser, sysAdminPage, role }: { browser: Browser; sysAdminPage: Page; role: LegacyRole },
   use: (r: User) => Promise<void>,
   testInfo: TestInfo
 ) {

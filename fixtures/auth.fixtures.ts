@@ -1,8 +1,11 @@
 import { Browser, Page, Response, TestInfo } from '@playwright/test';
+import { User } from '@stevanfreeborn/onspring-models';
+import { AuthTasks, DashboardTargets } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import fs from 'fs';
 import path from 'path';
 import { env } from '../env';
-import { User } from '../models/user';
+import { User as LegacyUser } from '../models/user';
 import { BASE_URL, SYS_ADMIN_AUTH_PATH, isCI } from '../playwright.config';
 
 export async function sysAdminPage(
@@ -13,13 +16,68 @@ export async function sysAdminPage(
   await createBaseAuthPage({ browser }, use, testInfo, SYS_ADMIN_AUTH_PATH);
 }
 
+export async function createAuthenticatedActor(
+  {
+    browser,
+    user,
+    name = 'TestUser',
+  }: {
+    browser: Browser;
+    user: User;
+    name?: string;
+  },
+  use: (actor: WebActor) => Promise<void>,
+  testInfo: TestInfo
+) {
+  await createBaseAuthPage(
+    { browser },
+    async page => {
+      const actor = WebActor.using(name, page);
+
+      if (user.status === 'Active') {
+        await actor.attemptsTo(AuthTasks.login(user.username, user.password));
+        await actor.browse().waitForUrl(DashboardTargets.pathRegex);
+      }
+
+      await use(actor);
+    },
+    testInfo
+  );
+}
+
+export class ActorFixtureBuilder {
+  private name = 'TestUser';
+
+  withName(name: string): this {
+    this.name = name;
+    return this;
+  }
+
+  build() {
+    const name = this.name;
+    return async (
+      { browser, user }: { browser: Browser; user: User },
+      use: (actor: WebActor) => Promise<void>,
+      testInfo: TestInfo
+    ) => {
+      await createAuthenticatedActor({ browser, user, name }, use, testInfo);
+    };
+  }
+}
+
+export class ActorFixture {
+  static forUser(): ActorFixtureBuilder {
+    return new ActorFixtureBuilder();
+  }
+}
+
 export async function createTestUserPageFixture(
   {
     browser,
     user,
   }: {
     browser: Browser;
-    user: User;
+    user: LegacyUser;
   },
   use: (r: Page) => Promise<void>,
   testInfo: TestInfo
