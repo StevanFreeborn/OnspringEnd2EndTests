@@ -88,6 +88,35 @@ export const DashboardTasks = {
       getListPagePath: DashboardsAdminPageTargets.getListPagePath,
     }),
 
+  selectResourceTab:
+    (tabName: 'Reports' | 'Key Metrics' | 'Layouts' | 'Objects'): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await ensureResourceTabSelected(actor, tabName);
+    },
+
+  scrollResourceBankUntilVisible:
+    (bankName: 'report' | 'object' | 'keymetric', itemTarget: Target, loadMorePathRegex: RegExp): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const scrollable = DashboardDesignerTargets.resources.bankScrollableList(bankName);
+
+      while (!(await actor.browse().isVisible(itemTarget))) {
+        if (!(await actor.browse().canScrollDown(scrollable))) {
+          break;
+        }
+
+        const moreResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => loadMorePathRegex.test(r.url()) && r.status() === 200, { timeout: 5000 })
+          .catch(() => null);
+        await actor.browse().scrollToBottom(scrollable);
+        const response = await moreResponse;
+
+        if (!response) {
+          break;
+        }
+      }
+    },
+
   waitForDesigner:
     (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
@@ -382,9 +411,23 @@ export const DashboardTasks = {
       } else if (item instanceof DashboardObjectItem) {
         await ensureResourceTabSelected(actor, 'Objects');
         itemTarget = DashboardDesignerTargets.resources.itemInBank('object', item.name);
+        await actor.attemptsTo(
+          DashboardTasks.scrollResourceBankUntilVisible(
+            'object',
+            itemTarget,
+            DashboardDesignerTargets.resources.getMoreObjectsPathRegex
+          )
+        );
       } else if (item instanceof KeyMetric) {
         await ensureResourceTabSelected(actor, 'Key Metrics');
         itemTarget = DashboardDesignerTargets.resources.itemInBank('keymetric', item.objectName);
+        await actor.attemptsTo(
+          DashboardTasks.scrollResourceBankUntilVisible(
+            'keymetric',
+            itemTarget,
+            DashboardDesignerTargets.resources.getMoreKeyMetricsPathRegex
+          )
+        );
       } else {
         throw new Error(`Item type not supported: ${String(item)}`);
       }

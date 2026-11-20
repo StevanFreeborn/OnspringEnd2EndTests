@@ -5,6 +5,10 @@ const designerFrame = (page: Page) => page.frameLocator('.dialog');
 const propertiesPopover = (page: Page) => designerFrame(page).locator('#editDashboardPropertiesPopover');
 const permissionsPopover = (page: Page) => designerFrame(page).locator('#editDashboardPermissionsPopover');
 const scheduleModal = (page: Page) => page.getByRole('dialog', { name: 'Configure Scheduled Exports' });
+const dashboardItem = (page: Page, name: string): Locator =>
+  page.locator('#dashboard-contents').locator('.dashboard-item', {
+    has: page.locator(`.title:has-text("${name}")`),
+  });
 
 export const DashboardsAdminPageTargets = {
   route: '/Admin/Dashboard',
@@ -51,6 +55,34 @@ export const DashboardPageTargets = {
   dashboardTitle: (page: Page): Locator => page.locator('#dashboard-title-container'),
   dashboardContents: (page: Page): Locator => page.locator('#dashboard-contents'),
   exportEmailDownloadLink: (page: Page): Locator => page.getByRole('link'),
+  dashboardItem:
+    (name: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, name),
+  dashboardItemSearchBox:
+    (itemName: string, appName: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).getByPlaceholder(`Search ${appName}`),
+  dashboardItemSearchButton:
+    (itemName: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).getByRole('button'),
+  dashboardItemLink:
+    (itemName: string, linkText: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).getByRole('link', { name: linkText }),
+  dashboardItemHeading:
+    (itemName: string, headingText: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).getByRole('heading', { name: headingText }),
+  dashboardItemText:
+    (itemName: string, text: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).getByText(text),
+  dashboardItemIframe:
+    (itemName: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, itemName).locator('iframe'),
 
   printModal: {
     dialog: (page: Page): Locator => page.getByRole('dialog', { name: 'Print Dashboard' }),
@@ -184,6 +216,12 @@ export const DashboardDesignerTargets = {
   },
 
   resources: {
+    getMoreObjectsPathRegex: /\/Admin\/Dashboard\/GetMoreObjectListItems/,
+    getMoreKeyMetricsPathRegex: /\/Admin\/Dashboard\/GetMoreKeyMetricsListItems/,
+    bankScrollableList:
+      (bankName: 'report' | 'object' | 'keymetric'): Target =>
+      (page: Page): Locator =>
+        designerFrame(page).locator(`[data-tab-content="${bankName}"] .item-lists`),
     tabButton:
       (tabName: 'Reports' | 'Key Metrics' | 'Layouts' | 'Objects'): Target =>
       (page: Page): Locator =>

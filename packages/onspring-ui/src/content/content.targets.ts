@@ -11,6 +11,7 @@ export const ContentRecordTargets = {
   addRoute: (appId: number) => `/Content/${appId}/Add`,
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
+  appContentPathRegex: /\/Content\/\d+\/App/,
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
   saveAndCloseButton: (page: Page): Locator => page.getByRole('link', { name: 'Save & Close' }),
 
