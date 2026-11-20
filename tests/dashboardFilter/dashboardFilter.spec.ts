@@ -1,114 +1,75 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Page } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { container } from '../../fixtures/container.fixtures';
-import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
-import { createReportFixture } from '../../fixtures/report.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { Container } from '../../models/container';
-import { TextDashboardFilter } from '../../models/dashboardFilter';
-import { TextDashboardFilterCriteria } from '../../models/dashboardFilterCriteria';
-import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
-import { TextField } from '../../models/textField';
-import { User, UserStatus } from '../../models/user';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
-import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
+import {
+  App,
+  Container,
+  Dashboard,
+  FakeDataFactory,
+  SavedReport,
+  TextDashboardFilter,
+  TextDashboardFilterCriteria,
+  TextField,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  DashboardFilterTargets,
+  DashboardFilterTasks,
+  DashboardTasks,
+  SidebarNavTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import {
+  ActorFixture,
+  AppFixture,
+  ContainerFixture,
+  DashboardFixture,
+  ReportFixture,
+  UserFixture,
+  test as base,
+} from '../../fixtures';
 import { AnnotationType } from '../annotations';
-import { Dashboard } from './../../models/dashboard';
 
 type DashboardFilterTestFixtures = {
-  sourceApp: App;
-  testUser: User;
-  testUserPage: Page;
+  app: App;
+  user: User;
+  testUserActor: WebActor;
   report: SavedReport;
   container: Container;
   dashboard: Dashboard;
-  adminHomePage: AdminHomePage;
-  dashboardsAdminPage: DashboardsAdminPage;
-  dashboardPage: DashboardPage;
-  appAdminPage: AppAdminPage;
 };
 
 const test = base.extend<DashboardFilterTestFixtures>({
-  sourceApp: app,
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        userStatus: UserStatus.Active,
-        sysAdmin: true,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
-  report: async ({ sysAdminPage, sourceApp }, use) =>
-    await createReportFixture(
-      {
-        sysAdminPage,
-        app: sourceApp,
-        report: new SavedReportAsReportDataOnly({
-          name: FakeDataFactory.createFakeReportName(),
-          appName: sourceApp.name,
-          security: 'Public',
-        }),
-      },
-      use
-    ),
-  container: container,
-  dashboard: async ({ sysAdminPage, container, report }, use) =>
-    await createDashboardFixture(
-      {
-        sysAdminPage,
-        dashboard: new Dashboard({
-          name: FakeDataFactory.createFakeDashboardName(),
-          containers: [container.name],
-          items: [
-            {
-              item: report,
-              row: 0,
-              column: 0,
-            },
-          ],
-        }),
-      },
-      use
-    ),
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
-  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+  app: AppFixture.create().build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
+  report: ReportFixture.create().withSecurity('Public').build(),
+  container: ContainerFixture.create().build(),
+  dashboard: DashboardFixture.create()
+    .withContainers(({ container }) => [container.name])
+    .withItems(({ report }) => [{ item: report, row: 0, column: 0 }])
+    .build(),
 });
 
 test.describe('dashboard filter', () => {
-  test('Enable dashboard filters', async ({ dashboard, dashboardPage }) => {
+  test('Enable dashboard filters', async ({ dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-751',
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Verify filter bar is present', async () => {
-      await expect(dashboardPage.dashboardFilterBar).toBeVisible();
+      await testUserActor.browse().check(DashboardFilterTargets.filterBar).isVisible();
     });
   });
 
-  test('Add a dashboard filter', async ({ dashboard, dashboardPage, report, sourceApp, appAdminPage }) => {
+  test('Add a dashboard filter', async ({ dashboard, report, app, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-752',
@@ -121,31 +82,27 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Verify dashboard filter was added', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toBeVisible();
+      await testUserActor.browse().check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label)).isVisible();
     });
   });
 
-  test('Update a dashboard filter', async ({ appAdminPage, sourceApp, dashboard, dashboardPage, report }) => {
+  test('Update a dashboard filter', async ({ app, dashboard, report, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-753',
@@ -158,44 +115,38 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Verify dashboard filter was added', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toBeVisible();
+      await testUserActor.browse().check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label)).isVisible();
     });
 
     const existingLabel = textDashboardFilter.label;
     textDashboardFilter.label = FakeDataFactory.createFakeDashboardFilterLabel();
 
     await test.step('Edit the dashboard filter', async () => {
-      await dashboardPage.editDashboardFilterByLabel(existingLabel, textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.editFilter(existingLabel, textDashboardFilter));
     });
 
     await test.step('Verify the dashboard filter was edited', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toBeVisible();
+      await testUserActor.browse().check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label)).isVisible();
     });
   });
 
-  test('Move a dashboard filter', async ({ report, appAdminPage, sourceApp, dashboardPage, dashboard }) => {
+  test('Move a dashboard filter', async ({ report, app, dashboard, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-754',
@@ -212,49 +163,49 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filters', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Add dashboard filters', async () => {
-      await dashboardPage.addDashboardFilter(firstDashboardFilter);
-      await dashboardPage.addDashboardFilter(secondDashboardFilter);
+      await testUserActor.attemptsTo(
+        DashboardFilterTasks.addFilter(firstDashboardFilter),
+        DashboardFilterTasks.addFilter(secondDashboardFilter)
+      );
     });
 
     await test.step('Verify dashboard filters were added', async () => {
-      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.label);
-      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.label);
-
-      await expect(firstFilter).toBeLeftOf(secondFilter);
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(firstDashboardFilter.label))
+        .isLeftOf(DashboardFilterTargets.filterByLabel(secondDashboardFilter.label));
     });
 
     await test.step('Move dashboard filter', async () => {
-      await dashboardPage.moveDashboardFilterRight(firstDashboardFilter.label);
+      await testUserActor.attemptsTo(DashboardFilterTasks.moveFilterRight(firstDashboardFilter.label));
     });
 
     await test.step('Verify the dashboard filter was moved', async () => {
-      const firstFilter = dashboardPage.getDashboardFilterByLabel(firstDashboardFilter.label);
-      const secondFilter = dashboardPage.getDashboardFilterByLabel(secondDashboardFilter.label);
-
-      await expect(firstFilter).toBeRightOf(secondFilter);
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(firstDashboardFilter.label))
+        .isRightOf(DashboardFilterTargets.filterByLabel(secondDashboardFilter.label));
     });
   });
 
   test('Save default dashboard filter criteria for a dashboard', async ({
     report,
-    appAdminPage,
-    sourceApp,
-    dashboardPage,
+    app,
     dashboard,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -272,50 +223,50 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Apply criteria to filter and save as dashboard default', async () => {
-      await dashboardPage.applyFilterCriteria(filterCriteria);
-      await dashboardPage.saveFilterCriteriaAsDefault();
+      await testUserActor.attemptsTo(
+        DashboardFilterTasks.applyFilterCriteria(filterCriteria),
+        DashboardFilterTasks.saveFilterCriteriaAsDefault()
+      );
     });
 
     await test.step('Navigate to the content tab', async () => {
-      await dashboardPage.sidebar.contentTab.click();
+      await testUserActor.browse().click(SidebarNavTargets.contentTab);
     });
 
     await test.step('Navigate back to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the saved default criteria is applied', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label))
+        .hasText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
     });
   });
 
   test('Save end user default dashboard filter criteria for a dashboard', async ({
     report,
-    appAdminPage,
-    sourceApp,
-    dashboardPage,
+    app,
     dashboard,
-    testUserPage,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -337,58 +288,57 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await sysAdminActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Enable saving end user defaults', async () => {
-      await dashboardPage.toggleEndUserDefaults();
+      await sysAdminActor.attemptsTo(DashboardFilterTasks.toggleEndUserDefaults());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await sysAdminActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Apply a dashboard default criteria to the dashboard', async () => {
-      await dashboardPage.applyFilterCriteria(filterCriteria);
-      await dashboardPage.saveFilterCriteriaAsDashboardDefault();
+      await sysAdminActor.attemptsTo(
+        DashboardFilterTasks.applyFilterCriteria(filterCriteria),
+        DashboardFilterTasks.saveFilterCriteriaAsDashboardDefault()
+      );
     });
 
-    const testUserDashboardPage = new DashboardPage(testUserPage);
-
     await test.step('Apply an end user default criteria to the dashboard', async () => {
-      await testUserDashboardPage.goto(dashboard.id);
-      await testUserDashboardPage.applyFilterCriteria(endUserFilterCriteria);
-      await testUserDashboardPage.saveFilterCriteriaAsEndUserDefault();
+      await testUserActor.attemptsTo(
+        DashboardTasks.gotoDashboard(dashboard.id),
+        DashboardFilterTasks.applyFilterCriteria(endUserFilterCriteria),
+        DashboardFilterTasks.saveFilterCriteriaAsEndUserDefault()
+      );
     });
 
     await test.step('Navigate to the content tab', async () => {
-      await testUserDashboardPage.sidebar.contentTab.click();
+      await testUserActor.browse().click(SidebarNavTargets.contentTab);
     });
 
     await test.step('Navigate back to the dashboard', async () => {
-      await testUserDashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the saved end user default criteria is applied', async () => {
-      const filter = testUserDashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toHaveText(
-        new RegExp(`${endUserFilterCriteria.filterLabel}\\s+${endUserFilterCriteria.operator}`)
-      );
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label))
+        .hasText(new RegExp(`${endUserFilterCriteria.filterLabel}\\s+${endUserFilterCriteria.operator}`));
     });
   });
 
-  test('Delete a dashboard filter', async ({ report, appAdminPage, sourceApp, dashboardPage, dashboard }) => {
+  test('Delete a dashboard filter', async ({ report, app, dashboard, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-757',
@@ -401,46 +351,40 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Verify dashboard filter was added', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toBeVisible();
+      await testUserActor.browse().check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label)).isVisible();
     });
 
     await test.step('Delete the dashboard filter', async () => {
-      await dashboardPage.deleteDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.deleteFilter(textDashboardFilter.label));
     });
 
     await test.step('Verify the dashboard filter was deleted', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toBeHidden();
+      await testUserActor.browse().check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label)).isHidden();
     });
   });
 
   test('Reset dashboard filters to dashboard defaults', async ({
     report,
-    appAdminPage,
-    sourceApp,
-    dashboardPage,
+    app,
     dashboard,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -462,51 +406,55 @@ test.describe('dashboard filter', () => {
     });
 
     await test.step('Create the text field that will be mapped in the filter', async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Enable dashboard filters', async () => {
-      await dashboardPage.toggleDashboardFilters();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleDashboardFilters());
     });
 
     await test.step('Enable saving end user defaults', async () => {
-      await dashboardPage.toggleEndUserDefaults();
+      await testUserActor.attemptsTo(DashboardFilterTasks.toggleEndUserDefaults());
     });
 
     await test.step('Add a dashboard filter', async () => {
-      await dashboardPage.addDashboardFilter(textDashboardFilter);
+      await testUserActor.attemptsTo(DashboardFilterTasks.addFilter(textDashboardFilter));
     });
 
     await test.step('Apply criteria to filter and save as dashboard default', async () => {
-      await dashboardPage.applyFilterCriteria(filterCriteria);
-      await dashboardPage.saveFilterCriteriaAsDashboardDefault();
+      await testUserActor.attemptsTo(
+        DashboardFilterTasks.applyFilterCriteria(filterCriteria),
+        DashboardFilterTasks.saveFilterCriteriaAsDashboardDefault()
+      );
     });
 
     await test.step('Change the criteria applied to the filter and save as end user defaults', async () => {
-      await dashboardPage.applyFilterCriteria(differentCriteria);
-      await dashboardPage.saveFilterCriteriaAsEndUserDefault();
+      await testUserActor.attemptsTo(
+        DashboardFilterTasks.applyFilterCriteria(differentCriteria),
+        DashboardFilterTasks.saveFilterCriteriaAsEndUserDefault()
+      );
     });
 
     await test.step('Verify the criteria was changed', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toHaveText(new RegExp(`${differentCriteria.filterLabel}\\s+${differentCriteria.operator}`));
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label))
+        .hasText(new RegExp(`${differentCriteria.filterLabel}\\s+${differentCriteria.operator}`));
     });
 
     await test.step('Reset the criteria to the default', async () => {
-      await dashboardPage.resetDashboardFilterCriteria();
+      await testUserActor.attemptsTo(DashboardFilterTasks.resetFilterCriteria());
     });
 
     await test.step('Verify the criteria was reset', async () => {
-      const filter = dashboardPage.getDashboardFilterByLabel(textDashboardFilter.label);
-
-      await expect(filter).toHaveText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
+      await testUserActor
+        .browse()
+        .check(DashboardFilterTargets.filterByLabel(textDashboardFilter.label))
+        .hasText(new RegExp(`${filterCriteria.filterLabel}\\s+${filterCriteria.operator}`));
     });
   });
 });
