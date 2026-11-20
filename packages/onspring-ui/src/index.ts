@@ -53,3 +53,5 @@ export * from './reports/reports.tasks.js';
 export * from './dashboards/dashboards.targets.js';
 export * from './dashboards/dashboards.questions.js';
 export * from './dashboards/dashboards.tasks.js';
+export * from './dashboards/dashboardFilters.targets.js';
+export * from './dashboards/dashboardFilters.tasks.js';
