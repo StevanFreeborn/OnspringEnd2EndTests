@@ -1,87 +1,82 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Page } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { container } from '../../fixtures/container.fixtures';
-import { createReportFixture } from '../../fixtures/report.fixtures';
-import { createRoleFixture } from '../../fixtures/role.fixures';
-import { activeUserWithRole } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { Container } from '../../models/container';
-import { Dashboard, DashboardSchedule } from '../../models/dashboard';
-import { ExportDashboardOptions } from '../../models/exportDashboardOptions';
-import { SavedReport, SavedReportAsReportDataOnly } from '../../models/report';
-import { AppPermission, Permission, Role } from '../../models/role';
-import { User } from '../../models/user';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { LoginPage } from '../../pageObjectModels/authentication/loginPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
-import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
+import {
+  App,
+  AppPermission,
+  Container,
+  Dashboard,
+  DashboardSchedule,
+  ExportDashboardOptions,
+  FakeDataFactory,
+  Permission,
+  Role,
+  SavedReport,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AuthTasks,
+  DashboardDesignerTargets,
+  DashboardPageTargets,
+  DashboardQuestions,
+  DashboardTasks,
+  DashboardTargets,
+  DashboardsAdminPageTargets,
+  SidebarNavTargets,
+  SidebarNavTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import {
+  ActorFixture,
+  AppFixture,
+  ContainerFixture,
+  ReportFixture,
+  RoleFixture,
+  UserFixture,
+  test as base,
+  expect,
+} from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type DashboardTestFixtures = {
-  adminHomePage: AdminHomePage;
-  dashboardsAdminPage: DashboardsAdminPage;
-  sourceApp: App;
+  app: App;
   role: Role;
   user: User;
-  testUserPage: Page;
+  testUserActor: WebActor;
   report: SavedReport;
   container: Container;
-  dashboardPage: DashboardPage;
 };
 
 const test = base.extend<DashboardTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  dashboardsAdminPage: async ({ sysAdminPage }, use) => await use(new DashboardsAdminPage(sysAdminPage)),
-  sourceApp: app,
-  role: async ({ sysAdminPage, sourceApp }, use) =>
-    await createRoleFixture(
-      {
-        sysAdminPage,
-        roleStatus: 'Active',
-        appPermissions: [
-          new AppPermission({
-            appName: sourceApp.name,
-            contentRecords: new Permission({ read: true }),
-          }),
-        ],
-      },
-      use
-    ),
-  report: async ({ sysAdminPage, sourceApp }, use) =>
-    await createReportFixture(
-      {
-        sysAdminPage,
-        app: sourceApp,
-        report: new SavedReportAsReportDataOnly({
-          name: FakeDataFactory.createFakeReportName(),
-          appName: sourceApp.name,
-          security: 'Public',
-        }),
-      },
-      use
-    ),
-  container: container,
-  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
-  user: activeUserWithRole,
-  testUserPage: createTestUserPageFixture,
+  app: AppFixture.create().build(),
+  role: RoleFixture.create()
+    .withStatus('Active')
+    .withAppPermissions(({ app }) => [
+      new AppPermission({
+        appName: app!.name,
+        contentRecords: new Permission({ read: true }),
+      }),
+    ])
+    .build(),
+  report: ReportFixture.create().withSecurity('Public').build(),
+  container: ContainerFixture.create().build(),
+  user: UserFixture.create()
+    .withStatus('Active')
+    .withRoles(({ role }) => [role.name])
+    .build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('dashboard', () => {
   let dashboardsToDelete: string[] = [];
 
-  test.beforeEach(async ({ adminHomePage }) => {
-    await adminHomePage.goto();
+  test.beforeEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.browse().goto('/Admin/Home');
   });
 
-  test.afterEach(async ({ dashboardsAdminPage }) => {
-    await dashboardsAdminPage.goto();
-    await dashboardsAdminPage.deleteDashboards(dashboardsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(DashboardTasks.deleteDashboards(dashboardsToDelete));
     dashboardsToDelete = [];
   });
 
-  test('Create a Dashboard via the create button in the header of the admin home page', async ({ adminHomePage }) => {
+  test('Create a Dashboard via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-316',
@@ -91,17 +86,16 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboardName);
 
     await test.step('Create the dashboard', async () => {
-      await adminHomePage.createDashboardUsingHeaderCreateButton(dashboardName);
-      await adminHomePage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createViaHeader(dashboardName));
     });
 
     await test.step('Verify the dashboard was created correctly', async () => {
-      await expect(adminHomePage.dashboardDesigner.title).toHaveText(dashboardName);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboardName);
     });
   });
 
   test('Create a Dashboard via the create button on the Dashboards tile on the admin home page', async ({
-    adminHomePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -112,17 +106,16 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboardName);
 
     await test.step('Create the dashboard', async () => {
-      await adminHomePage.createDashboardUsingDashboardsTileButton(dashboardName);
-      await adminHomePage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createViaTile(dashboardName));
     });
 
     await test.step('Verify the dashboard was created correctly', async () => {
-      await expect(adminHomePage.dashboardDesigner.title).toHaveText(dashboardName);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboardName);
     });
   });
 
   test('Create a Dashboard via the "Create Dashboard" button on the Dashboards home page', async ({
-    dashboardsAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -133,21 +126,20 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
     });
 
     await test.step('Verify the dashboard was created correctly', async () => {
-      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboard.name);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboard.name);
     });
   });
 
   test('Create a copy of a Dashboard via the create button in the header of the admin home page', async ({
-    adminHomePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -159,22 +151,23 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboardToCopyName, dashboardCopyName);
 
     await test.step('Create the dashboard to copy', async () => {
-      await adminHomePage.createDashboardUsingHeaderCreateButton(dashboardToCopyName);
-      await adminHomePage.dashboardDesigner.close();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createViaHeader(dashboardToCopyName),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Create the copy of the dashboard', async () => {
-      await adminHomePage.createDashboardCopyUsingHeaderCreateButton(dashboardToCopyName, dashboardCopyName);
-      await adminHomePage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createCopyViaHeader(dashboardToCopyName, dashboardCopyName));
     });
 
     await test.step('Verify the dashboard was copied correctly', async () => {
-      await expect(adminHomePage.dashboardDesigner.title).toHaveText(dashboardCopyName);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboardCopyName);
     });
   });
 
   test('Create a copy of a Dashboard via the create button on the Dashboards tile on the admin home page', async ({
-    adminHomePage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -186,22 +179,20 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboardToCopyName, dashboardCopyName);
 
     await test.step('Create the dashboard to copy', async () => {
-      await adminHomePage.createDashboardUsingDashboardsTileButton(dashboardToCopyName);
-      await adminHomePage.dashboardDesigner.close();
+      await sysAdminActor.attemptsTo(DashboardTasks.createViaTile(dashboardToCopyName), DashboardTasks.closeDesigner());
     });
 
     await test.step('Create the copy of the dashboard', async () => {
-      await adminHomePage.createDashboardCopyUsingDashboardsTileButton(dashboardToCopyName, dashboardCopyName);
-      await adminHomePage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createCopyViaTile(dashboardToCopyName, dashboardCopyName));
     });
 
     await test.step('Verify the dashboard was copied correctly', async () => {
-      await expect(adminHomePage.dashboardDesigner.title).toHaveText(dashboardCopyName);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboardCopyName);
     });
   });
 
   test('Create a copy of a Dashboard via the "Create Dashboard" button on the Dashboards home page', async ({
-    dashboardsAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -209,29 +200,30 @@ test.describe('dashboard', () => {
     });
 
     const dashboardToCopy = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
-    const dashboardCopyName = FakeDataFactory.createFakeAppName();
+    const dashboardCopyName = FakeDataFactory.createFakeDashboardName();
     dashboardsToDelete.push(dashboardToCopy.name, dashboardCopyName);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard to copy', async () => {
-      await dashboardsAdminPage.createDashboard(dashboardToCopy);
-      await dashboardsAdminPage.dashboardDesigner.close();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboardToCopy.name),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Create the copy of the dashboard', async () => {
-      await dashboardsAdminPage.createDashboardCopy(dashboardToCopy.name, dashboardCopyName);
-      await dashboardsAdminPage.dashboardDesigner.waitFor();
+      await sysAdminActor.attemptsTo(DashboardTasks.createCopyFromAdminPage(dashboardToCopy.name, dashboardCopyName));
     });
 
     await test.step('Verify the dashboard was copied correctly', async () => {
-      await expect(dashboardsAdminPage.dashboardDesigner.title).toHaveText(dashboardCopyName);
+      await sysAdminActor.browse().check(DashboardDesignerTargets.title).hasText(dashboardCopyName);
     });
   });
 
-  test('Update a dashboard', async ({ dashboardsAdminPage }) => {
+  test('Update a dashboard', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-322',
@@ -240,31 +232,32 @@ test.describe('dashboard', () => {
     const dashboard = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.close();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Update the dashboard', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await sysAdminActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
 
       dashboard.name = FakeDataFactory.createFakeDashboardName();
       dashboardsToDelete.push(dashboard.name);
 
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Verify the dashboard was updated correctly', async () => {
-      const updatedDashboard = await dashboardsAdminPage.getDashboardRow(dashboard.name);
-      await expect(updatedDashboard).toBeVisible();
+      await sysAdminActor.attemptsTo(DashboardTasks.scrollAllIntoView());
+      await sysAdminActor.browse().check(DashboardsAdminPageTargets.rowByName(dashboard.name)).isVisible();
     });
   });
 
-  test('Delete a dashboard', async ({ dashboardsAdminPage }) => {
+  test('Delete a dashboard', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-323',
@@ -273,30 +266,27 @@ test.describe('dashboard', () => {
     const dashboard = new Dashboard({ name: FakeDataFactory.createFakeDashboardName() });
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.close();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Delete the dashboard', async () => {
-      await dashboardsAdminPage.deleteDashboards([dashboard.name]);
+      await sysAdminActor.attemptsTo(DashboardTasks.deleteDashboard(dashboard.name));
     });
 
     await test.step('Verify the dashboard was deleted', async () => {
-      const dashboardRow = await dashboardsAdminPage.getDashboardRow(dashboard.name);
-      await expect(dashboardRow).not.toBeAttached();
+      await sysAdminActor.attemptsTo(DashboardTasks.scrollAllIntoView());
+      await sysAdminActor.browse().check(DashboardsAdminPageTargets.rowByName(dashboard.name)).isNotAttached();
     });
   });
 
-  test("Edit a dashboard's configurations from the dashboard", async ({
-    report,
-    container,
-    dashboardsAdminPage,
-    dashboardPage,
-  }) => {
+  test("Edit a dashboard's configurations from the dashboard", async ({ report, container, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-324',
@@ -315,47 +305,38 @@ test.describe('dashboard', () => {
     });
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardPage.openDashboardDesigner();
+      await sysAdminActor.attemptsTo(DashboardTasks.openDesignerFromDashboard());
     });
 
     await test.step('Update the dashboard', async () => {
       dashboard.name = FakeDataFactory.createFakeDashboardName();
       dashboardsToDelete.push(dashboard.name);
 
-      await dashboardPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardPage.dashboardDesigner.saveAndClose();
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardPage.page.waitForTimeout(1000);
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
+      await sysAdminActor.browse().waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard was updated correctly', async () => {
-      await dashboardPage.goto(dashboard.id);
-      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboard.name);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
+      await sysAdminActor.browse().check(DashboardPageTargets.breadcrumbTitle).hasText(dashboard.name);
     });
   });
 
-  test('Print a dashboard', async ({
-    report,
-    container,
-    dashboardsAdminPage,
-    dashboardPage,
-    downloadService,
-    pdfParser,
-  }) => {
+  test('Print a dashboard', async ({ report, container, sysAdminActor, downloadService, pdfParser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-325',
@@ -376,39 +357,28 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     let pdfPath: string;
 
     await test.step('Print the dashboard', async () => {
-      await dashboardPage.printDashboard();
+      await sysAdminActor.attemptsTo(DashboardTasks.printDashboard());
 
-      const pdfResponse = await dashboardPage.page.request.post(`/Dashboard/${dashboard.id}/Print`, {
-        form: { Orientation: 1 },
-      });
-      const responseHeaders = pdfResponse.headers();
-      const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
+      const { fileName, body } = await sysAdminActor.asks(DashboardQuestions.printedPdf(dashboard.id));
+      expect(fileName).toBe(`${dashboard.name}.pdf`);
 
-      expect(nameMatch).not.toBeNull();
-
-      const pdfName = nameMatch![1];
-
-      expect(pdfName).toBe(`${dashboard.name}.pdf`);
-
-      const pdf = await pdfResponse.body();
-
-      pdfPath = await downloadService.saveBuffer(pdf, pdfName);
+      pdfPath = await downloadService.saveBuffer(Buffer.from(body), fileName);
     });
 
     await test.step('Verify the printed dashboard contains expected text', async () => {
@@ -422,11 +392,9 @@ test.describe('dashboard', () => {
   test('Export a dashboard', async ({
     report,
     container,
-    dashboardsAdminPage,
-    dashboardPage,
+    sysAdminActor,
     sysAdminUser,
     sysAdminEmail,
-    sysAdminPage,
     downloadService,
     pdfParser,
   }) => {
@@ -450,21 +418,21 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Export the dashboard', async () => {
-      await dashboardPage.exportDashboard();
+      await sysAdminActor.attemptsTo(DashboardTasks.exportDashboard());
     });
 
     let exportEmailContent: string;
@@ -493,11 +461,7 @@ test.describe('dashboard', () => {
     let dashboardPath: string;
 
     await test.step('Download the exported dashboard', async () => {
-      await sysAdminPage.setContent(exportEmailContent);
-
-      const dashboardDownloadPromise = sysAdminPage.waitForEvent('download');
-      await sysAdminPage.getByRole('link').click();
-      const download = await dashboardDownloadPromise;
+      const download = await sysAdminActor.asks(DashboardQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       dashboardPath = await downloadService.saveDownload(download);
     });
 
@@ -512,10 +476,9 @@ test.describe('dashboard', () => {
   test('Schedule a dashboard for export', async ({
     report,
     container,
-    dashboardsAdminPage,
+    sysAdminActor,
     sysAdminUser,
     sysAdminEmail,
-    sysAdminPage,
     downloadService,
     pdfParser,
   }) => {
@@ -556,13 +519,15 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     let exportEmailContent: string;
@@ -591,11 +556,7 @@ test.describe('dashboard', () => {
     let dashboardPath: string;
 
     await test.step('Download the exported dashboard', async () => {
-      await sysAdminPage.setContent(exportEmailContent);
-
-      const dashboardDownloadPromise = sysAdminPage.waitForEvent('download');
-      await sysAdminPage.getByRole('link').click();
-      const download = await dashboardDownloadPromise;
+      const download = await sysAdminActor.asks(DashboardQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       dashboardPath = await downloadService.saveDownload(download);
     });
 
@@ -607,7 +568,7 @@ test.describe('dashboard', () => {
     });
   });
 
-  test("Get a dashboard's link", async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
+  test("Get a dashboard's link", async ({ report, container, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-328',
@@ -628,23 +589,23 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     let dashboardLink: string;
 
     await test.step("Get the dashboard's link", async () => {
-      dashboardLink = await dashboardPage.getDashboardLink();
+      dashboardLink = await sysAdminActor.asks(DashboardQuestions.dashboardLink());
     });
 
     await test.step('Verify the dashboard link has expected value', async () => {
@@ -655,8 +616,8 @@ test.describe('dashboard', () => {
   test('Set a dashboard as your default dashboard', async ({
     report,
     container,
-    dashboardsAdminPage,
-    testUserPage,
+    sysAdminActor,
+    testUserActor,
     user,
   }) => {
     test.info().annotations.push({
@@ -692,36 +653,35 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(...dashboards.map(d => d.name));
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboards', async () => {
       for (const dashboard of dashboards) {
-        await dashboardsAdminPage.createDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await sysAdminActor.attemptsTo(
+          DashboardTasks.createFromAdminPage(dashboard.name),
+          DashboardTasks.updateInDesigner(dashboard),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       }
     });
 
     await test.step('Set default dashboard and logout', async () => {
-      const dashboardPage = new DashboardPage(testUserPage);
-      await dashboardPage.goto();
-      await dashboardPage.setDefaultDashboard(dashboards[1].name);
-      await dashboardPage.logout();
+      await testUserActor.attemptsTo(
+        DashboardTasks.gotoDashboard(),
+        SidebarNavTasks.setDefaultDashboard(dashboards[1].name),
+        SidebarNavTasks.logout()
+      );
     });
 
     await test.step('Log in as user and verify default dashboard', async () => {
-      const loginPage = new LoginPage(testUserPage);
-      const dashboardPage = new DashboardPage(testUserPage);
-
-      await loginPage.login(user);
-      await loginPage.page.waitForURL(dashboardPage.path);
-
-      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboards[1].name);
+      await testUserActor.attemptsTo(AuthTasks.login(user.username, user.password));
+      await testUserActor.browse().waitForUrl(DashboardTargets.pathRegex);
+      await testUserActor.browse().check(DashboardPageTargets.breadcrumbTitle).hasText(dashboards[1].name);
     });
   });
 
-  test('Disable a dashboard', async ({ report, container, dashboardsAdminPage, testUserPage }) => {
+  test('Disable a dashboard', async ({ report, container, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-330',
@@ -740,31 +700,30 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
+      await sysAdminActor.browse().waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is disabled', async () => {
-      const dashboardPage = new DashboardPage(testUserPage);
-
-      await dashboardPage.goto();
-      await dashboardPage.sidebar.dashboardsTab.click();
-      await dashboardPage.page.waitForURL(dashboardPage.path);
-
-      const containerLink = dashboardPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeHidden();
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard());
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await testUserActor.browse().waitForUrl(DashboardPageTargets.route);
+      await testUserActor.browse().check(SidebarNavTargets.containerLink(container.name)).isHidden();
     });
   });
 
-  test('Enable a dashboard', async ({ report, container, dashboardsAdminPage }) => {
+  test('Enable a dashboard', async ({ report, container, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-331',
@@ -786,26 +745,25 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardsAdminPage.page.waitForTimeout(1000);
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
+      await sysAdminActor.browse().waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard is enabled', async () => {
-      await dashboardsAdminPage.sidebar.dashboardsTab.click();
-
-      const containerLink = dashboardsAdminPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeVisible();
+      await sysAdminActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await sysAdminActor.browse().check(SidebarNavTargets.containerLink(container.name)).isVisible();
     });
   });
 
-  test('Make a dashboard private', async ({ report, container, dashboardsAdminPage, testUserPage, sysAdminUser }) => {
+  test('Make a dashboard private', async ({ report, container, sysAdminActor, testUserActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-332',
@@ -826,45 +784,43 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
-    const testUserDashboardPage = new DashboardPage(testUserPage);
-
     await test.step('Verify the dashboard is visible', async () => {
-      await testUserDashboardPage.goto();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
-
-      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeVisible();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard());
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await testUserActor.browse().check(SidebarNavTargets.containerLink(container.name)).isVisible();
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
     });
 
     await test.step('Make the dashboard private', async () => {
       dashboard.permissionStatus = 'Private';
       dashboard.permissions.users.push(sysAdminUser.fullName);
 
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Verify the dashboard is not visible', async () => {
-      await testUserDashboardPage.page.reload();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
-
-      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeHidden();
+      await testUserActor.browse().reload();
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await testUserActor.browse().check(SidebarNavTargets.containerLink(container.name)).isHidden();
     });
   });
 
-  test('Make a dashboard public', async ({ report, container, dashboardsAdminPage, testUserPage, sysAdminUser }) => {
+  test('Make a dashboard public', async ({ report, container, sysAdminActor, testUserActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-333',
@@ -889,44 +845,42 @@ test.describe('dashboard', () => {
     dashboardsToDelete.push(dashboard.name);
 
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.createFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
-    const testUserDashboardPage = new DashboardPage(testUserPage);
-
     await test.step('Verify the dashboard is not visible', async () => {
-      await testUserDashboardPage.goto();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
-
-      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeHidden();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard());
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await testUserActor.browse().check(SidebarNavTargets.containerLink(container.name)).isHidden();
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
     });
 
     await test.step('Make the dashboard public', async () => {
       dashboard.permissionStatus = 'Public';
 
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Verify the dashboard is visible', async () => {
-      await testUserDashboardPage.page.reload();
-      await testUserDashboardPage.sidebar.dashboardsTab.click();
-
-      const containerLink = testUserDashboardPage.sidebar.getContainerLink(container.name);
-      await expect(containerLink).toBeVisible();
+      await testUserActor.browse().reload();
+      await testUserActor.browse().click(SidebarNavTargets.dashboardsTab);
+      await testUserActor.browse().check(SidebarNavTargets.containerLink(container.name)).isVisible();
     });
   });
 
-  test("Navigate to a dashboard via it's link", async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
+  test("Navigate to a dashboard via it's link", async ({ report, container, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-334',
@@ -944,40 +898,42 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Navigate to the dashboard', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     let dashboardLink: string;
 
     await test.step("Get the dashboard's link", async () => {
-      dashboardLink = await dashboardPage.getDashboardLink();
+      dashboardLink = await sysAdminActor.asks(DashboardQuestions.dashboardLink());
     });
 
     await test.step('Navigate to another page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Navigate back to the dashboard via the link', async () => {
-      await dashboardPage.page.goto(dashboardLink);
+      await sysAdminActor.browse().goto(dashboardLink);
     });
 
     await test.step('Verify the dashboard has expected title', async () => {
-      await expect(dashboardPage.dashboardBreadcrumbTitle).toHaveText(dashboard.name);
+      await sysAdminActor.browse().check(DashboardPageTargets.breadcrumbTitle).hasText(dashboard.name);
     });
   });
 
-  test('Add a dashboard title to a dashboard', async ({ report, container, dashboardsAdminPage, dashboardPage }) => {
+  test('Add a dashboard title to a dashboard', async ({ report, container, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-869',
@@ -996,38 +952,39 @@ test.describe('dashboard', () => {
       ],
     });
 
+    dashboardsToDelete.push(dashboard.name);
+
     await test.step('Navigate to the Dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create the dashboard', async () => {
-      await dashboardsAdminPage.createDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await sysAdminActor.attemptsTo(DashboardTasks.createFromAdminPage(dashboard.name));
+      dashboard.id = await sysAdminActor.asks(DashboardQuestions.designerDashboardId());
+      await sysAdminActor.attemptsTo(DashboardTasks.updateInDesigner(dashboard), DashboardTasks.saveAndCloseDesigner());
     });
 
     await test.step('Verify the dashboard has no title', async () => {
-      await dashboardPage.goto(dashboard.id);
-      await expect(dashboardPage.dashboardTitle).toBeHidden();
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
+      await sysAdminActor.browse().check(DashboardPageTargets.dashboardTitle).isHidden();
     });
 
     await test.step('Add a title to the dashboard', async () => {
       dashboard.displayTitle = true;
 
-      await dashboardPage.openDashboardDesigner();
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardPage.page.waitForTimeout(1000);
+      await sysAdminActor.attemptsTo(
+        DashboardTasks.openDesignerFromDashboard(),
+        DashboardTasks.updateInDesigner(dashboard),
+        DashboardTasks.saveAndCloseDesigner()
+      );
+      await sysAdminActor.browse().waitForTimeout(1000);
     });
 
     await test.step('Verify the dashboard has the expected title', async () => {
-      await dashboardPage.goto(dashboard.id);
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await dashboardPage.page.waitForTimeout(1000);
-      await dashboardPage.page.reload();
-      await expect(dashboardPage.dashboardTitle).toHaveText(dashboard.name);
+      await sysAdminActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
+      await sysAdminActor.browse().waitForTimeout(1000);
+      await sysAdminActor.browse().reload();
+      await sysAdminActor.browse().check(DashboardPageTargets.dashboardTitle).hasText(dashboard.name);
     });
   });
 });
