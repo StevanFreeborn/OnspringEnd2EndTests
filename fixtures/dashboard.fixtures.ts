@@ -1,15 +1,12 @@
-import { Page } from '@playwright/test';
 import {
   Container,
+  Dashboard,
   DashboardItemWithLocation,
-  Dashboard as ScreenplayDashboard,
   FakeDataFactory,
   SavedReport,
 } from '@stevanfreeborn/onspring-models';
 import { DashboardQuestions, DashboardTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { DashboardsAdminPage } from '../pageObjectModels/dashboards/dashboardsAdminPage';
-import { Dashboard } from '../models/dashboard';
 
 export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sysAdminActor: WebActor }> {
   private name?: string;
@@ -17,7 +14,7 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
   private containersFactory?: (deps: { container: Container }) => string[];
   private items: DashboardItemWithLocation[] = [];
   private itemsFactory?: (deps: { report: SavedReport }) => DashboardItemWithLocation[];
-  private configure?: (dashboard: ScreenplayDashboard) => void;
+  private configure?: (dashboard: Dashboard) => void;
 
   withName(name: string): this {
     this.name = name;
@@ -56,7 +53,7 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
     return this as unknown as DashboardFixtureBuilder<TDeps & { report: SavedReport }>;
   }
 
-  withConfiguration(configure: (dashboard: ScreenplayDashboard) => void): this {
+  withConfiguration(configure: (dashboard: Dashboard) => void): this {
     this.configure = configure;
     return this;
   }
@@ -65,9 +62,9 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
     sysAdminActor: WebActor,
     containers: string[],
     items: DashboardItemWithLocation[],
-    use: (dashboard: ScreenplayDashboard) => Promise<void>
+    use: (dashboard: Dashboard) => Promise<void>
   ): Promise<void> {
-    const dashboard = new ScreenplayDashboard({
+    const dashboard = new Dashboard({
       name: this.name ?? FakeDataFactory.createFakeDashboardName(),
       containers,
       items,
@@ -88,14 +85,14 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
     }
   }
 
-  build(): (deps: TDeps, use: (dashboard: ScreenplayDashboard) => Promise<void>) => Promise<void> {
+  build(): (deps: TDeps, use: (dashboard: Dashboard) => Promise<void>) => Promise<void> {
     const containersFactory = this.containersFactory;
     const itemsFactory = this.itemsFactory;
 
     if (containersFactory && itemsFactory) {
       return (async (
         { sysAdminActor, container, report }: { sysAdminActor: WebActor; container: Container; report: SavedReport },
-        use: (dashboard: ScreenplayDashboard) => Promise<void>
+        use: (dashboard: Dashboard) => Promise<void>
       ) => {
         await this.runFixture(
           sysAdminActor,
@@ -103,13 +100,13 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
           [...this.items, ...itemsFactory({ report })],
           use
         );
-      }) as unknown as (deps: TDeps, use: (dashboard: ScreenplayDashboard) => Promise<void>) => Promise<void>;
+      }) as unknown as (deps: TDeps, use: (dashboard: Dashboard) => Promise<void>) => Promise<void>;
     }
 
     if (containersFactory) {
       return (async (
         { sysAdminActor, container }: { sysAdminActor: WebActor; container: Container },
-        use: (dashboard: ScreenplayDashboard) => Promise<void>
+        use: (dashboard: Dashboard) => Promise<void>
       ) => {
         await this.runFixture(
           sysAdminActor,
@@ -117,24 +114,21 @@ export class DashboardFixtureBuilder<TDeps extends { sysAdminActor: WebActor } =
           [...this.items],
           use
         );
-      }) as unknown as (deps: TDeps, use: (dashboard: ScreenplayDashboard) => Promise<void>) => Promise<void>;
+      }) as unknown as (deps: TDeps, use: (dashboard: Dashboard) => Promise<void>) => Promise<void>;
     }
 
     if (itemsFactory) {
       return (async (
         { sysAdminActor, report }: { sysAdminActor: WebActor; report: SavedReport },
-        use: (dashboard: ScreenplayDashboard) => Promise<void>
+        use: (dashboard: Dashboard) => Promise<void>
       ) => {
         await this.runFixture(sysAdminActor, [...this.containers], [...this.items, ...itemsFactory({ report })], use);
-      }) as unknown as (deps: TDeps, use: (dashboard: ScreenplayDashboard) => Promise<void>) => Promise<void>;
+      }) as unknown as (deps: TDeps, use: (dashboard: Dashboard) => Promise<void>) => Promise<void>;
     }
 
-    return (async (
-      { sysAdminActor }: { sysAdminActor: WebActor },
-      use: (dashboard: ScreenplayDashboard) => Promise<void>
-    ) => {
+    return (async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (dashboard: Dashboard) => Promise<void>) => {
       await this.runFixture(sysAdminActor, [...this.containers], [...this.items], use);
-    }) as (deps: TDeps, use: (dashboard: ScreenplayDashboard) => Promise<void>) => Promise<void>;
+    }) as (deps: TDeps, use: (dashboard: Dashboard) => Promise<void>) => Promise<void>;
   }
 }
 
@@ -142,29 +136,4 @@ export class DashboardFixture {
   static create(): DashboardFixtureBuilder {
     return new DashboardFixtureBuilder();
   }
-}
-
-export async function createDashboardFixture(
-  { sysAdminPage, dashboard }: { sysAdminPage: Page; dashboard: Dashboard },
-  use: (r: Dashboard) => Promise<void>
-) {
-  const { dashboard: newDashboard, cleanup } = await createDashboard(sysAdminPage, dashboard);
-  await use(newDashboard);
-  await cleanup();
-}
-
-async function createDashboard(sysAdminPage: Page, dashboard: Dashboard) {
-  const dashboardsAdminPage = new DashboardsAdminPage(sysAdminPage);
-
-  await dashboardsAdminPage.goto();
-  await dashboardsAdminPage.createDashboard(dashboard);
-  await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-  await dashboardsAdminPage.dashboardDesigner.saveAndClose();
-
-  async function cleanup() {
-    await dashboardsAdminPage.goto();
-    await dashboardsAdminPage.deleteDashboards([dashboard.name]);
-  }
-
-  return { dashboard, cleanup };
 }

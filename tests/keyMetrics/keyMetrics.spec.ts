@@ -1,112 +1,85 @@
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Page } from '../../fixtures';
-import { createApp } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { container } from '../../fixtures/container.fixtures';
-import { createDashboardFixture } from '../../fixtures/dashboard.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { Container } from '../../models/container';
-import { Dashboard } from '../../models/dashboard';
 import {
+  App,
   BarGaugeKeyMetric,
   BulbGaugeKeyMetric,
+  Container,
+  Dashboard,
   DialGaugeKeyMetric,
   DonutGaugeKeyMetric,
+  FakeDataFactory,
   KeyMetric,
+  SavedReportAsReportDataOnly,
   SingleValueKeyMetric,
-} from '../../models/keyMetric';
-import { SavedReportAsReportDataOnly } from '../../models/report';
-import { TextField } from '../../models/textField';
-import { User, UserStatus } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { DashboardPage } from '../../pageObjectModels/dashboards/dashboardPage';
-import { DashboardsAdminPage } from '../../pageObjectModels/dashboards/dashboardsAdminPage';
-import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
-import { ReportPage } from '../../pageObjectModels/reports/reportPage';
+  TextField,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentQuestions,
+  ContentTasks,
+  DashboardPageTargets,
+  DashboardTasks,
+  KeyMetricTasks,
+  ReportTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import {
+  ActorFixture,
+  AppFixture,
+  ContainerFixture,
+  DashboardFixture,
+  UserFixture,
+  test as base,
+  expect,
+} from '../../fixtures';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
-import { AddContentPage } from './../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from './../../pageObjectModels/content/editContentPage';
 
 type KeyMetricTestFixtures = {
   sourceApp: App;
   container: Container;
   dashboard: Dashboard;
-  testUser: User;
-  testUserPage: Page;
-  dashboardsAdminPage: DashboardsAdminPage;
-  dashboardPage: DashboardPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  reportHomePage: ReportHomePage;
-  reportPage: ReportPage;
-  appAdminPage: AppAdminPage;
-  appsAdminPage: AppsAdminPage;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<KeyMetricTestFixtures>({
-  sourceApp: async ({ sysAdminPage }, use) => {
-    const app = await createApp(sysAdminPage);
-    await use(app);
-  },
-  container: container,
-  dashboard: async ({ sysAdminPage, container }, use) =>
-    await createDashboardFixture(
-      {
-        sysAdminPage,
-        dashboard: new Dashboard({ name: FakeDataFactory.createFakeDashboardName(), containers: [container.name] }),
-      },
-      use
-    ),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
-  dashboardsAdminPage: async ({ testUserPage }, use) => await use(new DashboardsAdminPage(testUserPage)),
-  dashboardPage: async ({ sysAdminPage }, use) => await use(new DashboardPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
-  reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
-  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  appsAdminPage: async ({ sysAdminPage }, use) => await use(new AppsAdminPage(sysAdminPage)),
+  sourceApp: AppFixture.create().build(),
+  container: ContainerFixture.create().build(),
+  dashboard: DashboardFixture.create()
+    .withContainers(({ container }) => [container.name])
+    .build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('key metrics', () => {
   let keyMetricsToDelete: KeyMetric[] = [];
 
-  test.afterEach(async ({ appsAdminPage, dashboardsAdminPage, dashboard, sourceApp }) => {
-    await dashboardsAdminPage.goto();
-    await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-
-    for (const keyMetric of keyMetricsToDelete) {
-      await dashboardsAdminPage.dashboardDesigner.deleteKeyMetric(keyMetric);
+  test.afterEach(async ({ testUserActor, dashboard }) => {
+    if (keyMetricsToDelete.length === 0) {
+      return;
     }
 
+    const metrics = [...keyMetricsToDelete];
     keyMetricsToDelete = [];
 
-    await appsAdminPage.deleteApps([sourceApp.name]);
+    await testUserActor.attemptsTo(
+      DashboardTasks.gotoAdminPage(),
+      DashboardTasks.openDesignerFromAdminPage(dashboard.name)
+    );
+
+    for (const keyMetric of metrics) {
+      await testUserActor.attemptsTo(KeyMetricTasks.deleteKeyMetric(keyMetric.objectName));
+    }
+
+    await testUserActor.attemptsTo(DashboardTasks.closeDesigner());
   });
 
   test('Add a new single value key metric with an app/survey field source', async ({
     sourceApp,
-    dashboardsAdminPage,
     dashboard,
-    dashboardPage,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -124,39 +97,35 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
   test('Add a new single value key metric with a content record field source', async ({
     sourceApp,
-    dashboardsAdminPage,
     dashboard,
-    dashboardPage,
-    addContentPage,
-    editContentPage,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -166,10 +135,8 @@ test.describe('key metrics', () => {
     let recordId = 0;
 
     await test.step('Create a content record in the source app', async () => {
-      await addContentPage.goto(sourceApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
       expect(recordId).toBeGreaterThan(0);
     });
 
@@ -185,39 +152,35 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
   test('Add a new single value key metric with a report field source', async ({
     sourceApp,
-    reportHomePage,
-    reportPage,
-    dashboardsAdminPage,
     dashboard,
-    dashboardPage,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -231,9 +194,7 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Create a report in the source app', async () => {
-      await reportHomePage.goto();
-      await reportHomePage.createReport(report);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createSavedDataReport(sourceApp.id, report));
     });
 
     const keyMetric = new SingleValueKeyMetric({
@@ -248,33 +209,31 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
-  test('Modify an existing key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Modify an existing key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-777',
@@ -293,18 +252,16 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create a key metric to update', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Update the key metric', async () => {
@@ -312,32 +269,30 @@ test.describe('key metrics', () => {
       updatedKeyMetric.objectName = updatedKeyMetricName;
       keyMetricsToDelete.push(updatedKeyMetric);
 
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-
-      await dashboardsAdminPage.dashboardDesigner.updateKeyMetric(keyMetric, updatedKeyMetric);
-
-      await dashboardsAdminPage.dashboardDesigner.close();
+      await testUserActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        KeyMetricTasks.updateKeyMetric(keyMetric.objectName, updatedKeyMetric),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was updated successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(updatedKeyMetricName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(updatedKeyMetricName)).isVisible();
     });
   });
 
-  test('Delete a key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Delete a key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-778',
     });
 
-    const keyMetricName = FakeDataFactory.createFakeKeyMetricName();
     const keyMetric = new SingleValueKeyMetric({
-      objectName: keyMetricName,
+      objectName: FakeDataFactory.createFakeKeyMetricName(),
       appOrSurvey: sourceApp.name,
       fieldSource: {
         type: 'App/Survey',
@@ -346,53 +301,51 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Create a key metric to delete', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was created successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
 
     await test.step('Navigate back to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Delete the key metric', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
-      await dashboardsAdminPage.dashboardDesigner.deleteKeyMetric(keyMetric);
-      await dashboardsAdminPage.dashboardDesigner.close();
+      await testUserActor.attemptsTo(
+        DashboardTasks.openDesignerFromAdminPage(dashboard.name),
+        KeyMetricTasks.deleteKeyMetric(keyMetric.objectName),
+        DashboardTasks.closeDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was deleted successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeHidden();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isHidden();
     });
   });
 
   test(
     'Verify an app/survey single value key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
+    async ({ sourceApp, dashboard, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-779',
@@ -409,29 +362,28 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
@@ -439,16 +391,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a content record single value key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({
-      sourceApp,
-      appAdminPage,
-      dashboardsAdminPage,
-      dashboard,
-      dashboardPage,
-      addContentPage,
-      editContentPage,
-      testUserPage,
-    }) => {
+    async ({ sourceApp, dashboard, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-780',
@@ -463,36 +406,33 @@ test.describe('key metrics', () => {
       });
 
       await test.step('Add a text field to the source app', async () => {
-        await appAdminPage.goto(sourceApp.id);
-        await appAdminPage.layoutTabButton.click();
-        await appAdminPage.layoutTab.openLayout();
-        await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionRow: 0,
-          sectionColumn: 0,
-          fieldName: textField.name,
-        });
-        await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+        await sysAdminActor.attemptsTo(
+          AppTasks.gotoApp(sourceApp.id),
+          AppTasks.openLayoutDesigner(),
+          AppTasks.addTextFieldInLayoutDesigner(textField.name),
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            row: 0,
+            column: 0,
+            fieldName: textField.name,
+          }),
+          AppTasks.saveAndCloseLayout()
+        );
       });
 
       await test.step('Create a content record in the source app', async () => {
-        await addContentPage.goto(sourceApp.id);
-
-        const textFieldInput = await addContentPage.form.getField({
-          tabName: tabName,
-          sectionName: sectionName,
-          fieldName: textField.name,
-          fieldType: textField.type as FieldType,
-        });
-        await textFieldInput.fill('Test Value');
-
-        await addContentPage.saveRecordButton.click();
-        await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-        recordId = editContentPage.getRecordIdFromUrl();
-
+        await sysAdminActor.attemptsTo(
+          ContentTasks.gotoAdd(sourceApp.id),
+          ContentTasks.fillTextField({
+            tabName,
+            sectionName,
+            fieldName: textField.name,
+            value: 'Test Value',
+          }),
+          ContentTasks.saveRecord()
+        );
+        recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
         expect(recordId).toBeGreaterThan(0);
       });
 
@@ -508,41 +448,37 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
 
   test('Verify a report single value key metric displays and functions as expected', async ({
     sourceApp,
-    reportHomePage,
-    reportPage,
-    dashboardsAdminPage,
     dashboard,
-    dashboardPage,
-    testUserPage,
+    sysAdminActor,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -556,9 +492,7 @@ test.describe('key metrics', () => {
     });
 
     await test.step('Create a report in the source app', async () => {
-      await reportHomePage.goto();
-      await reportHomePage.createReport(report);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createSavedDataReport(sourceApp.id, report));
     });
 
     const keyMetric = new SingleValueKeyMetric({
@@ -573,33 +507,32 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric displays as expected', async () => {
-      const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-      await expect(keyMetricCard).toHaveScreenshot();
+      await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
     });
   });
 
-  test('Add a new dial gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Add a new dial gauge key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-795',
@@ -612,14 +545,7 @@ test.describe('key metrics', () => {
         type: 'App/Survey',
         aggregate: { fn: 'Count (of Records Returned)' },
       },
-      valueRanges: [
-        {
-          rangeStop: 50,
-        },
-        {
-          rangeStop: 100,
-        },
-      ],
+      valueRanges: [{ rangeStop: 50 }, { rangeStop: 100 }],
       totalSource: {
         type: 'Static',
         totalValue: 10,
@@ -628,33 +554,31 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
-  test('Add a new donut gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Add a new donut gauge key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-796',
@@ -680,33 +604,31 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
-  test('Add a new bar gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Add a new bar gauge key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-797',
@@ -719,14 +641,7 @@ test.describe('key metrics', () => {
         type: 'App/Survey',
         aggregate: { fn: 'Count (of Records Returned)' },
       },
-      valueRanges: [
-        {
-          rangeStop: 50,
-        },
-        {
-          rangeStop: 100,
-        },
-      ],
+      valueRanges: [{ rangeStop: 50 }, { rangeStop: 100 }],
       totalSource: {
         type: 'Static',
         totalValue: 10,
@@ -735,33 +650,31 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
-  test('Add a new bulb gauge key metric', async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage }) => {
+  test('Add a new bulb gauge key metric', async ({ sourceApp, dashboard, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-798',
@@ -783,36 +696,34 @@ test.describe('key metrics', () => {
     keyMetricsToDelete.push(keyMetric);
 
     await test.step('Navigate to the dashboards admin page', async () => {
-      await dashboardsAdminPage.goto();
+      await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
     });
 
     await test.step('Open the dashboard designer', async () => {
-      await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+      await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
     });
 
     await test.step('Add key metric to the dashboard', async () => {
-      await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-      dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-      await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-      await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+      await testUserActor.attemptsTo(
+        KeyMetricTasks.addKeyMetric(keyMetric),
+        DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+        DashboardTasks.saveAndCloseDesigner()
+      );
     });
 
     await test.step('Navigate to the dashboard page', async () => {
-      await dashboardPage.goto(dashboard.id);
+      await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
     });
 
     await test.step('Verify the key metric was added successfully', async () => {
-      const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-      await expect(keyMetricCard).toBeVisible();
+      await testUserActor.browse().check(DashboardPageTargets.dashboardItem(keyMetric.objectName)).isVisible();
     });
   });
 
   test(
     'Verify a bulb gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
+    async ({ sourceApp, dashboard, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-799',
@@ -834,29 +745,28 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
@@ -864,7 +774,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a bar gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
+    async ({ sourceApp, dashboard, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-800',
@@ -877,14 +787,7 @@ test.describe('key metrics', () => {
           type: 'App/Survey',
           aggregate: { fn: 'Count (of Records Returned)' },
         },
-        valueRanges: [
-          {
-            rangeStop: 50,
-          },
-          {
-            rangeStop: 100,
-          },
-        ],
+        valueRanges: [{ rangeStop: 50 }, { rangeStop: 100 }],
         totalSource: {
           type: 'Static',
           totalValue: 10,
@@ -893,29 +796,28 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
@@ -923,25 +825,15 @@ test.describe('key metrics', () => {
   test(
     'Verify a donut gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({
-      sourceApp,
-      addContentPage,
-      editContentPage,
-      dashboardsAdminPage,
-      dashboard,
-      dashboardPage,
-      testUserPage,
-    }) => {
+    async ({ sourceApp, dashboard, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-801',
       });
 
       await test.step('Create a content record in the source app', async () => {
-        await addContentPage.goto(sourceApp.id);
-        await addContentPage.saveRecordButton.click();
-        await addContentPage.page.waitForURL(editContentPage.pathRegex);
-        const recordId = editContentPage.getRecordIdFromUrl();
+        await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
+        const recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
         expect(recordId).toBeGreaterThan(0);
       });
 
@@ -965,29 +857,28 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
@@ -995,7 +886,7 @@ test.describe('key metrics', () => {
   test(
     'Verify a dial gauge key metric displays and functions as expected',
     { tag: [Tags.Snapshot] },
-    async ({ sourceApp, dashboardsAdminPage, dashboard, dashboardPage, testUserPage }) => {
+    async ({ sourceApp, dashboard, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-802',
@@ -1008,14 +899,7 @@ test.describe('key metrics', () => {
           type: 'App/Survey',
           aggregate: { fn: 'Count (of Records Returned)' },
         },
-        valueRanges: [
-          {
-            rangeStop: 50,
-          },
-          {
-            rangeStop: 100,
-          },
-        ],
+        valueRanges: [{ rangeStop: 50 }, { rangeStop: 100 }],
         totalSource: {
           type: 'Static',
           totalValue: 10,
@@ -1024,49 +908,29 @@ test.describe('key metrics', () => {
       keyMetricsToDelete.push(keyMetric);
 
       await test.step('Navigate to the dashboards admin page', async () => {
-        await dashboardsAdminPage.goto();
+        await testUserActor.attemptsTo(DashboardTasks.gotoAdminPage());
       });
 
       await test.step('Open the dashboard designer', async () => {
-        await dashboardsAdminPage.openDashboardDesigner(dashboard.name);
+        await testUserActor.attemptsTo(DashboardTasks.openDesignerFromAdminPage(dashboard.name));
       });
 
       await test.step('Add key metric to the dashboard', async () => {
-        await dashboardsAdminPage.dashboardDesigner.addKeyMetric(keyMetric);
-
-        dashboard.items.push({ row: 0, column: 0, item: keyMetric });
-
-        await dashboardsAdminPage.dashboardDesigner.updateDashboard(dashboard);
-        await dashboardsAdminPage.dashboardDesigner.saveAndClose();
+        await testUserActor.attemptsTo(
+          KeyMetricTasks.addKeyMetric(keyMetric),
+          DashboardTasks.addItemToDashboard({ row: 0, column: 0, item: keyMetric }),
+          DashboardTasks.saveAndCloseDesigner()
+        );
       });
 
       await test.step('Navigate to the dashboard page', async () => {
-        await dashboardPage.goto(dashboard.id);
+        await testUserActor.attemptsTo(DashboardTasks.gotoDashboard(dashboard.id));
       });
 
       await test.step('Verify the key metric displays as expected', async () => {
-        const keyMetricCard = await getKeyMetricForScreenshot(testUserPage, dashboard, keyMetric);
-        await expect(keyMetricCard).toHaveScreenshot();
+        await testUserActor.attemptsTo(KeyMetricTasks.normalizeTitleForScreenshot(keyMetric.objectName));
+        await testUserActor.browse().check(DashboardPageTargets.dashboardItem('Key Metric')).hasScreenshot();
       });
     }
   );
 });
-
-async function getKeyMetricForScreenshot(
-  testUserPage: Page,
-  dashboard: Dashboard,
-  keyMetric: KeyMetric,
-  placeholderName: string = 'Key Metric'
-) {
-  const dashboardPage = new DashboardPage(testUserPage);
-
-  await dashboardPage.goto(dashboard.id);
-  const keyMetricCard = dashboardPage.getDashboardItem(keyMetric.objectName);
-  const keyMetricTitle = keyMetricCard.locator('.title');
-
-  await expect(keyMetricTitle).toHaveText(new RegExp(keyMetric.objectName));
-
-  await keyMetricTitle.evaluate((el, name) => (el.textContent = name), placeholderName);
-
-  return dashboardPage.getDashboardItem(placeholderName);
-}
