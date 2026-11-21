@@ -9,6 +9,7 @@ export * from './common/controls/emailAddressControl.js';
 export * from './common/controls/kendoGrid.js';
 export * from './common/controls/referenceFieldGrid.js';
 export * from './common/controls/statusSwitch.js';
+export * from './common/controls/tabbedColorPicker.js';
 
 // Feature domains
 export * from './apiKeys/apiKeys.targets.js';
@@ -58,3 +59,5 @@ export * from './dashboards/dashboardFilters.targets.js';
 export * from './dashboards/dashboardFilters.tasks.js';
 export * from './dashboards/dashboardObjects.targets.js';
 export * from './dashboards/dashboardObjects.tasks.js';
+export * from './dashboards/keyMetrics.targets.js';
+export * from './dashboards/keyMetrics.tasks.js';

@@ -159,7 +159,7 @@ export class FakeDataFactory {
   }
 
   static createFakePassword() {
-    return faker.internet.password({ length: 10 });
+    return `${faker.internet.password({ length: 7 })}Aa1`;
   }
 
   static createFakeAppName() {

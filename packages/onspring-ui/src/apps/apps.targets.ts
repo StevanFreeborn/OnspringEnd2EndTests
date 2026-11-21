@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { resolveTarget, Target } from '@stevanfreeborn/screenplay-playwright';
 
 function createSettingSelector(settingName: string) {
   return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
@@ -189,39 +190,103 @@ export const AppMessagingTabTargets = {
     page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Edit Slack Message'),
 };
 
+const layoutDesignerDialog = (page: Page) => page.getByRole('dialog').first();
+const layoutDesignerFrame = (page: Page) => layoutDesignerDialog(page).frameLocator('iframe').first();
+
 export const AppLayoutTabTargets = {
-  layoutsGrid: (page: Page) => page.locator('#layout-grid, .layouts-grid, #grid'),
-  layoutRowByName: (name: string) => (page: Page) =>
-    page.locator('#layout-grid, .layouts-grid, #grid').getByRole('row', { name }),
+  layoutsGrid: (page: Page) => page.locator('#grid-layouts').first(),
+  layoutRowByName:
+    (name: string): Target =>
+    (page: Page) =>
+      page.locator('#grid-layouts').first().getByRole('row', { name }).first(),
   getLayoutDesignPathRegex: /\/Admin\/App\/Layout\/\d+\/Design/,
+  saveLayoutPathRegex: /\/Admin\/App\/\d+\/Layout\/\d+\/Save/,
 
   designer: {
-    modal: (page: Page) => page.locator('#layout-designer-modal, .layout-designer-modal, #designer'),
+    dialog: layoutDesignerDialog,
     fieldsTabButton: (page: Page) =>
-      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: 'Fields' }),
+      layoutDesignerFrame(page).locator('.item-container').first().locator('#tabstrip-container').getByText('Fields'),
     objectsTabButton: (page: Page) =>
-      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: 'Objects' }),
-    addFieldButton: (page: Page) =>
-      page
-        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
-        .getByRole('button', { name: 'Add Field' }),
-    fieldFromBank: (fieldName: string) => (page: Page) =>
-      page
-        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
-        .locator(`.field-bank .draggable:has-text("${fieldName}"), .fields-list .draggable:has-text("${fieldName}")`),
-    tabByName: (tabName: string) => (page: Page) =>
-      page.locator('#designer, #layout-designer-modal, .layout-designer-modal').getByRole('tab', { name: tabName }),
-    itemDropzone: (params: { tabName: string; sectionName: string; column: number; row: number }) => (page: Page) =>
-      page
-        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
-        .locator(
-          `[data-tab-name="${params.tabName}"] [data-section-name="${params.sectionName}"] .dropzone, [data-tab-name="${params.tabName}"] [data-section-name="${params.sectionName}"] .layout-item-dropzone`
-        )
-        .first(),
-    saveAndCloseButton: (page: Page) =>
-      page
-        .locator('#designer, #layout-designer-modal, .layout-designer-modal')
-        .getByRole('button', { name: 'Save & Close' }),
+      layoutDesignerFrame(page).locator('.item-container').first().locator('#tabstrip-container').getByText('Objects'),
+    addFieldButton: (page: Page) => layoutDesignerFrame(page).getByTitle('Add Field'),
+    addObjectButton: (page: Page) => layoutDesignerFrame(page).getByTitle('Add Object'),
+    addFieldMenuOption:
+      (fieldType: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page).locator('[data-add-menu="field"]').first().getByText(fieldType, { exact: true }),
+    fieldFromBank:
+      (fieldName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('[data-tab-content="field"]')
+          .locator('div.layoutItem')
+          .filter({ hasText: fieldName })
+          .first(),
+    canvasSection: (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first(),
+    canvasTabStrip: (page: Page) =>
+      layoutDesignerFrame(page).locator('.canvas-section').first().locator('.k-tabstrip-items'),
+    canvasTabButton:
+      (tabName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator('.k-tabstrip-items')
+          .locator('div.k-item')
+          .filter({ hasText: tabName })
+          .first(),
+    canvasTabText:
+      (tabName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator('.k-tabstrip-items')
+          .getByText(tabName)
+          .first(),
+    standaloneSectionByName:
+      (sectionName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator('.mainContainer > .section')
+          .filter({ hasText: sectionName })
+          .first(),
+    canvasSectionByName:
+      (sectionName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator('section.section')
+          .filter({ hasText: sectionName })
+          .first(),
+    canvasSectionInTab:
+      (tabId: string, sectionName: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator(`[data-tab-body="${tabId}"]`)
+          .first()
+          .locator('section')
+          .filter({ hasText: sectionName })
+          .first(),
+    renderedItemsInSection:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).locator('.rendered-item'),
+    dropzoneInSectionAt:
+      (sectionTarget: Target, column: number, row: number): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget)
+          .locator(`.rendered-item[data-column="${column}"][data-row="${row}"]`)
+          .first(),
+    dropLocation: (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first().locator('#dropLocation'),
+    saveButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save', exact: true }),
+    saveAndCloseButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save & Close' }),
+    closeButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Close' }),
   },
 
   addFieldButton: (page: Page) => page.getByText('Add Field'),

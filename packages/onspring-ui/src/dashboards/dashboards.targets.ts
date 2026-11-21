@@ -59,6 +59,10 @@ export const DashboardPageTargets = {
     (name: string): Target =>
     (page: Page): Locator =>
       dashboardItem(page, name),
+  dashboardItemTitle:
+    (name: string): Target =>
+    (page: Page): Locator =>
+      dashboardItem(page, name).locator('.title'),
   dashboardItemSearchBox:
     (itemName: string, appName: string): Target =>
     (page: Page): Locator =>

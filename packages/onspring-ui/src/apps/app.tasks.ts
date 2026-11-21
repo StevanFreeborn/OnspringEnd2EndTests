@@ -1,6 +1,6 @@
 import { Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
-import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import {
   AppDetailTargets,
@@ -18,6 +18,49 @@ import {
 } from './apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
 import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
+
+async function resolveClampedLayoutDropzone(
+  actor: WebActor,
+  sectionTarget: Target,
+  desiredColumn: number,
+  desiredRow: number
+): Promise<Target> {
+  await actor.browse().waitForState(sectionTarget, 'visible');
+
+  const itemsTarget = AppLayoutTabTargets.designer.renderedItemsInSection(sectionTarget);
+  const columnAttrs = await actor.browse().getAttributes(itemsTarget, 'data-column');
+  const rowAttrs = await actor.browse().getAttributes(itemsTarget, 'data-row');
+
+  let maxColumn = -1;
+  for (const col of columnAttrs) {
+    if (col === null) continue;
+    const colNum = parseInt(col, 10);
+    if (colNum > maxColumn) maxColumn = colNum;
+  }
+
+  if (maxColumn < 0) {
+    throw new Error('Invalid column number');
+  }
+
+  const column = Math.min(desiredColumn, maxColumn);
+
+  let maxRow = -1;
+  for (let i = 0; i < columnAttrs.length; i++) {
+    const col = columnAttrs[i];
+    const row = rowAttrs[i];
+    if (col !== null && parseInt(col, 10) === column && row !== null) {
+      maxRow += 1;
+    }
+  }
+
+  if (maxRow < 0) {
+    throw new Error('Invalid row number');
+  }
+
+  const row = Math.min(desiredRow, maxRow);
+
+  return AppLayoutTabTargets.designer.dropzoneInSectionAt(sectionTarget, column, row);
+}
 
 export const AppTasks = {
   goto:
@@ -322,6 +365,106 @@ export const AppTasks = {
         .waitForResponse((r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200);
       await actor.browse().click(modal.saveButton);
       await saveFieldResponse;
+    },
+
+  openLayoutDesigner:
+    (layoutName: string = 'Default Layout'): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(AppDetailTargets.layoutTabButton);
+      const getLayoutDesignResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => AppLayoutTabTargets.getLayoutDesignPathRegex.test(r.url()) && r.status() === 200
+        );
+      await actor.browse().click(AppLayoutTabTargets.layoutRowByName(layoutName));
+      await getLayoutDesignResponse;
+      await actor.browse().waitForTimeout(1000);
+    },
+
+  addTextFieldInLayoutDesigner:
+    (fieldName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+
+      if (await actor.browse().isVisible(designer.addObjectButton)) {
+        await actor.browse().click(designer.fieldsTabButton);
+      }
+
+      await actor.browse().waitForState(designer.addFieldButton, 'visible');
+      await actor.browse().click(designer.addFieldButton);
+      await actor.browse().click(designer.addFieldMenuOption('Text'));
+
+      const addItemResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => AppLayoutTabTargets.addItemPathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AppLayoutTabTargets.addLayoutItemDialogContinueButton);
+      await addItemResponse;
+
+      const modal = AppLayoutTabTargets.fieldModal;
+      await actor.browse().waitForState(modal.nameInput(1), 'visible');
+      await actor.browse().fill(modal.nameInput(1), fieldName);
+
+      await actor.browse().click(modal.securityTabButton(1));
+      await actor.browse().click(modal.securityViewSelect(1));
+      await actor.browse().click(modal.securityOption('Public', 1));
+
+      const saveFieldResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(modal.saveButton);
+      await saveFieldResponse;
+      await actor.browse().waitForState(designer.fieldFromBank(fieldName), 'visible');
+    },
+
+  dragFieldOntoLayout:
+    ({
+      tabName,
+      sectionName,
+      column,
+      row,
+      fieldName,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      column: number;
+      row: number;
+      fieldName: string;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+
+      if (await actor.browse().isVisible(designer.addObjectButton)) {
+        await actor.browse().click(designer.fieldsTabButton);
+      }
+
+      let sectionTarget: Target;
+
+      if (tabName === undefined) {
+        sectionTarget = designer.standaloneSectionByName(sectionName);
+      } else if (!(await actor.browse().isVisible(designer.canvasTabStrip))) {
+        sectionTarget = designer.canvasSectionByName(sectionName);
+      } else {
+        await actor.browse().click(designer.canvasTabText(tabName));
+        const tabId = await actor.browse().getAttribute(designer.canvasTabButton(tabName), 'data-canvas-tab');
+        if (tabId === null) {
+          throw new Error(`Layout designer tab "${tabName}" did not expose a data-canvas-tab attribute.`);
+        }
+        sectionTarget = designer.canvasSectionInTab(tabId, sectionName);
+      }
+
+      const dropzone = await resolveClampedLayoutDropzone(actor, sectionTarget, column, row);
+      await actor.browse().dragWithMouse(designer.fieldFromBank(fieldName), dropzone, designer.dropLocation);
+    },
+
+  saveAndCloseLayout:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => AppLayoutTabTargets.saveLayoutPathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AppLayoutTabTargets.designer.saveAndCloseButton);
+      await saveResponse;
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.dialog, 'hidden');
     },
 
   enableGeocoding:

@@ -1,7 +1,7 @@
 import { Response } from '@playwright/test';
 import { User, UserStatus } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
-import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { Retry, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { ReferenceFieldGrid } from '../common/controls/referenceFieldGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
@@ -129,8 +129,18 @@ export const UserTasks = {
       await actor.browse().waitForState(dialog.newPasswordInput, 'visible');
       await actor.browse().fill(dialog.newPasswordInput, password);
       await actor.browse().fill(dialog.verifyPasswordInput, password);
-      await actor.browse().click(dialog.saveButton);
-      await actor.browse().waitForState(dialog.saveButton, 'hidden');
+      await actor.browse().blur(dialog.verifyPasswordInput);
+      await actor.attemptsTo(
+        Retry.until(
+          async a => {
+            if (await a.browse().isVisible(dialog.saveButton)) {
+              await a.browse().click(dialog.saveButton);
+            }
+            await a.browse().waitForState(dialog.saveButton, 'hidden', { timeout: 3000 });
+          },
+          { intervals: [500, 1000], timeout: 30_000 }
+        )
+      );
 
       const saveResponse = actor
         .browse()
