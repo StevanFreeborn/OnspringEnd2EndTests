@@ -74,6 +74,7 @@ export default defineConfig([
             'hasAttribute',
             'hasCSS',
             'hasUrl',
+            'hasScreenshot',
             'isLeftOf',
             'isRightOf',
             'isAbove',

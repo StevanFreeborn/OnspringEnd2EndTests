@@ -150,6 +150,16 @@ export class BrowserActions {
     await resolveTarget(this.page, target).fill(value);
   }
 
+  async clear(target: Target): Promise<void> {
+    await resolveTarget(this.page, target).clear();
+  }
+
+  async setTextContent(target: Target, text: string): Promise<void> {
+    await resolveTarget(this.page, target).evaluate((el, value) => {
+      el.textContent = value;
+    }, text);
+  }
+
   async selectByLabel(target: Target, label: string): Promise<void> {
     await resolveTarget(this.page, target).selectOption({ label });
   }
@@ -288,6 +298,15 @@ export class TargetAssertions {
 
   async hasCSS(name: string, value: string | RegExp): Promise<void> {
     await expect(this.locator).toHaveCSS(name, value);
+  }
+
+  async hasScreenshot(options?: {
+    maxDiffPixels?: number;
+    maxDiffPixelRatio?: number;
+    threshold?: number;
+    timeout?: number;
+  }): Promise<void> {
+    await expect(this.locator).toHaveScreenshot(options);
   }
 
   private async assertRelativePosition(
