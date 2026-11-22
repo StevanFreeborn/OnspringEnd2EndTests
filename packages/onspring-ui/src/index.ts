@@ -59,5 +59,6 @@ export * from './dashboards/dashboardFilters.targets.js';
 export * from './dashboards/dashboardFilters.tasks.js';
 export * from './dashboards/dashboardObjects.targets.js';
 export * from './dashboards/dashboardObjects.tasks.js';
+export * from './dashboards/gettingStartedDashboard.targets.js';
 export * from './dashboards/keyMetrics.targets.js';
 export * from './dashboards/keyMetrics.tasks.js';

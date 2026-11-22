@@ -30,6 +30,13 @@ export const SidebarNavTasks = {
       await actor.browse().waitForState(UserPreferencesModalTargets.modal, 'hidden');
     },
 
+  openDashboardContainer:
+    (containerName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SidebarNavTargets.dashboardsTab);
+      await actor.browse().click(SidebarNavTargets.containerLink(containerName));
+    },
+
   logout:
     (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
