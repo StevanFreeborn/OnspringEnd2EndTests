@@ -230,6 +230,18 @@ export class BrowserActions {
     return downloadPromise;
   }
 
+  async clickAndOpenNewTab(target: Target, actorName: string = 'NewTab'): Promise<WebActor> {
+    const pagePromise = this.page.context().waitForEvent('page');
+    await resolveTarget(this.page, target).click();
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+    return WebActor.using(actorName, newPage);
+  }
+
+  async close(): Promise<void> {
+    await this.page.close();
+  }
+
   check(target: Target): TargetAssertions {
     return new TargetAssertions(this.page, resolveTarget(this.page, target));
   }
@@ -345,6 +357,18 @@ export class TargetAssertions {
 
   async isBelow(other: Target, options?: { timeout?: number }): Promise<void> {
     await this.assertRelativePosition(other, 'below', (a, b) => a.y >= b.y + b.height, options);
+  }
+
+  async opensNewTabWithUrl(expected: string | RegExp): Promise<void> {
+    const pagePromise = this.page.context().waitForEvent('page');
+    await this.locator.click();
+    const newPage = await pagePromise;
+    try {
+      await newPage.waitForLoadState();
+      await expect(newPage).toHaveURL(expected);
+    } finally {
+      await newPage.close();
+    }
   }
 }
 

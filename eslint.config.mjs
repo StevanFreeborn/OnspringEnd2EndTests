@@ -75,6 +75,7 @@ export default defineConfig([
             'hasCSS',
             'hasUrl',
             'hasScreenshot',
+            'opensNewTabWithUrl',
             'isLeftOf',
             'isRightOf',
             'isAbove',
