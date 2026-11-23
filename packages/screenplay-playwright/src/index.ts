@@ -150,8 +150,16 @@ export class BrowserActions {
     await resolveTarget(this.page, target).fill(value);
   }
 
+  async focus(target: Target): Promise<void> {
+    await resolveTarget(this.page, target).focus();
+  }
+
   async clear(target: Target): Promise<void> {
     await resolveTarget(this.page, target).clear();
+  }
+
+  async moveMouse(x: number, y: number): Promise<void> {
+    await this.page.mouse.move(x, y);
   }
 
   async setTextContent(target: Target, text: string): Promise<void> {
@@ -189,6 +197,10 @@ export class BrowserActions {
     return text.trim();
   }
 
+  async getAllTexts(target: Target): Promise<string[]> {
+    return resolveTarget(this.page, target).allTextContents();
+  }
+
   async blur(target: Target): Promise<void> {
     await resolveTarget(this.page, target).blur();
   }
@@ -210,11 +222,27 @@ export class BrowserActions {
     await this.page.mouse.up();
   }
 
+  async interceptJsonResponseOnce<T = unknown>(
+    urlPattern: string | RegExp,
+    transform: (body: T) => T | void
+  ): Promise<void> {
+    await this.page.route(
+      urlPattern,
+      async route => {
+        const response = await route.fetch();
+        const body = (await response.json()) as T;
+        const transformed = transform(body);
+        await route.fulfill({ response, json: transformed === undefined ? body : transformed });
+      },
+      { times: 1 }
+    );
+  }
+
   async postForm(
     url: string,
-    form: Record<string, string | number | boolean>
+    form?: Record<string, string | number | boolean>
   ): Promise<{ headers: Record<string, string>; body: Uint8Array }> {
-    const response = await this.page.request.post(url, { form });
+    const response = await this.page.request.post(url, form ? { form } : undefined);
     const headers = response.headers();
     const body = await response.body();
     return { headers, body };
@@ -264,8 +292,8 @@ export class TargetAssertions {
     private readonly locator: Locator
   ) {}
 
-  async isVisible(): Promise<void> {
-    await expect(this.locator).toBeVisible();
+  async isVisible(options?: { timeout?: number }): Promise<void> {
+    await expect(this.locator).toBeVisible(options);
   }
 
   async isHidden(): Promise<void> {
@@ -300,8 +328,12 @@ export class TargetAssertions {
     await expect(this.locator).toHaveValue(expected);
   }
 
-  async hasText(expected: string | RegExp): Promise<void> {
-    await expect(this.locator).toHaveText(expected);
+  async hasText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+    await expect(this.locator).toHaveText(expected, options);
+  }
+
+  async hasCount(count: number, options?: { timeout?: number }): Promise<void> {
+    await expect(this.locator).toHaveCount(count, options);
   }
 
   async hasAttribute(name: string, value: string | RegExp): Promise<void> {

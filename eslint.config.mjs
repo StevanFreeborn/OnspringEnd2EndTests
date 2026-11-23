@@ -71,6 +71,7 @@ export default defineConfig([
             'isDisabled',
             'hasValue',
             'hasText',
+            'hasCount',
             'hasAttribute',
             'hasCSS',
             'hasUrl',
