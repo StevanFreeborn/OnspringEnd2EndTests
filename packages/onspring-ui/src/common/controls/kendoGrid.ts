@@ -38,7 +38,7 @@ export const KendoGridTasks = {
       }
 
       const pagerInfoText = await actor.browse().getText(pagerInfo);
-      const totalNumOfItems = parseInt(pagerInfoText.split(' ')[0], 10);
+      const totalNumOfItems = parseInt(pagerInfoText.split(' ')[0].replace(/,/g, ''), 10);
 
       if (Number.isNaN(totalNumOfItems) || totalNumOfItems === 0) {
         return;

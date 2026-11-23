@@ -94,6 +94,40 @@ export const DashboardTasks = {
       await ensureResourceTabSelected(actor, tabName);
     },
 
+  filterResourceBank:
+    (bankName: 'report' | 'object' | 'keymetric', searchTerm: string, loadMorePathRegex: RegExp): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const filterInput = DashboardDesignerTargets.resources.filterInput(bankName);
+      await actor.browse().waitForState(filterInput, 'visible');
+      const filterResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => loadMorePathRegex.test(r.url()) && r.status() === 200, { timeout: 10_000 })
+        .catch(() => null);
+      await actor.browse().fill(filterInput, searchTerm);
+      await filterResponse;
+    },
+
+  locateItemInResourceBank:
+    (
+      bankName: 'report' | 'object' | 'keymetric',
+      searchTerm: string,
+      itemTarget: Target,
+      loadMorePathRegex: RegExp
+    ): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (await actor.browse().isVisible(itemTarget)) {
+        return;
+      }
+
+      await actor.attemptsTo(DashboardTasks.filterResourceBank(bankName, searchTerm, loadMorePathRegex));
+
+      if (await actor.browse().isVisibleWithin(itemTarget, 3000)) {
+        return;
+      }
+
+      await actor.attemptsTo(DashboardTasks.scrollResourceBankUntilVisible(bankName, itemTarget, loadMorePathRegex));
+    },
+
   scrollResourceBankUntilVisible:
     (bankName: 'report' | 'object' | 'keymetric', itemTarget: Target, loadMorePathRegex: RegExp): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
@@ -403,33 +437,55 @@ export const DashboardTasks = {
     (itemWithLocation: DashboardItemWithLocation): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const { item, row, column } = itemWithLocation;
+
+      let itemName: string;
+      if (item instanceof SavedReport || item instanceof DashboardObjectItem) {
+        itemName = item.name;
+      } else if (item instanceof KeyMetric) {
+        itemName = item.objectName;
+      } else {
+        throw new Error(`Item type not supported: ${String(item)}`);
+      }
+
+      if (await actor.browse().isVisible(DashboardDesignerTargets.canvas.renderedItemByName(itemName))) {
+        return;
+      }
+
       let itemTarget: Target;
 
       if (item instanceof SavedReport) {
         await ensureResourceTabSelected(actor, 'Reports');
         itemTarget = DashboardDesignerTargets.resources.itemInBank('report', item.name);
+        await actor.attemptsTo(
+          DashboardTasks.locateItemInResourceBank(
+            'report',
+            item.name,
+            itemTarget,
+            DashboardDesignerTargets.resources.getMoreReportsPathRegex
+          )
+        );
       } else if (item instanceof DashboardObjectItem) {
         await ensureResourceTabSelected(actor, 'Objects');
         itemTarget = DashboardDesignerTargets.resources.itemInBank('object', item.name);
         await actor.attemptsTo(
-          DashboardTasks.scrollResourceBankUntilVisible(
+          DashboardTasks.locateItemInResourceBank(
             'object',
+            item.name,
             itemTarget,
             DashboardDesignerTargets.resources.getMoreObjectsPathRegex
           )
         );
-      } else if (item instanceof KeyMetric) {
+      } else {
         await ensureResourceTabSelected(actor, 'Key Metrics');
         itemTarget = DashboardDesignerTargets.resources.itemInBank('keymetric', item.objectName);
         await actor.attemptsTo(
-          DashboardTasks.scrollResourceBankUntilVisible(
+          DashboardTasks.locateItemInResourceBank(
             'keymetric',
+            item.objectName,
             itemTarget,
             DashboardDesignerTargets.resources.getMoreKeyMetricsPathRegex
           )
         );
-      } else {
-        throw new Error(`Item type not supported: ${String(item)}`);
       }
 
       const itemClasses = await actor.browse().getAttribute(itemTarget, 'class');

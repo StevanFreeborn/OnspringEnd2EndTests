@@ -19,6 +19,7 @@ import {
   OptionTargets,
 } from './apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 
 async function resolveClampedLayoutDropzone(
@@ -80,6 +81,22 @@ export const AppTasks = {
     async (actor: WebActor): Promise<void> => {
       await actor.browse().goto(`/Admin/App/${appId}`);
     },
+
+  filterBy:
+    (searchTerm: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const filterResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => r.url().includes(AppsPageTargets.getAppsListPath) && r.status() === 200);
+      await actor.browse().fill(AppsPageTargets.filterByInput, searchTerm);
+      await filterResponse;
+    },
+
+  scrollAllIntoView: (): Task<WebActor> =>
+    KendoGridTasks.scrollAllIntoView({
+      grid: AppsPageTargets.appGrid,
+      getListPagePath: AppsPageTargets.getAppsListPath,
+    }),
 
   create:
     (appName: string): Task<WebActor> =>
@@ -566,13 +583,15 @@ export const AppTasks = {
   deleteApps:
     (appsToDelete: string[]): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      if (appsToDelete.length === 0) return;
+      const uniqueApps = [...new Set(appsToDelete)];
+      if (uniqueApps.length === 0) return;
 
       await actor.attemptsTo(AppTasks.goto());
 
-      for (const appName of appsToDelete) {
+      for (const appName of uniqueApps) {
+        await actor.attemptsTo(AppTasks.filterBy(appName));
         const row = AppsPageTargets.rowByName(appName);
-        const isVisible = await actor.browse().isVisible(row);
+        const isVisible = await actor.browse().isVisibleWithin(row, 3000);
         if (isVisible) {
           await actor.browse().hover(row);
           await actor.browse().click(AppsPageTargets.deleteButtonInRow(appName));

@@ -9,6 +9,7 @@ export const AppsPageTargets = {
   route: '/Admin/App',
   getAppsListPath: '/Admin/App/AppsListRead',
   createAppButton: (page: Page) => page.locator('.create-button'),
+  filterByInput: (page: Page) => page.getByPlaceholder('Filter By'),
   appGrid: (page: Page) => page.locator('#grid'),
   rowByName: (appName: string) => (page: Page) => page.locator('#grid').getByRole('row', { name: appName }).first(),
   deleteButtonInRow: (appName: string) => (page: Page) =>

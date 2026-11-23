@@ -959,7 +959,7 @@ test.describe('app', () => {
     });
 
     await test.step('Navigate to apps admin page', async () => {
-      await sysAdminActor.attemptsTo(AppTasks.goto());
+      await sysAdminActor.attemptsTo(AppTasks.goto(), AppTasks.filterBy(appName));
       await sysAdminActor.browse().check(appRow).isVisible();
     });
 

@@ -99,8 +99,9 @@ export const DashboardObjectTasks = {
       const itemTarget = DashboardDesignerTargets.resources.itemInBank('object', existingObjectName);
       await actor.attemptsTo(
         DashboardTasks.selectResourceTab('Objects'),
-        DashboardTasks.scrollResourceBankUntilVisible(
+        DashboardTasks.locateItemInResourceBank(
           'object',
+          existingObjectName,
           itemTarget,
           DashboardDesignerTargets.resources.getMoreObjectsPathRegex
         )
@@ -116,8 +117,9 @@ export const DashboardObjectTasks = {
       const itemTarget = DashboardDesignerTargets.resources.itemInBank('object', objectName);
       await actor.attemptsTo(
         DashboardTasks.selectResourceTab('Objects'),
-        DashboardTasks.scrollResourceBankUntilVisible(
+        DashboardTasks.locateItemInResourceBank(
           'object',
+          objectName,
           itemTarget,
           DashboardDesignerTargets.resources.getMoreObjectsPathRegex
         )

@@ -213,8 +213,9 @@ export const KeyMetricTasks = {
       const itemTarget = DashboardDesignerTargets.resources.itemInBank('keymetric', existingObjectName);
       await actor.attemptsTo(
         DashboardTasks.selectResourceTab('Key Metrics'),
-        DashboardTasks.scrollResourceBankUntilVisible(
+        DashboardTasks.locateItemInResourceBank(
           'keymetric',
+          existingObjectName,
           itemTarget,
           DashboardDesignerTargets.resources.getMoreKeyMetricsPathRegex
         )
@@ -230,8 +231,9 @@ export const KeyMetricTasks = {
       const itemTarget = DashboardDesignerTargets.resources.itemInBank('keymetric', objectName);
       await actor.attemptsTo(
         DashboardTasks.selectResourceTab('Key Metrics'),
-        DashboardTasks.scrollResourceBankUntilVisible(
+        DashboardTasks.locateItemInResourceBank(
           'keymetric',
+          objectName,
           itemTarget,
           DashboardDesignerTargets.resources.getMoreKeyMetricsPathRegex
         )

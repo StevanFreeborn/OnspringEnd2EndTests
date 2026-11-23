@@ -220,8 +220,19 @@ export const DashboardDesignerTargets = {
   },
 
   resources: {
+    getMoreReportsPathRegex: /\/Admin\/Dashboard\/GetMoreReportListItems/,
     getMoreObjectsPathRegex: /\/Admin\/Dashboard\/GetMoreObjectListItems/,
     getMoreKeyMetricsPathRegex: /\/Admin\/Dashboard\/GetMoreKeyMetricsListItems/,
+    filterInput:
+      (bankName: 'report' | 'object' | 'keymetric'): Target =>
+      (page: Page): Locator => {
+        const placeholders: Record<'report' | 'object' | 'keymetric', string> = {
+          report: 'Filter Reports',
+          object: 'Filter Objects',
+          keymetric: 'Filter Key Metrics',
+        };
+        return designerFrame(page).getByPlaceholder(placeholders[bankName]);
+      },
     bankScrollableList:
       (bankName: 'report' | 'object' | 'keymetric'): Target =>
       (page: Page): Locator =>
@@ -247,6 +258,15 @@ export const DashboardDesignerTargets = {
       designerFrame(page).locator('.canvas-section').first().locator('.mainContainer .section'),
     renderedItems: (page: Page): Locator =>
       designerFrame(page).locator('.canvas-section').first().locator('.mainContainer .section .rendered-item'),
+    renderedItemByName:
+      (name: string): Target =>
+      (page: Page): Locator =>
+        designerFrame(page)
+          .locator('.canvas-section')
+          .first()
+          .locator('.mainContainer .section .rendered-item')
+          .filter({ hasText: name })
+          .first(),
     dropzoneAt:
       (column: number, row: number): Target =>
       (page: Page): Locator =>
