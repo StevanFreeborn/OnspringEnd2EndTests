@@ -1,7 +1,9 @@
 import { Response } from '@playwright/test';
+import { DateField, LayoutItem, ListField, ReferenceField, TextField } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
+import { TabbedColorPickerTasks } from '../common/controls/tabbedColorPicker.js';
 import {
   AppDetailTargets,
   AppLayoutTabTargets,
@@ -384,7 +386,25 @@ export const AppTasks = {
   addTextFieldInLayoutDesigner:
     (fieldName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(AppTasks.addLayoutItemInLayoutDesigner(new TextField({ name: fieldName })));
+    },
+
+  addLayoutItemInLayoutDesigner:
+    (item: LayoutItem): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (
+        !(
+          item instanceof TextField ||
+          item instanceof ListField ||
+          item instanceof DateField ||
+          item instanceof ReferenceField
+        )
+      ) {
+        throw new Error(`Unsupported layout item type "${item.type}" in addLayoutItemInLayoutDesigner.`);
+      }
+
       const designer = AppLayoutTabTargets.designer;
+      const frameNumber = 1;
 
       if (await actor.browse().isVisible(designer.addObjectButton)) {
         await actor.browse().click(designer.fieldsTabButton);
@@ -392,7 +412,7 @@ export const AppTasks = {
 
       await actor.browse().waitForState(designer.addFieldButton, 'visible');
       await actor.browse().click(designer.addFieldButton);
-      await actor.browse().click(designer.addFieldMenuOption('Text'));
+      await actor.browse().click(designer.addFieldMenuOption(item.type));
 
       const addItemResponse = actor
         .browse()
@@ -401,19 +421,67 @@ export const AppTasks = {
       await addItemResponse;
 
       const modal = AppLayoutTabTargets.fieldModal;
-      await actor.browse().waitForState(modal.nameInput(1), 'visible');
-      await actor.browse().fill(modal.nameInput(1), fieldName);
+      await actor.browse().waitForState(modal.nameInput(frameNumber), 'visible');
+      await actor.browse().fill(modal.nameInput(frameNumber), item.name);
 
-      await actor.browse().click(modal.securityTabButton(1));
-      await actor.browse().click(modal.securityViewSelect(1));
-      await actor.browse().click(modal.securityOption('Public', 1));
+      if (item instanceof ListField) {
+        for (const listValue of item.values) {
+          await actor.browse().click(modal.listValuesGrid.addValueButton(frameNumber));
+          await actor.browse().fill(modal.listValuesGrid.lastRowValueInput(frameNumber), listValue.value);
+          await actor
+            .browse()
+            .fill(modal.listValuesGrid.lastRowNumericValueInput(frameNumber), listValue.numericValue.toString());
+
+          if (listValue.color) {
+            await actor.attemptsTo(
+              TabbedColorPickerTasks.selectColor(
+                modal.listValuesGrid.lastRowColorPicker(frameNumber),
+                listValue.color,
+                modal.frame(frameNumber)
+              )
+            );
+          }
+        }
+      } else if (item instanceof DateField) {
+        await actor.browse().click(modal.dateDisplaySelect(frameNumber));
+        await actor.browse().click(modal.dateDisplayOption(item.display, frameNumber));
+      } else if (item instanceof ReferenceField) {
+        const initialDisplayFieldResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => modal.referenceDisplayFieldsPathRegex.test(r.url()) && r.status() === 200);
+        await actor.browse().click(modal.referenceSelect(frameNumber));
+        await initialDisplayFieldResponse;
+
+        const referenceSelectText = await actor.browse().getText(modal.referenceSelect(frameNumber));
+        if (referenceSelectText.includes(item.reference)) {
+          await actor.browse().click(modal.referenceOption(item.reference, frameNumber));
+        } else {
+          const displayFieldResponse = actor
+            .browse()
+            .waitForResponse(
+              (r: Response) => modal.referenceDisplayFieldsPathRegex.test(r.url()) && r.status() === 200
+            );
+          await actor.browse().click(modal.referenceOption(item.reference, frameNumber));
+          await displayFieldResponse;
+        }
+
+        await actor.browse().waitForState(modal.selectedGridFields(frameNumber), 'visible');
+      }
+
+      if (item.permissions.length > 0) {
+        throw new Error('Role-based field permissions in addLayoutItemInLayoutDesigner are not implemented.');
+      }
+
+      await actor.browse().click(modal.securityTabButton(frameNumber));
+      await actor.browse().click(modal.securityViewSelect(frameNumber));
+      await actor.browse().click(modal.securityOption('Public', frameNumber));
 
       const saveFieldResponse = actor
         .browse()
         .waitForResponse((r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200);
       await actor.browse().click(modal.saveButton);
       await saveFieldResponse;
-      await actor.browse().waitForState(designer.fieldFromBank(fieldName), 'visible');
+      await actor.browse().waitForState(designer.fieldFromBank(item.name), 'visible');
     },
 
   dragFieldOntoLayout:

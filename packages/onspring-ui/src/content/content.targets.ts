@@ -16,9 +16,14 @@ const contentContainer = (page: Page): Locator => page.locator('div.contentConta
 
 export const ContentRecordTargets = {
   addRoute: (appId: number) => `/Content/${appId}/Add`,
+  viewRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/View`,
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
   appContentPathRegex: /\/Content\/\d+\/App/,
+  dropdownOption:
+    (name: string): Target =>
+    (page: Page): Locator =>
+      page.getByRole('option', { name }),
   contentContainer,
   tabStrip: (page: Page): Locator => contentContainer(page).locator('.k-tabstrip-items'),
   horizontalTabButton:
@@ -62,6 +67,30 @@ export const ContentRecordTargets = {
       return resolveTarget(page, sectionTarget)
         .locator(`.data-${escapedPascal} input[data-field-type="textBox"]`)
         .first();
+    },
+  listFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator => {
+      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
+      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.type-list`).getByRole('listbox');
+    },
+  dateFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator => {
+      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
+      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} span.k-datetimepicker`).first();
+    },
+  referenceFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator => {
+      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
+      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.onx-reference-grid`).first();
+    },
+  readOnlyTextFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator => {
+      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
+      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.data-text-only`).first();
     },
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
   saveAndCloseButton: (page: Page): Locator => page.getByRole('link', { name: 'Save & Close' }),

@@ -195,6 +195,11 @@ const layoutDesignerFrame = (page: Page) => layoutDesignerDialog(page).frameLoca
 
 export const AppLayoutTabTargets = {
   layoutsGrid: (page: Page) => page.locator('#grid-layouts').first(),
+  fieldsAndObjectsGrid: (page: Page) => page.locator('#grid-layout-items').first(),
+  fieldOrObjectRowByName:
+    (name: string): Target =>
+    (page: Page) =>
+      page.locator('#grid-layout-items').first().getByRole('row', { name }),
   layoutRowByName:
     (name: string): Target =>
     (page: Page) =>
@@ -305,6 +310,79 @@ export const AppLayoutTabTargets = {
       (frameNumber: number = 0) =>
       (page: Page) =>
         page.frameLocator('iframe').nth(frameNumber).getByLabel('Field', { exact: true }),
+    listValuesGrid: {
+      addValueButton:
+        (frameNumber: number = 0) =>
+        (page: Page) =>
+          page
+            .frameLocator('iframe')
+            .nth(frameNumber)
+            .locator('.list-values')
+            .first()
+            .getByRole('button', { name: 'Add Value' }),
+      lastRowValueInput:
+        (frameNumber: number = 0) =>
+        (page: Page) =>
+          page
+            .frameLocator('iframe')
+            .nth(frameNumber)
+            .locator('.list-values')
+            .first()
+            .locator('div.k-grid-content')
+            .getByRole('row')
+            .last()
+            .locator('td[data-field="name"] input'),
+      lastRowNumericValueInput:
+        (frameNumber: number = 0) =>
+        (page: Page) =>
+          page
+            .frameLocator('iframe')
+            .nth(frameNumber)
+            .locator('.list-values')
+            .first()
+            .locator('div.k-grid-content')
+            .getByRole('row')
+            .last()
+            .locator('td[data-field="numericValue"] input.k-formatted-value'),
+      lastRowColorPicker:
+        (frameNumber: number = 0) =>
+        (page: Page) =>
+          page
+            .frameLocator('iframe')
+            .nth(frameNumber)
+            .locator('.list-values')
+            .first()
+            .locator('div.k-grid-content')
+            .getByRole('row')
+            .last()
+            .locator('td[data-field="color"] span.k-colorpicker'),
+    },
+    dateDisplaySelect:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).locator('.label:has-text("Display") + .data').getByRole('listbox'),
+    dateDisplayOption:
+      (display: string, frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: display, exact: true }),
+    referenceSelect:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('listbox', { name: 'Reference' }),
+    referenceOption:
+      (reference: string, frameNumber: number = 0) =>
+      (page: Page) =>
+        page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: reference }),
+    selectedGridFields:
+      (frameNumber: number = 0) =>
+      (page: Page) =>
+        page
+          .frameLocator('iframe')
+          .nth(frameNumber)
+          .locator('td:has-text("Grid Fields") + td div.onx-selector')
+          .locator('.selector-select-list li')
+          .first(),
+    referenceDisplayFieldsPathRegex: /\/Admin\/App\/\d+\/Field\/ReferenceDisplayFields/,
     securityTabButton:
       (frameNumber: number = 0) =>
       (page: Page) =>

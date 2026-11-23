@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { FrameOwner, resolveFrameOwner } from './frameOwner.js';
 
 const emailAddressTargets = {
   localPartInput:
@@ -12,14 +13,14 @@ const emailAddressTargets = {
     (page: Page) =>
       resolveTarget(page, containerTarget).getByRole('listbox', { includeHidden: true }),
   domainOption:
-    (domain: string): Target =>
+    (domain: string, frameOwner?: FrameOwner): Target =>
     (page: Page) =>
-      page.getByRole('option', { name: domain }),
+      resolveFrameOwner(page, frameOwner).getByRole('option', { name: domain }),
 };
 
 export const EmailAddressControlTasks = {
   enterAddress:
-    (containerTarget: Target, address: string): Task<WebActor> =>
+    (containerTarget: Target, address: string, frameOwner?: FrameOwner): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const [username, domain] = address.split('@');
 
@@ -42,6 +43,6 @@ export const EmailAddressControlTasks = {
       }
 
       await actor.browse().click(domainSelect);
-      await actor.browse().click(emailAddressTargets.domainOption(domain));
+      await actor.browse().click(emailAddressTargets.domainOption(domain, frameOwner));
     },
 };

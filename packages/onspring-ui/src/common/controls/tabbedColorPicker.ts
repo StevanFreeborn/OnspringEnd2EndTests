@@ -1,42 +1,43 @@
 import { Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { FrameOwner, resolveFrameOwner } from './frameOwner.js';
 
-const colorPopupOwner = (page: Page, frameSelector?: string) =>
-  frameSelector ? page.frameLocator(frameSelector) : page;
+const activePopupSelector = '.tabbed-color-popup:visible:not([aria-hidden="true"])';
 
 const tabbedColorPickerTargets = {
   popup:
-    (frameSelector?: string): Target =>
+    (frameOwner?: FrameOwner): Target =>
     (page: Page) =>
-      colorPopupOwner(page, frameSelector).locator('.tabbed-color-popup:visible'),
+      resolveFrameOwner(page, frameOwner).locator(activePopupSelector),
   customTab:
-    (frameSelector?: string): Target =>
+    (frameOwner?: FrameOwner): Target =>
     (page: Page) =>
-      colorPopupOwner(page, frameSelector).locator('.tabbed-color-popup:visible').getByRole('tab', { name: 'Custom' }),
+      resolveFrameOwner(page, frameOwner).locator(activePopupSelector).getByRole('tab', { name: 'Custom' }),
   colorInput:
-    (frameSelector?: string): Target =>
+    (frameOwner?: FrameOwner): Target =>
     (page: Page) =>
-      colorPopupOwner(page, frameSelector).locator('.tabbed-color-popup:visible').locator('.k-color-value'),
+      resolveFrameOwner(page, frameOwner).locator(activePopupSelector).locator('.k-color-value'),
   closeButton:
-    (frameSelector?: string): Target =>
+    (frameOwner?: FrameOwner): Target =>
     (page: Page) =>
-      colorPopupOwner(page, frameSelector).locator('.tabbed-color-popup:visible').locator('.popup-close'),
+      resolveFrameOwner(page, frameOwner).locator(activePopupSelector).locator('.popup-close'),
 };
 
 export const TabbedColorPickerTasks = {
   selectColor:
-    (controlTarget: Target, color: string, frameSelector?: string): Task<WebActor> =>
+    (controlTarget: Target, color: string, frameOwner?: FrameOwner): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      const popup = tabbedColorPickerTargets.popup(frameSelector);
+      const popup = tabbedColorPickerTargets.popup(frameOwner);
       await actor.browse().click(controlTarget);
       await actor.browse().waitForState(popup, 'visible');
       await actor.browse().waitForTimeout(1000);
-      await actor.browse().click(tabbedColorPickerTargets.customTab(frameSelector));
-      await actor.browse().type(tabbedColorPickerTargets.colorInput(frameSelector), color, {
+      await actor.browse().click(tabbedColorPickerTargets.customTab(frameOwner));
+      await actor.browse().type(tabbedColorPickerTargets.colorInput(frameOwner), color, {
         delay: 150,
         clear: true,
       });
-      await actor.browse().click(tabbedColorPickerTargets.closeButton(frameSelector));
+      await actor.browse().click(tabbedColorPickerTargets.closeButton(frameOwner));
+      await actor.browse().waitForState(popup, 'hidden');
     },
 };
