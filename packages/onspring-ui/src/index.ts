@@ -4,12 +4,15 @@ export * from './common/navs/sidebarNav.tasks.js';
 export * from './common/dialogs/dialogs.targets.js';
 export * from './common/controls/colorPickerControl.js';
 export * from './common/controls/dateFieldControl.js';
+export * from './common/controls/datePicker.js';
 export * from './common/controls/dualPaneSelector.js';
 export * from './common/controls/emailAddressControl.js';
+export * from './common/controls/frameOwner.js';
 export * from './common/controls/kendoGrid.js';
 export * from './common/controls/referenceFieldGrid.js';
 export * from './common/controls/statusSwitch.js';
 export * from './common/controls/tabbedColorPicker.js';
+export * from './common/controls/treeviewSelector.js';
 
 // Feature domains
 export * from './apiKeys/apiKeys.targets.js';
