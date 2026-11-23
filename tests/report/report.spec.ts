@@ -1,34 +1,24 @@
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Page, Route } from '../../fixtures';
-import { app, createApp } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
 import {
+  App,
   BarChart,
   BubbleChart,
   ColumnChart,
   ColumnPlusLineChart,
+  DateField,
+  DisplayField,
   DonutChart,
+  FakeDataFactory,
+  FieldType,
   FunnelChart,
   HeatMapChart,
+  LayoutItem,
   LineChart,
+  ListField,
+  ListValue,
   PieChart,
   PyramidChart,
   RadarChart,
-  SplineChart,
-  StackedBarChart,
-  StackedColumnChart,
-  StackedColumnPlusLineChart,
-} from '../../models/chart';
-import { DateField } from '../../models/dateField';
-import { LayoutItem } from '../../models/layoutItem';
-import { ListField } from '../../models/listField';
-import { ListValue } from '../../models/listValue';
-import { ReferenceField } from '../../models/referenceField';
-import {
-  DisplayField,
+  ReferenceField,
   Report,
   ReportSchedule,
   SavedReportAsCalendar,
@@ -36,79 +26,50 @@ import {
   SavedReportAsGanttChart,
   SavedReportAsPointMap,
   SavedReportAsReportDataOnly,
-} from '../../models/report';
-import { TextField } from '../../models/textField';
-import { User, UserStatus } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
-import { ReportHomePage } from '../../pageObjectModels/reports/reportHomePage';
-import { ReportPage } from '../../pageObjectModels/reports/reportPage';
+  SplineChart,
+  StackedBarChart,
+  StackedColumnChart,
+  StackedColumnPlusLineChart,
+  TextField,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppDetailTargets,
+  AppLayoutTabTargets,
+  AppTasks,
+  ContentQuestions,
+  ContentTasks,
+  ReportAppPageTargets,
+  ReportPageTargets,
+  ReportQuestions,
+  ReportTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { Task } from '@stevanfreeborn/screenplay';
+import { Retry, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, UserFixture, test as base, expect } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
 
 type ReportTestFixtures = {
   referencedApp: App;
   sourceApp: App;
-  testUser: User;
-  testUserPage: Page;
-  reportHomePage: ReportHomePage;
-  reportAppPage: ReportAppPage;
-  reportPage: ReportPage;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  viewContentPage: ViewContentPage;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<ReportTestFixtures>({
-  referencedApp: app,
-  sourceApp: app,
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
-  reportHomePage: async ({ sysAdminPage }, use) => await use(new ReportHomePage(sysAdminPage)),
-  reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
-  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
-  viewContentPage: async ({ sysAdminPage }, use) => await use(new ViewContentPage(sysAdminPage)),
+  referencedApp: AppFixture.create().build(),
+  sourceApp: AppFixture.create().build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().withName('TestUser').build(),
 });
 
 test.describe('report', () => {
   test.slow();
 
-  let appsToDelete: string[] = [];
-
-  test.afterEach(async ({ sysAdminPage }) => {
-    if (appsToDelete.length === 0) {
-      return;
-    }
-
-    await new AppsAdminPage(sysAdminPage).deleteApps(appsToDelete);
-    appsToDelete = [];
-  });
-
   test('Create a report via the "Create Report" button on the report home page', async ({
     sourceApp,
-    reportHomePage,
-    reportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -121,28 +82,29 @@ test.describe('report', () => {
     });
 
     await test.step('Navigate to the report home page', async () => {
-      await reportHomePage.goto();
+      await sysAdminActor.attemptsTo(ReportTasks.gotoReportHome());
     });
 
     await test.step('Create the report', async () => {
-      await reportHomePage.createReport(report);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromReportHome(report));
     });
 
     await test.step('Verify the report was created', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(/record id/i))
+        .isVisible();
     });
   });
 
   test('Create a report via the "Create Report" button on an app\'s or survey\'s reports home page.', async ({
     sourceApp,
-    reportAppPage,
-    reportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -155,25 +117,27 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's or survey's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Verify the report was created', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(/record id/i))
+        .isVisible();
     });
   });
 
-  test('Create a copy of a report', async ({ sourceApp, reportHomePage, reportPage }) => {
+  test('Create a copy of a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-596',
@@ -190,34 +154,35 @@ test.describe('report', () => {
     });
 
     await test.step('Navigate to the report home page', async () => {
-      await reportHomePage.goto();
+      await sysAdminActor.attemptsTo(ReportTasks.gotoReportHome());
     });
 
     await test.step('Create the report to copy', async () => {
-      await reportHomePage.createReport(reportToCopy);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromReportHome(reportToCopy));
     });
 
     await test.step('Navigate back to the report home page', async () => {
-      await reportHomePage.goto();
+      await sysAdminActor.attemptsTo(ReportTasks.gotoReportHome());
     });
 
     await test.step('Create a copy of the report', async () => {
-      await reportHomePage.createCopyOfReport(reportToCopy.name, copy);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createCopyFromReportHome(reportToCopy.name, copy));
     });
 
     await test.step('Verify the report was created', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${copy.appName}[\\s\\S]*${copy.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${copy.appName}[\\s\\S]*${copy.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(/record id/i))
+        .isVisible();
     });
   });
 
-  test('Update a report', async ({ sourceApp, reportAppPage, reportPage }) => {
+  test('Update a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-597',
@@ -229,31 +194,32 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report to update', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Update the report', async () => {
       report.name = FakeDataFactory.createFakeReportName();
-      await reportPage.updateReport(report);
-      await reportPage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.update(report));
     });
 
     await test.step('Verify the report was updated', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: /record id/i });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(/record id/i))
+        .isVisible();
     });
   });
 
-  test('Delete a report', async ({ sourceApp, reportAppPage, reportPage }) => {
+  test('Delete a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-598',
@@ -265,35 +231,23 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report to delete', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Delete the report', async () => {
-      await reportPage.deleteReport();
-      await reportPage.page.waitForURL(reportAppPage.pathRegex);
-      await reportAppPage.page.waitForLoadState('load');
+      await sysAdminActor.attemptsTo(ReportTasks.delete());
     });
 
     await test.step('Verify the report was deleted', async () => {
-      const reportRow = reportAppPage.allReportsGrid.getByRole('row', { name: report.name });
-
-      await expect(reportRow).toBeHidden();
+      await sysAdminActor.browse().check(ReportAppPageTargets.reportRowByName(report.name)).isHidden();
     });
   });
 
-  test('Bulk edit records in a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Bulk edit records in a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-599',
@@ -303,8 +257,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -314,46 +268,36 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Bulk edit records in the report', async () => {
-      await reportPage.selectAllRecords();
-      await reportPage.bulkEditSelectedRecords();
-      await reportPage.bulkEditModal.updateFields([
-        {
-          field: fields.groupField,
-          value: fields.groupField.values[0].value,
-        },
-      ]);
-      await reportPage.bulkEditModal.saveChanges();
-      await reportPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(
+        ReportTasks.selectAllRecords(),
+        ReportTasks.bulkEdit([
+          {
+            field: fields.groupField,
+            value: fields.groupField.values[0].value,
+          },
+        ])
+      );
     });
 
     await test.step('Verify the records were updated', async () => {
-      const groupFieldCells = await reportPage.getAllFieldCells(fields.groupField.name);
+      const cellTexts = await sysAdminActor.asks(ReportQuestions.columnCellTexts(fields.groupField.name));
+      expect(cellTexts).toHaveLength(records.length);
 
-      for (const cell of groupFieldCells) {
-        await expect(cell).toHaveText(fields.groupField.values[0].value);
+      for (const cellText of cellTexts) {
+        expect(cellText.trim()).toBe(fields.groupField.values[0].value);
       }
     });
   });
 
-  test('Bulk delete records in a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Bulk delete records in a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-600',
@@ -363,8 +307,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -373,37 +317,23 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Bulk delete records in the report', async () => {
-      await reportPage.selectAllRecords();
-      await reportPage.bulkDeleteSelectedRecords();
-      await reportPage.bulkDeleteDialog.confirmDelete();
-      await reportPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.selectAllRecords(), ReportTasks.bulkDelete());
     });
 
     await test.step('Verify the records were deleted', async () => {
-      const rows = reportPage.dataGridContainer.locator('tbody').locator('tr');
-      await expect(rows).toHaveCount(0);
+      await sysAdminActor.browse().check(ReportPageTargets.gridRows).hasCount(0);
     });
   });
 
-  test('Apply liver filters to a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Apply liver filters to a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-601',
@@ -413,8 +343,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -424,38 +354,30 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Apply live filter to the report', async () => {
-      await reportPage.applyLiveFilter({
-        fieldName: fields.groupField.name,
-        fieldType: fields.groupField.type as FieldType,
-        operator: 'Contains Any',
-        value: fields.groupField.values[0].value,
-      });
+      await sysAdminActor.attemptsTo(
+        ReportTasks.applyLiveFilter({
+          fieldName: fields.groupField.name,
+          fieldType: fields.groupField.type as FieldType,
+          operator: 'Contains Any',
+          value: fields.groupField.values[0].value,
+        })
+      );
     });
 
     await test.step('Verify the report has been filtered', async () => {
-      const rows = reportPage.dataGridContainer.locator('tbody').locator('tr');
-      await expect(rows).toHaveCount(3);
+      await sysAdminActor.browse().check(ReportPageTargets.gridRows).hasCount(3);
     });
   });
 
-  test('Sort a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Sort a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-602',
@@ -465,8 +387,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -475,37 +397,27 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Sort the report', async () => {
-      await reportPage.sortByField({ fieldName: 'Record Id', sortOrder: 'desc' });
+      await sysAdminActor.attemptsTo(ReportTasks.sortByField({ fieldName: 'Record Id', sortOrder: 'desc' }));
     });
 
     await test.step('Verify the report has been sorted', async () => {
       const expectedRecordIds = records.map(record => record.id).sort((a, b) => b - a);
-      const recordIdCells = await reportPage.getAllFieldCells('Record Id');
-      const recordIds = await Promise.all(recordIdCells.map(cell => cell.textContent()));
-      const actualRecordIds = recordIds.filter(id => id !== null).map(id => parseInt(id!));
+      const recordIdTexts = await sysAdminActor.asks(ReportQuestions.columnCellTexts('Record Id'));
+      const actualRecordIds = recordIdTexts.filter(id => id !== '').map(id => parseInt(id, 10));
 
       expect(actualRecordIds).toEqual(expectedRecordIds);
     });
   });
 
-  test('Filter a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Filter a report', async ({ sourceApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-603',
@@ -515,8 +427,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -525,37 +437,28 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Filter the report', async () => {
-      await reportPage.filterByText('1');
+      await sysAdminActor.attemptsTo(ReportTasks.filterByText('1'));
     });
 
     await test.step('Verify the report has been filtered', async () => {
-      const rows = reportPage.dataGridContainer.locator('tbody').locator('tr');
-
-      await expect(rows).toHaveCount(1);
-      await expect(rows).toHaveText(new RegExp('1', 'i'));
+      await sysAdminActor.browse().check(ReportPageTargets.gridRows).hasCount(1);
+      await sysAdminActor.browse().check(ReportPageTargets.gridRows).hasText(new RegExp('1', 'i'));
     });
   });
 
   test('Export a report', async ({
     sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
+    sysAdminActor,
     sysAdminUser,
     sysAdminEmail,
-    sysAdminPage,
     downloadService,
     sheetParser,
   }) => {
@@ -568,8 +471,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -578,17 +481,15 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Export the report', async () => {
-      await reportPage.exportReport();
+      await sysAdminActor.attemptsTo(ReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -601,7 +502,6 @@ test.describe('report', () => {
         expect(result.isOk()).toBe(true);
 
         const email = result.unwrap();
-
         exportEmailContent = email.html as string;
       }).toPass({
         intervals: [30_000],
@@ -612,12 +512,8 @@ test.describe('report', () => {
     let reportPath: string;
 
     await test.step('Download the exported report', async () => {
-      await sysAdminPage.setContent(exportEmailContent);
-
-      const reportDownload = sysAdminPage.waitForEvent('download');
-      await sysAdminPage.getByRole('link').click();
-      const report = await reportDownload;
-      reportPath = await downloadService.saveDownload(report);
+      const download = await sysAdminActor.asks(ReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
+      reportPath = await downloadService.saveDownload(download);
     });
 
     await test.step('Verify the exported report contains expected data', async () => {
@@ -632,16 +528,7 @@ test.describe('report', () => {
     });
   });
 
-  test('Print a report', async ({
-    sourceApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-    downloadService,
-    pdfParser,
-  }) => {
+  test('Print a report', async ({ sourceApp, sysAdminActor, downloadService, pdfParser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-605',
@@ -651,8 +538,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -661,33 +548,24 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     let pdfPath: string;
 
     await test.step('Print the report to PDF', async () => {
-      await reportPage.printReport();
+      await sysAdminActor.attemptsTo(ReportTasks.printReport());
 
-      const pdfResponse = await reportPage.page.request.post(`/Report/${reportPage.getReportIdFromUrl()}/Print`);
-      const responseHeaders = pdfResponse.headers();
-      const nameMatch = responseHeaders['content-disposition'].match(/filename="(.+?)"/);
+      const reportId = await sysAdminActor.asks(ReportQuestions.currentId());
+      const { fileName, body } = await sysAdminActor.asks(ReportQuestions.printedPdf(reportId));
 
-      expect(nameMatch).not.toBeNull();
+      expect(fileName).toBe(`${report.name}.pdf`);
 
-      const pdfName = nameMatch![1];
-
-      expect(pdfName).toBe(`${report.name}.pdf`);
-
-      const pdf = await pdfResponse.body();
-
-      pdfPath = await downloadService.saveBuffer(pdf, pdfName);
+      pdfPath = await downloadService.saveBuffer(Buffer.from(body), fileName);
     });
 
     await test.step('Verify the printed report contains expected text', async () => {
@@ -698,15 +576,7 @@ test.describe('report', () => {
     });
   });
 
-  test('Add related data to a report', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    referencedApp,
-    reportAppPage,
-    reportPage,
-  }) => {
+  test('Add related data to a report', async ({ sysAdminActor, sourceApp, referencedApp }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-606',
@@ -721,23 +591,21 @@ test.describe('report', () => {
       }),
     };
 
-    let relatedRecordId: string;
+    let relatedRecordId = '';
 
     await test.step('Create record in referenced app', async () => {
-      await addContentPage.goto(referencedApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      relatedRecordId = editContentPage.getRecordIdFromUrl().toString();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(referencedApp.id), ContentTasks.saveRecord());
+      relatedRecordId = (await sysAdminActor.asks(ContentQuestions.currentRecordId())).toString();
     });
 
     let records = buildRecords(fields.groupField, fields.seriesField, {
       referenceField: fields.referenceField,
-      relatedRecordId: relatedRecordId!,
+      relatedRecordId,
     });
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsReportDataOnly({
@@ -752,60 +620,43 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Verify the report was created', async () => {
-      const masterRows = reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row');
-      await expect(masterRows).toHaveCount(records.length);
+      await sysAdminActor.browse().check(ReportPageTargets.masterRows).hasCount(records.length);
 
-      const numOfMasterRows = await masterRows.count();
+      const numOfMasterRows = await sysAdminActor.browse().count(ReportPageTargets.masterRows);
 
       for (let i = 0; i < numOfMasterRows; i++) {
-        const detailListResponse = reportAppPage.page.waitForResponse(/\/Report\/\d+\/DetailRecordList/);
-        const masterRow = reportPage.dataGridContainer.locator('tbody').locator('tr.k-master-row').nth(i);
-        await masterRow.locator('td').first().getByRole('link').click();
-        await detailListResponse;
+        await sysAdminActor.attemptsTo(ReportTasks.expandMasterRow(i));
 
-        const detailRow = reportPage.dataGridContainer.locator('tbody').locator('tr.k-detail-row').nth(i);
-        const fieldGridHeader = detailRow.locator('.toolbar-container', { hasText: fields.referenceField.name });
-        const recordIdHeader = detailRow.locator('thead').locator('th', { hasText: 'Record Id' });
-        const relatedRecord = detailRow.locator('tbody').locator('tr', { hasText: relatedRecordId });
-
-        await expect(fieldGridHeader).toBeVisible();
-        await expect(recordIdHeader).toBeVisible();
-        await expect(relatedRecord).toBeVisible();
+        await sysAdminActor
+          .browse()
+          .check(ReportPageTargets.detailRowToolbar(i, fields.referenceField.name))
+          .isVisible();
+        await sysAdminActor.browse().check(ReportPageTargets.detailRowHeader(i, 'Record Id')).isVisible();
+        await sysAdminActor.browse().check(ReportPageTargets.detailRowRecord(i, relatedRecordId)).isVisible();
       }
     });
   });
 
-  test('Schedule a report for export', async ({
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-    sysAdminEmail,
-  }) => {
+  test('Schedule a report for export', async ({ sourceApp, sysAdminActor, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-607',
     });
 
     await test.step('Create record in source app', async () => {
-      await addContentPage.goto(sourceApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     const reportName = FakeDataFactory.createFakeReportName();
@@ -825,9 +676,7 @@ test.describe('report', () => {
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
     });
 
     await test.step('Verify the report is exported', async () => {
@@ -848,7 +697,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-608',
@@ -858,8 +707,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -873,21 +722,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the bar chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -897,7 +744,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-609',
@@ -907,8 +754,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -922,21 +769,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the column chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -946,7 +791,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-610',
@@ -956,8 +801,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -971,21 +816,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the pie chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -995,7 +838,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-611',
@@ -1005,8 +848,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1020,21 +863,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the donut chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1044,7 +885,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-612',
@@ -1054,8 +895,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1069,21 +910,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the line chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1093,7 +932,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-613',
@@ -1103,8 +942,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1118,21 +957,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the spline chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1142,7 +979,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-614',
@@ -1152,8 +989,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1167,21 +1004,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the funnel chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1191,7 +1026,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-615',
@@ -1201,8 +1036,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1216,21 +1051,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the pyramid chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1240,7 +1073,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-616',
@@ -1250,8 +1083,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1266,21 +1099,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked bar chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1290,15 +1121,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({
-      appAdminPage,
-      addContentPage,
-      editContentPage,
-      reportAppPage,
-      reportPage,
-      sysAdminPage,
-      testUserPage,
-    }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-617',
@@ -1307,17 +1130,14 @@ test.describe('report', () => {
       // The name of the source app needs to be unique to avoid conflicts...but
       // it also needs to be consistent across test runs so that snapshots can be compared.
       const projectName = test.info().project.name;
-      const appName = FakeDataFactory.createFakeAppName();
       const mockAppName = `configure_a_column_plus_line_chart_${projectName}`;
-      const sourceApp = await createApp(sysAdminPage, appName);
-      appsToDelete.push(appName);
 
       const fields = getFieldsForApp();
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const lineReport = new SavedReportAsChart({
@@ -1343,40 +1163,31 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the line report', async () => {
-        await reportAppPage.createReport(lineReport);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(lineReport));
       });
 
       await test.step('Navigate back to the app reports home page', async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the column report', async () => {
-        await reportAppPage.createReport(columnReport);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(columnReport));
 
-        columnReport.id = reportPage.getReportIdFromUrl();
+        columnReport.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(columnReport.id).not.toBe(0);
       });
 
       await test.step('Verify the column plus line chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({
-          testUserPage,
+        await prepareReportForScreenshot({
+          actor: testUserActor,
           report: columnReport,
-          beforeNavigation: async rp => {
-            await rp.page.route(
-              /Report\/\d+\/GetReportDisplayConfig/,
-              async route => await mockLineChartSeriesName(route, appName, mockAppName),
-              { times: 1 }
-            );
-          },
+          beforeNavigation: ReportTasks.mockLineChartSeriesName(sourceApp.name, mockAppName),
         });
-        await expect(reportContents).toHaveScreenshot();
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1386,7 +1197,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-618',
@@ -1396,8 +1207,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1412,21 +1223,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked column chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1436,15 +1245,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({
-      appAdminPage,
-      addContentPage,
-      editContentPage,
-      reportAppPage,
-      reportPage,
-      sysAdminPage,
-      testUserPage,
-    }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-619',
@@ -1453,17 +1254,14 @@ test.describe('report', () => {
       // The name of the source app needs to be unique to avoid conflicts...but
       // it also needs to be consistent across test runs so that snapshots can be compared.
       const projectName = test.info().project.name;
-      const appName = FakeDataFactory.createFakeAppName();
       const mockAppName = `configure_a_column_plus_line_chart_${projectName}`;
-      const sourceApp = await createApp(sysAdminPage, appName);
-      appsToDelete.push(appName);
 
       const fields = getFieldsForApp();
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const lineReport = new SavedReportAsChart({
@@ -1489,40 +1287,31 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the line report', async () => {
-        await reportAppPage.createReport(lineReport);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(lineReport));
       });
 
       await test.step("Navigate back to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the stacked column plus line report', async () => {
-        await reportAppPage.createReport(stackedColumnReport);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(stackedColumnReport));
 
-        stackedColumnReport.id = reportPage.getReportIdFromUrl();
+        stackedColumnReport.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(stackedColumnReport.id).not.toBe(0);
       });
 
       await test.step('Verify the stacked column plus line chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({
-          testUserPage,
+        await prepareReportForScreenshot({
+          actor: testUserActor,
           report: stackedColumnReport,
-          beforeNavigation: async rp => {
-            await rp.page.route(
-              /Report\/\d+\/GetReportDisplayConfig/,
-              async route => await mockLineChartSeriesName(route, appName, mockAppName),
-              { times: 1 }
-            );
-          },
+          beforeNavigation: ReportTasks.mockLineChartSeriesName(sourceApp.name, mockAppName),
         });
-        await expect(reportContents).toHaveScreenshot();
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1532,7 +1321,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-620',
@@ -1542,8 +1331,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField, undefined, fields.additionalGroupField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1559,21 +1348,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the bubble chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1583,7 +1370,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-621',
@@ -1593,8 +1380,8 @@ test.describe('report', () => {
       let records = buildRecords(fields.groupField, fields.seriesField);
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       const report = new SavedReportAsChart({
@@ -1613,21 +1400,19 @@ test.describe('report', () => {
       });
 
       await test.step("Navigate to the app's reports home page", async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the heat map chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1637,7 +1422,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-622',
@@ -1698,12 +1483,12 @@ test.describe('report', () => {
       ];
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, [startDate, endDate]);
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, [startDate, endDate]);
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       await test.step('Navigate to the app reports home page', async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       const report = new SavedReportAsCalendar({
@@ -1721,24 +1506,23 @@ test.describe('report', () => {
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.calendarChart.selectDate(testDate);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(
+          ReportTasks.createFromAppReports(report),
+          ReportTasks.selectCalendarDate(testDate),
+          ReportTasks.waitUntilLoaded()
+        );
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the calendar displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({
-          testUserPage,
+        await prepareReportForScreenshot({
+          actor: testUserActor,
           report,
-          afterNavigation: async rp => {
-            await rp.calendarChart.selectDate(testDate);
-          },
+          afterNavigation: ReportTasks.selectCalendarDate(testDate),
         });
-        await expect(reportContents).toHaveScreenshot();
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1748,7 +1532,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({ appAdminPage, sourceApp, addContentPage, editContentPage, reportAppPage, reportPage, testUserPage }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-623',
@@ -1804,12 +1588,12 @@ test.describe('report', () => {
       ];
 
       await test.step('Setup source app with fields and records', async () => {
-        await addFieldsToApp(appAdminPage, sourceApp, [startDate, endDate]);
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        await addFieldsToApp(sysAdminActor, sourceApp, [startDate, endDate]);
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       await test.step('Navigate to the app reports home page', async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       const report = new SavedReportAsGanttChart({
@@ -1827,17 +1611,15 @@ test.describe('report', () => {
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the gantt chart displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot();
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot();
       });
     }
   );
@@ -1847,16 +1629,7 @@ test.describe('report', () => {
     {
       tag: [Tags.Snapshot],
     },
-    async ({
-      sourceApp,
-      appAdminPage,
-      addContentPage,
-      editContentPage,
-      viewContentPage,
-      reportAppPage,
-      reportPage,
-      testUserPage,
-    }) => {
+    async ({ sourceApp, sysAdminActor, testUserActor }) => {
       test.info().annotations.push({
         type: AnnotationType.TestId,
         description: 'Test-624',
@@ -1871,43 +1644,47 @@ test.describe('report', () => {
       const longitudeFieldName = 'Longitude';
 
       await test.step('Navigate to the source app admin page', async () => {
-        await appAdminPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(AppTasks.gotoApp(sourceApp.id));
       });
 
       await test.step('Enable geocoding for the source app', async () => {
-        await appAdminPage.enableGeocoding({
-          address: addressField,
-          city: cityField,
-          state: stateField,
-          zip: zipField,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.enableGeocoding({
+            address: addressField.name,
+            city: cityField.name,
+            state: stateField.name,
+            zip: zipField.name,
+          })
+        );
       });
 
       await test.step('Wait for geocode fields to be created', async () => {
-        await appAdminPage.layoutTabButton.click();
+        await sysAdminActor.browse().click(AppDetailTargets.layoutTabButton);
 
-        await expect(async () => {
-          await appAdminPage.page.reload();
-
-          const geocodePrecisionRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-            name: geocodePrecisionFieldName,
-          });
-          const latitudeRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: latitudeFieldName });
-          const longitudeRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-            name: longitudeFieldName,
-          });
-
-          await expect(geocodePrecisionRow).toBeVisible({ timeout: 1_000 });
-          await expect(latitudeRow).toBeVisible({ timeout: 1_000 });
-          await expect(longitudeRow).toBeVisible({ timeout: 1_000 });
-        }).toPass({
-          intervals: [5_000],
-          timeout: 120_000,
-        });
+        await sysAdminActor.attemptsTo(
+          Retry.until(
+            async actor => {
+              await actor.browse().reload();
+              await actor
+                .browse()
+                .check(AppLayoutTabTargets.fieldOrObjectRowByName(geocodePrecisionFieldName))
+                .isVisible({ timeout: 1_000 });
+              await actor
+                .browse()
+                .check(AppLayoutTabTargets.fieldOrObjectRowByName(latitudeFieldName))
+                .isVisible({ timeout: 1_000 });
+              await actor
+                .browse()
+                .check(AppLayoutTabTargets.fieldOrObjectRowByName(longitudeFieldName))
+                .isVisible({ timeout: 1_000 });
+            },
+            { intervals: [5_000], timeout: 120_000 }
+          )
+        );
       });
 
       await test.step('Place geocode fields on layout', async () => {
-        await appAdminPage.layoutTab.openLayout();
+        await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
         const fields = [
           addressField.name,
@@ -1920,16 +1697,18 @@ test.describe('report', () => {
         ];
 
         for (const field of fields) {
-          await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-            tabName: 'Tab 2',
-            sectionName: 'Section 1',
-            sectionColumn: 0,
-            sectionRow: 0,
-            fieldName: field,
-          });
+          await sysAdminActor.attemptsTo(
+            AppTasks.dragFieldOntoLayout({
+              tabName: 'Tab 2',
+              sectionName: 'Section 1',
+              column: 0,
+              row: 0,
+              fieldName: field,
+            })
+          );
         }
 
-        await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+        await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
       });
 
       let records: Record[] = [
@@ -1969,30 +1748,33 @@ test.describe('report', () => {
       ];
 
       await test.step('Add record to the source app', async () => {
-        records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+        records = await addRecordsToApp(sysAdminActor, sourceApp, records);
       });
 
       await test.step('Wait for record to be geocoded', async () => {
-        await viewContentPage.goto(sourceApp.id, records[0].id);
+        await sysAdminActor.attemptsTo(ContentTasks.gotoView(sourceApp.id, records[0].id));
 
-        const geocodePrecisionField = await viewContentPage.form.getField({
-          tabName: 'Tab 2',
-          sectionName: 'Section 1',
-          fieldName: geocodePrecisionFieldName,
-          fieldType: 'Text',
-        });
-
-        await expect(async () => {
-          await viewContentPage.page.reload();
-          await expect(geocodePrecisionField).toHaveText('High', { timeout: 1_000 });
-        }).toPass({
-          intervals: [5_000],
-          timeout: 120_000,
-        });
+        await sysAdminActor.attemptsTo(
+          Retry.until(
+            async actor => {
+              await actor.browse().reload();
+              await actor.attemptsTo(
+                ContentTasks.checkReadOnlyFieldText({
+                  tabName: 'Tab 2',
+                  sectionName: 'Section 1',
+                  fieldName: geocodePrecisionFieldName,
+                  expectedText: 'High',
+                  timeout: 1_000,
+                })
+              );
+            },
+            { intervals: [5_000], timeout: 120_000 }
+          )
+        );
       });
 
       await test.step('Navigate to the source app reports home page', async () => {
-        await reportAppPage.goto(sourceApp.id);
+        await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
       });
 
       const report = new SavedReportAsPointMap({
@@ -2005,25 +1787,22 @@ test.describe('report', () => {
       });
 
       await test.step('Create the report', async () => {
-        await reportAppPage.createReport(report);
-        await reportAppPage.page.waitForURL(reportPage.pathRegex);
-        await reportPage.waitUntilLoaded();
+        await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-        report.id = reportPage.getReportIdFromUrl();
+        report.id = await sysAdminActor.asks(ReportQuestions.currentId());
         expect(report.id).not.toBe(0);
       });
 
       await test.step('Verify the point map displays as expected', async () => {
-        const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-        await expect(reportContents).toHaveScreenshot({ maxDiffPixels: 14 });
+        await prepareReportForScreenshot({ actor: testUserActor, report });
+        await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot({ maxDiffPixels: 400 });
       });
     }
   );
 
   test('Add a Report Alias to a display field and verify it displays correctly when viewing the report', async ({
     sourceApp,
-    reportHomePage,
-    reportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -2039,28 +1818,29 @@ test.describe('report', () => {
     });
 
     await test.step('Navigate to the report home page', async () => {
-      await reportHomePage.goto();
+      await sysAdminActor.attemptsTo(ReportTasks.gotoReportHome());
     });
 
     await test.step('Create the report', async () => {
-      await reportHomePage.createReport(report);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromReportHome(report));
     });
 
     await test.step('Verify the report was created', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: new RegExp(aliasValue, 'i') });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(new RegExp(aliasValue, 'i')))
+        .isVisible();
     });
   });
 
   test('Update a report alias on a display field and verify it updates correctly when viewing the report', async ({
     sourceApp,
-    reportHomePage,
-    reportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -2077,21 +1857,23 @@ test.describe('report', () => {
     });
 
     await test.step('Navigate to the report home page', async () => {
-      await reportHomePage.goto();
+      await sysAdminActor.attemptsTo(ReportTasks.gotoReportHome());
     });
 
     await test.step('Create the report', async () => {
-      await reportHomePage.createReport(report);
-      await reportHomePage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createFromReportHome(report));
     });
 
     await test.step('Verify the report was created', async () => {
-      await expect(reportPage.breadcrumb).toHaveText(
-        new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i')
-      );
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.breadcrumb)
+        .hasText(new RegExp(`Reports[\\s\\S]*${report.appName}[\\s\\S]*${report.name}`, 'i'));
 
-      const recordIdColumn = reportPage.dataGridContainer.locator('th', { hasText: new RegExp(aliasValue, 'i') });
-      await expect(recordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(new RegExp(aliasValue, 'i')))
+        .isVisible();
     });
 
     await test.step('Update the report alias', async () => {
@@ -2101,27 +1883,18 @@ test.describe('report', () => {
         displayFields: [new DisplayField({ name: 'Record Id', alias: updatedAliasValue })],
       });
 
-      await reportPage.updateReport(updatedReport);
+      await sysAdminActor.attemptsTo(ReportTasks.update(updatedReport));
     });
 
     await test.step('Verify the report alias was updated', async () => {
-      const updatedRecordIdColumn = reportPage.dataGridContainer.locator('th', {
-        hasText: new RegExp(updatedAliasValue, 'i'),
-      });
-
-      await expect(updatedRecordIdColumn).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ReportPageTargets.columnHeader(new RegExp(updatedAliasValue, 'i')))
+        .isVisible();
     });
   });
 
-  test('Configure a radar chart', async ({
-    appAdminPage,
-    sourceApp,
-    addContentPage,
-    editContentPage,
-    reportAppPage,
-    reportPage,
-    testUserPage,
-  }) => {
+  test('Configure a radar chart', async ({ sourceApp, sysAdminActor, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-906',
@@ -2131,8 +1904,8 @@ test.describe('report', () => {
     let records = buildRecords(fields.groupField, fields.seriesField);
 
     await test.step('Setup source app with fields and records', async () => {
-      await addFieldsToApp(appAdminPage, sourceApp, Object.values(fields));
-      records = await addRecordsToApp(addContentPage, editContentPage, sourceApp, records);
+      await addFieldsToApp(sysAdminActor, sourceApp, Object.values(fields));
+      records = await addRecordsToApp(sysAdminActor, sourceApp, records);
     });
 
     const report = new SavedReportAsChart({
@@ -2147,21 +1920,19 @@ test.describe('report', () => {
     });
 
     await test.step("Navigate to the app's reports home page", async () => {
-      await reportAppPage.goto(sourceApp.id);
+      await sysAdminActor.attemptsTo(ReportTasks.gotoAppReports(sourceApp.id));
     });
 
     await test.step('Create the report', async () => {
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
-      await reportPage.waitUntilLoaded();
+      await sysAdminActor.attemptsTo(ReportTasks.createFromAppReports(report));
 
-      report.id = reportPage.getReportIdFromUrl();
+      report.id = await sysAdminActor.asks(ReportQuestions.currentId());
       expect(report.id).not.toBe(0);
     });
 
     await test.step('Verify the heat map chart displays as expected', async () => {
-      const reportContents = await getReportContentsForScreenshot({ testUserPage, report });
-      await expect(reportContents).toHaveScreenshot({ maxDiffPixels: 400 });
+      await prepareReportForScreenshot({ actor: testUserActor, report });
+      await testUserActor.browse().check(ReportPageTargets.reportContents).hasScreenshot({ maxDiffPixels: 400 });
     });
   });
 });
@@ -2197,24 +1968,23 @@ function getFieldsForApp() {
   return { groupField, seriesField, additionalGroupField };
 }
 
-async function addFieldsToApp(appAdminPage: AppAdminPage, app: App, fields: LayoutItem[]) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.openLayout();
+async function addFieldsToApp(actor: WebActor, app: App, fields: LayoutItem[]) {
+  await actor.attemptsTo(AppTasks.gotoApp(app.id), AppTasks.openLayoutDesigner());
 
   for (const [index, field] of fields.entries()) {
-    await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
-
-    await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-      fieldName: field.name,
-      tabName: 'Tab 2',
-      sectionName: 'Section 1',
-      sectionColumn: 0,
-      sectionRow: index,
-    });
+    await actor.attemptsTo(
+      AppTasks.addLayoutItemInLayoutDesigner(field),
+      AppTasks.dragFieldOntoLayout({
+        fieldName: field.name,
+        tabName: 'Tab 2',
+        sectionName: 'Section 1',
+        column: 0,
+        row: index,
+      })
+    );
   }
 
-  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+  await actor.attemptsTo(AppTasks.saveAndCloseLayout());
 }
 
 type Record = {
@@ -2261,7 +2031,7 @@ function buildRecords(
 
       records.push({
         id: 0,
-        fieldValues: fieldValues,
+        fieldValues,
       });
     }
   }
@@ -2272,7 +2042,7 @@ function buildRecords(
 
       record.fieldValues.push({
         field: additionalField.name,
-        value: value,
+        value,
         tabName: 'Tab 2',
         sectionName: 'Section 1',
         type: additionalField.type as FieldType,
@@ -2283,62 +2053,56 @@ function buildRecords(
   return records;
 }
 
-async function addRecordsToApp(
-  addContentPage: AddContentPage,
-  editContentPage: EditContentPage,
-  app: App,
-  records: Record[]
-) {
+async function addRecordsToApp(actor: WebActor, app: App, records: Record[]) {
   const createdRecords = [];
 
   for (const record of records) {
-    await addContentPage.goto(app.id);
+    await actor.attemptsTo(ContentTasks.gotoAdd(app.id));
 
     for (const fieldValue of record.fieldValues) {
       switch (fieldValue.type) {
         case 'List': {
-          const field = await addContentPage.form.getField({
-            tabName: fieldValue.tabName,
-            sectionName: fieldValue.sectionName,
-            fieldName: fieldValue.field,
-            fieldType: fieldValue.type,
-          });
-
-          await field.click();
-          await field.page().getByRole('option', { name: fieldValue.value }).click();
+          await actor.attemptsTo(
+            ContentTasks.selectListField({
+              tabName: fieldValue.tabName,
+              sectionName: fieldValue.sectionName,
+              fieldName: fieldValue.field,
+              value: fieldValue.value,
+            })
+          );
           break;
         }
         case 'Reference': {
-          const field = await addContentPage.form.getField({
-            tabName: fieldValue.tabName,
-            sectionName: fieldValue.sectionName,
-            fieldName: fieldValue.field,
-            fieldType: fieldValue.type,
-          });
-
-          await field.searchForAndSelectRecord(fieldValue.value);
+          await actor.attemptsTo(
+            ContentTasks.selectReferenceField({
+              tabName: fieldValue.tabName,
+              sectionName: fieldValue.sectionName,
+              fieldName: fieldValue.field,
+              searchTerm: fieldValue.value,
+            })
+          );
           break;
         }
         case 'Date/Time': {
-          const field = await addContentPage.form.getField({
-            tabName: fieldValue.tabName,
-            sectionName: fieldValue.sectionName,
-            fieldName: fieldValue.field,
-            fieldType: fieldValue.type,
-          });
-
-          await field.enterDate(new Date(fieldValue.value));
+          await actor.attemptsTo(
+            ContentTasks.enterDateField({
+              tabName: fieldValue.tabName,
+              sectionName: fieldValue.sectionName,
+              fieldName: fieldValue.field,
+              date: new Date(fieldValue.value),
+            })
+          );
           break;
         }
         case 'Text': {
-          const field = await addContentPage.form.getField({
-            tabName: fieldValue.tabName,
-            sectionName: fieldValue.sectionName,
-            fieldName: fieldValue.field,
-            fieldType: fieldValue.type,
-          });
-
-          await field.fill(fieldValue.value);
+          await actor.attemptsTo(
+            ContentTasks.fillTextField({
+              tabName: fieldValue.tabName,
+              sectionName: fieldValue.sectionName,
+              fieldName: fieldValue.field,
+              value: fieldValue.value,
+            })
+          );
           break;
         }
         default:
@@ -2346,56 +2110,36 @@ async function addRecordsToApp(
       }
     }
 
-    await addContentPage.saveRecordButton.click();
-    await addContentPage.page.waitForURL(editContentPage.pathRegex);
+    await actor.attemptsTo(ContentTasks.saveRecord());
 
     const createdRecord = { ...record };
-    createdRecord.id = editContentPage.getRecordIdFromUrl();
+    createdRecord.id = await actor.asks(ContentQuestions.currentRecordId());
     createdRecords.push(createdRecord);
   }
 
   return createdRecords;
 }
 
-async function mockLineChartSeriesName(route: Route, appName: string, mockAppName: string) {
-  const response = await route.fetch();
-  const body = await response.json();
-  const lineChartSeries = body.chartConfig.chartConfigData.dataset.find(
-    (d: { seriesName: string }) => d.seriesName === appName
-  );
-
-  if (lineChartSeries === undefined) {
-    throw new Error(`Series with name ${appName} not found in the chart config.`);
-  }
-
-  lineChartSeries.seriesName = mockAppName;
-
-  await route.fulfill({ response, json: body });
-}
-
-async function getReportContentsForScreenshot({
-  testUserPage,
+async function prepareReportForScreenshot({
+  actor,
   report,
   beforeNavigation,
   afterNavigation,
 }: {
-  testUserPage: Page;
+  actor: WebActor;
   report: Report;
-  beforeNavigation?: (reportPage: ReportPage) => Promise<void>;
-  afterNavigation?: (reportPage: ReportPage) => Promise<void>;
+  beforeNavigation?: Task<WebActor>;
+  afterNavigation?: Task<WebActor>;
 }) {
-  const reportPage = new ReportPage(testUserPage);
-
   if (beforeNavigation) {
-    await beforeNavigation(reportPage);
+    await actor.attemptsTo(beforeNavigation);
   }
 
-  await reportPage.goto(report.id!);
+  await actor.attemptsTo(ReportTasks.gotoReport(report.id));
 
   if (afterNavigation) {
-    await afterNavigation(reportPage);
+    await actor.attemptsTo(afterNavigation);
   }
 
-  await reportPage.page.mouse.move(0, 0);
-  return reportPage.reportContents;
+  await actor.browse().moveMouse(0, 0);
 }

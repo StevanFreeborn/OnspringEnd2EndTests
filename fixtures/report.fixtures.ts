@@ -1,5 +1,10 @@
 import { Page } from '@playwright/test';
-import { App as ScreenplayApp, FakeDataFactory, SavedReportAsReportDataOnly } from '@stevanfreeborn/onspring-models';
+import {
+  App as ScreenplayApp,
+  FakeDataFactory,
+  ReportSecurity,
+  SavedReportAsReportDataOnly,
+} from '@stevanfreeborn/onspring-models';
 import { ReportQuestions, ReportTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { App } from '../models/app';
@@ -9,14 +14,14 @@ import { ReportPage } from '../pageObjectModels/reports/reportPage';
 
 export class ReportFixtureBuilder {
   private name?: string;
-  private security: 'Private to me' | 'Private by Role' | 'Public' = 'Public';
+  private security: ReportSecurity = 'Public';
 
   withName(name: string): this {
     this.name = name;
     return this;
   }
 
-  withSecurity(security: 'Private to me' | 'Private by Role' | 'Public'): this {
+  withSecurity(security: ReportSecurity): this {
     this.security = security;
     return this;
   }
@@ -43,22 +48,6 @@ export class ReportFixture {
   static create(): ReportFixtureBuilder {
     return new ReportFixtureBuilder();
   }
-}
-
-export async function createReportFixture(
-  {
-    sysAdminPage,
-    app,
-    report,
-  }: {
-    sysAdminPage: Page;
-    app: App;
-    report: SavedReport;
-  },
-  use: (r: SavedReport) => Promise<void>
-) {
-  const createdReport = await createReport(sysAdminPage, app, report);
-  await use(createdReport);
 }
 
 export async function createReport(sysAdminPage: Page, app: App, report: SavedReport) {
