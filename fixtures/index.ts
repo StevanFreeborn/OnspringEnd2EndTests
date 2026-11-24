@@ -1,4 +1,5 @@
 import { Page, test as base } from '@playwright/test';
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { App } from '../models/app';
 import { Role } from '../models/role';
@@ -29,6 +30,12 @@ import {
 } from './services.fixtures';
 import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
+
+FakeDataFactory.configure({
+  defaultEmailSendingDomain: env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech',
+  customEmailSendingDomain: env.CUSTOM_EMAIL_SENDING_DOMAIN,
+  sysAdminEmail: env.SYS_ADMIN_EMAIL,
+});
 
 type Environment = {
   getEnvironment: () => typeof env.TEST_ENV;
