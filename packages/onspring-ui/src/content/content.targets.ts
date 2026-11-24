@@ -35,13 +35,39 @@ const createRecordDialog = (page: Page): Locator =>
     })
     .first();
 
+const generateDocumentDialog = (page: Page): Locator =>
+  page.getByRole('dialog', { name: /generate dynamic document/i });
+
 export const ContentRecordTargets = {
   appContentRoute: (appId: number) => `/Content/${appId}/App`,
   addRoute: (appId: number) => `/Content/${appId}/Add`,
+  editRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/Edit`,
   viewRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/View`,
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
   appContentPathRegex: /\/Content\/\d+\/App/,
+  actionMenuButton: (page: Page): Locator => page.locator('#action-menu-button'),
+  actionMenu: (page: Page): Locator => page.locator('#action-menu'),
+  actionMenuOption:
+    (name: string): Target =>
+    (page: Page): Locator =>
+      page.locator('#action-menu').getByText(name),
+  generateDocumentModal: {
+    dialog: generateDocumentDialog,
+    fileTypeSelect: (page: Page): Locator =>
+      generateDocumentDialog(page).locator('.label:has-text("File Type") + .data').getByRole('listbox'),
+    documentActionSelect: (page: Page): Locator =>
+      generateDocumentDialog(page).locator('.label:has-text("Document Action") + .data').getByRole('listbox'),
+    emailDeliverySelect: (page: Page): Locator =>
+      generateDocumentDialog(page).locator('.label:has-text("Email Delivery") + .data').getByRole('listbox'),
+    optionByName:
+      (name: string, exact: boolean = false): Target =>
+      (page: Page): Locator =>
+        page.getByRole('option', { name, exact }),
+    okButton: (page: Page): Locator => generateDocumentDialog(page).getByRole('button', { name: 'OK' }),
+    cancelButton: (page: Page): Locator => generateDocumentDialog(page).getByRole('button', { name: 'Cancel' }),
+    closeButton: (page: Page): Locator => generateDocumentDialog(page).getByRole('button', { name: 'Close' }),
+  },
   quickContentAddForm: (page: Page): Locator => page.locator('form', { hasText: 'Quick Content Add' }),
   tabByName:
     (tabName: string): Target =>

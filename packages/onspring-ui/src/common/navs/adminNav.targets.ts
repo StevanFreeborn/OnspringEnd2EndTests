@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 
 export const AdminNavTargets = {
+  homeRoute: '/Admin/Home',
   adminCreateButton: (page: Page): Locator => page.locator('#admin-create-button'),
   adminCreateMenu: (page: Page): Locator => page.locator('#admin-create-menu'),
   menuOption:
@@ -124,4 +125,10 @@ export const AdminTileTargets = {
     (name: string) =>
     (page: Page): Locator =>
       page.locator('[data-create-menu-for="card-create-button-Integration"]').getByText(name),
+
+  documentTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Documents")'),
+    }),
+  documentTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Documents'),
 };

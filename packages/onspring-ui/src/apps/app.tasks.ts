@@ -11,6 +11,7 @@ import { FieldTasks } from '../fields/fields.tasks.js';
 import { AppQuestions } from './app.questions.js';
 import {
   AppDetailTargets,
+  AppDocumentsTabTargets,
   AppLayoutTabTargets,
   AppsPageTargets,
   CreateAppDialogTargets,
@@ -110,6 +111,14 @@ export const AppTasks = {
       await actor.browse().goto(`/Admin/App/${appId}`);
       await actor.browse().click(AppDetailTargets.layoutTabButton);
       await actor.browse().waitForState(AppLayoutTabTargets.layoutsGrid, 'visible');
+    },
+
+  gotoAppDocumentsTab:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(`/Admin/App/${appId}`);
+      await actor.browse().click(AppDetailTargets.documentsTabButton);
+      await actor.browse().waitForState(AppDocumentsTabTargets.documentsGrid, 'visible');
     },
 
   filterBy:

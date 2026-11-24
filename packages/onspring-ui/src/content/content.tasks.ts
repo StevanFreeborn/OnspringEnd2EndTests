@@ -6,6 +6,17 @@ import { TimeSpanFieldControlTasks, TimeSpanUnit } from '../common/controls/time
 import { ContentQuestions } from './content.questions.js';
 import { ContentFieldLocation, ContentRecordTargets } from './content.targets.js';
 
+export type GenerateDynamicDocumentOptions =
+  | {
+      fileType: 'PDF' | 'Microsoft Word';
+      documentAction: 'Email the document to me' | 'Save to an attachment field and email it to me';
+      emailDelivery: 'Email a link to the document' | 'Attach to the email';
+    }
+  | {
+      fileType: 'PDF' | 'Microsoft Word';
+      documentAction: 'Save to an attachment field';
+    };
+
 export const ContentTasks = {
   gotoAppContent:
     (appId: number): Task<WebActor> =>
@@ -19,10 +30,48 @@ export const ContentTasks = {
       await actor.browse().goto(ContentRecordTargets.addRoute(appId));
     },
 
+  gotoEdit:
+    (appId: number, recordId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(ContentRecordTargets.editRoute(appId, recordId));
+    },
+
   gotoView:
     (appId: number, recordId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().goto(ContentRecordTargets.viewRoute(appId, recordId));
+    },
+
+  openActionMenu:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(ContentRecordTargets.actionMenuButton);
+      await actor.browse().waitForState(ContentRecordTargets.actionMenu, 'visible');
+    },
+
+  generateDynamicDocument:
+    (options: GenerateDynamicDocumentOptions): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(ContentTasks.openActionMenu());
+      await actor.browse().click(ContentRecordTargets.actionMenuOption('Generate Document'));
+
+      const modal = ContentRecordTargets.generateDocumentModal;
+      await actor.browse().waitForState(modal.dialog, 'visible');
+
+      await actor.browse().click(modal.fileTypeSelect);
+      await actor.browse().click(modal.optionByName(options.fileType));
+
+      await actor.browse().click(modal.documentActionSelect);
+      await actor.browse().click(modal.optionByName(options.documentAction, true));
+
+      if (options.documentAction !== 'Save to an attachment field') {
+        await actor.browse().click(modal.emailDeliverySelect);
+        await actor.browse().click(modal.optionByName(options.emailDelivery));
+      }
+
+      await actor.browse().click(modal.okButton);
+      await actor.browse().click(modal.closeButton);
+      await actor.browse().waitForState(modal.dialog, 'hidden');
     },
 
   fillText:

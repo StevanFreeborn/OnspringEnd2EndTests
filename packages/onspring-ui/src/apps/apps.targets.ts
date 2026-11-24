@@ -68,6 +68,7 @@ export const AppDetailTargets = {
   closeButton: (page: Page) => page.locator('a:has-text("Close")'),
   generalTabButton: (page: Page) => page.getByRole('tab', { name: 'General' }),
   layoutTabButton: (page: Page) => page.getByRole('tab', { name: 'Layout' }),
+  documentsTabButton: (page: Page) => page.getByRole('tab', { name: 'Documents' }),
   messagingTabButton: (page: Page) => page.getByRole('tab', { name: 'Messaging' }),
 
   generalTab: {
@@ -217,6 +218,25 @@ export const AppMessagingTabTargets = {
     page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Delete Slack Message'),
   editSlackMessageButtonInRow: (name: string) => (page: Page) =>
     page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Edit Slack Message'),
+};
+
+const appDocumentsGrid = (page: Page) => page.locator('#grid-documents');
+
+export const AppDocumentsTabTargets = {
+  addDocumentLink: (page: Page) => page.getByRole('link', { name: 'Add Document' }),
+  documentsGrid: appDocumentsGrid,
+  rowByName:
+    (name: string): Target =>
+    (page: Page) =>
+      appDocumentsGrid(page).getByRole('row', { name }).first(),
+  editButtonInRow:
+    (name: string): Target =>
+    (page: Page) =>
+      appDocumentsGrid(page).getByRole('row', { name }).first().getByTitle('Edit Document'),
+  deleteButtonInRow:
+    (name: string): Target =>
+    (page: Page) =>
+      appDocumentsGrid(page).getByRole('row', { name }).first().getByTitle('Delete Document'),
 };
 
 const layoutsGrid = (page: Page) => page.locator('#grid-layouts').first();
