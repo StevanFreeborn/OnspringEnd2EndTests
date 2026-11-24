@@ -153,6 +153,8 @@ export { SendingNumberFixture, SendingNumberFixtureBuilder, sendingNumber } from
 export { TextMessageFixture, TextMessageFixtureBuilder } from './textMessage.fixtures';
 export { SlackMessageFixture, SlackMessageFixtureBuilder } from './slackMessage.fixtures';
 export { DashboardFixture, DashboardFixtureBuilder } from './dashboard.fixtures';
+export { DataConnectorFixture, DataConnectorFixtureBuilder } from './dataConnector.fixtures';
+export type { DataConnectorFixtureData } from './dataConnector.fixtures';
 export { ReportFixture, ReportFixtureBuilder } from './report.fixtures';
 
 export * from '@playwright/test';
