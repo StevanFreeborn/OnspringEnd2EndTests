@@ -136,7 +136,7 @@ export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
 
 export { expect } from './matchers.fixtures';
 export { ActorFixture, ActorFixtureBuilder, createAuthenticatedActor } from './auth.fixtures';
-export { AppFixture, AppFixtureBuilder } from './app.fixtures';
+export { AppFixture, AppFixtureBuilder, createAppWithActor } from './app.fixtures';
 export { FieldFixture, FieldFixtureBuilder, createFieldsWithActor } from './field.fixtures';
 export type { FieldLayoutPlacement } from './field.fixtures';
 export { RoleFixture, RoleFixtureBuilder } from './role.fixtures';
