@@ -1,6 +1,27 @@
 import { Page } from '@playwright/test';
 import { resolveTarget, Target } from '@stevanfreeborn/screenplay-playwright';
 
+export type FieldsAndObjectsReportExportFormat = 'Excel' | 'PDF' | 'Microsoft Word';
+
+export type FieldsAndObjectsReportExportableField =
+  | 'Name'
+  | 'Description'
+  | 'Type'
+  | 'List Values'
+  | 'Status'
+  | 'Field Security'
+  | 'Field ID'
+  | 'Last Saved'
+  | 'Help';
+
+export type ExportFieldsAndObjectsReportOptions = {
+  format: FieldsAndObjectsReportExportFormat;
+  fields: FieldsAndObjectsReportExportableField[];
+  includeUsage?: boolean;
+  includeListValueGUIDs?: boolean;
+  messageCenterAlertsOnly?: boolean;
+};
+
 function createSettingSelector(settingName: string) {
   return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
 }
@@ -197,10 +218,15 @@ const layoutDesignerFrame = (page: Page) => layoutDesignerDialog(page).frameLoca
 export const AppLayoutTabTargets = {
   layoutsGrid: (page: Page) => page.locator('#grid-layouts').first(),
   fieldsAndObjectsGrid: (page: Page) => page.locator('#grid-layout-items').first(),
+  fieldsAndObjectsGridRows: (page: Page) => page.locator('#grid-layout-items').first().locator('.k-grid-content tr'),
   fieldOrObjectRowByName:
-    (name: string): Target =>
+    (name: string | RegExp): Target =>
     (page: Page) =>
       page.locator('#grid-layout-items').first().getByRole('row', { name }),
+  getLayoutItemPathRegex: /Admin\/App\/\d+\/Layout\/ItemListPage/,
+  filterFieldsInput: (page: Page) => page.getByPlaceholder('Filter Fields'),
+  exportFieldsAndObjectsReportButton: (page: Page) => page.locator('#export-layout-items'),
+  exportEmailDownloadLink: (page: Page) => page.getByRole('link', { name: 'Download the export file' }),
   layoutRowByName:
     (name: string): Target =>
     (page: Page) =>
@@ -397,5 +423,32 @@ export const AppLayoutTabTargets = {
       (page: Page) =>
         page.frameLocator('iframe').nth(frameNumber).getByRole('option', { name: optionName }),
     saveButton: (page: Page) => page.getByRole('button', { name: 'Save', exact: true }).last(),
+  },
+
+  exportFieldsAndObjectsModal: {
+    modal: (page: Page) => page.getByRole('dialog', { name: 'Export Fields & Objects' }),
+    formatSelect: (page: Page) =>
+      page
+        .getByRole('dialog', { name: 'Export Fields & Objects' })
+        .locator('.label:has-text("Format") + .data')
+        .getByRole('listbox'),
+    fieldsSelector: (page: Page) =>
+      page
+        .getByRole('dialog', { name: 'Export Fields & Objects' })
+        .locator('.label:has-text("Fields") + .data .onx-selector'),
+    includeUsageCheckbox: (page: Page) =>
+      page
+        .getByRole('dialog', { name: 'Export Fields & Objects' })
+        .getByRole('checkbox', { name: 'Include usage data (Word and PDF only)' }),
+    includeListValueGUIDsCheckbox: (page: Page) =>
+      page
+        .getByRole('dialog', { name: 'Export Fields & Objects' })
+        .getByRole('checkbox', { name: 'Include list value GUIDs for API development' }),
+    messageCenterAlertsOnlyCheckbox: (page: Page) =>
+      page
+        .getByRole('dialog', { name: 'Export Fields & Objects' })
+        .getByRole('checkbox', { name: 'Message Center Alerts Only' }),
+    exportButton: (page: Page) =>
+      page.getByRole('dialog', { name: 'Export Fields & Objects' }).getByRole('button', { name: 'Export' }),
   },
 };

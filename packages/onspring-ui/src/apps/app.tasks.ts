@@ -16,6 +16,7 @@ import {
   EditGeneralSettingsModalTargets,
   EditGeocodingSettingsModalTargets,
   EditNotesSettingsModalTargets,
+  ExportFieldsAndObjectsReportOptions,
   OptionTargets,
 } from './apps.targets.js';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
@@ -578,6 +579,63 @@ export const AppTasks = {
       await actor.browse().click(OptionTargets.byName(mapping.zip));
 
       await actor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
+    },
+
+  searchFieldsAndObjectsReport:
+    (searchTerm: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (!(await actor.browse().isVisible(AppLayoutTabTargets.filterFieldsInput))) {
+        await actor.browse().click(AppDetailTargets.layoutTabButton);
+      }
+
+      const searchResponse = actor.browse().waitForResponse((r: Response) => {
+        if (!AppLayoutTabTargets.getLayoutItemPathRegex.test(r.url()) || r.request().method() !== 'POST') {
+          return false;
+        }
+        const requestBody = r.request().postDataJSON() as { searchTerm?: string } | null;
+        return requestBody?.searchTerm === searchTerm && r.status() === 200;
+      });
+
+      await actor.browse().fill(AppLayoutTabTargets.filterFieldsInput, searchTerm);
+      await searchResponse;
+    },
+
+  exportFieldsAndObjectsReport:
+    ({
+      format,
+      fields,
+      includeUsage = false,
+      includeListValueGUIDs = false,
+      messageCenterAlertsOnly = false,
+    }: ExportFieldsAndObjectsReportOptions): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (!(await actor.browse().isVisible(AppLayoutTabTargets.exportFieldsAndObjectsReportButton))) {
+        await actor.browse().click(AppDetailTargets.layoutTabButton);
+      }
+
+      await actor.browse().click(AppLayoutTabTargets.exportFieldsAndObjectsReportButton);
+
+      const modal = AppLayoutTabTargets.exportFieldsAndObjectsModal;
+      await actor.browse().waitForState(modal.modal, 'visible');
+
+      await actor.browse().click(modal.formatSelect);
+      await actor.browse().click(OptionTargets.byName(format));
+
+      await actor.attemptsTo(
+        DualPaneSelector.removeAllOptions(modal.fieldsSelector),
+        DualPaneSelector.selectOptions(modal.fieldsSelector, fields)
+      );
+
+      if (format !== 'Excel') {
+        await actor.browse().setChecked(modal.includeUsageCheckbox, includeUsage);
+      }
+
+      if (fields.includes('List Values')) {
+        await actor.browse().setChecked(modal.includeListValueGUIDsCheckbox, includeListValueGUIDs);
+      }
+
+      await actor.browse().setChecked(modal.messageCenterAlertsOnlyCheckbox, messageCenterAlertsOnly);
+      await actor.browse().click(modal.exportButton);
     },
 
   deleteApps:

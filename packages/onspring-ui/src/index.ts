@@ -18,6 +18,7 @@ export * from './common/controls/treeviewSelector.js';
 export * from './apiKeys/apiKeys.targets.js';
 export * from './apiKeys/apiKey.tasks.js';
 export * from './apps/apps.targets.js';
+export * from './apps/app.questions.js';
 export * from './apps/app.tasks.js';
 export * from './groups/groups.targets.js';
 export * from './groups/group.tasks.js';

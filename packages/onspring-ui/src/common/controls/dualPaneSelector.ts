@@ -28,6 +28,10 @@ const dualPaneTargets = {
       resolveTarget(page, dualPaneTargets.popup(frameOwner))
         .locator('.selected-pane')
         .getByText(option, { exact: true }),
+  removeAllLink:
+    (frameOwner?: FrameOwner): Target =>
+    (page: Page) =>
+      resolveTarget(page, dualPaneTargets.popup(frameOwner)).getByRole('link', { name: 'Remove All' }),
   closeButton:
     (frameOwner?: FrameOwner): Target =>
     (page: Page) =>
@@ -65,5 +69,13 @@ export const DualPaneSelector = {
         await actor.browse().click(dualPaneTargets.selectedOption(option, frameOwner));
         await actor.browse().click(dualPaneTargets.closeButton(frameOwner));
       }
+    },
+
+  removeAllOptions:
+    (containerTarget: Target, frameOwner?: FrameOwner): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(containerTarget);
+      await actor.browse().click(dualPaneTargets.removeAllLink(frameOwner));
+      await actor.browse().click(dualPaneTargets.closeButton(frameOwner));
     },
 };
