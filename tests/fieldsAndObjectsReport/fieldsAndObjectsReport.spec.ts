@@ -1,69 +1,49 @@
-import { test as base, expect, Page } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { User, UserStatus } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { App, User } from '@stevanfreeborn/onspring-models';
+import { AppLayoutTabTargets, AppQuestions, AppTasks } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, UserFixture, test as base, expect } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type FieldsAndObjectsReportTestFixtures = {
   app: App;
-  appAdminPage: AppAdminPage;
-  testUser: User;
-  testUserPage: Page;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<FieldsAndObjectsReportTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  app: AppFixture.create().build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().withName('TestUser').build(),
 });
 
 test.describe('fields & objects report', () => {
-  test("Search an app's Fields & Objects report", async ({ app, appAdminPage }) => {
+  test("Search an app's Fields & Objects report", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-53',
     });
 
     await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id));
     });
 
     await test.step('Search for a field in the Fields & Objects report', async () => {
-      await appAdminPage.layoutTabButton.click();
-
-      await appAdminPage.layoutTab.searchFieldsAndObjectsReport('Record Id');
+      await sysAdminActor.attemptsTo(AppTasks.searchFieldsAndObjectsReport('Record Id'));
     });
 
     await test.step('Verify the field is found in the report', async () => {
-      const rows = appAdminPage.layoutTab.fieldsAndObjectsGrid.locator('.k-grid-content tr');
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: /Record Id/i });
-
-      await expect(rows).toHaveCount(1);
-      await expect(fieldRow).toBeVisible();
+      await sysAdminActor.browse().check(AppLayoutTabTargets.fieldsAndObjectsGridRows).hasCount(1);
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.fieldOrObjectRowByName(/Record Id/i))
+        .isVisible();
     });
   });
 
   test("Export an app's Fields & Objects report, including the usage.", async ({
     app,
-    testUser,
-    testUserPage,
+    user,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     pdfParser,
@@ -73,32 +53,30 @@ test.describe('fields & objects report', () => {
       description: 'Test-54',
     });
 
-    const testUserAppAdminPage = new AppAdminPage(testUserPage);
-
     await test.step('Navigate to the app admin page', async () => {
-      await testUserAppAdminPage.goto(app.id);
+      await testUserActor.attemptsTo(AppTasks.gotoApp(app.id));
     });
 
     await test.step('Export the Fields & Objects report', async () => {
-      await testUserAppAdminPage.layoutTabButton.click();
-      await testUserAppAdminPage.layoutTab.exportFieldsAndObjectsReport({
-        format: 'PDF',
-        fields: ['Name'],
-        includeUsage: true,
-      });
+      await testUserActor.attemptsTo(
+        AppTasks.exportFieldsAndObjectsReport({
+          format: 'PDF',
+          fields: ['Name'],
+          includeUsage: true,
+        })
+      );
     });
 
     let exportEmailContent: string;
 
     await test.step('Verify the report is exported successfully', async () => {
       await expect(async () => {
-        const searchCriteria = [['TO', testUser.email], ['TEXT', `${app.name} Field Report`], ['UNSEEN']];
+        const searchCriteria = [['TO', user.email], ['TEXT', `${app.name} Field Report`], ['UNSEEN']];
         const result = await sysAdminEmail.getEmailByQuery(searchCriteria);
 
         expect(result.isOk()).toBe(true);
 
         const email = result.unwrap();
-
         exportEmailContent = email.html as string;
       }).toPass({
         intervals: [30_000],
@@ -109,12 +87,9 @@ test.describe('fields & objects report', () => {
     let reportPath: string;
 
     await test.step('Download the exported report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(
+        AppQuestions.downloadedFieldsAndObjectsExportFromEmailHtml(exportEmailContent)
+      );
       reportPath = await downloadService.saveDownload(report);
     });
 
