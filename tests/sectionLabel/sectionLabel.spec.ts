@@ -1,11 +1,31 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, layoutItemTest as test } from '../../fixtures';
-import { SectionLabel } from '../../models/sectionLabel';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { App, FakeDataFactory, SectionLabel } from '@stevanfreeborn/onspring-models';
+import {
+  AppLayoutTabTargets,
+  AppQuestions,
+  AppTasks,
+  ContentQuestions,
+  ContentRecordTargets,
+  ContentTasks,
+  FieldTargets,
+  LayoutObjectTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
+type SectionLabelTestFixtures = {
+  app: App;
+};
+
+const test = base.extend<SectionLabelTestFixtures>({
+  app: AppFixture.create().build(),
+});
+
 test.describe('section label object', () => {
-  test('Add a section label object to an app', async ({ appAdminPage, app }) => {
+  test.beforeEach(async ({ sysAdminActor, app }) => {
+    await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
+  });
+
+  test('Add a section label object to an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-872',
@@ -15,23 +35,17 @@ test.describe('section label object', () => {
       name: FakeDataFactory.createFakeSectionLabelName(),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-    });
-
     await test.step('Add the section label', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.addFromGrid(sectionLabel));
     });
 
     await test.step('Verify the section label was added', async () => {
-      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
-      await expect(sectionLabelRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(sectionLabel.name)).isVisible();
     });
   });
 
   // NOTE: Currently broken: https://corp.onspring.com/Content/8/4940
-  test.fail('Create a copy of a section label object', async ({ appAdminPage, app }) => {
+  test.fail('Create a copy of a section label object', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-873',
@@ -42,39 +56,22 @@ test.describe('section label object', () => {
     });
     const copiedSectionLabelName = `${sectionLabel.name} (1)`;
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-    });
-
     await test.step('Add the section label to be copied', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.addFromGrid(sectionLabel));
     });
 
     await test.step('Add a copy of the section label', async () => {
-      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
-
-      await sectionLabelRow.hover();
-      await sectionLabelRow.getByTitle('Copy').click();
-
-      const addSectionLabelModal = appAdminPage.layoutTab.getLayoutItemModal('Section Label');
-
-      await addSectionLabelModal.generalTab.nameInput.waitFor({ timeout: 1000 });
-      await expect(addSectionLabelModal.generalTab.nameInput).toHaveValue(copiedSectionLabelName);
-      await addSectionLabelModal.save();
+      await sysAdminActor.attemptsTo(
+        LayoutObjectTasks.copyFromGridRow(sectionLabel.name, copiedSectionLabelName, { timeout: 1000 })
+      );
     });
 
     await test.step('Verify the section label was copied', async () => {
-      const copiedSectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedSectionLabelName,
-      });
-
-      await copiedSectionLabelRow.waitFor();
-      await expect(copiedSectionLabelRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedSectionLabelName)).isVisible();
     });
   });
 
-  test("Add a section label object to an app's layout", async ({ appAdminPage, sysAdminPage, app }) => {
+  test("Add a section label object to an app's layout", async ({ sysAdminActor, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-874',
@@ -87,50 +84,45 @@ test.describe('section label object', () => {
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-    });
-
     await test.step('Add the section label that will be added to the layout', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.addFromGrid(sectionLabel));
     });
 
     await test.step('Add the section label to the layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.objectsTabButton.click();
-
-      const { object: sectionLabelInBank, dropzone } =
-        await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragObjectOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
           objectName: sectionLabel.name,
-        });
+        })
+      );
 
-      await expect(sectionLabelInBank).toHaveClass(/ui-draggable-disabled/);
-      await expect(dropzone).toHaveText(new RegExp(sectionLabel.name));
+      const dropzone = await sysAdminActor.asks(
+        AppQuestions.layoutDropzone({ tabName, sectionName, column: 0, row: 0 })
+      );
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.designer.objectFromBank(sectionLabel.name))
+        .hasClass(/ui-draggable-disabled/);
+      await sysAdminActor.browse().check(dropzone).hasText(new RegExp(sectionLabel.name));
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Verify the section label was added to the layout', async () => {
-      const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      const sectionLabelContent = ContentRecordTargets.objectInSection(section, sectionLabel.name);
 
-      const sectionLabelContent = await addContentPage.form.getObject({
-        tabName: tabName,
-        sectionName: sectionName,
-        objectName: sectionLabel.name,
-      });
-
-      await expect(sectionLabelContent).toBeVisible();
-      await expect(sectionLabelContent).toHaveText(new RegExp(sectionLabel.text));
+      await sysAdminActor.browse().check(sectionLabelContent).isVisible();
+      await sysAdminActor.browse().check(sectionLabelContent).hasText(new RegExp(sectionLabel.text));
     });
   });
 
-  test('Update the configuration of a Section Label Object in an app', async ({ appAdminPage, app }) => {
+  test('Update the configuration of a Section Label Object in an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-875',
@@ -142,35 +134,20 @@ test.describe('section label object', () => {
     });
     const updatedSectionLabelName = `${sectionLabel.name} updated`;
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-    });
-
     await test.step('Add the section label', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.addFromGrid(sectionLabel));
     });
 
     await test.step('Update the section label', async () => {
-      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
-      await sectionLabelRow.hover();
-      await sectionLabelRow.getByTitle('Edit').click();
-
-      const editSectionLabelModal = appAdminPage.layoutTab.getLayoutItemModal('Section Label');
-      await editSectionLabelModal.generalTab.nameInput.waitFor();
-      await editSectionLabelModal.generalTab.nameInput.fill(updatedSectionLabelName);
-      await editSectionLabelModal.save();
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.updateNameFromGrid(sectionLabel.name, updatedSectionLabelName));
     });
 
     await test.step('Verify the section label was updated', async () => {
-      const updatedSectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: updatedSectionLabelName,
-      });
-      await expect(updatedSectionLabelRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(updatedSectionLabelName)).isVisible();
     });
   });
 
-  test('Delete a Section Label Object from an app', async ({ appAdminPage, app }) => {
+  test('Delete a Section Label Object from an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-876',
@@ -180,31 +157,16 @@ test.describe('section label object', () => {
       name: FakeDataFactory.createFakeSectionLabelName(),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-    });
-
     await test.step('Add the section label', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(sectionLabel);
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.addFromGrid(sectionLabel));
     });
 
     await test.step('Delete the section label', async () => {
-      const sectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: sectionLabel.name });
-      await sectionLabelRow.hover();
-      await sectionLabelRow.getByTitle('Delete').click();
-
-      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
-      await appAdminPage.layoutTab.deleteLayoutDialog.deleteButton.click();
-      await deleteResponse;
+      await sysAdminActor.attemptsTo(LayoutObjectTasks.deleteFromGrid(sectionLabel.name));
     });
 
     await test.step('Verify the section label was deleted', async () => {
-      const deleteSectionLabelRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: sectionLabel.name,
-      });
-
-      await expect(deleteSectionLabelRow).toBeHidden();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(sectionLabel.name)).isHidden();
     });
   });
 });
