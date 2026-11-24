@@ -70,6 +70,7 @@ export default defineConfig([
             'isEnabled',
             'isDisabled',
             'hasValue',
+            'doesNotHaveValue',
             'hasText',
             'hasCount',
             'hasAttribute',

@@ -328,6 +328,10 @@ export class TargetAssertions {
     await expect(this.locator).toHaveValue(expected);
   }
 
+  async doesNotHaveValue(expected: string | RegExp): Promise<void> {
+    await expect(this.locator).not.toHaveValue(expected);
+  }
+
   async hasText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
     await expect(this.locator).toHaveText(expected, options);
   }
@@ -435,10 +439,10 @@ export class WebActor extends Actor {
   }
 }
 
-export interface RetryOptions {
+export type RetryOptions = {
   intervals?: number[];
   timeout?: number;
-}
+};
 
 /**
  * Task wrapper that retries tasks using Playwright's expect.toPass until they succeed or timeout.
