@@ -170,6 +170,14 @@ export class BrowserActions {
     await this.page.mouse.move(x, y);
   }
 
+  async mouseDown(): Promise<void> {
+    await this.page.mouse.down();
+  }
+
+  async mouseUp(): Promise<void> {
+    await this.page.mouse.up();
+  }
+
   async setTextContent(target: Target, text: string): Promise<void> {
     await resolveTarget(this.page, target).evaluate((el, value) => {
       el.textContent = value;
@@ -215,6 +223,10 @@ export class BrowserActions {
   async getText(target: Target): Promise<string> {
     const text = await resolveTarget(this.page, target).innerText();
     return text.trim();
+  }
+
+  async inputValue(target: Target): Promise<string> {
+    return resolveTarget(this.page, target).inputValue();
   }
 
   async getAllTexts(target: Target): Promise<string[]> {
