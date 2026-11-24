@@ -25,6 +25,8 @@ export * from './apps/app.tasks.js';
 export * from './fields/fields.targets.js';
 export * from './fields/fields.questions.js';
 export * from './fields/fields.tasks.js';
+export * from './layoutObjects/layoutObjects.targets.js';
+export * from './layoutObjects/layoutObjects.tasks.js';
 export * from './groups/groups.targets.js';
 export * from './groups/group.tasks.js';
 export * from './roles/roles.targets.js';

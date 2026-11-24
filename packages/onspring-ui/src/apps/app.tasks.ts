@@ -462,6 +462,40 @@ export const AppTasks = {
       await actor.browse().click(AppLayoutTabTargets.designer.removeFieldFromDropzoneButton(dropzone));
     },
 
+  dragObjectOntoLayout:
+    ({
+      tabName,
+      sectionName,
+      column,
+      row,
+      objectName,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      column: number;
+      row: number;
+      objectName: string;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await ensureDesignerItemsTab(actor, 'objects');
+      const dropzone = await actor.asks(AppQuestions.layoutDropzone({ tabName, sectionName, column, row }));
+      await actor
+        .browse()
+        .dragWithMouse(
+          AppLayoutTabTargets.designer.objectFromBank(objectName),
+          dropzone,
+          AppLayoutTabTargets.designer.dropLocation
+        );
+    },
+
+  removeObjectFromLayout:
+    (location: LayoutDropzoneLocation): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const dropzone = await actor.asks(AppQuestions.layoutDropzone(location));
+      await actor.browse().hover(dropzone);
+      await actor.browse().click(AppLayoutTabTargets.designer.removeObjectFromDropzoneButton(dropzone));
+    },
+
   addLayout:
     (layoutName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {

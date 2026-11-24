@@ -282,6 +282,10 @@ export const AppLayoutTabTargets = {
       (fieldType: string): Target =>
       (page: Page) =>
         layoutDesignerFrame(page).locator('[data-add-menu="field"]').first().getByText(fieldType, { exact: true }),
+    addObjectMenuOption:
+      (objectType: string): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page).locator('[data-add-menu="object"]').first().getByText(objectType, { exact: true }),
     fieldFromBank:
       (fieldName: string): Target =>
       (page: Page) =>
@@ -411,6 +415,10 @@ export const AppLayoutTabTargets = {
       (dropzoneTarget: Target): Target =>
       (page: Page) =>
         resolveTarget(page, dropzoneTarget).getByTitle('Remove Field from Layout'),
+    removeObjectFromDropzoneButton:
+      (dropzoneTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, dropzoneTarget).getByTitle('Remove Object from Layout'),
     dropLocation: (page: Page) => layoutDesignerCanvas(page).locator('#dropLocation'),
     saveButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save', exact: true }),
     saveAndCloseButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save & Close' }),
