@@ -1,10 +1,18 @@
-import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { Survey } from '../../models/survey';
-import { SurveyPage } from '../../models/surveyPage';
-import { TextQuestion } from '../../models/textQuestion';
+import { FakeDataFactory, Survey, SurveyPage, TextQuestion } from '@stevanfreeborn/onspring-models';
+import {
+  DeleteQuestionRequest,
+  SurveyDesignerQuestions,
+  SurveyDesignerTasks,
+  SurveyPreviewTargets,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
+
+const test = base.extend<{ sourceSurvey: Survey; targetSurvey: Survey }>({
+  sourceSurvey: SurveyFixture.create().build(),
+  targetSurvey: SurveyFixture.create().build(),
+});
 
 test.describe('text question', () => {
   test.describe.configure({
@@ -18,26 +26,30 @@ test.describe('text question', () => {
     targetSurvey = survey;
   });
 
-  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
+  test.beforeEach('Navigate to survey admin page', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurvey.id));
   });
 
-  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
-    await surveyAdminPage.designTabButton.click();
-    await surveyAdminPage.designTab.openSurveyDesigner();
+  test.afterEach('Delete questions created during the test', async ({ sysAdminActor }) => {
+    if (surveyItemsToBeDeleted.length === 0) {
+      return;
+    }
+
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurveyDesignTab(targetSurvey.id), SurveyTasks.openSurveyDesigner());
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.surveyItemId,
-        pageName: itemToBeDeleted.pageName,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId: itemToBeDeleted.surveyItemId,
+          pageName: itemToBeDeleted.pageName,
+        })
+      );
     }
 
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a text question', async ({ surveyAdminPage }) => {
+  test('Create a text question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-661',
@@ -46,30 +58,37 @@ test.describe('text question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const textQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a text question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the text question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, textQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Create a copy of a text question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a text question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-662',
@@ -78,42 +97,49 @@ test.describe('text question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const textQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
-    let surveyItemId: string;
-    let surveyItemIdCopy: string;
+    let surveyItemId = '';
+    let surveyItemIdCopy = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a text question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Copy the text question', async () => {
-      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
-        surveyItemId,
-        textQuestion.questionText
+      surveyItemIdCopy = await sysAdminActor.asks(
+        SurveyDesignerQuestions.copyQuestion(surveyItemId, textQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied text question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, textQuestion.questionText);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await expect(copiedQuestion).toBeVisible();
-      await expect(questionCopy).toBeVisible();
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, textQuestion.questionText))
+          .isVisible();
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemIdCopy, textQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Import a text question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a text question', async ({ sourceSurvey, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-663',
@@ -122,50 +148,53 @@ test.describe('text question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const sourceTextQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
-    let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
+    let questionCreatedViaImport = '';
 
     await test.step("Open the source survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(sourceSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Add a text question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceTextQuestion);
-    });
-
-    await test.step("Navigate to the target survey's admin page", async () => {
-      await surveyAdminPage.goto(targetSurvey.id);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(sourceTextQuestion));
     });
 
     await test.step("Open the target survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(targetSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Import the text question into the target survey', async () => {
-      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
-        sourceSurvey.name,
-        sourceTextQuestion
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.importQuestion(sourceSurvey.name, sourceTextQuestion));
+      questionCreatedViaImport = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(sourceTextQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the text question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceTextQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(questionCreatedViaImport, sourceTextQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Update a text question', async ({ surveyAdminPage }) => {
+  test('Update a text question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-664',
@@ -174,36 +203,48 @@ test.describe('text question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const textQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
-    const updatedQuestion = { ...textQuestion, questionText: `${textQuestion.questionText} updated` };
+    const updatedQuestion = new TextQuestion({
+      questionId: textQuestion.questionId,
+      questionText: `${textQuestion.questionText} updated`,
+    });
 
-    let createdQuestionItemId: string;
+    let createdQuestionItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create the text question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+      createdQuestionItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText)
+      );
       surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the text question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.updateQuestion(createdQuestionItemId, updatedQuestion));
     });
 
     await test.step('Preview the survey and confirm the updated text question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
-      await expect(updatedQuestionElement).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(createdQuestionItemId, updatedQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a text question on a page', async ({ surveyAdminPage }) => {
+  test('Move a text question on a page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-665',
@@ -223,31 +264,39 @@ test.describe('text question', () => {
     const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create text questions', async () => {
       for (const textQuestion of textQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+        await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+        const surveyItemId = await sysAdminActor.asks(
+          SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText)
+        );
         surveyItemIds.push(surveyItemId);
-        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+        surveyItemsToBeDeleted.push({ surveyItemId });
       }
     });
 
     await test.step('Move the second text question above the first text question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]));
     });
 
     await test.step('Preview the survey and confirm the second text question is displayed above the first text question', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      expect(isAbove).toBe(true);
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.questionByItemId(surveyItemIds[1]))
+          .isAbove(SurveyPreviewTargets.questionByItemId(surveyItemIds[0]));
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a text question to another page.', async ({ surveyAdminPage }) => {
+  test('Move a text question to another page.', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-666',
@@ -257,7 +306,7 @@ test.describe('text question', () => {
     const firstPageName = 'Page 1';
 
     const textQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
@@ -265,39 +314,46 @@ test.describe('text question', () => {
       name: FakeDataFactory.createFakeSurveyPageName(),
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create a text question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addPage(newPage));
     });
 
     await test.step('Move the text question to the new page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.goToPage(firstPageName),
+        SurveyDesignerTasks.moveQuestionToPage(surveyItemId, newPage.name)
+      );
     });
 
     await test.step('Preview the survey and confirm the text question is on the new page', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await previewPage.nextButton.waitFor();
-      await previewPage.nextButton.click();
-
-      const question = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
-      await expect(question).toBeVisible();
+      try {
+        await previewActor.browse().waitForState(SurveyPreviewTargets.nextButton, 'visible');
+        await previewActor.browse().click(SurveyPreviewTargets.nextButton);
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, textQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Delete a text question', async ({ surveyAdminPage }) => {
+  test('Delete a text question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-667',
@@ -306,32 +362,41 @@ test.describe('text question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const textQuestion = new TextQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a text question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(textQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(textQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(textQuestion.questionText));
     });
 
     await test.step('Delete the text question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: surveyItemId,
-        questionText: textQuestion.questionText,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId,
+          questionText: textQuestion.questionText,
+        })
+      );
     });
 
     await test.step('Preview the survey and confirm the text question is not present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, textQuestion.questionText);
-      await expect(question).toBeHidden();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, textQuestion.questionText))
+          .isHidden();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 });

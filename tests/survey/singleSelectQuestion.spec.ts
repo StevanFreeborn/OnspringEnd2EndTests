@@ -1,11 +1,18 @@
-import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { ListValue } from '../../models/listValue';
-import { SingleSelectQuestion } from '../../models/singleSelectQuestion';
-import { Survey } from '../../models/survey';
-import { SurveyPage } from '../../models/surveyPage';
+import { FakeDataFactory, ListValue, SingleSelectQuestion, Survey, SurveyPage } from '@stevanfreeborn/onspring-models';
+import {
+  DeleteQuestionRequest,
+  SurveyDesignerQuestions,
+  SurveyDesignerTasks,
+  SurveyPreviewTargets,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
+
+const test = base.extend<{ sourceSurvey: Survey; targetSurvey: Survey }>({
+  sourceSurvey: SurveyFixture.create().build(),
+  targetSurvey: SurveyFixture.create().build(),
+});
 
 test.describe('single select question', () => {
   test.describe.configure({
@@ -19,26 +26,30 @@ test.describe('single select question', () => {
     targetSurvey = survey;
   });
 
-  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
+  test.beforeEach('Navigate to survey admin page', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurvey.id));
   });
 
-  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
-    await surveyAdminPage.designTabButton.click();
-    await surveyAdminPage.designTab.openSurveyDesigner();
+  test.afterEach('Delete questions created during the test', async ({ sysAdminActor }) => {
+    if (surveyItemsToBeDeleted.length === 0) {
+      return;
+    }
+
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurveyDesignTab(targetSurvey.id), SurveyTasks.openSurveyDesigner());
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.surveyItemId,
-        pageName: itemToBeDeleted.pageName,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId: itemToBeDeleted.surveyItemId,
+          pageName: itemToBeDeleted.pageName,
+        })
+      );
     }
 
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a single select question', async ({ surveyAdminPage }) => {
+  test('Create a single select question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-645',
@@ -47,31 +58,40 @@ test.describe('single select question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const singleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a single select question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the single select question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, singleSelectQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Create a copy of a single select question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a single select question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-646',
@@ -80,43 +100,52 @@ test.describe('single select question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const singleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    let surveyItemId: string;
-    let surveyItemIdCopy: string;
+    let surveyItemId = '';
+    let surveyItemIdCopy = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a single select question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Copy the single select question', async () => {
-      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
-        surveyItemId,
-        singleSelectQuestion.questionText
+      surveyItemIdCopy = await sysAdminActor.asks(
+        SurveyDesignerQuestions.copyQuestion(surveyItemId, singleSelectQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied single select question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, singleSelectQuestion.questionText);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await expect(copiedQuestion).toBeVisible();
-      await expect(questionCopy).toBeVisible();
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, singleSelectQuestion.questionText))
+          .isVisible();
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemIdCopy, singleSelectQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Import a single select question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a single select question', async ({ sourceSurvey, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-647',
@@ -125,54 +154,54 @@ test.describe('single select question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const sourceSingleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
+    let questionCreatedViaImport = '';
 
     await test.step("Open the source survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(sourceSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Add a single select question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceSingleSelectQuestion);
-    });
-
-    await test.step("Navigate to the target survey's admin page", async () => {
-      await surveyAdminPage.goto(targetSurvey.id);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(sourceSingleSelectQuestion));
     });
 
     await test.step("Open the target survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(targetSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Import the single select question into the target survey', async () => {
-      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
-        sourceSurvey.name,
-        sourceSingleSelectQuestion
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.importQuestion(sourceSurvey.name, sourceSingleSelectQuestion));
+      questionCreatedViaImport = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(sourceSingleSelectQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the single select question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(
-        questionCreatedViaImport,
-        sourceSingleSelectQuestion.questionText
-      );
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(questionCreatedViaImport, sourceSingleSelectQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Update a single select question', async ({ surveyAdminPage }) => {
+  test('Update a single select question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-648',
@@ -181,41 +210,50 @@ test.describe('single select question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const singleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    const updatedQuestion = {
-      ...singleSelectQuestion,
+    const updatedQuestion = new SingleSelectQuestion({
+      questionId: singleSelectQuestion.questionId,
       questionText: `${singleSelectQuestion.questionText} updated`,
       answerValues: [new ListValue({ value: 'Nah' }), new ListValue({ value: 'Yeah' })],
-    };
+    });
 
-    let createdQuestionItemId: string;
+    let createdQuestionItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create the single select question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+      createdQuestionItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+      );
       surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the single select question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.updateQuestion(createdQuestionItemId, updatedQuestion));
     });
 
     await test.step('Preview the survey and confirm the updated single select question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
-      await expect(updatedQuestionElement).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(createdQuestionItemId, updatedQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a single select question on a page', async ({ surveyAdminPage }) => {
+  test('Move a single select question on a page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-649',
@@ -237,31 +275,39 @@ test.describe('single select question', () => {
     const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create single select questions', async () => {
       for (const singleSelectQuestion of singleSelectQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+        await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+        const surveyItemId = await sysAdminActor.asks(
+          SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+        );
         surveyItemIds.push(surveyItemId);
-        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+        surveyItemsToBeDeleted.push({ surveyItemId });
       }
     });
 
     await test.step('Move the second single select question above the first single select question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]));
     });
 
     await test.step('Preview the survey and confirm the second single select question is displayed above the first single select question', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      expect(isAbove).toBe(true);
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.questionByItemId(surveyItemIds[1]))
+          .isAbove(SurveyPreviewTargets.questionByItemId(surveyItemIds[0]));
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a single select question to another page.', async ({ surveyAdminPage }) => {
+  test('Move a single select question to another page.', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-650',
@@ -271,7 +317,7 @@ test.describe('single select question', () => {
     const firstPageName = 'Page 1';
 
     const singleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
@@ -280,39 +326,48 @@ test.describe('single select question', () => {
       name: FakeDataFactory.createFakeSurveyPageName(),
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create a single select question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addPage(newPage));
     });
 
     await test.step('Move the single select question to the new page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.goToPage(firstPageName),
+        SurveyDesignerTasks.moveQuestionToPage(surveyItemId, newPage.name)
+      );
     });
 
     await test.step('Preview the survey and confirm the single select question is on the new page', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await previewPage.nextButton.waitFor();
-      await previewPage.nextButton.click();
-
-      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
-      await expect(question).toBeVisible();
+      try {
+        await previewActor.browse().waitForState(SurveyPreviewTargets.nextButton, 'visible');
+        await previewActor.browse().click(SurveyPreviewTargets.nextButton);
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, singleSelectQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Delete a single select question', async ({ surveyAdminPage }) => {
+  test('Delete a single select question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-651',
@@ -321,33 +376,44 @@ test.describe('single select question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const singleSelectQuestion = new SingleSelectQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new ListValue({ value: 'No' }), new ListValue({ value: 'Yes' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a single select question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(singleSelectQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(singleSelectQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(singleSelectQuestion.questionText)
+      );
     });
 
     await test.step('Delete the single select question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: surveyItemId,
-        questionText: singleSelectQuestion.questionText,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId,
+          questionText: singleSelectQuestion.questionText,
+        })
+      );
     });
 
     await test.step('Preview the survey and confirm the single select question is not present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, singleSelectQuestion.questionText);
-      await expect(question).toBeHidden();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, singleSelectQuestion.questionText))
+          .isHidden();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 });

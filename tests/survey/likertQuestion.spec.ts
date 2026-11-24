@@ -1,11 +1,18 @@
-import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { LikertQuestion } from '../../models/likertQuestion';
-import { BaseListValue } from '../../models/listValue';
-import { Survey } from '../../models/survey';
-import { SurveyPage } from '../../models/surveyPage';
+import { BaseListValue, FakeDataFactory, LikertQuestion, Survey, SurveyPage } from '@stevanfreeborn/onspring-models';
+import {
+  DeleteQuestionRequest,
+  SurveyDesignerQuestions,
+  SurveyDesignerTasks,
+  SurveyPreviewTargets,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-import { expect, surveyQuestionTest as test } from './../../fixtures/index';
+
+const test = base.extend<{ sourceSurvey: Survey; targetSurvey: Survey }>({
+  sourceSurvey: SurveyFixture.create().build(),
+  targetSurvey: SurveyFixture.create().build(),
+});
 
 test.describe('likert question', () => {
   test.describe.configure({
@@ -19,26 +26,30 @@ test.describe('likert question', () => {
     targetSurvey = survey;
   });
 
-  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
+  test.beforeEach('Navigate to survey admin page', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurvey.id));
   });
 
-  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
-    await surveyAdminPage.designTabButton.click();
-    await surveyAdminPage.designTab.openSurveyDesigner();
+  test.afterEach('Delete questions created during the test', async ({ sysAdminActor }) => {
+    if (surveyItemsToBeDeleted.length === 0) {
+      return;
+    }
+
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurveyDesignTab(targetSurvey.id), SurveyTasks.openSurveyDesigner());
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.surveyItemId,
-        pageName: itemToBeDeleted.pageName,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId: itemToBeDeleted.surveyItemId,
+          pageName: itemToBeDeleted.pageName,
+        })
+      );
     }
 
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a likert scale question', async ({ surveyAdminPage }) => {
+  test('Create a likert scale question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-542',
@@ -47,33 +58,38 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const likertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the likert question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, likertQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Create a copy of a likert scale question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a likert scale question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-543',
@@ -82,47 +98,50 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const likertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
 
-    let surveyItemId: string;
-    let surveyItemIdCopy: string;
+    let surveyItemId = '';
+    let surveyItemIdCopy = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a likert question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Copy the likert question', async () => {
-      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
-        surveyItemId,
-        likertQuestion.questionText
+      surveyItemIdCopy = await sysAdminActor.asks(
+        SurveyDesignerQuestions.copyQuestion(surveyItemId, likertQuestion.questionText)
       );
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemIdCopy,
-      });
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied likert question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, likertQuestion.questionText);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await expect(copiedQuestion).toBeVisible();
-      await expect(questionCopy).toBeVisible();
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, likertQuestion.questionText))
+          .isVisible();
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemIdCopy, likertQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Import a likert scale question', async ({ surveyAdminPage, sourceSurvey }) => {
+  test('Import a likert scale question', async ({ sourceSurvey, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-544',
@@ -131,53 +150,54 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const sourceLikertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
 
-    let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
+    let questionCreatedViaImport = '';
 
     await test.step("Open the source survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(sourceSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Add a likert question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceLikertQuestion);
-    });
-
-    await test.step("Navigate to the target survey's admin page", async () => {
-      await surveyAdminPage.goto(targetSurvey.id);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(sourceLikertQuestion));
     });
 
     await test.step("Open the target survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(targetSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Import the likert question into the target survey', async () => {
-      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
-        sourceSurvey.name,
-        sourceLikertQuestion
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.importQuestion(sourceSurvey.name, sourceLikertQuestion));
+      questionCreatedViaImport = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(sourceLikertQuestion.questionText)
       );
-      surveyItemsToBeDeleted.push({
-        surveyItemId: questionCreatedViaImport,
-      });
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the likert question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceLikertQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(questionCreatedViaImport, sourceLikertQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Update a likert scale question', async ({ surveyAdminPage }) => {
+  test('Update a likert scale question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-545',
@@ -186,39 +206,50 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const likertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
 
-    const updatedQuestion = { ...likertQuestion, questionText: `${likertQuestion.questionText} updated` };
+    const updatedQuestion = new LikertQuestion({
+      questionId: likertQuestion.questionId,
+      questionText: `${likertQuestion.questionText} updated`,
+      answerValues: likertQuestion.answerValues,
+    });
 
-    let createdQuestionItemId: string;
+    let createdQuestionItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create the likert question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: createdQuestionItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+      createdQuestionItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the likert question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.updateQuestion(createdQuestionItemId, updatedQuestion));
     });
 
     await test.step('Preview the survey and confirm the updated likert question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
-      await expect(updatedQuestionElement).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(createdQuestionItemId, updatedQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a likert scale question on a page', async ({ surveyAdminPage }) => {
+  test('Move a likert scale question on a page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-546',
@@ -242,33 +273,39 @@ test.describe('likert question', () => {
     const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create likert questions', async () => {
       for (const likertQuestion of likertQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+        await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+        const surveyItemId = await sysAdminActor.asks(
+          SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText)
+        );
         surveyItemIds.push(surveyItemId);
-        surveyItemsToBeDeleted.push({
-          surveyItemId: surveyItemId,
-        });
+        surveyItemsToBeDeleted.push({ surveyItemId });
       }
     });
 
     await test.step('Move the second likert question above the first likert question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]));
     });
 
     await test.step('Preview the survey and confirm the second likert question is displayed above the first likert question', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      expect(isAbove).toBe(true);
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.questionByItemId(surveyItemIds[1]))
+          .isAbove(SurveyPreviewTargets.questionByItemId(surveyItemIds[0]));
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a likert scale question to another page', async ({ surveyAdminPage }) => {
+  test('Move a likert scale question to another page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-547',
@@ -278,7 +315,7 @@ test.describe('likert question', () => {
     const firstPageName = 'Page 1';
 
     const likertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
@@ -287,42 +324,46 @@ test.describe('likert question', () => {
       name: FakeDataFactory.createFakeSurveyPageName(),
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-        pageName: newPage.name,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addPage(newPage));
     });
 
     await test.step('Move the likert question to the new page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.goToPage(firstPageName),
+        SurveyDesignerTasks.moveQuestionToPage(surveyItemId, newPage.name)
+      );
     });
 
     await test.step('Preview the survey and confirm the likert question is on the new page', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await previewPage.nextButton.waitFor();
-      await previewPage.nextButton.click();
-
-      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
-      await expect(question).toBeVisible();
+      try {
+        await previewActor.browse().waitForState(SurveyPreviewTargets.nextButton, 'visible');
+        await previewActor.browse().click(SurveyPreviewTargets.nextButton);
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, likertQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Delete a likert scale question', async ({ surveyAdminPage }) => {
+  test('Delete a likert scale question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-548',
@@ -331,33 +372,42 @@ test.describe('likert question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const likertQuestion = new LikertQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       answerValues: [new BaseListValue({ value: 'Strongly Disagree' }), new BaseListValue({ value: 'Strongly Agree' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a likert question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(likertQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(likertQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(likertQuestion.questionText));
     });
 
     await test.step('Delete the likert question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: surveyItemId,
-        questionText: likertQuestion.questionText,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId,
+          questionText: likertQuestion.questionText,
+        })
+      );
     });
 
     await test.step('Preview the survey and confirm the likert question is not present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, likertQuestion.questionText);
-      await expect(question).toBeHidden();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, likertQuestion.questionText))
+          .isHidden();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 });

@@ -1,15 +1,20 @@
-import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { createApp } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { ReferenceQuestion } from '../../models/referenceQuestion';
-import { Survey } from '../../models/survey';
-import { SurveyPage } from '../../models/surveyPage';
-import { AppsAdminPage } from '../../pageObjectModels/apps/appsAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
+import { App, FakeDataFactory, ReferenceQuestion, Survey, SurveyPage } from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentTasks,
+  DeleteQuestionRequest,
+  SurveyDesignerQuestions,
+  SurveyDesignerTasks,
+  SurveyPreviewTargets,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, createAppWithActor, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
+
+const test = base.extend<{ sourceSurvey: Survey; targetSurvey: Survey }>({
+  sourceSurvey: SurveyFixture.create().build(),
+  targetSurvey: SurveyFixture.create().build(),
+});
 
 test.describe('reference question', () => {
   test.describe.configure({
@@ -22,44 +27,41 @@ test.describe('reference question', () => {
 
   test.beforeAll(
     'Create target survey, referenced app, and answer value content record',
-    async ({ sysAdminPage, targetSurvey: survey }) => {
+    async ({ sysAdminActor, targetSurvey: survey }) => {
       targetSurvey = survey;
-      referencedApp = await createApp(sysAdminPage);
-
-      const addContentPage = new AddContentPage(sysAdminPage);
-      const editContentPage = new EditContentPage(sysAdminPage);
-
-      await addContentPage.goto(referencedApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      referencedApp = await createAppWithActor(sysAdminActor);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(referencedApp.id), ContentTasks.saveRecord());
     }
   );
 
-  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
+  test.beforeEach('Navigate to survey admin page', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurvey.id));
   });
 
-  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
-    await surveyAdminPage.designTabButton.click();
-    await surveyAdminPage.designTab.openSurveyDesigner();
+  test.afterEach('Delete questions created during the test', async ({ sysAdminActor }) => {
+    if (surveyItemsToBeDeleted.length === 0) {
+      return;
+    }
+
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurveyDesignTab(targetSurvey.id), SurveyTasks.openSurveyDesigner());
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.surveyItemId,
-        pageName: itemToBeDeleted.pageName,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId: itemToBeDeleted.surveyItemId,
+          pageName: itemToBeDeleted.pageName,
+        })
+      );
     }
 
     surveyItemsToBeDeleted = [];
   });
 
-  test.afterAll('Delete the referenced app created during the test', async ({ sysAdminPage }) => {
-    const appsAdminPage = new AppsAdminPage(sysAdminPage);
-    await appsAdminPage.deleteApps([referencedApp.name]);
+  test.afterAll('Delete the referenced app created during the test', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(AppTasks.deleteApps([referencedApp.name]));
   });
 
-  test('Create a reference question', async ({ surveyAdminPage }) => {
+  test('Create a reference question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-587',
@@ -68,32 +70,41 @@ test.describe('reference question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const referenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a reference question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the reference question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, referenceQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Create a copy of a reference question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a reference question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-588',
@@ -102,44 +113,53 @@ test.describe('reference question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const referenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
     });
 
-    let surveyItemId: string;
-    let surveyItemIdCopy: string;
+    let surveyItemId = '';
+    let surveyItemIdCopy = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a reference question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Copy the reference question', async () => {
-      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
-        surveyItemId,
-        referenceQuestion.questionText
+      surveyItemIdCopy = await sysAdminActor.asks(
+        SurveyDesignerQuestions.copyQuestion(surveyItemId, referenceQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied reference question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, referenceQuestion.questionText);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await expect(copiedQuestion).toBeVisible();
-      await expect(questionCopy).toBeVisible();
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, referenceQuestion.questionText))
+          .isVisible();
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemIdCopy, referenceQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Import a reference question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a reference question', async ({ sourceSurvey, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-589',
@@ -148,52 +168,55 @@ test.describe('reference question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const sourceReferenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
     });
 
-    let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
+    let questionCreatedViaImport = '';
 
     await test.step("Open the source survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(sourceSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Add a reference question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceReferenceQuestion);
-    });
-
-    await test.step("Navigate to the target survey's admin page", async () => {
-      await surveyAdminPage.goto(targetSurvey.id);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(sourceReferenceQuestion));
     });
 
     await test.step("Open the target survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(targetSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Import the reference question into the target survey', async () => {
-      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
-        sourceSurvey.name,
-        sourceReferenceQuestion
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.importQuestion(sourceSurvey.name, sourceReferenceQuestion));
+      questionCreatedViaImport = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(sourceReferenceQuestion.questionText)
       );
       surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the reference question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceReferenceQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(questionCreatedViaImport, sourceReferenceQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Update a reference question', async ({ surveyAdminPage }) => {
+  test('Update a reference question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-590',
@@ -202,38 +225,52 @@ test.describe('reference question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const referenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
     });
 
-    const updatedQuestion = { ...referenceQuestion, questionText: `${referenceQuestion.questionText} updated` };
+    const updatedQuestion = new ReferenceQuestion({
+      questionId: referenceQuestion.questionId,
+      questionText: `${referenceQuestion.questionText} updated`,
+      appReference: referencedApp.name,
+      answerValues: 'ALL',
+    });
 
-    let createdQuestionItemId: string;
+    let createdQuestionItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create the reference question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+      createdQuestionItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+      );
       surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the reference question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.updateQuestion(createdQuestionItemId, updatedQuestion));
     });
 
     await test.step('Preview the survey and confirm the updated reference question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
-      await expect(updatedQuestionElement).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(createdQuestionItemId, updatedQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a reference question on a page', async ({ surveyAdminPage }) => {
+  test('Move a reference question on a page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-591',
@@ -257,31 +294,39 @@ test.describe('reference question', () => {
     const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create reference questions', async () => {
       for (const referenceQuestion of referenceQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+        await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+        const surveyItemId = await sysAdminActor.asks(
+          SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+        );
         surveyItemIds.push(surveyItemId);
-        surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId });
+        surveyItemsToBeDeleted.push({ surveyItemId });
       }
     });
 
     await test.step('Move the second reference question above the first reference question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]));
     });
 
     await test.step('Preview the survey and confirm the second reference question is displayed above the first reference question', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      expect(isAbove).toBe(true);
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.questionByItemId(surveyItemIds[1]))
+          .isAbove(SurveyPreviewTargets.questionByItemId(surveyItemIds[0]));
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a reference question to another page', async ({ surveyAdminPage }) => {
+  test('Move a reference question to another page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-592',
@@ -291,7 +336,7 @@ test.describe('reference question', () => {
     const firstPageName = 'Page 1';
 
     const referenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
@@ -301,39 +346,48 @@ test.describe('reference question', () => {
       name: FakeDataFactory.createFakeSurveyPageName(),
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create a reference question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
-      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemId, pageName: newPage.name });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addPage(newPage));
     });
 
     await test.step('Move the reference question to the new page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.goToPage(firstPageName),
+        SurveyDesignerTasks.moveQuestionToPage(surveyItemId, newPage.name)
+      );
     });
 
     await test.step('Preview the survey and confirm the reference question is on the new page', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await previewPage.nextButton.waitFor();
-      await previewPage.nextButton.click();
-
-      const question = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
-      await expect(question).toBeVisible();
+      try {
+        await previewActor.browse().waitForState(SurveyPreviewTargets.nextButton, 'visible');
+        await previewActor.browse().click(SurveyPreviewTargets.nextButton);
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, referenceQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Delete a reference question', async ({ surveyAdminPage }) => {
+  test('Delete a reference question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-593',
@@ -342,34 +396,45 @@ test.describe('reference question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const referenceQuestion = new ReferenceQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       appReference: referencedApp.name,
       answerValues: 'ALL',
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a reference question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(referenceQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(referenceQuestion));
+      surveyItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(referenceQuestion.questionText)
+      );
     });
 
     await test.step('Delete the reference question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: surveyItemId,
-        questionText: referenceQuestion.questionText,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId,
+          questionText: referenceQuestion.questionText,
+        })
+      );
     });
 
     await test.step('Preview the survey and confirm the reference question is not present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, referenceQuestion.questionText);
-      await expect(question).toBeHidden();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, referenceQuestion.questionText))
+          .isHidden();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 });

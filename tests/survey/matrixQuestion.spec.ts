@@ -1,11 +1,18 @@
-import { DeleteQuestionRequest } from '../../componentObjectModels/modals/surveyDesignerModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, surveyQuestionTest as test } from '../../fixtures';
-import { BaseListValue } from '../../models/listValue';
-import { MatrixQuestion } from '../../models/matrixQuestion';
-import { Survey } from '../../models/survey';
-import { SurveyPage } from '../../models/surveyPage';
+import { BaseListValue, FakeDataFactory, MatrixQuestion, Survey, SurveyPage } from '@stevanfreeborn/onspring-models';
+import {
+  DeleteQuestionRequest,
+  SurveyDesignerQuestions,
+  SurveyDesignerTasks,
+  SurveyPreviewTargets,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
+
+const test = base.extend<{ sourceSurvey: Survey; targetSurvey: Survey }>({
+  sourceSurvey: SurveyFixture.create().build(),
+  targetSurvey: SurveyFixture.create().build(),
+});
 
 test.describe('matrix question', () => {
   test.describe.configure({
@@ -19,26 +26,30 @@ test.describe('matrix question', () => {
     targetSurvey = survey;
   });
 
-  test.beforeEach('Navigate to survey admin page', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
+  test.beforeEach('Navigate to survey admin page', async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurvey.id));
   });
 
-  test.afterEach('Delete questions created during the test', async ({ surveyAdminPage }) => {
-    await surveyAdminPage.goto(targetSurvey.id);
-    await surveyAdminPage.designTabButton.click();
-    await surveyAdminPage.designTab.openSurveyDesigner();
+  test.afterEach('Delete questions created during the test', async ({ sysAdminActor }) => {
+    if (surveyItemsToBeDeleted.length === 0) {
+      return;
+    }
+
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurveyDesignTab(targetSurvey.id), SurveyTasks.openSurveyDesigner());
 
     for (const itemToBeDeleted of surveyItemsToBeDeleted) {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: itemToBeDeleted.surveyItemId,
-        pageName: itemToBeDeleted.pageName,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId: itemToBeDeleted.surveyItemId,
+          pageName: itemToBeDeleted.pageName,
+        })
+      );
     }
 
     surveyItemsToBeDeleted = [];
   });
 
-  test('Create a matrix question', async ({ surveyAdminPage }) => {
+  test('Create a matrix question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-552',
@@ -47,34 +58,39 @@ test.describe('matrix question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const matrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a matrix question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Preview the survey and confirm the matrix question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, matrixQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Create a copy of a matrix question', async ({ surveyAdminPage }) => {
+  test('Create a copy of a matrix question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-553',
@@ -83,48 +99,51 @@ test.describe('matrix question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const matrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    let surveyItemId: string;
-    let surveyItemIdCopy: string;
+    let surveyItemId = '';
+    let surveyItemIdCopy = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a matrix question to copy', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId });
     });
 
     await test.step('Copy the matrix question', async () => {
-      surveyItemIdCopy = await surveyAdminPage.designTab.surveyDesignerModal.copyQuestion(
-        surveyItemId,
-        matrixQuestion.questionText
+      surveyItemIdCopy = await sysAdminActor.asks(
+        SurveyDesignerQuestions.copyQuestion(surveyItemId, matrixQuestion.questionText)
       );
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemIdCopy,
-      });
+      surveyItemsToBeDeleted.push({ surveyItemId: surveyItemIdCopy });
     });
 
     await test.step('Preview the survey and confirm the copied matrix question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const copiedQuestion = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
-      const questionCopy = previewPage.getQuestion(surveyItemIdCopy, matrixQuestion.questionText);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await expect(copiedQuestion).toBeVisible();
-      await expect(questionCopy).toBeVisible();
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, matrixQuestion.questionText))
+          .isVisible();
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemIdCopy, matrixQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Import a matrix question', async ({ sourceSurvey, surveyAdminPage }) => {
+  test('Import a matrix question', async ({ sourceSurvey, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-554',
@@ -133,54 +152,55 @@ test.describe('matrix question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const sourceMatrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    let questionCreatedViaImport: string;
-
-    await test.step("Navigate to the source survey's admin page", async () => {
-      await surveyAdminPage.goto(sourceSurvey.id);
-    });
+    let questionCreatedViaImport = '';
 
     await test.step("Open the source survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(sourceSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Add a matrix question to the source survey', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(sourceMatrixQuestion);
-    });
-
-    await test.step("Navigate to the target survey's admin page", async () => {
-      await surveyAdminPage.goto(targetSurvey.id);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(sourceMatrixQuestion));
     });
 
     await test.step("Open the target survey's survey designer", async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyDesignTab(targetSurvey.id),
+        SurveyTasks.openSurveyDesigner()
+      );
     });
 
     await test.step('Import the matrix question into the target survey', async () => {
-      questionCreatedViaImport = await surveyAdminPage.designTab.surveyDesignerModal.importQuestion(
-        sourceSurvey.name,
-        sourceMatrixQuestion
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.importQuestion(sourceSurvey.name, sourceMatrixQuestion));
+      questionCreatedViaImport = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(sourceMatrixQuestion.questionText)
       );
-      surveyItemsToBeDeleted.push({
-        surveyItemId: questionCreatedViaImport,
-      });
+      surveyItemsToBeDeleted.push({ surveyItemId: questionCreatedViaImport });
     });
 
     await test.step('Preview the target survey and confirm the matrix question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const createdQuestion = previewPage.getQuestion(questionCreatedViaImport, sourceMatrixQuestion.questionText);
-      await expect(createdQuestion).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(questionCreatedViaImport, sourceMatrixQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Update a matrix question', async ({ surveyAdminPage }) => {
+  test('Update a matrix question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-555',
@@ -189,40 +209,52 @@ test.describe('matrix question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const matrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    const updatedQuestion = { ...matrixQuestion, questionText: `${matrixQuestion.questionText} updated` };
+    const updatedQuestion = new MatrixQuestion({
+      questionId: matrixQuestion.questionId,
+      questionText: `${matrixQuestion.questionText} updated`,
+      rowValues: matrixQuestion.rowValues,
+      columnValues: matrixQuestion.columnValues,
+    });
 
-    let createdQuestionItemId: string;
+    let createdQuestionItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create the matrix question to update', async () => {
-      createdQuestionItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: createdQuestionItemId,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+      createdQuestionItemId = await sysAdminActor.asks(
+        SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText)
+      );
+      surveyItemsToBeDeleted.push({ surveyItemId: createdQuestionItemId });
     });
 
     await test.step('Update the matrix question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.updateQuestion(createdQuestionItemId, updatedQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.updateQuestion(createdQuestionItemId, updatedQuestion));
     });
 
     await test.step('Preview the survey and confirm the updated matrix question is present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const updatedQuestionElement = previewPage.getQuestion(createdQuestionItemId, updatedQuestion.questionText);
-      await expect(updatedQuestionElement).toBeVisible();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(createdQuestionItemId, updatedQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a matrix question on a page', async ({ surveyAdminPage }) => {
+  test('Move a matrix question on a page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-556',
@@ -235,47 +267,53 @@ test.describe('matrix question', () => {
       new MatrixQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
         questionText: 'Matrix Question 1',
-        rowValues: rowValues,
-        columnValues: columnValues,
+        rowValues,
+        columnValues,
       }),
       new MatrixQuestion({
         questionId: FakeDataFactory.createFakeQuestionId(),
         questionText: 'Matrix Question 2',
-        rowValues: rowValues,
-        columnValues: columnValues,
+        rowValues,
+        columnValues,
       }),
     ];
 
     const surveyItemIds: string[] = [];
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create matrix questions', async () => {
       for (const matrixQuestion of matrixQuestions) {
-        const surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
+        await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+        const surveyItemId = await sysAdminActor.asks(
+          SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText)
+        );
         surveyItemIds.push(surveyItemId);
-        surveyItemsToBeDeleted.push({
-          surveyItemId: surveyItemId,
-        });
+        surveyItemsToBeDeleted.push({ surveyItemId });
       }
     });
 
     await test.step('Move the second matrix question above the first matrix question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.moveQuestionAbove(surveyItemIds[1], surveyItemIds[0]));
     });
 
     await test.step('Preview the survey and confirm the second matrix question is displayed above the first matrix question', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const isAbove = await previewPage.questionIsAbove(surveyItemIds[1], surveyItemIds[0]);
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      expect(isAbove).toBe(true);
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.questionByItemId(surveyItemIds[1]))
+          .isAbove(SurveyPreviewTargets.questionByItemId(surveyItemIds[0]));
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Move a matrix question to another page', async ({ surveyAdminPage }) => {
+  test('Move a matrix question to another page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-557',
@@ -285,7 +323,7 @@ test.describe('matrix question', () => {
     const firstPageName = 'Page 1';
 
     const matrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
@@ -295,42 +333,46 @@ test.describe('matrix question', () => {
       name: FakeDataFactory.createFakeSurveyPageName(),
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Create a matrix question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
-      surveyItemsToBeDeleted.push({
-        surveyItemId: surveyItemId,
-        pageName: newPage.name,
-      });
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText));
+      surveyItemsToBeDeleted.push({ surveyItemId, pageName: newPage.name });
     });
 
     await test.step('Create a new survey page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.addPage(newPage);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addPage(newPage));
     });
 
     await test.step('Move the matrix question to the new page', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.goToPage(firstPageName);
-      await surveyAdminPage.designTab.surveyDesignerModal.moveQuestionToPage(surveyItemId, newPage.name);
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.goToPage(firstPageName),
+        SurveyDesignerTasks.moveQuestionToPage(surveyItemId, newPage.name)
+      );
     });
 
     await test.step('Preview the survey and confirm the matrix question is on the new page', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
 
-      await previewPage.nextButton.waitFor();
-      await previewPage.nextButton.click();
-
-      const question = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
-      await expect(question).toBeVisible();
+      try {
+        await previewActor.browse().waitForState(SurveyPreviewTargets.nextButton, 'visible');
+        await previewActor.browse().click(SurveyPreviewTargets.nextButton);
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, matrixQuestion.questionText))
+          .isVisible();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 
-  test('Delete a matrix question', async ({ surveyAdminPage }) => {
+  test('Delete a matrix question', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-558',
@@ -339,34 +381,43 @@ test.describe('matrix question', () => {
     const questionId = FakeDataFactory.createFakeQuestionId();
 
     const matrixQuestion = new MatrixQuestion({
-      questionId: questionId,
+      questionId,
       questionText: questionId,
       rowValues: [new BaseListValue({ value: 'Row 1' }), new BaseListValue({ value: 'Row 2' })],
       columnValues: [new BaseListValue({ value: 'Column 1' }), new BaseListValue({ value: 'Column 2' })],
     });
 
-    let surveyItemId: string;
+    let surveyItemId = '';
 
     await test.step('Open the survey designer', async () => {
-      await surveyAdminPage.designTabButton.click();
-      await surveyAdminPage.designTab.openSurveyDesigner();
+      await sysAdminActor.attemptsTo(SurveyTasks.openDesignTab(), SurveyTasks.openSurveyDesigner());
     });
 
     await test.step('Add a matrix question', async () => {
-      surveyItemId = await surveyAdminPage.designTab.surveyDesignerModal.addQuestion(matrixQuestion);
+      await sysAdminActor.attemptsTo(SurveyDesignerTasks.addQuestion(matrixQuestion));
+      surveyItemId = await sysAdminActor.asks(SurveyDesignerQuestions.surveyItemIdByText(matrixQuestion.questionText));
     });
 
     await test.step('Delete the matrix question', async () => {
-      await surveyAdminPage.designTab.surveyDesignerModal.deleteQuestion({
-        surveyItemId: surveyItemId,
-        questionText: matrixQuestion.questionText,
-      });
+      await sysAdminActor.attemptsTo(
+        SurveyDesignerTasks.deleteQuestion({
+          surveyItemId,
+          questionText: matrixQuestion.questionText,
+        })
+      );
     });
 
     await test.step('Preview the survey and confirm the matrix question is not present', async () => {
-      const previewPage = await surveyAdminPage.designTab.surveyDesignerModal.previewSurvey();
-      const question = previewPage.getQuestion(surveyItemId, matrixQuestion.questionText);
-      await expect(question).toBeHidden();
+      const previewActor = await sysAdminActor.asks(SurveyDesignerQuestions.previewSurvey());
+
+      try {
+        await previewActor
+          .browse()
+          .check(SurveyPreviewTargets.question(surveyItemId, matrixQuestion.questionText))
+          .isHidden();
+      } finally {
+        await previewActor.browse().close();
+      }
     });
   });
 });
