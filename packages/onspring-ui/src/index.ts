@@ -70,3 +70,6 @@ export * from './dashboards/keyMetrics.tasks.js';
 export * from './dataConnectors/dataConnectors.targets.js';
 export * from './dataConnectors/dataConnectors.questions.js';
 export * from './dataConnectors/dataConnectors.tasks.js';
+export * from './dataImports/dataImports.targets.js';
+export * from './dataImports/dataImports.questions.js';
+export * from './dataImports/dataImports.tasks.js';
