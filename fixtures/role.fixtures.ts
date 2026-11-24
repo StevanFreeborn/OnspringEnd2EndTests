@@ -3,10 +3,11 @@ import { App, AppPermission, FakeDataFactory, Permission, Role, RoleStatus } fro
 import { RoleTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 
-export class RoleFixtureBuilder {
+export class RoleFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sysAdminActor: WebActor }> {
   private name?: string;
   private status: RoleStatus = 'Active';
-  private appPermissionsFactory?: (deps: { app?: App }) => AppPermission[];
+  private appPermissions: AppPermission[] = [];
+  private appPermissionsFactory?: (deps: { app: App }) => AppPermission[];
 
   withName(name: string): this {
     this.name = name;
@@ -18,32 +19,54 @@ export class RoleFixtureBuilder {
     return this;
   }
 
-  withAppPermissions(factory: (deps: { app?: App }) => AppPermission[]): this {
-    this.appPermissionsFactory = factory;
-    return this;
+  withAppPermissions(permissions: AppPermission[]): this;
+  withAppPermissions(factory: (deps: { app: App }) => AppPermission[]): RoleFixtureBuilder<TDeps & { app: App }>;
+  withAppPermissions(
+    permissionsOrFactory: AppPermission[] | ((deps: { app: App }) => AppPermission[])
+  ): this | RoleFixtureBuilder<TDeps & { app: App }> {
+    if (Array.isArray(permissionsOrFactory)) {
+      this.appPermissions.push(...permissionsOrFactory);
+      return this;
+    }
+
+    this.appPermissionsFactory = permissionsOrFactory;
+    return this as unknown as RoleFixtureBuilder<TDeps & { app: App }>;
   }
 
-  build() {
-    return async (
-      { sysAdminActor, app }: { sysAdminActor: WebActor; app?: App },
-      use: (role: Role) => Promise<void>
-    ) => {
-      const roleName = this.name ?? FakeDataFactory.createFakeRoleName();
-      const appPermissions = this.appPermissionsFactory ? this.appPermissionsFactory({ app }) : [];
+  private async runFixture(
+    sysAdminActor: WebActor,
+    appPermissions: AppPermission[],
+    use: (role: Role) => Promise<void>
+  ): Promise<void> {
+    const role = new Role({
+      name: this.name ?? FakeDataFactory.createFakeRoleName(),
+      status: this.status,
+      appPermissions,
+    });
 
-      const role = new Role({
-        name: roleName,
-        status: this.status,
-        appPermissions,
-      });
+    await sysAdminActor.attemptsTo(RoleTasks.create(role));
+    try {
+      await use(role);
+    } finally {
+      await sysAdminActor.attemptsTo(RoleTasks.deleteRoles([role.name]));
+    }
+  }
 
-      await sysAdminActor.attemptsTo(RoleTasks.create(role));
-      try {
-        await use(role);
-      } finally {
-        await sysAdminActor.attemptsTo(RoleTasks.deleteRoles([role.name]));
-      }
-    };
+  build(): (deps: TDeps, use: (role: Role) => Promise<void>) => Promise<void> {
+    const appPermissionsFactory = this.appPermissionsFactory;
+
+    if (appPermissionsFactory) {
+      return (async (
+        { sysAdminActor, app }: { sysAdminActor: WebActor; app: App },
+        use: (role: Role) => Promise<void>
+      ) => {
+        await this.runFixture(sysAdminActor, [...this.appPermissions, ...appPermissionsFactory({ app })], use);
+      }) as unknown as (deps: TDeps, use: (role: Role) => Promise<void>) => Promise<void>;
+    }
+
+    return (async ({ sysAdminActor }: { sysAdminActor: WebActor }, use: (role: Role) => Promise<void>) => {
+      await this.runFixture(sysAdminActor, [...this.appPermissions], use);
+    }) as (deps: TDeps, use: (role: Role) => Promise<void>) => Promise<void>;
   }
 }
 
