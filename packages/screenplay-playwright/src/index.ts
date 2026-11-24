@@ -281,7 +281,10 @@ export class BrowserActions {
   async uploadViaFileChooser(
     triggerTarget: Target,
     files: string | string[],
-    options?: { waitForResponseUrl?: string | RegExp | ((response: Response) => boolean | Promise<boolean>) }
+    options?: {
+      waitForResponseUrl?: string | RegExp | ((response: Response) => boolean | Promise<boolean>);
+      timeout?: number;
+    }
   ): Promise<Response | undefined> {
     const [fileChooser] = await Promise.all([
       this.page.waitForEvent('filechooser'),
@@ -289,8 +292,9 @@ export class BrowserActions {
     ]);
 
     if (options?.waitForResponseUrl) {
+      const waitForResponseOptions = options.timeout !== undefined ? { timeout: options.timeout } : undefined;
       const [response] = await Promise.all([
-        this.page.waitForResponse(options.waitForResponseUrl),
+        this.page.waitForResponse(options.waitForResponseUrl, waitForResponseOptions),
         fileChooser.setFiles(files),
       ]);
       return response;
