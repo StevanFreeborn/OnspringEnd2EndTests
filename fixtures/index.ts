@@ -155,6 +155,8 @@ export { SlackMessageFixture, SlackMessageFixtureBuilder } from './slackMessage.
 export { DashboardFixture, DashboardFixtureBuilder } from './dashboard.fixtures';
 export { DataConnectorFixture, DataConnectorFixtureBuilder } from './dataConnector.fixtures';
 export type { DataConnectorFixtureData } from './dataConnector.fixtures';
+export { DataImportFixture, DataImportFixtureBuilder, dataImport } from './dataImport.fixtures';
+export type { DataImportFixtureData } from './dataImport.fixtures';
 export { ReportFixture, ReportFixtureBuilder } from './report.fixtures';
 
 export * from '@playwright/test';
