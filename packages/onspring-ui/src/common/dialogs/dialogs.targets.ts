@@ -9,6 +9,7 @@ export const CreateDialogTargets = {
       page.getByRole('option', { name }),
   saveButton: (page: Page): Locator => page.getByRole('button', { name: 'Save' }),
   continueButton: (page: Page): Locator => page.getByRole('button', { name: 'Continue' }),
+  okButton: (page: Page): Locator => page.getByRole('button', { name: 'OK' }),
   copyFromRadioButton: (page: Page): Locator => page.getByText('Copy from'),
   copyFromDropdown: (page: Page): Locator => page.locator('.copy-from-dropdown'),
   optionToCopy:

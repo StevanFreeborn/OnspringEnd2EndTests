@@ -131,4 +131,10 @@ export const AdminTileTargets = {
       has: page.locator('.title:has-text("Documents")'),
     }),
   documentTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Documents'),
+
+  surveyTileLink: (page: Page): Locator =>
+    page.locator('.landing-list-item-container .image-link', {
+      has: page.locator('.title:has-text("Surveys")'),
+    }),
+  surveyTileCreateButton: (page: Page): Locator => page.locator('#card-create-button-Surveys'),
 };
