@@ -102,6 +102,14 @@ export class BrowserActions {
     return resolveTarget(this.page, target).isDisabled();
   }
 
+  async isEnabled(target: Target): Promise<boolean> {
+    return resolveTarget(this.page, target).isEnabled();
+  }
+
+  async isEditable(target: Target): Promise<boolean> {
+    return resolveTarget(this.page, target).isEditable();
+  }
+
   async setChecked(target: Target, checked: boolean): Promise<void> {
     await resolveTarget(this.page, target).setChecked(checked);
   }
@@ -166,6 +174,18 @@ export class BrowserActions {
     await resolveTarget(this.page, target).evaluate((el, value) => {
       el.textContent = value;
     }, text);
+  }
+
+  async setCodeMirrorValue(target: Target, value: string): Promise<void> {
+    await resolveTarget(this.page, target).evaluate((el, val) => {
+      const cm = (el as HTMLElement & { CodeMirror?: { setValue: (v: string) => void } }).CodeMirror;
+      if (!cm) {
+        throw new Error('Target element does not expose a CodeMirror instance.');
+      }
+      cm.setValue(val);
+    }, value);
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(500);
   }
 
   async selectByLabel(target: Target, label: string): Promise<void> {
@@ -262,17 +282,22 @@ export class BrowserActions {
     triggerTarget: Target,
     files: string | string[],
     options?: { waitForResponseUrl?: string | RegExp | ((response: Response) => boolean | Promise<boolean>) }
-  ): Promise<void> {
+  ): Promise<Response | undefined> {
     const [fileChooser] = await Promise.all([
       this.page.waitForEvent('filechooser'),
       resolveTarget(this.page, triggerTarget).click(),
     ]);
 
     if (options?.waitForResponseUrl) {
-      await Promise.all([this.page.waitForResponse(options.waitForResponseUrl), fileChooser.setFiles(files)]);
-    } else {
-      await fileChooser.setFiles(files);
+      const [response] = await Promise.all([
+        this.page.waitForResponse(options.waitForResponseUrl),
+        fileChooser.setFiles(files),
+      ]);
+      return response;
     }
+
+    await fileChooser.setFiles(files);
+    return undefined;
   }
 
   async clickAndOpenNewTab(target: Target, actorName: string = 'NewTab'): Promise<WebActor> {
@@ -351,6 +376,18 @@ export class TargetAssertions {
 
   async hasText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
     await expect(this.locator).toHaveText(expected, options);
+  }
+
+  async doesNotHaveText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+    await expect(this.locator).not.toHaveText(expected, options);
+  }
+
+  async hasClass(expected: string | RegExp): Promise<void> {
+    await expect(this.locator).toHaveClass(expected);
+  }
+
+  async doesNotHaveClass(expected: string | RegExp): Promise<void> {
+    await expect(this.locator).not.toHaveClass(expected);
   }
 
   async hasCount(count: number, options?: { timeout?: number }): Promise<void> {
