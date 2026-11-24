@@ -1,29 +1,56 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, expect, layoutItemTest } from '../../fixtures';
-import { AttachmentField } from '../../models/attachmentField';
-import { LayoutItemPermission } from '../../models/layoutItem';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
+import {
+  App,
+  AppPermission,
+  AttachmentField,
+  FakeDataFactory,
+  LayoutItemPermission,
+  Permission,
+  Role,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppLayoutTabTargets,
+  AppQuestions,
+  AppTasks,
+  ContentQuestions,
+  ContentRecordTargets,
+  ContentTasks,
+  FieldTargets,
+  FieldTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, test as base, RoleFixture, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type AttachmentFieldTestFixtures = {
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
+  app: App;
+  role: Role;
+  user: User;
+  testUserActor: WebActor;
 };
 
-const test = layoutItemTest.extend<AttachmentFieldTestFixtures>({
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
+const test = base.extend<AttachmentFieldTestFixtures>({
+  app: AppFixture.create().build(),
+  role: RoleFixture.create()
+    .withAppPermissions(({ app }) => [
+      new AppPermission({
+        appName: app.name,
+        contentRecords: new Permission({ read: true }),
+      }),
+    ])
+    .build(),
+  user: UserFixture.create()
+    .withRoles(({ role }) => [role.name])
+    .build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('attachment field', () => {
-  test.beforeEach(async ({ appAdminPage, app }) => {
-    await appAdminPage.goto(app.id);
-    await appAdminPage.layoutTabButton.click();
+  test.beforeEach(async ({ sysAdminActor, app }) => {
+    await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
   });
 
-  test('Add an Attachment Field to an app from the Fields & Objects report', async ({ appAdminPage }) => {
+  test('Add an Attachment Field to an app from the Fields & Objects report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-88',
@@ -32,17 +59,16 @@ test.describe('attachment field', () => {
     const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Verify the field was added', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await expect(fieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isVisible();
     });
   });
 
   test('Create a copy of an Attachment Field on an app from the Fields & Objects report using the row copy button', async ({
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -53,33 +79,20 @@ test.describe('attachment field', () => {
     const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Add the the attachment field to be copied', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add a copy of the attachment field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Copy').click();
-
-      const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
-
-      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await addAttachmentFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.copyFromGridRow(field.name, copiedFieldName));
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
-
-      await copiedFieldRow.waitFor();
-      await expect(copiedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
     });
   });
 
   test('Create a copy of an Attachment Field on an app from the Fields & Objects report using the Add Field button', async ({
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -90,34 +103,19 @@ test.describe('attachment field', () => {
     const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Add the attachment field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add a copy of the attachment field', async () => {
-      await appAdminPage.layoutTab.addFieldButton.click();
-      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-
-      const addAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
-
-      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-
-      await addAttachmentFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.copyFromAddFieldButton(field.type, field.name, copiedFieldName));
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
-      await expect(copiedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
     });
   });
 
-  test('Add an Attachment Field to an app from a layout', async ({ appAdminPage }) => {
+  test('Add an Attachment Field to an app from a layout', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-90',
@@ -126,30 +124,28 @@ test.describe('attachment field', () => {
     const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
     });
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromLayoutDesigner(field));
     });
 
     await test.step('Verify the attachment field was added', async () => {
-      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
-        field.name
-      );
+      const fieldInBank = AppLayoutTabTargets.designer.fieldFromBank(field.name);
+      await sysAdminActor.browse().check(fieldInBank).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(fieldInBank)
+        .doesNotHaveClass(/ui-draggable-disabled/);
 
-      await expect(fieldInBank).toBeVisible();
-      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      await sysAdminActor.attemptsTo(AppTasks.closeLayout());
 
-      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
-
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-
-      await expect(fieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isVisible();
     });
   });
 
-  test('Create a copy of an Attachment Field on an app from a layout', async ({ appAdminPage }) => {
+  test('Create a copy of an Attachment Field on an app from a layout', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-91',
@@ -159,50 +155,32 @@ test.describe('attachment field', () => {
     const copiedFieldName = `${field.name} (1)`;
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
     });
 
     await test.step('Add the attachment field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromLayoutDesigner(field));
     });
 
     await test.step('Add a copy of the attachment field', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem(
-        'Attachment'
-      );
-
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-
-      const addAttachmentFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Attachment', 1);
-
-      await addAttachmentFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addAttachmentFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-
-      await addAttachmentFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.copyFromLayoutDesigner('Attachment', field.name, copiedFieldName));
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedField =
-        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
+      const copiedField = AppLayoutTabTargets.designer.fieldFromBank(copiedFieldName);
+      await sysAdminActor.browse().check(copiedField).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(copiedField)
+        .doesNotHaveClass(/ui-draggable-disabled/);
 
-      await expect(copiedField).toBeVisible();
-      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+      await sysAdminActor.attemptsTo(AppTasks.closeLayout());
 
-      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
-
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
-
-      await expect(copiedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
     });
   });
 
-  test("Add an Attachment Field to an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
+  test("Add an Attachment Field to an app's layout", async ({ sysAdminActor, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-92',
@@ -213,42 +191,45 @@ test.describe('attachment field', () => {
     const sectionName = 'Section 1';
 
     await test.step('Add the attachment field that will be added to layout', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add the attachment field to the layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        })
+      );
 
-      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
+      const dropzone = await sysAdminActor.asks(
+        AppQuestions.layoutDropzone({ tabName, sectionName, column: 0, row: 0 })
+      );
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.designer.fieldFromBank(field.name))
+        .hasClass(/ui-draggable-disabled/);
+      await sysAdminActor.browse().check(dropzone).hasText(new RegExp(field.name));
 
-      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
-      await expect(dropzone).toHaveText(new RegExp(field.name));
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Verify the field was added to the layout', async () => {
-      const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
 
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await expect(attachmentField.control).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.attachmentFieldInSection(section, field.name))
+        .isVisible();
     });
   });
 
-  test("Remove an Attachment Field from an app's layout", async ({ sysAdminPage, appAdminPage, app }) => {
+  test("Remove an Attachment Field from an app's layout", async ({ sysAdminActor, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-93',
@@ -257,52 +238,54 @@ test.describe('attachment field', () => {
     const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    let fieldInBank: Locator;
-    let fieldLayoutDropzone: Locator;
 
     await test.step('Add the attachment field that will be removed from layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
-      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-
-      fieldLayoutDropzone = dropzone;
-      fieldInBank = fieldFromBank;
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        FieldTasks.addFromLayoutDesigner(field),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Remove the attachment field from the layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await fieldLayoutDropzone.hover();
-      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.removeFieldFromLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+        })
+      );
 
-      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
-      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
+      const dropzone = await sysAdminActor.asks(
+        AppQuestions.layoutDropzone({ tabName, sectionName, column: 0, row: 0 })
+      );
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.designer.fieldFromBank(field.name))
+        .doesNotHaveClass(/ui-draggable-disabled/);
+      await sysAdminActor.browse().check(dropzone).doesNotHaveText(new RegExp(field.name));
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Verify the field was removed from the layout', async () => {
-      const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
 
-      await expect(attachmentField.control).toBeHidden();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor.browse().check(ContentRecordTargets.attachmentFieldInSection(section, field.name)).isHidden();
     });
   });
 
-  test('Update the configuration of an Attachment Field on an app', async ({ appAdminPage }) => {
+  test('Update the configuration of an Attachment Field on an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-94',
@@ -312,30 +295,19 @@ test.describe('attachment field', () => {
     const updatedFieldName = `${field.name} updated`;
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Update the attachment field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Edit').click();
-
-      const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
-
-      await editAttachmentFieldModal.generalTab.fieldInput.waitFor();
-      await editAttachmentFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editAttachmentFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.updateNameFromGrid(field.name, updatedFieldName));
     });
 
     await test.step('Verify the field was updated', async () => {
-      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: updatedFieldName,
-      });
-      await expect(updatedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(updatedFieldName)).isVisible();
     });
   });
 
-  test('Delete an Attachment Field from an app', async ({ appAdminPage }) => {
+  test('Delete an Attachment Field from an app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-95',
@@ -344,34 +316,23 @@ test.describe('attachment field', () => {
     const field = new AttachmentField({ name: FakeDataFactory.createFakeFieldName() });
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Delete the attachment field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Delete').click();
-
-      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
-      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await deleteResponse;
+      await sysAdminActor.attemptsTo(FieldTasks.deleteFromGrid(field.name));
     });
 
     await test.step('Verify the field was deleted', async () => {
-      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: field.name,
-      });
-
-      await expect(deletedFieldRow).toBeHidden();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isHidden();
     });
   });
 
   test('Make an Attachment Field private by role to prevent access', async ({
-    sysAdminPage,
-    appAdminPage,
+    sysAdminActor,
     app,
     role,
-    testUserPage,
+    testUserActor,
     txtFile,
   }) => {
     test.info().annotations.push({
@@ -385,64 +346,53 @@ test.describe('attachment field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await attachmentField.addFile(txtFile.path);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.asks(
+        ContentQuestions.uploadAttachment({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+          filePath: txtFile.path,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const attachmentField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await expect(attachmentField).toBeHidden();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor.browse().check(ContentRecordTargets.attachmentFieldInSection(section, field.name)).isHidden();
     });
   });
 
   test('Make an Attachment Field private by role to give access', async ({
-    sysAdminPage,
-    appAdminPage,
+    sysAdminActor,
     app,
     role,
-    testUserPage,
+    testUserActor,
     txtFile,
   }) => {
     test.info().annotations.push({
@@ -456,61 +406,56 @@ test.describe('attachment field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await attachmentField.addFile(txtFile.path);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.asks(
+        ContentQuestions.uploadAttachment({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+          filePath: txtFile.path,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is visible', async () => {
-      const attachmentField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-      const attachment = await viewContentPage.form.getAttachmentByNameFromField(attachmentField, txtFile.name);
-
-      await expect(attachmentField).toBeAttached();
-      await expect(attachment).toBeVisible();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.attachmentFieldInSection(section, field.name))
+        .isAttached();
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.attachmentRowInSection(section, field.name, txtFile.name))
+        .isVisible();
     });
   });
 
-  test('Make an Attachment Field public', async ({ sysAdminPage, appAdminPage, app, role, testUserPage, txtFile }) => {
+  test('Make an Attachment Field public', async ({ sysAdminActor, app, role, testUserActor, txtFile }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-97',
@@ -522,98 +467,73 @@ test.describe('attachment field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the attachment field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await attachmentField.addFile(txtFile.path);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      await editContentPage.page.waitForLoadState();
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.asks(
+        ContentQuestions.uploadAttachment({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+          filePath: txtFile.path,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const attachmentField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await expect(attachmentField).toBeHidden();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor.browse().check(ContentRecordTargets.attachmentFieldInSection(section, field.name)).isHidden();
     });
 
     await test.step('Update the attachment field so that it is public', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Edit').click();
-
-      const editAttachmentFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Attachment');
-
-      await editAttachmentFieldModal.securityTabButton.waitFor();
-      await editAttachmentFieldModal.securityTabButton.click();
-      await editAttachmentFieldModal.securityTab.setPermissions([]);
-      await editAttachmentFieldModal.save();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.updatePermissionsFromGrid(field.name, [])
+      );
     });
 
     await test.step('Navigate to created record again as test user', async () => {
-      await viewContentPage.goto(app.id, recordId);
-      await viewContentPage.page.reload();
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
+      await testUserActor.browse().reload();
     });
 
     await test.step('Verify the field is visible', async () => {
-      const attachmentField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-      const attachment = await viewContentPage.form.getAttachmentByNameFromField(attachmentField, txtFile.name);
-
-      await expect(attachmentField).toBeAttached();
-      await expect(attachment).toBeVisible();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.attachmentFieldInSection(section, field.name))
+        .isAttached();
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.attachmentRowInSection(section, field.name, txtFile.name))
+        .isVisible();
     });
   });
 
-  test('Upload a large file to an attachment Field', async ({
-    appAdminPage,
-    app,
-    addContentPage,
-    editContentPage,
-    large149mbTxtFile,
-  }) => {
+  test('Upload a large file to an attachment Field', async ({ sysAdminActor, app, large149mbTxtFile }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-918',
@@ -626,52 +546,47 @@ test.describe('attachment field', () => {
     const sectionName = 'Section 1';
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record and upload the large file to the attachment field', async () => {
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await attachmentField.addFile(large149mbTxtFile.path);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.asks(
+        ContentQuestions.uploadAttachment({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+          filePath: large149mbTxtFile.path,
+          timeout: 120_000,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
     });
 
     await test.step('Verify the file was uploaded successfully', async () => {
-      const attachmentField = await editContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      const attachment = attachmentField.attachmentGridBody.getByRole('row', { name: large149mbTxtFile.name });
-
-      await expect(attachment).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.attachmentRowInSection(section, field.name, large149mbTxtFile.name))
+        .isVisible();
     });
   });
 
   test('Upload a file that exceeds the max file size limit to an attachment Field', async ({
-    appAdminPage,
+    sysAdminActor,
     app,
-    addContentPage,
     large151mbTxtFile,
   }) => {
     test.info().annotations.push({
@@ -686,36 +601,35 @@ test.describe('attachment field', () => {
     const sectionName = 'Section 1';
 
     await test.step('Add the attachment field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record and attempt to upload the large file to the attachment field', async () => {
-      await addContentPage.goto(app.id);
-      const attachmentField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Attachment',
-      });
-
-      await attachmentField.addFileWithoutWaitingForResponse(large151mbTxtFile.path);
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoAdd(app.id),
+        ContentTasks.attemptAttachmentUpload({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+          filePath: large151mbTxtFile.path,
+        })
+      );
     });
 
     await test.step('Verify the file upload fails', async () => {
-      const fileUploadErrorModal = addContentPage.page.getByRole('dialog', { name: 'File Upload Error' });
-
-      await expect(fileUploadErrorModal).toBeVisible();
+      await sysAdminActor.browse().check(ContentRecordTargets.fileUploadErrorDialog).isVisible();
     });
   });
 });

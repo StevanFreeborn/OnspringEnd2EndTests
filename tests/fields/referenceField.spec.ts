@@ -1,72 +1,68 @@
-import { CreateRecordModal } from '../../componentObjectModels/modals/createRecordModal';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, Page, test as base, expect } from '../../fixtures';
-import { app, appAdminPage } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { activeUserWithRole } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { LayoutItemPermission } from '../../models/layoutItem';
-import { ReferenceField } from '../../models/referenceField';
-import { AppPermission, Permission, Role } from '../../models/role';
-import { User } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
+import {
+  App,
+  AppPermission,
+  FakeDataFactory,
+  LayoutItemPermission,
+  Permission,
+  ReferenceField,
+  Role,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppLayoutTabTargets,
+  AppQuestions,
+  AppTasks,
+  ContentQuestions,
+  ContentRecordTargets,
+  ContentTasks,
+  FieldTargets,
+  FieldTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, test as base, RoleFixture, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type ReferenceFieldTestFixtures = {
-  appAdminPage: AppAdminPage;
   app: App;
   referencedApp: App;
   role: Role;
   user: User;
-  testUserPage: Page;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<ReferenceFieldTestFixtures>({
-  appAdminPage: appAdminPage,
-  app: app,
-  referencedApp: app,
-  role: async ({ sysAdminPage, app, referencedApp }, use) => {
-    const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
-    const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-    const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
-    const roleName = FakeDataFactory.createFakeRoleName();
-    const role = new Role({ name: roleName, status: 'Active' });
-    const appPermissions = [
-      new AppPermission({
-        appName: app.name,
-        contentRecords: new Permission({ read: true }),
-      }),
-      new AppPermission({
-        appName: referencedApp.name,
-        referencedRecords: new Permission({ read: true }),
-      }),
-    ];
-    role.appPermissions.push(...appPermissions);
+  app: AppFixture.create().build(),
+  referencedApp: AppFixture.create().build(),
+  role: async ({ sysAdminActor, app, referencedApp }, use) => {
+    const roleFixture = RoleFixture.create()
+      .withAppPermissions([
+        new AppPermission({
+          appName: app.name,
+          contentRecords: new Permission({ read: true }),
+        }),
+        new AppPermission({
+          appName: referencedApp.name,
+          referencedRecords: new Permission({ read: true }),
+        }),
+      ])
+      .build();
 
-    await addRoleAdminPage.addRole(role);
-    await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-    // eslint-disable-next-line playwright/no-wait-for-timeout
-    await editRoleAdminPage.page.waitForTimeout(1000);
-
-    role.id = editRoleAdminPage.getRoleIdFromUrl();
-
-    await use(role);
-
-    await roleSecurityAdminPage.deleteRoles([roleName]);
+    await roleFixture({ sysAdminActor }, use);
   },
-  user: activeUserWithRole,
-  testUserPage: createTestUserPageFixture,
+  user: UserFixture.create()
+    .withRoles(({ role }) => [role.name])
+    .build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('reference field', () => {
+  test.beforeEach(async ({ sysAdminActor, app, referencedApp }) => {
+    void referencedApp;
+    await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
+  });
+
   test('Add a Reference Field to an app from the Fields & Objects report', async ({
-    appAdminPage,
+    sysAdminActor,
     referencedApp,
     app,
   }) => {
@@ -78,25 +74,19 @@ test.describe('reference field', () => {
     const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Verify the field was added', async () => {
-      const referenceFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await expect(referenceFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isVisible();
 
-      await appAdminPage.goto(referencedApp.id);
-      await appAdminPage.layoutTabButton.click();
-      const parallelReferenceFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: app.name,
-      });
-      await expect(parallelReferenceFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(referencedApp.id));
+      await sysAdminActor.browse().check(FieldTargets.rowByName(app.name)).isVisible();
     });
   });
 
   test('Create a copy of a Reference Field on an app from the Fields & Objects report using the row copy button', async ({
-    appAdminPage,
+    sysAdminActor,
     referencedApp,
     app,
   }) => {
@@ -110,45 +100,25 @@ test.describe('reference field', () => {
     const copiedParallelFieldName = `${app.name} (1)`;
 
     await test.step('Add the the reference field to be copied', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add a copy of the reference field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Copy').click();
-
-      const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
-
-      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
-      await addReferenceFieldModal.save();
+      await sysAdminActor.attemptsTo(
+        FieldTasks.copyFromGridRow(field.name, copiedFieldName, { waitForSelectedGridFields: true })
+      );
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
 
-      await copiedFieldRow.waitFor();
-      await expect(copiedFieldRow).toBeVisible();
-
-      await appAdminPage.goto(referencedApp.id);
-      await appAdminPage.layoutTabButton.click();
-      const copiedParallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedParallelFieldName,
-      });
-
-      await expect(copiedParallelFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(referencedApp.id));
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedParallelFieldName)).isVisible();
     });
   });
 
   test('Create a copy of a Reference Field on an app from the Fields & Objects report using the Add Field button', async ({
-    appAdminPage,
+    sysAdminActor,
     referencedApp,
     app,
   }) => {
@@ -162,44 +132,22 @@ test.describe('reference field', () => {
     const copiedParallelFieldName = `${app.name} (1)`;
 
     await test.step('Add the reference field to copy', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add a copy of the reference field', async () => {
-      await appAdminPage.layoutTab.addFieldButton.click();
-      await appAdminPage.layoutTab.addLayoutItemMenu.selectItem(field.type);
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-
-      const addReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
-
-      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
-
-      await addReferenceFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.copyFromAddFieldButton(field.type, field.name, copiedFieldName));
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
-      await expect(copiedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
 
-      await appAdminPage.goto(referencedApp.id);
-      await appAdminPage.layoutTabButton.click();
-      const copiedParallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedParallelFieldName,
-      });
-      await expect(copiedParallelFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(referencedApp.id));
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedParallelFieldName)).isVisible();
     });
   });
 
-  test('Add a Reference Field to an app from a layout', async ({ appAdminPage, referencedApp, app }) => {
+  test('Add a Reference Field to an app from a layout', async ({ sysAdminActor, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-118',
@@ -208,33 +156,30 @@ test.describe('reference field', () => {
     const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
     });
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromLayoutDesigner(field));
     });
 
     await test.step('Verify the field was added', async () => {
-      const fieldInBank = appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(
-        field.name
-      );
-      await expect(fieldInBank).toBeVisible();
-      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
+      const fieldInBank = AppLayoutTabTargets.designer.fieldFromBank(field.name);
+      await sysAdminActor.browse().check(fieldInBank).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(fieldInBank)
+        .doesNotHaveClass(/ui-draggable-disabled/);
 
-      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await expect(fieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.closeLayout());
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isVisible();
 
-      await appAdminPage.goto(referencedApp.id);
-      await appAdminPage.layoutTabButton.click();
-      const parallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: app.name });
-      await expect(parallelFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(referencedApp.id));
+      await sysAdminActor.browse().check(FieldTargets.rowByName(app.name)).isVisible();
     });
   });
 
-  test('Create a copy of a Reference Field on an app from a layout', async ({ appAdminPage, referencedApp, app }) => {
+  test('Create a copy of a Reference Field on an app from a layout', async ({ sysAdminActor, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-119',
@@ -245,57 +190,34 @@ test.describe('reference field', () => {
     const copiedParallelFieldName = `${app.name} (1)`;
 
     await test.step('Open layout designer for default layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
     });
 
     await test.step('Add the reference field to copy', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromLayoutDesigner(field));
     });
 
     await test.step('Add a copy of the reference field', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.addFieldMenu.selectItem(
-        'Reference'
-      );
-
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromRadioButton.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.copyFromDropdown.click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.getLayoutItemToCopy(field.name).click();
-      await appAdminPage.layoutTab.addLayoutItemDialog.continueButton.click();
-
-      const addReferenceFieldModal = appAdminPage.layoutTab.layoutDesignerModal.getLayoutItemModal('Reference', 1);
-
-      await addReferenceFieldModal.generalTab.fieldInput.waitFor();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toBeVisible();
-      await expect(addReferenceFieldModal.generalTab.fieldInput).toHaveValue(copiedFieldName);
-      await expect(addReferenceFieldModal.generalTab.selectedGridFields).toBeVisible();
-
-      await addReferenceFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.copyFromLayoutDesigner('Reference', field.name, copiedFieldName));
     });
 
     await test.step('Verify the field was copied', async () => {
-      const copiedField =
-        appAdminPage.layoutTab.layoutDesignerModal.layoutItemsSection.fieldsTab.getFieldFromBank(copiedFieldName);
-      await expect(copiedField).toBeVisible();
-      await expect(copiedField).not.toHaveClass(/ui-draggable-disabled/);
+      const copiedField = AppLayoutTabTargets.designer.fieldFromBank(copiedFieldName);
+      await sysAdminActor.browse().check(copiedField).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(copiedField)
+        .doesNotHaveClass(/ui-draggable-disabled/);
 
-      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
-      const copiedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedFieldName,
-      });
-      await expect(copiedFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.closeLayout());
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedFieldName)).isVisible();
 
-      await appAdminPage.goto(referencedApp.id);
-      await appAdminPage.layoutTabButton.click();
-      const copiedParallelFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: copiedParallelFieldName,
-      });
-      await expect(copiedParallelFieldRow).toBeVisible();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(referencedApp.id));
+      await sysAdminActor.browse().check(FieldTargets.rowByName(copiedParallelFieldName)).isVisible();
     });
   });
 
-  test("Add a Reference Field to an app's layout", async ({ sysAdminPage, appAdminPage, referencedApp, app }) => {
+  test("Add a Reference Field to an app's layout", async ({ sysAdminActor, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-120',
@@ -306,43 +228,42 @@ test.describe('reference field', () => {
     const sectionName = 'Section 1';
 
     await test.step('Add the reference field that will be added to layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Add the reference field to the layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        })
+      );
 
-      const { field: fieldInBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
+      const dropzone = await sysAdminActor.asks(
+        AppQuestions.layoutDropzone({ tabName, sectionName, column: 0, row: 0 })
+      );
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.designer.fieldFromBank(field.name))
+        .hasClass(/ui-draggable-disabled/);
+      await sysAdminActor.browse().check(dropzone).hasText(new RegExp(field.name));
 
-      await expect(fieldInBank).toHaveClass(/ui-draggable-disabled/);
-      await expect(dropzone).toHaveText(new RegExp(field.name));
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Verify the field was added to the layout', async () => {
-      const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
 
-      const referenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-
-      await expect(referenceField.control).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor.browse().check(ContentRecordTargets.referenceFieldInSection(section, field.name)).isVisible();
     });
   });
 
-  test("Remove a Reference Field from an app's layout", async ({ sysAdminPage, appAdminPage, referencedApp, app }) => {
+  test("Remove a Reference Field from an app's layout", async ({ sysAdminActor, referencedApp, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-121',
@@ -351,53 +272,54 @@ test.describe('reference field', () => {
     const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    let fieldInBank: Locator;
-    let fieldLayoutDropzone: Locator;
 
     await test.step('Add the reference field that will be removed from layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
-      const { field: fieldFromBank, dropzone } = await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-
-      fieldLayoutDropzone = dropzone;
-      fieldInBank = fieldFromBank;
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        FieldTasks.addFromLayoutDesigner(field),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Remove the reference field from the layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await fieldLayoutDropzone.hover();
-      await fieldLayoutDropzone.getByTitle('Remove Field from Layout').click();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.removeFieldFromLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+        })
+      );
 
-      await expect(fieldInBank).not.toHaveClass(/ui-draggable-disabled/);
-      await expect(fieldLayoutDropzone).not.toHaveText(new RegExp(field.name));
+      const dropzone = await sysAdminActor.asks(
+        AppQuestions.layoutDropzone({ tabName, sectionName, column: 0, row: 0 })
+      );
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.designer.fieldFromBank(field.name))
+        .doesNotHaveClass(/ui-draggable-disabled/);
+      await sysAdminActor.browse().check(dropzone).doesNotHaveText(new RegExp(field.name));
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Verify the field was removed from the layout', async () => {
-      const addContentPage = new AddContentPage(sysAdminPage);
-      await addContentPage.goto(app.id);
-      const referenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
 
-      await expect(referenceField.control).toBeHidden();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor.browse().check(ContentRecordTargets.referenceFieldInSection(section, field.name)).isHidden();
     });
   });
 
-  test('Update the configuration of a Reference Field on an app', async ({ appAdminPage, referencedApp, app }) => {
+  test('Update the configuration of a Reference Field on an app', async ({ sysAdminActor, referencedApp }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-122',
@@ -407,32 +329,19 @@ test.describe('reference field', () => {
     const updatedFieldName = `${field.name} updated`;
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Update the reference field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Edit').click();
-
-      const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Reference');
-
-      await editReferenceFieldModal.generalTab.fieldInput.waitFor();
-      await editReferenceFieldModal.generalTab.fieldInput.fill(updatedFieldName);
-      await editReferenceFieldModal.save();
+      await sysAdminActor.attemptsTo(FieldTasks.updateNameFromGrid(field.name, updatedFieldName));
     });
 
     await test.step('Verify the field was updated', async () => {
-      const updatedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: updatedFieldName,
-      });
-      await expect(updatedFieldRow).toBeVisible();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(updatedFieldName)).isVisible();
     });
   });
 
-  test('Delete a Reference Field from an app', async ({ appAdminPage, referencedApp, app }) => {
+  test('Delete a Reference Field from an app', async ({ sysAdminActor, referencedApp }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-123',
@@ -441,37 +350,24 @@ test.describe('reference field', () => {
     const field = new ReferenceField({ name: FakeDataFactory.createFakeFieldName(), reference: referencedApp.name });
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(field));
     });
 
     await test.step('Delete the reference field', async () => {
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Delete').click();
-
-      const deleteResponse = appAdminPage.waitForLayoutItemDeleteResponse();
-      await appAdminPage.layoutTab.deleteLayoutItemDialog.deleteButton.click();
-      await deleteResponse;
+      await sysAdminActor.attemptsTo(FieldTasks.deleteFromGrid(field.name));
     });
 
     await test.step('Verify the field was deleted', async () => {
-      const deletedFieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', {
-        name: field.name,
-      });
-
-      await expect(deletedFieldRow).toBeHidden();
+      await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isHidden();
     });
   });
 
   test('Make a Reference Field private by role to prevent access', async ({
-    sysAdminPage,
-    appAdminPage,
+    sysAdminActor,
     referencedApp,
     app,
     role,
-    testUserPage,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -485,68 +381,56 @@ test.describe('reference field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const createRecordModal = new CreateRecordModal(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the reference field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const referenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-
-      await referenceField.openCreateNewRecordModal();
-      await createRecordModal.saveRecord();
-
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await editContentPage.page.waitForTimeout(1000);
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.asks(
+        ContentQuestions.createNewReferencedRecord({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const referenceField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-      await expect(referenceField).toBeHidden();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceFieldInSection(section, field.name))
+        .isHidden();
     });
   });
 
   test('Make a Reference Field private by role to give access', async ({
-    sysAdminPage,
-    appAdminPage,
+    sysAdminActor,
     referencedApp,
     app,
     role,
-    testUserPage,
+    testUserActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -560,73 +444,56 @@ test.describe('reference field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const createRecordModal = new CreateRecordModal(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
     let referencedRecordId: number;
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the reference field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const referenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-
-      await referenceField.openCreateNewRecordModal();
-      referencedRecordId = await createRecordModal.saveRecord();
-
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await editContentPage.page.waitForTimeout(1000);
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      referencedRecordId = await sysAdminActor.asks(
+        ContentQuestions.createNewReferencedRecord({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is visible', async () => {
-      const referenceField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-      const referencedRecord = referenceField.getByRole('row', { name: referencedRecordId.toString() });
-
-      await expect(referenceField).toBeVisible();
-      await expect(referencedRecord).toBeVisible();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceFieldInSection(section, field.name))
+        .isVisible();
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceRecordRowInSection(section, field.name, referencedRecordId))
+        .isVisible();
     });
   });
 
-  test('Make a Reference Field public', async ({
-    sysAdminPage,
-    appAdminPage,
-    referencedApp,
-    app,
-    role,
-    testUserPage,
-  }) => {
+  test('Make a Reference Field public', async ({ sysAdminActor, referencedApp, app, role, testUserActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-125',
@@ -639,90 +506,72 @@ test.describe('reference field', () => {
     });
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
-    const addContentPage = new AddContentPage(sysAdminPage);
-    const createRecordModal = new CreateRecordModal(sysAdminPage);
-    const editContentPage = new EditContentPage(sysAdminPage);
-    const viewContentPage = new ViewContentPage(testUserPage);
     let recordId: number;
     let referencedRecordId: number;
 
     await test.step('Add the reference field', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: field.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(field),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: field.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a record with a value in the reference field as system admin', async () => {
-      await addContentPage.goto(app.id);
-      const referenceField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-
-      await referenceField.openCreateNewRecordModal();
-      referencedRecordId = await createRecordModal.saveRecord();
-
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await editContentPage.page.waitForTimeout(1000);
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      referencedRecordId = await sysAdminActor.asks(
+        ContentQuestions.createNewReferencedRecord({
+          tabName,
+          sectionName,
+          fieldName: field.name,
+        })
+      );
+      await sysAdminActor.attemptsTo(ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Navigate to created record as test user who does not have access to the field by their role', async () => {
-      await viewContentPage.goto(app.id, recordId);
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
     });
 
     await test.step('Verify the field is not visible', async () => {
-      const referenceField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-      await expect(referenceField).toBeHidden();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceFieldInSection(section, field.name))
+        .isHidden();
     });
 
     await test.step('Update the reference field so that it is public', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      const fieldRow = appAdminPage.layoutTab.fieldsAndObjectsGrid.getByRole('row', { name: field.name });
-      await fieldRow.hover();
-      await fieldRow.getByTitle('Edit').click();
-
-      const editReferenceFieldModal = appAdminPage.layoutTab.getLayoutItemModal('Text');
-      await editReferenceFieldModal.securityTabButton.click();
-      await editReferenceFieldModal.securityTab.setPermissions([]);
-      await editReferenceFieldModal.save();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.updatePermissionsFromGrid(field.name, [])
+      );
     });
 
     await test.step('Navigate to created record again as test user', async () => {
-      await viewContentPage.goto(app.id, recordId);
-      await viewContentPage.page.reload();
+      await testUserActor.attemptsTo(ContentTasks.gotoView(app.id, recordId));
+      await testUserActor.browse().reload();
     });
 
     await test.step('Verify the field is visible', async () => {
-      const referenceField = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: field.name,
-        fieldType: 'Reference',
-      });
-      const referencedRecord = referenceField.getByRole('row', { name: referencedRecordId.toString() });
-
-      await expect(referenceField).toBeVisible();
-      await expect(referencedRecord).toBeVisible();
+      const section = await testUserActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceFieldInSection(section, field.name))
+        .isVisible();
+      await testUserActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyReferenceRecordRowInSection(section, field.name, referencedRecordId))
+        .isVisible();
     });
   });
 });
