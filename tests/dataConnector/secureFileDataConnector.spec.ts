@@ -1,136 +1,133 @@
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
+import { App, FakeDataFactory, SecureFileDataConnector, TextField } from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentTasks,
+  DataConnectorsPageTargets,
+  DataConnectorTasks,
+  EditDataConnectorPageTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base, expect } from '../../fixtures';
 import { writeCsvFile } from '../../fixtures/file.fixtures';
-import { App } from '../../models/app';
-import { SecureFileDataConnector } from '../../models/secureFileDataConnector';
-import { TextField } from '../../models/textField';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
-import { EditSecureFileDataConnectorPage } from '../../pageObjectModels/dataConnectors/editSecureFileDataConnectorPage';
 import { AnnotationType } from '../annotations';
 
 type SecureFileDataConnectorTestFixtures = {
   app: App;
-  appAdminPage: AppAdminPage;
-  dataConnectorsAdminPage: DataConnectorAdminPage;
-  editConnectorPage: EditSecureFileDataConnectorPage;
-  viewContentPage: ViewContentPage;
 };
 
 const test = base.extend<SecureFileDataConnectorTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  dataConnectorsAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
-  editConnectorPage: async ({ sysAdminPage }, use) => await use(new EditSecureFileDataConnectorPage(sysAdminPage)),
-  viewContentPage: async ({ sysAdminPage }, use) => await use(new ViewContentPage(sysAdminPage)),
+  app: AppFixture.create().build(),
 });
 
 test.describe('secure file data connector', () => {
   let connectorsToDelete: string[] = [];
+  let sftpFilesToDelete: string[] = [];
 
-  test.afterEach(async ({ dataConnectorsAdminPage }) => {
-    await dataConnectorsAdminPage.deleteConnectors(connectorsToDelete);
+  test.afterEach(async ({ sysAdminActor, sftpService }) => {
+    await sysAdminActor.attemptsTo(DataConnectorTasks.deleteConnectors(connectorsToDelete));
     connectorsToDelete = [];
+
+    for (const filePath of sftpFilesToDelete) {
+      await sftpService.deleteFile(filePath);
+    }
+
+    sftpFilesToDelete = [];
   });
 
-  test('Create a new Secure File connector', async ({ dataConnectorsAdminPage, editConnectorPage }) => {
+  test('Create a new Secure File connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-430',
     });
 
-    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+    const dataConnectorName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(dataConnectorName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create a new secure file connector', async () => {
-      await dataConnectorsAdminPage.createConnector(dataConnectorName, 'Secure File Data Connector');
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(dataConnectorName, 'Secure File Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the secure file connector is created successfully', async () => {
-      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnectorName);
+      await sysAdminActor
+        .browse()
+        .check(EditDataConnectorPageTargets.connectionTab.nameInput)
+        .hasValue(dataConnectorName);
     });
   });
 
-  test('Create a copy of a Secure File connector', async ({ dataConnectorsAdminPage, editConnectorPage }) => {
+  test('Create a copy of a Secure File connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-431',
     });
 
-    const connectorToCopy = FakeDataFactory.createFakeConnectorName();
-    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorToCopy = FakeDataFactory.createFakeDataConnectorName();
+    const dataConnectorName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(connectorToCopy, dataConnectorName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the secure file connector to copy', async () => {
-      await dataConnectorsAdminPage.createConnector(connectorToCopy, 'Secure File Data Connector');
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorToCopy, 'Secure File Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Copy the secure file connector', async () => {
-      await dataConnectorsAdminPage.copyConnector('Secure File Data Connector', connectorToCopy, dataConnectorName);
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DataConnectorTasks.createCopy('Secure File Data Connector', connectorToCopy, dataConnectorName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the secure file connector copy is created successfully', async () => {
-      await expect(editConnectorPage.connectionTab.nameInput).toHaveValue(dataConnectorName);
+      await sysAdminActor
+        .browse()
+        .check(EditDataConnectorPageTargets.connectionTab.nameInput)
+        .hasValue(dataConnectorName);
     });
   });
 
-  test('Delete a Secure File connector', async ({ dataConnectorsAdminPage, editConnectorPage }) => {
+  test('Delete a Secure File connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-432',
     });
 
-    const dataConnectorName = FakeDataFactory.createFakeConnectorName();
+    const dataConnectorName = FakeDataFactory.createFakeDataConnectorName();
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the secure file connector to delete', async () => {
-      await dataConnectorsAdminPage.createConnector(dataConnectorName, 'Secure File Data Connector');
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(dataConnectorName, 'Secure File Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Delete the secure file connector', async () => {
-      await dataConnectorsAdminPage.deleteConnector(dataConnectorName);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.delete(dataConnectorName));
     });
 
     await test.step('Verify the secure file connector is deleted successfully', async () => {
-      const connectorRow = dataConnectorsAdminPage.connectorsGrid.getByRole('row', { name: dataConnectorName });
-      await expect(connectorRow).toBeHidden();
+      await sysAdminActor.browse().check(DataConnectorsPageTargets.rowByName(dataConnectorName)).isHidden();
     });
   });
 
-  test('Configure a new Secure File connector', async ({
-    app,
-    appAdminPage,
-    dataConnectorsAdminPage,
-    editConnectorPage,
-    sftpService,
-    sysAdminUser,
-  }) => {
+  test('Configure a new Secure File connector', async ({ app, sysAdminActor, sftpService, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-433',
@@ -141,7 +138,7 @@ test.describe('secure file data connector', () => {
     });
 
     const dataConnector = new SecureFileDataConnector({
-      name: FakeDataFactory.createFakeConnectorName(),
+      name: FakeDataFactory.createFakeDataConnectorName(),
       status: true,
       app: app.name,
       hostname: sftpService.hostname(),
@@ -163,57 +160,56 @@ test.describe('secure file data connector', () => {
     connectorsToDelete.push(dataConnector.name);
 
     await test.step('Navigate to app admin page', async () => {
-      await appAdminPage.goto(app.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id));
     });
 
     await test.step('Add text field for field mappings', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.addTextField(textField.name));
     });
 
     await test.step('Upload csv to be imported', async () => {
       const sourcePath = writeCsvFile([{ [textField.name]: 'Text Field Value' }]);
       await sftpService.uploadFile(sourcePath, dataConnector.filePath());
+      sftpFilesToDelete.push(dataConnector.filePath());
     });
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create a new secure file connector', async () => {
-      await dataConnectorsAdminPage.createConnector(dataConnector.name, 'Secure File Data Connector');
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(dataConnector.name, 'Secure File Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Configure the secure file connector', async () => {
-      await editConnectorPage.updateConnector(dataConnector);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.configureSecureFile(dataConnector));
     });
 
     await test.step('Verify the secure file connector is configured successfully', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto(), DataConnectorTasks.scrollAllIntoView());
 
-      const dataConnectorRow = dataConnectorsAdminPage.connectorsGrid.getByRole('row', {
-        name: new RegExp(dataConnector.name),
-      });
-
-      await expect(dataConnectorRow).toBeVisible();
-      await expect(dataConnectorRow).toHaveText(/enabled/i);
+      const dataConnectorRow = DataConnectorsPageTargets.rowByName(new RegExp(dataConnector.name));
+      await sysAdminActor.browse().check(dataConnectorRow).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(dataConnectorRow)
+        .hasText(/enabled/i);
     });
 
     await test.step('Remove the uploaded file from SFTP server', async () => {
-      await sftpService.deleteFile(dataConnector.filePath());
+      const filePath = dataConnector.filePath();
+      await sftpService.deleteFile(filePath);
+      sftpFilesToDelete = sftpFilesToDelete.filter(path => path !== filePath);
     });
   });
 
   test('Verify a new Secure File connector runs successfully', async ({
     app,
-    appAdminPage,
-    dataConnectorsAdminPage,
-    editConnectorPage,
+    sysAdminActor,
     sftpService,
     sysAdminUser,
     sysAdminEmail,
-    viewContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -230,7 +226,7 @@ test.describe('secure file data connector', () => {
     });
 
     const dataConnector = new SecureFileDataConnector({
-      name: FakeDataFactory.createFakeConnectorName(),
+      name: FakeDataFactory.createFakeDataConnectorName(),
       status: true,
       app: app.name,
       hostname: sftpService.hostname(),
@@ -252,39 +248,41 @@ test.describe('secure file data connector', () => {
     connectorsToDelete.push(dataConnector.name);
 
     await test.step('Navigate to app admin page', async () => {
-      await appAdminPage.goto(app.id);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(app.id));
     });
 
     await test.step('Add text field for field mappings', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionRow: 0,
-        sectionColumn: 0,
-        fieldName: textField.name,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addTextFieldInLayoutDesigner(textField.name),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: textField.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Upload csv to be imported', async () => {
       const sourcePath = writeCsvFile([{ [textField.name]: 'Text Field Value' }]);
       await sftpService.uploadFile(sourcePath, dataConnector.filePath());
+      sftpFilesToDelete.push(dataConnector.filePath());
     });
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create a new secure file connector', async () => {
-      await dataConnectorsAdminPage.createConnector(dataConnector.name, 'Secure File Data Connector');
-      await dataConnectorsAdminPage.page.waitForURL(editConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(dataConnector.name, 'Secure File Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Configure the secure file connector', async () => {
-      await editConnectorPage.updateConnector(dataConnector);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.configureSecureFile(dataConnector));
     });
 
     await test.step('Verify the secure file connector is run', async () => {
@@ -301,20 +299,21 @@ test.describe('secure file data connector', () => {
         timeout: 300_000,
       });
 
-      await viewContentPage.goto(app.id, 1);
-
-      const field = await viewContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: textField.name,
-        fieldType: textField.type as FieldType,
-      });
-
-      await expect(field).toHaveText(textFieldValue);
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoView(app.id, 1),
+        ContentTasks.checkReadOnlyFieldText({
+          tabName,
+          sectionName,
+          fieldName: textField.name,
+          expectedText: textFieldValue,
+        })
+      );
     });
 
     await test.step('Remove the uploaded file from SFTP server', async () => {
-      await sftpService.deleteFile(dataConnector.filePath());
+      const filePath = dataConnector.filePath();
+      await sftpService.deleteFile(filePath);
+      sftpFilesToDelete = sftpFilesToDelete.filter(path => path !== filePath);
     });
   });
 });

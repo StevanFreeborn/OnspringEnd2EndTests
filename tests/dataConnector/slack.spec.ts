@@ -1,112 +1,108 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
-import { EditSlackConnectorPage } from '../../pageObjectModels/dataConnectors/editSlackConnectorPage';
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import {
+  DataConnectorsPageTargets,
+  DataConnectorTasks,
+  EditDataConnectorPageTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-
-type SlackAppDataConnectorTestFixtures = {
-  dataConnectorAdminPage: DataConnectorAdminPage;
-  editSlackConnectorPage: EditSlackConnectorPage;
-};
-
-const test = base.extend<SlackAppDataConnectorTestFixtures>({
-  dataConnectorAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
-  editSlackConnectorPage: async ({ sysAdminPage }, use) => await use(new EditSlackConnectorPage(sysAdminPage)),
-});
 
 test.describe('slack app data connector', () => {
   let connectorsToDelete: string[] = [];
 
-  test.afterEach(async ({ dataConnectorAdminPage }) => {
-    await dataConnectorAdminPage.deleteConnectors(connectorsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(DataConnectorTasks.deleteConnectors(connectorsToDelete));
     connectorsToDelete = [];
   });
 
-  test('Create a new Slack app connector', async ({ dataConnectorAdminPage, editSlackConnectorPage }) => {
+  test('Create a new Slack app connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-437',
     });
 
-    const connectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(connectorName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the slack app data connector', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'Slack App Connector');
-      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorName, 'Slack App Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the data connector was created successfully', async () => {
-      await expect(editSlackConnectorPage.generalTab.nameInput).toHaveValue(connectorName);
+      await sysAdminActor.browse().check(EditDataConnectorPageTargets.connectionTab.nameInput).hasValue(connectorName);
     });
   });
 
-  test('Create a copy of a Slack app connector', async ({ dataConnectorAdminPage, editSlackConnectorPage }) => {
+  test('Create a copy of a Slack app connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-438',
     });
 
-    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
-    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorToCopyName = FakeDataFactory.createFakeDataConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(connectorToCopyName, connectorCopyName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the slack app data connector to copy', async () => {
-      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'Slack App Connector');
-      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorToCopyName, 'Slack App Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create a copy of the slack app data connector', async () => {
-      await dataConnectorAdminPage.copyConnector('Slack App Connector', connectorToCopyName, connectorCopyName);
-      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DataConnectorTasks.createCopy('Slack App Connector', connectorToCopyName, connectorCopyName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the data connector was created successfully', async () => {
-      await expect(editSlackConnectorPage.generalTab.nameInput).toHaveValue(connectorCopyName);
+      await sysAdminActor
+        .browse()
+        .check(EditDataConnectorPageTargets.connectionTab.nameInput)
+        .hasValue(connectorCopyName);
     });
   });
 
-  test('Delete a Slack app connector', async ({ dataConnectorAdminPage, editSlackConnectorPage }) => {
+  test('Delete a Slack app connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-439',
     });
 
-    const connectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorName = FakeDataFactory.createFakeDataConnectorName();
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the data connector to delete', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'Slack App Connector');
-      await dataConnectorAdminPage.page.waitForURL(editSlackConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorName, 'Slack App Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Delete the data connector', async () => {
-      await dataConnectorAdminPage.deleteConnector(connectorName);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.delete(connectorName));
     });
 
     await test.step('Verify the data connector has been deleted', async () => {
-      const connectorRow = dataConnectorAdminPage.connectorsGrid.getByRole('row', { name: connectorName });
-
-      await expect(connectorRow).toBeHidden();
+      await sysAdminActor.browse().check(DataConnectorsPageTargets.rowByName(connectorName)).isHidden();
     });
   });
 });

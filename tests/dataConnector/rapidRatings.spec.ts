@@ -1,116 +1,108 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { DataConnectorAdminPage } from '../../pageObjectModels/dataConnectors/dataConnectorAdminPage';
-import { EditRapidRatingsConnectorPage } from '../../pageObjectModels/dataConnectors/editRapidRatingsConnectorPage';
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import {
+  DataConnectorsPageTargets,
+  DataConnectorTasks,
+  EditDataConnectorPageTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-
-type RapidRatingsDataConnectorTestFixtures = {
-  dataConnectorAdminPage: DataConnectorAdminPage;
-  editRapidRatingsConnectorPage: EditRapidRatingsConnectorPage;
-};
-
-const test = base.extend<RapidRatingsDataConnectorTestFixtures>({
-  dataConnectorAdminPage: async ({ sysAdminPage }, use) => await use(new DataConnectorAdminPage(sysAdminPage)),
-  editRapidRatingsConnectorPage: async ({ sysAdminPage }, use) =>
-    await use(new EditRapidRatingsConnectorPage(sysAdminPage)),
-});
 
 test.describe('rapid ratings data connector', () => {
   let connectorsToDelete: string[] = [];
 
-  test.afterEach(async ({ dataConnectorAdminPage }) => {
-    await dataConnectorAdminPage.deleteConnectors(connectorsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(DataConnectorTasks.deleteConnectors(connectorsToDelete));
     connectorsToDelete = [];
   });
 
-  test('Create a new RapidRatings connector', async ({ dataConnectorAdminPage, editRapidRatingsConnectorPage }) => {
+  test('Create a new RapidRatings connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-402',
     });
 
-    const connectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(connectorName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the rapid ratings data connector', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'RapidRatings Data Connector');
-      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorName, 'RapidRatings Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the data connector was created successfully', async () => {
-      await expect(editRapidRatingsConnectorPage.connectionTab.nameInput).toHaveValue(connectorName);
+      await sysAdminActor.browse().check(EditDataConnectorPageTargets.connectionTab.nameInput).hasValue(connectorName);
     });
   });
 
-  test('Create a copy of a RapidRatings connector', async ({
-    dataConnectorAdminPage,
-    editRapidRatingsConnectorPage,
-  }) => {
+  test('Create a copy of a RapidRatings connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-403',
     });
 
-    const connectorToCopyName = FakeDataFactory.createFakeConnectorName();
-    const connectorCopyName = FakeDataFactory.createFakeConnectorName();
+    const connectorToCopyName = FakeDataFactory.createFakeDataConnectorName();
+    const connectorCopyName = FakeDataFactory.createFakeDataConnectorName();
     connectorsToDelete.push(connectorToCopyName, connectorCopyName);
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the rapid ratings data connector to copy', async () => {
-      await dataConnectorAdminPage.createConnector(connectorToCopyName, 'RapidRatings Data Connector');
-      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorToCopyName, 'RapidRatings Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create a copy of the rapid ratings data connector', async () => {
-      await dataConnectorAdminPage.copyConnector('RapidRatings Data Connector', connectorToCopyName, connectorCopyName);
-      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DataConnectorTasks.createCopy('RapidRatings Data Connector', connectorToCopyName, connectorCopyName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Verify the data connector was created successfully', async () => {
-      await expect(editRapidRatingsConnectorPage.connectionTab.nameInput).toHaveValue(connectorCopyName);
+      await sysAdminActor
+        .browse()
+        .check(EditDataConnectorPageTargets.connectionTab.nameInput)
+        .hasValue(connectorCopyName);
     });
   });
 
-  test('Delete a RapidRatings connector', async ({ dataConnectorAdminPage, editRapidRatingsConnectorPage }) => {
+  test('Delete a RapidRatings connector', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-404',
     });
 
-    const connectorName = FakeDataFactory.createFakeConnectorName();
+    const connectorName = FakeDataFactory.createFakeDataConnectorName();
 
     await test.step('Navigate to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Create the data connector to delete', async () => {
-      await dataConnectorAdminPage.createConnector(connectorName, 'RapidRatings Data Connector');
-      await dataConnectorAdminPage.page.waitForURL(editRapidRatingsConnectorPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.create(connectorName, 'RapidRatings Data Connector'));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataConnectorPageTargets.pathRegex);
     });
 
     await test.step('Navigate back to the data connectors admin page', async () => {
-      await dataConnectorAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataConnectorTasks.goto());
     });
 
     await test.step('Delete the data connector', async () => {
-      await dataConnectorAdminPage.deleteConnector(connectorName);
+      await sysAdminActor.attemptsTo(DataConnectorTasks.delete(connectorName));
     });
 
     await test.step('Verify the data connector has been deleted', async () => {
-      const connectorRow = dataConnectorAdminPage.connectorsGrid.getByRole('row', { name: connectorName });
-
-      await expect(connectorRow).toBeHidden();
+      await sysAdminActor.browse().check(DataConnectorsPageTargets.rowByName(connectorName)).isHidden();
     });
   });
 });
