@@ -2,10 +2,10 @@ import { Page, Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 
-export interface ScrollKendoGridOptions {
+export type ScrollKendoGridOptions = {
   grid: Target;
   getListPagePath: string;
-}
+};
 
 const kendoGridTargets = {
   pagerInfo:

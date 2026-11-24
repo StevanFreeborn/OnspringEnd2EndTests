@@ -38,13 +38,13 @@ import {
   ReportPageTargets,
 } from './reports.targets.js';
 
-interface ReportDisplayConfigBody {
+type ReportDisplayConfigBody = {
   chartConfig: {
     chartConfigData: {
       dataset: { seriesName: string }[];
     };
   };
-}
+};
 
 async function fillAddReportDialog(actor: WebActor, report: Report, reportToCopy?: string): Promise<void> {
   if (reportToCopy !== undefined) {

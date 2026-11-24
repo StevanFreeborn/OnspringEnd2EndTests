@@ -4,10 +4,10 @@ import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { DashboardDesignerTargets, DashboardPageTargets } from './dashboards.targets.js';
 import { DashboardTasks } from './dashboards.tasks.js';
 
-export interface PrintedDashboardPdf {
+export type PrintedDashboardPdf = {
   fileName: string;
   body: Uint8Array;
-}
+};
 
 export const DashboardQuestions = {
   designerDashboardId:

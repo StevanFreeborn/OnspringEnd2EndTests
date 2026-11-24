@@ -2,14 +2,14 @@ import { Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Retry, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 
-export interface SelectReferenceGridRecordOptions {
+export type SelectReferenceGridRecordOptions = {
   gridTarget: Target;
   searchTerm: string;
   controlType?: 'checkbox' | 'radio';
   searchResultsContainer?: Target;
   searchPathRegex?: RegExp;
   filterPlaceholder?: string;
-}
+};
 
 const defaultSearchPathRegex = /\/Content\/[0-9]+\/[0-9]+\/EditReferenceSearchList/;
 const defaultSearchResultsContainer: Target = (page: Page) => page.locator('.grid-search-results:visible');

@@ -1,16 +1,16 @@
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 
-export interface SetAriaSwitchOptions {
+export type SetAriaSwitchOptions = {
   switchTarget: Target;
   toggleTarget: Target;
   enabled: boolean;
-}
+};
 
-export interface SetKendoSwitchOptions {
+export type SetKendoSwitchOptions = {
   switchTarget: Target;
   enabled: boolean;
-}
+};
 
 export const StatusSwitchTasks = {
   setAriaSwitch:

@@ -3,10 +3,10 @@ import { Question } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { ReportPageTargets } from './reports.targets.js';
 
-export interface PrintedReportPdf {
+export type PrintedReportPdf = {
   fileName: string;
   body: Uint8Array;
-}
+};
 
 export const ReportQuestions = {
   currentId:
