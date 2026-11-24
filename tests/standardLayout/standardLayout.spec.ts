@@ -1,40 +1,27 @@
-import { expect } from '@playwright/test';
-import { test as base } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createRoleFixture } from '../../fixtures/role.fixures';
-import { App } from '../../models/app';
-import { AppPermission, Permission, Role } from '../../models/role';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { App, AppPermission, Permission, Role } from '@stevanfreeborn/onspring-models';
+import { AppLayoutTabTargets, AppTasks } from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base, RoleFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type StandardLayoutTestFixtures = {
   app: App;
   role: Role;
-  appAdminPage: AppAdminPage;
 };
 
 const test = base.extend<StandardLayoutTestFixtures>({
-  app: app,
-  role: async ({ sysAdminPage, app }, use) => {
-    await createRoleFixture(
-      {
-        sysAdminPage,
-        roleStatus: 'Active',
-        appPermissions: [
-          new AppPermission({
-            appName: app.name,
-            contentRecords: new Permission({ read: true }),
-          }),
-        ],
-      },
-      use
-    );
-  },
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+  app: AppFixture.create().build(),
+  role: RoleFixture.create()
+    .withAppPermissions(({ app }) => [
+      new AppPermission({
+        appName: app!.name,
+        contentRecords: new Permission({ read: true }),
+      }),
+    ])
+    .build(),
 });
 
 test.describe('standard layout', () => {
-  test('Add a standard layout to an app', async ({ app, appAdminPage }) => {
+  test('Add a standard layout to an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-32',
@@ -42,24 +29,20 @@ test.describe('standard layout', () => {
 
     const layoutName = 'Standard Layout';
 
-    await test.step('Navigate to app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
-      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        AppTasks.addLayout(layoutName),
+        AppTasks.closeLayout()
+      );
     });
 
     await test.step('Verify the standard layout is added', async () => {
-      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
-
-      await expect(layoutRow).toBeVisible();
+      await sysAdminActor.browse().check(AppLayoutTabTargets.layoutRowByName(layoutName)).isVisible();
     });
   });
 
-  test('Update a standard layout of an app', async ({ app, appAdminPage }) => {
+  test('Update a standard layout of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-33',
@@ -68,32 +51,23 @@ test.describe('standard layout', () => {
     const layoutName = 'Standard Layout';
     const updatedLayoutName = 'Updated Standard Layout';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id), AppTasks.addLayout(layoutName));
     });
 
     await test.step('Update a standard layout', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.layoutNameInput.fill(
-        updatedLayoutName
+      await sysAdminActor.attemptsTo(
+        AppTasks.updateLayoutProperties({ name: updatedLayoutName }),
+        AppTasks.saveAndCloseLayout()
       );
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Verify the standard layout is updated', async () => {
-      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(updatedLayoutName);
-
-      await expect(layoutRow).toBeVisible();
+      await sysAdminActor.browse().check(AppLayoutTabTargets.layoutRowByName(updatedLayoutName)).isVisible();
     });
   });
 
-  test('Disable a standard layout of an app', async ({ app, appAdminPage }) => {
+  test('Disable a standard layout of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-35',
@@ -101,30 +75,26 @@ test.describe('standard layout', () => {
 
     const layoutName = 'Standard Layout';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id), AppTasks.addLayout(layoutName));
     });
 
     await test.step('Disable a standard layout', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.updateLayoutProperties({ enabled: false }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the standard layout is disabled', async () => {
-      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
-
-      await expect(layoutRow).toHaveText(/Disabled/);
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.layoutRowByName(layoutName))
+        .hasText(/Disabled/);
     });
   });
 
-  test('Enable a standard layout of an app', async ({ app, appAdminPage }) => {
+  test('Enable a standard layout of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-36',
@@ -132,39 +102,39 @@ test.describe('standard layout', () => {
 
     const layoutName = 'Standard Layout';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id), AppTasks.addLayout(layoutName));
     });
 
     await test.step('Disable a standard layout', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.updateLayoutProperties({ enabled: false }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Enable a standard layout', async () => {
-      await appAdminPage.layoutTab.openLayout(layoutName);
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.statusToggle.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(layoutName),
+        AppTasks.updateLayoutProperties({ enabled: true }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the standard layout is enabled', async () => {
-      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
-
-      await expect(layoutRow).not.toHaveText(/Disabled/);
-      await expect(layoutRow).toHaveText(/Enabled/);
+      const layoutRow = AppLayoutTabTargets.layoutRowByName(layoutName);
+      await sysAdminActor
+        .browse()
+        .check(layoutRow)
+        .doesNotHaveText(/Disabled/);
+      await sysAdminActor
+        .browse()
+        .check(layoutRow)
+        .hasText(/Enabled/);
     });
   });
 
-  test('Delete a standard layout of an app', async ({ app, appAdminPage }) => {
+  test('Delete a standard layout of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-37',
@@ -172,31 +142,24 @@ test.describe('standard layout', () => {
 
     const layoutName = 'Standard Layout';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
-      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        AppTasks.addLayout(layoutName),
+        AppTasks.closeLayout()
+      );
     });
-
-    const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
 
     await test.step('Delete a standard layout', async () => {
-      await layoutRow.hover();
-      await layoutRow.getByTitle('Delete Layout').click();
-      await appAdminPage.layoutTab.deleteLayoutDialog.deleteButton.click();
-      await appAdminPage.layoutTab.deleteLayoutDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.attemptsTo(AppTasks.deleteLayout(layoutName));
     });
 
     await test.step('Verify the standard layout is deleted', async () => {
-      await expect(layoutRow).toBeHidden();
+      await sysAdminActor.browse().check(AppLayoutTabTargets.layoutRowByName(layoutName)).isHidden();
     });
   });
 
-  test('Assign roles to a standard layout of an app', async ({ app, role, appAdminPage }) => {
+  test('Assign roles to a standard layout of an app', async ({ app, role, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-55',
@@ -204,32 +167,26 @@ test.describe('standard layout', () => {
 
     const layoutName = 'Standard Layout';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id), AppTasks.addLayout(layoutName));
     });
 
     await test.step('Assign roles to a standard layout', async () => {
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesLink.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.rolesDualPaneSelector.selectOption(
-        role.name
+      await sysAdminActor.attemptsTo(
+        AppTasks.updateLayoutProperties({ roleNames: [role.name] }),
+        AppTasks.saveAndCloseLayout()
       );
-      await appAdminPage.layoutTab.layoutDesignerModal.editLayoutPropertiesModal.applyButton.click();
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
     });
 
     await test.step('Verify the roles are assigned to the standard layout', async () => {
-      const layoutRow = appAdminPage.layoutTab.getLayoutRowByName(layoutName);
-
-      await expect(layoutRow).toHaveText(new RegExp(role.name, 'i'));
+      await sysAdminActor
+        .browse()
+        .check(AppLayoutTabTargets.layoutRowByName(layoutName))
+        .hasText(new RegExp(role.name, 'i'));
     });
   });
 
-  test('Make a copy of a standard layout', async ({ app, appAdminPage }) => {
+  test('Make a copy of a standard layout', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-864',
@@ -238,25 +195,20 @@ test.describe('standard layout', () => {
     const layoutName = 'Standard Layout';
     const copiedLayoutName = 'Standard Layout Copy';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standard layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayout(layoutName);
-      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        AppTasks.addLayout(layoutName),
+        AppTasks.closeLayout()
+      );
     });
 
     await test.step('Make a copy of a standard layout', async () => {
-      await appAdminPage.layoutTab.copyLayout(layoutName, copiedLayoutName);
-      await appAdminPage.layoutTab.layoutDesignerModal.closeLayout();
+      await sysAdminActor.attemptsTo(AppTasks.copyLayout(layoutName, copiedLayoutName), AppTasks.closeLayout());
     });
 
     await test.step('Verify the copy of the standard layout is created', async () => {
-      const copiedLayoutRow = appAdminPage.layoutTab.getLayoutRowByName(copiedLayoutName);
-
-      await expect(copiedLayoutRow).toBeVisible();
+      await sysAdminActor.browse().check(AppLayoutTabTargets.layoutRowByName(copiedLayoutName)).isVisible();
     });
   });
 });

@@ -1,24 +1,22 @@
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
+import { App } from '@stevanfreeborn/onspring-models';
+import { AppTasks, ContentQuestions, ContentRecordTargets, ContentTasks } from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type SectionTestFixtures = {
   app: App;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
 };
 
 const test = base.extend<SectionTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
+  app: AppFixture.create().build(),
 });
 
 test.describe('section', () => {
-  test("Add a section to an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test.beforeEach(async ({ sysAdminActor, app }) => {
+    await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
+  });
+
+  test("Add a section to an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-46',
@@ -28,42 +26,27 @@ test.describe('section', () => {
     const sectionName = 'New Section';
     const fieldName = 'Record Id';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a new section to the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: fieldName,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addLayoutSection({ tabName, sectionName }),
+        AppTasks.dragFieldOntoLayout({ tabName, sectionName, column: 0, row: 0, fieldName }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the section is added successfully', async () => {
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
 
-      const recordIdField = await addContentPage.form.getField({
-        tabName: tabName,
-        sectionName: sectionName,
-        fieldName: fieldName,
-        fieldType: 'AutoNumber',
-      });
-
-      await expect(recordIdField).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyTextFieldInSection(section, fieldName))
+        .isVisible();
     });
   });
 
-  test("Update a section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test("Update a section of an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-47',
@@ -71,75 +54,57 @@ test.describe('section', () => {
 
     const sectionName = 'Updated Section';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Update a section of the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.updateSectionName({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        newSectionName: sectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Record Id',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.updateLayoutSectionName({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          newSectionName: sectionName,
+        }),
+        AppTasks.dragFieldOntoLayout({
+          tabName: 'Tab 2',
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: 'Record Id',
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the section is updated successfully', async () => {
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName: 'Tab 2', sectionName }));
 
-      const recordIdField = await addContentPage.form.getField({
-        tabName: 'Tab 2',
-        sectionName: sectionName,
-        fieldName: 'Record Id',
-        fieldType: 'AutoNumber',
-      });
-
-      await expect(recordIdField).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.readOnlyTextFieldInSection(section, 'Record Id'))
+        .isVisible();
     });
   });
 
-  test("Delete a section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test("Delete a section of an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-48',
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Delete a section of the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.deleteSection({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.deleteLayoutSection({ tabName: 'Tab 2', sectionName: 'Section 1' }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the section is deleted successfully', async () => {
-      await addContentPage.goto(app.id);
-
-      const tabTwo = addContentPage.page.getByRole('tab', { name: 'Tab 2' });
-
-      await expect(tabTwo).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.browse().check(ContentRecordTargets.tabByName('Tab 2')).isHidden();
     });
   });
 
-  test("Add a standalone section to an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test("Add a standalone section to an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-49',
@@ -147,50 +112,36 @@ test.describe('section', () => {
 
     const sectionName = 'Standalone Section';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Add a standalone section to the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Record Id',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        sectionName: sectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Last Saved By',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          column: 0,
+          row: 0,
+          fieldName: 'Record Id',
+        }),
+        AppTasks.addLayoutSection({ sectionName }),
+        AppTasks.dragFieldOntoLayout({
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: 'Last Saved By',
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the standalone section is added successfully', async () => {
-      await addContentPage.goto(app.id);
-
-      const standAloneSection = addContentPage.page.locator('.section', {
-        has: addContentPage.page.getByRole('heading', { name: sectionName }),
-      });
-      const tabTwo = addContentPage.page.getByRole('tab', { name: 'Tab 2' });
-
-      await expect(standAloneSection).toBeVisible();
-      await expect(standAloneSection).toBeAbove(tabTwo);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      const standAloneSection = ContentRecordTargets.sectionByHeading(sectionName);
+      await sysAdminActor.browse().check(standAloneSection).isVisible();
+      await sysAdminActor.browse().check(standAloneSection).isAbove(ContentRecordTargets.tabByName('Tab 2'));
     });
   });
 
-  test("Update a standalone section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test("Update a standalone section of an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-50',
@@ -199,49 +150,30 @@ test.describe('section', () => {
     const sectionName = 'Standalone Section';
     const newSectionName = 'Updated Standalone Section';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Update a standalone section of the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        sectionName: sectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
-
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.updateSectionName({
-        sectionName: sectionName,
-        newSectionName: newSectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        sectionName: newSectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Record Id',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addLayoutSection({ sectionName }),
+        AppTasks.saveAndCloseLayout(),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.updateLayoutSectionName({ sectionName, newSectionName }),
+        AppTasks.dragFieldOntoLayout({
+          sectionName: newSectionName,
+          column: 0,
+          row: 0,
+          fieldName: 'Record Id',
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the standalone section is updated successfully', async () => {
-      await addContentPage.goto(app.id);
-
-      const updatedSection = addContentPage.page.locator('.section', {
-        has: addContentPage.page.getByRole('heading', { name: newSectionName }),
-      });
-
-      await expect(updatedSection).toBeVisible();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.browse().check(ContentRecordTargets.sectionByHeading(newSectionName)).isVisible();
     });
   });
 
-  test("Delete a standalone section of an app's layout", async ({ app, appAdminPage, addContentPage }) => {
+  test("Delete a standalone section of an app's layout", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-51',
@@ -249,47 +181,31 @@ test.describe('section', () => {
 
     const sectionName = 'Standalone Section';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Delete a standalone section of the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: 'Tab 2',
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Record Id',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        sectionName: sectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
-
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.deleteSection({
-        sectionName: sectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName: 'Tab 2',
+          sectionName: 'Section 1',
+          column: 0,
+          row: 0,
+          fieldName: 'Record Id',
+        }),
+        AppTasks.addLayoutSection({ sectionName }),
+        AppTasks.saveAndCloseLayout(),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.deleteLayoutSection({ sectionName }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the standalone section is deleted successfully', async () => {
-      await addContentPage.goto(app.id);
-
-      const standAloneSectionContainer = addContentPage.page.locator('.standalone-section-container');
-
-      await expect(standAloneSectionContainer).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      await sysAdminActor.browse().check(ContentRecordTargets.standaloneSectionContainer).isHidden();
     });
   });
 
-  test('Rearrange the sections of an app’s layout', async ({ app, appAdminPage, addContentPage }) => {
+  test('Rearrange the sections of an app’s layout', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-52',
@@ -299,53 +215,41 @@ test.describe('section', () => {
     const sectionOneName = 'Section 1';
     const rearrangedSectionName = 'Rearranged Section';
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Rearrange the sections of the app layout', async () => {
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionOneName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Record Id',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        tabName: tabName,
-        sectionName: rearrangedSectionName,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: rearrangedSectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: 'Last Saved By',
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragSection({
-        tabName: tabName,
-        sectionName: sectionOneName,
-        placementIndex: 0,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName: sectionOneName,
+          column: 0,
+          row: 0,
+          fieldName: 'Record Id',
+        }),
+        AppTasks.addLayoutSection({ tabName, sectionName: rearrangedSectionName }),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName: rearrangedSectionName,
+          column: 0,
+          row: 0,
+          fieldName: 'Last Saved By',
+        }),
+        AppTasks.dragLayoutSection({
+          tabName,
+          sectionName: sectionOneName,
+          placementIndex: 0,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Verify the sections are rearranged successfully', async () => {
-      await addContentPage.goto(app.id);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id));
+      const sectionOne = ContentRecordTargets.sectionHeading(sectionOneName);
+      const rearrangedSection = ContentRecordTargets.sectionHeading(rearrangedSectionName);
 
-      const sectionOne = addContentPage.page.getByRole('heading', { name: sectionOneName });
-      const rearrangedSection = addContentPage.page.getByRole('heading', { name: rearrangedSectionName });
-
-      await expect(sectionOne).toBeVisible();
-      await expect(rearrangedSection).toBeVisible();
-      await expect(sectionOne).toBeAbove(rearrangedSection);
+      await sysAdminActor.browse().check(sectionOne).isVisible();
+      await sysAdminActor.browse().check(rearrangedSection).isVisible();
+      await sysAdminActor.browse().check(sectionOne).isAbove(rearrangedSection);
     });
   });
 });
