@@ -160,6 +160,7 @@ export { DataConnectorFixture, DataConnectorFixtureBuilder } from './dataConnect
 export type { DataConnectorFixtureData } from './dataConnector.fixtures';
 export { DataImportFixture, DataImportFixtureBuilder, dataImport } from './dataImport.fixtures';
 export type { DataImportFixtureData } from './dataImport.fixtures';
+export { SurveyFixture, SurveyFixtureBuilder, createSurveyWithActor } from './survey.fixtures';
 export { ReportFixture, ReportFixtureBuilder } from './report.fixtures';
 
 export * from '@playwright/test';
