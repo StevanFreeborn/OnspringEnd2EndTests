@@ -38,8 +38,11 @@ export class RoleFixtureBuilder {
       });
 
       await sysAdminActor.attemptsTo(RoleTasks.create(role));
-      await use(role);
-      await sysAdminActor.attemptsTo(RoleTasks.deleteRoles([role.name]));
+      try {
+        await use(role);
+      } finally {
+        await sysAdminActor.attemptsTo(RoleTasks.deleteRoles([role.name]));
+      }
     };
   }
 }
