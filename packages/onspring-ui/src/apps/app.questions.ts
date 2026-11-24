@@ -46,6 +46,21 @@ async function resolveClampedLayoutDropzone(
   return AppLayoutTabTargets.designer.dropzoneInSectionAt(sectionTarget, column, row);
 }
 
+async function resolveDesignerTabId(actor: WebActor, tabName: string): Promise<string> {
+  const designer = AppLayoutTabTargets.designer;
+  const tabButton = designer.canvasTabButton(tabName);
+  const tabClasses = await actor.browse().getAttribute(tabButton, 'class');
+  if (!tabClasses?.includes('k-state-active')) {
+    await actor.browse().click(designer.canvasTabText(tabName));
+  }
+
+  const tabId = await actor.browse().getAttribute(tabButton, 'data-canvas-tab');
+  if (tabId === null) {
+    throw new Error(`Layout designer tab "${tabName}" did not expose a data-canvas-tab attribute.`);
+  }
+  return tabId;
+}
+
 export const AppQuestions = {
   downloadedFieldsAndObjectsExportFromEmailHtml:
     (html: string): Question<WebActor, Download> =>
@@ -54,30 +69,42 @@ export const AppQuestions = {
       return actor.browse().clickAndWaitForDownload(AppLayoutTabTargets.exportEmailDownloadLink);
     },
 
+  layoutDesignerTabOrientation:
+    (): Question<WebActor, 'horizontal' | 'vertical'> =>
+    async (actor: WebActor): Promise<'horizontal' | 'vertical'> => {
+      const orientation = await actor.browse().getText(AppLayoutTabTargets.designer.tabOrientationSelected);
+      if (!orientation) {
+        throw new Error('Layout designer tab orientation was not found.');
+      }
+      return orientation.toLowerCase() === 'horizontal' ? 'horizontal' : 'vertical';
+    },
+
+  layoutDesignerTabId:
+    (tabName: string): Question<WebActor, string> =>
+    async (actor: WebActor): Promise<string> =>
+      resolveDesignerTabId(actor, tabName),
+
+  layoutDesignerSection:
+    ({ tabName, sectionName }: { tabName?: string; sectionName: string }): Question<WebActor, Target> =>
+    async (actor: WebActor): Promise<Target> => {
+      const designer = AppLayoutTabTargets.designer;
+
+      if (tabName === undefined) {
+        return designer.standaloneSectionByName(sectionName);
+      }
+
+      if (!(await actor.browse().isVisible(designer.canvasTabStrip))) {
+        return designer.canvasSectionByName(sectionName);
+      }
+
+      const tabId = await resolveDesignerTabId(actor, tabName);
+      return designer.canvasSectionInTab(tabId, sectionName);
+    },
+
   layoutDropzone:
     ({ tabName, sectionName, column, row }: LayoutDropzoneLocation): Question<WebActor, Target> =>
     async (actor: WebActor): Promise<Target> => {
-      const designer = AppLayoutTabTargets.designer;
-      let sectionTarget: Target;
-
-      if (tabName === undefined) {
-        sectionTarget = designer.standaloneSectionByName(sectionName);
-      } else if (!(await actor.browse().isVisible(designer.canvasTabStrip))) {
-        sectionTarget = designer.canvasSectionByName(sectionName);
-      } else {
-        const tabButton = designer.canvasTabButton(tabName);
-        const tabClasses = await actor.browse().getAttribute(tabButton, 'class');
-        if (!tabClasses?.includes('k-state-active')) {
-          await actor.browse().click(designer.canvasTabText(tabName));
-        }
-
-        const tabId = await actor.browse().getAttribute(tabButton, 'data-canvas-tab');
-        if (tabId === null) {
-          throw new Error(`Layout designer tab "${tabName}" did not expose a data-canvas-tab attribute.`);
-        }
-        sectionTarget = designer.canvasSectionInTab(tabId, sectionName);
-      }
-
+      const sectionTarget = await actor.asks(AppQuestions.layoutDesignerSection({ tabName, sectionName }));
       return resolveClampedLayoutDropzone(actor, sectionTarget, column, row);
     },
 };

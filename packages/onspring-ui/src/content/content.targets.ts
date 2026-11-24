@@ -36,11 +36,26 @@ const createRecordDialog = (page: Page): Locator =>
     .first();
 
 export const ContentRecordTargets = {
+  appContentRoute: (appId: number) => `/Content/${appId}/App`,
   addRoute: (appId: number) => `/Content/${appId}/Add`,
   viewRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/View`,
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
   appContentPathRegex: /\/Content\/\d+\/App/,
+  quickContentAddForm: (page: Page): Locator => page.locator('form', { hasText: 'Quick Content Add' }),
+  tabByName:
+    (tabName: string): Target =>
+    (page: Page): Locator =>
+      page.getByRole('tab', { name: tabName }),
+  sectionByHeading:
+    (sectionName: string): Target =>
+    (page: Page): Locator =>
+      page.locator('.section', { has: page.getByRole('heading', { name: sectionName }) }),
+  sectionHeading:
+    (sectionName: string): Target =>
+    (page: Page): Locator =>
+      page.getByRole('heading', { name: sectionName }),
+  standaloneSectionContainer: (page: Page): Locator => page.locator('.standalone-section-container'),
   saveAttachmentPathRegex: /\/Content\/(\d+\/)?\d+\/SaveAttachments/,
   saveImagePathRegex: /\/Content\/(\d+\/)?\d+\/SaveImages/,
   fileUploadErrorDialog: (page: Page): Locator => page.getByRole('dialog', { name: 'File Upload Error' }),

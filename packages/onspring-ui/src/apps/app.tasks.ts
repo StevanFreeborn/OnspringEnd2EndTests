@@ -1,10 +1,11 @@
 import { Response } from '@playwright/test';
 import { LayoutItem, TextField } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
-import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
+import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { FieldTasks } from '../fields/fields.tasks.js';
 import { AppQuestions } from './app.questions.js';
@@ -24,6 +25,67 @@ import {
   LayoutDropzoneLocation,
   OptionTargets,
 } from './apps.targets.js';
+
+export type UpdateLayoutPropertiesOptions = {
+  name?: string;
+  enabled?: boolean;
+  roleNames?: string[];
+};
+
+async function ensureDesignerItemsTab(actor: WebActor, tab: 'fields' | 'objects'): Promise<void> {
+  const designer = AppLayoutTabTargets.designer;
+  if (tab === 'fields' && (await actor.browse().isVisible(designer.addObjectButton))) {
+    await actor.browse().click(designer.fieldsTabButton);
+    return;
+  }
+
+  if (tab === 'objects' && (await actor.browse().isVisible(designer.addFieldButton))) {
+    await actor.browse().click(designer.objectsTabButton);
+  }
+}
+
+async function resolveClampedIndex(actor: WebActor, dropzones: Target, desiredIndex?: number): Promise<number> {
+  const count = await actor.browse().count(dropzones);
+  if (count === 0) {
+    throw new Error('No layout dropzones were found.');
+  }
+  return desiredIndex === undefined ? count - 1 : Math.min(Math.max(desiredIndex, 0), count - 1);
+}
+
+async function resolveHorizontalTabDropzone(actor: WebActor, index?: number): Promise<Target> {
+  const designer = AppLayoutTabTargets.designer;
+  const clampedIndex = await resolveClampedIndex(actor, designer.canvasTabDropzones, index);
+  return designer.canvasTabDropzoneAt(clampedIndex);
+}
+
+async function resolveLayoutSectionDropzone(
+  actor: WebActor,
+  tabName?: string,
+  placementIndex?: number
+): Promise<{ dropzone: Target; hoveredDropzone: Target }> {
+  const designer = AppLayoutTabTargets.designer;
+  if (tabName === undefined) {
+    const clampedIndex = await resolveClampedIndex(actor, designer.standaloneSectionDropzones, placementIndex);
+    return {
+      dropzone: designer.standaloneSectionDropzoneAt(clampedIndex),
+      hoveredDropzone: designer.hoveredStandaloneSectionDropzone,
+    };
+  }
+
+  const tabId = await actor.asks(AppQuestions.layoutDesignerTabId(tabName));
+  const clampedIndex = await resolveClampedIndex(actor, designer.sectionDropzonesInTab(tabId), placementIndex);
+  return {
+    dropzone: designer.sectionDropzoneInTabAt(tabId, clampedIndex),
+    hoveredDropzone: designer.hoveredSectionDropzone,
+  };
+}
+
+async function ensureHorizontalOrientation(actor: WebActor): Promise<void> {
+  const orientation = await actor.asks(AppQuestions.layoutDesignerTabOrientation());
+  if (orientation !== 'horizontal') {
+    throw new Error('Support for vertical tabs is not implemented yet');
+  }
+}
 
 export const AppTasks = {
   goto:
@@ -381,14 +443,15 @@ export const AppTasks = {
       fieldName: string;
     }): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      const designer = AppLayoutTabTargets.designer;
-
-      if (await actor.browse().isVisible(designer.addObjectButton)) {
-        await actor.browse().click(designer.fieldsTabButton);
-      }
-
+      await ensureDesignerItemsTab(actor, 'fields');
       const dropzone = await actor.asks(AppQuestions.layoutDropzone({ tabName, sectionName, column, row }));
-      await actor.browse().dragWithMouse(designer.fieldFromBank(fieldName), dropzone, designer.dropLocation);
+      await actor
+        .browse()
+        .dragWithMouse(
+          AppLayoutTabTargets.designer.fieldFromBank(fieldName),
+          dropzone,
+          AppLayoutTabTargets.designer.dropLocation
+        );
     },
 
   removeFieldFromLayout:
@@ -397,6 +460,219 @@ export const AppTasks = {
       const dropzone = await actor.asks(AppQuestions.layoutDropzone(location));
       await actor.browse().hover(dropzone);
       await actor.browse().click(AppLayoutTabTargets.designer.removeFieldFromDropzoneButton(dropzone));
+    },
+
+  addLayout:
+    (layoutName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (!(await actor.browse().isVisible(AppLayoutTabTargets.layoutsGrid))) {
+        await actor.browse().click(AppDetailTargets.layoutTabButton);
+        await actor.browse().waitForState(AppLayoutTabTargets.layoutsGrid, 'visible');
+      }
+
+      await actor.browse().click(AppLayoutTabTargets.addLayoutLink);
+      await actor.browse().fill(CreateDialogTargets.nameInput, layoutName);
+      await actor.browse().click(CreateDialogTargets.saveButton);
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.dialog, 'visible');
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.editLayoutPropertiesLink, 'visible');
+    },
+
+  copyLayout:
+    (layoutName: string, copiedLayoutName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const row = AppLayoutTabTargets.layoutRowByName(layoutName);
+      await actor.browse().hover(row);
+      await actor.browse().click(AppLayoutTabTargets.copyLayoutButtonInRow(layoutName));
+      await actor.browse().fill(AppLayoutTabTargets.copyLayoutDialog.layoutNameInput, copiedLayoutName);
+      await actor.browse().click(AppLayoutTabTargets.copyLayoutDialog.copyButton);
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.dialog, 'visible');
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.editLayoutPropertiesLink, 'visible');
+    },
+
+  deleteLayout:
+    (layoutName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const row = AppLayoutTabTargets.layoutRowByName(layoutName);
+      await actor.browse().hover(row);
+      await actor.browse().click(AppLayoutTabTargets.deleteLayoutButtonInRow(layoutName));
+      await actor.browse().click(DeleteDialogTargets.deleteButton);
+      await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
+      await actor.browse().waitForDetached(DeleteDialogTargets.overlay);
+    },
+
+  updateLayoutProperties:
+    ({ name, enabled, roleNames }: UpdateLayoutPropertiesOptions): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      const modal = designer.editPropertiesModal;
+
+      await actor.browse().click(designer.editLayoutPropertiesLink);
+      await actor.browse().waitForState(modal.modal, 'visible');
+
+      if (name !== undefined) {
+        await actor.browse().fill(modal.nameInput, name);
+      }
+
+      if (enabled !== undefined) {
+        await actor.attemptsTo(
+          StatusSwitchTasks.setAriaSwitch({
+            switchTarget: modal.statusSwitch,
+            toggleTarget: modal.statusToggle,
+            enabled,
+          })
+        );
+      }
+
+      if (roleNames && roleNames.length > 0) {
+        await actor.attemptsTo(DualPaneSelector.selectOptions(modal.rolesSelector, roleNames, designer.frame));
+      }
+
+      await actor.browse().click(modal.applyButton);
+      await actor.browse().waitForState(modal.modal, 'hidden');
+    },
+
+  addLayoutTab:
+    ({ name, index }: { name: string; index?: number }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      await ensureHorizontalOrientation(actor);
+      await ensureDesignerItemsTab(actor, 'objects');
+
+      const dropzone = await resolveHorizontalTabDropzone(actor, index);
+      await actor.browse().dragWithMouse(designer.objectFromBank('New Tab'), dropzone, designer.hoveredTabDropzone);
+      await actor.browse().fill(designer.nameEditor.input, name);
+      await actor.browse().click(designer.nameEditor.applyButton);
+    },
+
+  updateLayoutTabName:
+    ({ currentName, newName }: { currentName: string; newName: string }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      await actor.browse().hover(designer.canvasTabButton(currentName));
+      await actor.browse().click(designer.editTabNameButton(currentName));
+      await actor.browse().fill(designer.nameEditor.input, newName);
+      await actor.browse().click(designer.nameEditor.applyButton);
+    },
+
+  deleteLayoutTab:
+    (tabName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      await actor.browse().click(designer.configureTabSetLink);
+      await actor.browse().click(designer.configureTabSetModal.deleteTabButton(tabName));
+      await actor.browse().click(designer.configureTabSetModal.applyButton);
+    },
+
+  dragLayoutTab:
+    ({ tabName, index }: { tabName: string; index: number }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      await ensureHorizontalOrientation(actor);
+
+      await actor.browse().hover(designer.canvasTabButton(tabName));
+      await actor.browse().mouseDown();
+      await actor.browse().moveMouse(0, 0);
+      const dropzone = await resolveHorizontalTabDropzone(actor, index);
+      await actor.browse().hover(dropzone);
+      await actor.browse().waitForState(designer.hoveredTabDropzone, 'visible');
+      await actor.browse().mouseUp();
+    },
+
+  addLayoutSection:
+    ({
+      tabName,
+      sectionName,
+      placementIndex,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      placementIndex?: number;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      await ensureDesignerItemsTab(actor, 'objects');
+
+      const { dropzone, hoveredDropzone } = await resolveLayoutSectionDropzone(actor, tabName, placementIndex);
+      await actor.browse().dragWithMouse(designer.objectFromBank('New Section'), dropzone, hoveredDropzone);
+
+      const initialSectionName = (await actor.browse().inputValue(designer.nameEditor.input)).trim();
+      await actor.attemptsTo(
+        AppTasks.updateLayoutSectionName({ tabName, sectionName: initialSectionName, newSectionName: sectionName })
+      );
+    },
+
+  updateLayoutSectionName:
+    ({
+      tabName,
+      sectionName,
+      newSectionName,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      newSectionName: string;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      if (await actor.browse().isVisible(designer.nameEditor.container)) {
+        await actor.browse().click(designer.nameEditor.applyButton);
+      }
+
+      const section = await actor.asks(AppQuestions.layoutDesignerSection({ tabName, sectionName }));
+      await actor.browse().hover(designer.sectionHeading(section));
+      await actor.browse().click(designer.editSectionNameButton(section));
+      await actor.browse().fill(designer.nameEditor.input, newSectionName);
+      await actor.browse().click(designer.nameEditor.applyButton);
+    },
+
+  updateLayoutSectionColumnCount:
+    ({
+      tabName,
+      sectionName,
+      columnCount,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      columnCount: number;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (columnCount < 1 || columnCount > 12) {
+        throw new Error('Column count must be between 1 and 12');
+      }
+
+      const designer = AppLayoutTabTargets.designer;
+      const section = await actor.asks(AppQuestions.layoutDesignerSection({ tabName, sectionName }));
+      await actor.browse().click(designer.sectionColumnsListbox(section));
+      await actor.browse().click(designer.sectionColumnOption(columnCount));
+    },
+
+  deleteLayoutSection:
+    ({ tabName, sectionName }: { tabName?: string; sectionName: string }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      const section = await actor.asks(AppQuestions.layoutDesignerSection({ tabName, sectionName }));
+      await actor.browse().click(designer.sectionDeleteLink(section));
+
+      if (await actor.browse().isVisibleWithin(designer.deleteSectionDialog, 2000)) {
+        await actor.browse().click(designer.deleteSectionConfirmButton);
+        await actor.browse().waitForState(designer.deleteSectionDialog, 'hidden');
+      }
+    },
+
+  dragLayoutSection:
+    ({
+      tabName,
+      sectionName,
+      placementIndex,
+    }: {
+      tabName?: string;
+      sectionName: string;
+      placementIndex: number;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const designer = AppLayoutTabTargets.designer;
+      const section = await actor.asks(AppQuestions.layoutDesignerSection({ tabName, sectionName }));
+      const { dropzone, hoveredDropzone } = await resolveLayoutSectionDropzone(actor, tabName, placementIndex);
+      await actor.browse().dragWithMouse(designer.sectionHandle(section), dropzone, hoveredDropzone);
     },
 
   saveLayout:

@@ -219,11 +219,21 @@ export const AppMessagingTabTargets = {
     page.locator('#grid-slack-messages').getByRole('row', { name }).getByTitle('Edit Slack Message'),
 };
 
+const layoutsGrid = (page: Page) => page.locator('#grid-layouts').first();
+const copyLayoutDialog = (page: Page) => page.getByRole('dialog', { name: 'Copy Layout' });
 const layoutDesignerDialog = (page: Page) => page.getByRole('dialog').first();
 const layoutDesignerFrame = (page: Page) => layoutDesignerDialog(page).frameLocator('iframe').first();
+const layoutDesignerCanvas = (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first();
+const editLayoutPropertiesModal = (page: Page) => layoutDesignerFrame(page).locator('#editLayoutPropertiesPopover');
+const deleteSectionDialog = (page: Page) => page.getByRole('dialog', { name: 'Delete Section' });
+
+const designerTabButton =
+  (tabName: string): Target =>
+  (page: Page) =>
+    layoutDesignerCanvas(page).locator('.k-tabstrip-items').locator('div.k-item').filter({ hasText: tabName }).first();
 
 export const AppLayoutTabTargets = {
-  layoutsGrid: (page: Page) => page.locator('#grid-layouts').first(),
+  layoutsGrid,
   fieldsAndObjectsGrid: (page: Page) => page.locator('#grid-layout-items').first(),
   fieldsAndObjectsGridRows: (page: Page) => page.locator('#grid-layout-items').first().locator('.k-grid-content tr'),
   fieldOrObjectRowByName:
@@ -234,15 +244,34 @@ export const AppLayoutTabTargets = {
   filterFieldsInput: (page: Page) => page.getByPlaceholder('Filter Fields'),
   exportFieldsAndObjectsReportButton: (page: Page) => page.locator('#export-layout-items'),
   exportEmailDownloadLink: (page: Page) => page.getByRole('link', { name: 'Download the export file' }),
+  addLayoutLink: (page: Page) => page.getByRole('link', { name: 'Add Layout' }),
   layoutRowByName:
     (name: string): Target =>
     (page: Page) =>
-      page.locator('#grid-layouts').first().getByRole('row', { name }).first(),
+      layoutsGrid(page).getByRole('row', { name }).first(),
+  copyLayoutButtonInRow:
+    (name: string): Target =>
+    (page: Page) =>
+      layoutsGrid(page).getByRole('row', { name }).first().getByTitle('Copy Layout'),
+  deleteLayoutButtonInRow:
+    (name: string): Target =>
+    (page: Page) =>
+      layoutsGrid(page).getByRole('row', { name }).first().getByTitle('Delete Layout'),
+  copyLayoutDialog: {
+    dialog: copyLayoutDialog,
+    layoutNameInput: (page: Page) => copyLayoutDialog(page).getByLabel('Layout Name'),
+    copyButton: (page: Page) => copyLayoutDialog(page).getByRole('button', { name: 'Copy' }),
+  },
   getLayoutDesignPathRegex: /\/Admin\/App\/Layout\/\d+\/Design/,
   saveLayoutPathRegex: /\/Admin\/App\/\d+\/Layout\/\d+\/Save/,
 
   designer: {
     dialog: layoutDesignerDialog,
+    frame: layoutDesignerFrame,
+    editLayoutPropertiesLink: (page: Page) =>
+      layoutDesignerFrame(page).getByRole('link', { name: 'Edit Layout Properties' }),
+    configureTabSetLink: (page: Page) => layoutDesignerFrame(page).getByRole('link', { name: 'Configure Tab Set' }),
+    tabOrientationSelected: (page: Page) => layoutDesignerFrame(page).locator('#canvas-orientation .selected'),
     fieldsTabButton: (page: Page) =>
       layoutDesignerFrame(page).locator('.item-container').first().locator('#tabstrip-container').getByText('Fields'),
     objectsTabButton: (page: Page) =>
@@ -261,57 +290,113 @@ export const AppLayoutTabTargets = {
           .locator('div.layoutItem')
           .filter({ hasText: fieldName })
           .first(),
-    canvasSection: (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first(),
-    canvasTabStrip: (page: Page) =>
-      layoutDesignerFrame(page).locator('.canvas-section').first().locator('.k-tabstrip-items'),
-    canvasTabButton:
-      (tabName: string): Target =>
+    objectFromBank:
+      (objectName: string): Target =>
       (page: Page) =>
         layoutDesignerFrame(page)
-          .locator('.canvas-section')
-          .first()
-          .locator('.k-tabstrip-items')
-          .locator('div.k-item')
-          .filter({ hasText: tabName })
+          .locator('[data-tab-content="object"]')
+          .locator('div.layoutItem')
+          .filter({ hasText: objectName })
           .first(),
+    canvasSection: layoutDesignerCanvas,
+    canvasTabStrip: (page: Page) => layoutDesignerCanvas(page).locator('.k-tabstrip-items'),
+    canvasTabButton: designerTabButton,
+    editTabNameButton:
+      (tabName: string): Target =>
+      (page: Page) =>
+        resolveTarget(page, designerTabButton(tabName)).locator('[title="Edit Tab Name"]'),
     canvasTabText:
       (tabName: string): Target =>
       (page: Page) =>
-        layoutDesignerFrame(page)
-          .locator('.canvas-section')
-          .first()
-          .locator('.k-tabstrip-items')
-          .getByText(tabName)
-          .first(),
+        layoutDesignerCanvas(page).locator('.k-tabstrip-items').getByText(tabName).first(),
+    canvasTabDropzones: (page: Page) => layoutDesignerCanvas(page).locator('.k-tabstrip-items').locator('.tabDropArea'),
+    canvasTabDropzoneAt:
+      (index: number): Target =>
+      (page: Page) =>
+        layoutDesignerCanvas(page).locator('.k-tabstrip-items').locator('.tabDropArea').nth(index),
+    hoveredTabDropzone: (page: Page) => layoutDesignerCanvas(page).locator('.tabDropArea.ui-droppable-hover'),
+    standaloneSectionDropzones: (page: Page) => layoutDesignerCanvas(page).locator('.standaloneSectionDropArea'),
+    standaloneSectionDropzoneAt:
+      (index: number): Target =>
+      (page: Page) =>
+        layoutDesignerCanvas(page).locator('.standaloneSectionDropArea').nth(index),
+    hoveredStandaloneSectionDropzone: (page: Page) =>
+      layoutDesignerCanvas(page).locator('.standaloneSectionDropArea.ui-droppable-hover'),
+    sectionDropzonesInTab:
+      (tabId: string): Target =>
+      (page: Page) =>
+        layoutDesignerCanvas(page).locator(`[data-tab-body="${tabId}"]`).first().locator('.sectionDropArea'),
+    sectionDropzoneInTabAt:
+      (tabId: string, index: number): Target =>
+      (page: Page) =>
+        layoutDesignerCanvas(page).locator(`[data-tab-body="${tabId}"]`).first().locator('.sectionDropArea').nth(index),
+    hoveredSectionDropzone: (page: Page) => layoutDesignerCanvas(page).locator('.sectionDropArea.ui-droppable-hover'),
     standaloneSectionByName:
       (sectionName: string): Target =>
       (page: Page) =>
-        layoutDesignerFrame(page)
-          .locator('.canvas-section')
-          .first()
-          .locator('.mainContainer > .section')
-          .filter({ hasText: sectionName })
-          .first(),
+        layoutDesignerCanvas(page).locator('.mainContainer > .section').filter({ hasText: sectionName }).first(),
     canvasSectionByName:
       (sectionName: string): Target =>
       (page: Page) =>
-        layoutDesignerFrame(page)
-          .locator('.canvas-section')
-          .first()
-          .locator('section.section')
-          .filter({ hasText: sectionName })
-          .first(),
+        layoutDesignerCanvas(page).locator('section.section').filter({ hasText: sectionName }).first(),
     canvasSectionInTab:
       (tabId: string, sectionName: string): Target =>
       (page: Page) =>
-        layoutDesignerFrame(page)
-          .locator('.canvas-section')
-          .first()
+        layoutDesignerCanvas(page)
           .locator(`[data-tab-body="${tabId}"]`)
           .first()
           .locator('section')
           .filter({ hasText: sectionName })
           .first(),
+    sectionHandle:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).locator('[data-section-header]'),
+    sectionHeading:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).locator('h1'),
+    editSectionNameButton:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).getByTitle('Edit Section Name'),
+    sectionColumnsListbox:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).locator('#columns-container').getByRole('listbox'),
+    sectionColumnOption:
+      (columnCount: number): Target =>
+      (page: Page) =>
+        layoutDesignerFrame(page).getByRole('option', { name: columnCount.toString() }),
+    sectionDeleteLink:
+      (sectionTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, sectionTarget).getByRole('link', { name: 'Delete' }),
+    deleteSectionDialog,
+    deleteSectionConfirmButton: (page: Page) => deleteSectionDialog(page).getByRole('button', { name: 'Delete' }),
+    nameEditor: {
+      container: (page: Page) => layoutDesignerFrame(page).locator('#name-editor'),
+      input: (page: Page) => layoutDesignerFrame(page).locator('#name-editor input'),
+      applyButton: (page: Page) => layoutDesignerFrame(page).locator('#name-editor').getByTitle('Apply'),
+    },
+    editPropertiesModal: {
+      modal: editLayoutPropertiesModal,
+      nameInput: (page: Page) => editLayoutPropertiesModal(page).getByLabel('Name'),
+      rolesSelector: (page: Page) =>
+        editLayoutPropertiesModal(page).locator('.label:has-text("Role Permissions") + .data .onx-selector'),
+      statusSwitch: (page: Page) => editLayoutPropertiesModal(page).getByRole('switch', { name: 'Status' }),
+      statusToggle: (page: Page) =>
+        editLayoutPropertiesModal(page).getByRole('switch', { name: 'Status' }).locator('span').nth(3),
+      applyButton: (page: Page) => editLayoutPropertiesModal(page).getByRole('link', { name: 'Apply' }),
+      cancelButton: (page: Page) => editLayoutPropertiesModal(page).getByRole('link', { name: 'Cancel' }),
+    },
+    configureTabSetModal: {
+      deleteTabButton:
+        (tabName: string): Target =>
+        (page: Page) =>
+          layoutDesignerFrame(page).locator('.grid').getByRole('row', { name: tabName }).locator('[data-delete]'),
+      applyButton: (page: Page) => layoutDesignerFrame(page).getByRole('link', { name: 'Apply' }),
+    },
     renderedItemsInSection:
       (sectionTarget: Target): Target =>
       (page: Page) =>
@@ -326,7 +411,7 @@ export const AppLayoutTabTargets = {
       (dropzoneTarget: Target): Target =>
       (page: Page) =>
         resolveTarget(page, dropzoneTarget).getByTitle('Remove Field from Layout'),
-    dropLocation: (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first().locator('#dropLocation'),
+    dropLocation: (page: Page) => layoutDesignerCanvas(page).locator('#dropLocation'),
     saveButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save', exact: true }),
     saveAndCloseButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save & Close' }),
     closeButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Close' }),

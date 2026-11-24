@@ -7,6 +7,12 @@ import { ContentQuestions } from './content.questions.js';
 import { ContentFieldLocation, ContentRecordTargets } from './content.targets.js';
 
 export const ContentTasks = {
+  gotoAppContent:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(ContentRecordTargets.appContentRoute(appId));
+    },
+
   gotoAdd:
     (appId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
