@@ -1,54 +1,40 @@
 import fs from 'fs';
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
+import {
+  App,
+  DateField,
+  FakeDataFactory,
+  LayoutItem,
+  ListField,
+  ListValue,
+  NumberField,
+  TextField,
+  TimeSpanField,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentTasks,
+  DataImportsPageTargets,
+  DataImportTasks,
+  EditDataImportPageTargets,
+} from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base, expect } from '../../fixtures';
 import { writeCsvFile } from '../../fixtures/file.fixtures';
-import { App } from '../../models/app';
-import { DateField } from '../../models/dateField';
-import { LayoutItem } from '../../models/layoutItem';
-import { ListField } from '../../models/listField';
-import { ListValue } from '../../models/listValue';
-import { NumberField } from '../../models/numberField';
-import { TextField } from '../../models/textField';
-import { TimeSpanField } from '../../models/timeSpanField';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { ViewContentPage } from '../../pageObjectModels/content/viewContentPage';
-import { DataImportsAdminPage } from '../../pageObjectModels/dataImports/dataImportsAdminPage';
-import { EditDataImportPage } from '../../pageObjectModels/dataImports/editDataImportPage';
 import { AnnotationType } from '../annotations';
 
 type DataImportTestFixtures = {
-  adminHomePage: AdminHomePage;
-  editDataImportPage: EditDataImportPage;
-  dataImportsAdminPage: DataImportsAdminPage;
   targetApp: App;
-  createDataImportFile: () => Promise<string>;
 };
 
 const test = base.extend<DataImportTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    await use(adminHomePage);
-  },
-  editDataImportPage: async ({ sysAdminPage }, use) => {
-    const editDataImportPage = new EditDataImportPage(sysAdminPage);
-    await use(editDataImportPage);
-  },
-  dataImportsAdminPage: async ({ sysAdminPage }, use) => {
-    const dataImportsAdminPage = new DataImportsAdminPage(sysAdminPage);
-    await use(dataImportsAdminPage);
-  },
-  targetApp: app,
+  targetApp: AppFixture.create().build(),
 });
 
 test.describe('data import', () => {
   let dataImportsToDelete: string[] = [];
   let importFilesToDelete: string[] = [];
 
-  test.afterEach(async ({ dataImportsAdminPage }) => {
-    await dataImportsAdminPage.deleteDataImports(dataImportsToDelete);
+  test.afterEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(DataImportTasks.deleteDataImports(dataImportsToDelete));
 
     for (const importFilePath of importFilesToDelete) {
       if (fs.existsSync(importFilePath) === false) {
@@ -62,34 +48,31 @@ test.describe('data import', () => {
     importFilesToDelete = [];
   });
 
-  test('Create a Data Import via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editDataImportPage,
-  }) => {
+  test('Create a Data Import via the create button in the header of the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-335',
     });
 
     const dataImportName = FakeDataFactory.createFakeDataImportName();
+    dataImportsToDelete.push(dataImportName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import', async () => {
-      await adminHomePage.createImportConfigUsingHeaderCreateButton(dataImportName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportName);
     });
   });
 
   test('Create a Data Import via the create button on the Integrations tile on the admin home page', async ({
-    adminHomePage,
-    editDataImportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -100,22 +83,21 @@ test.describe('data import', () => {
     dataImportsToDelete.push(dataImportName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import', async () => {
-      await adminHomePage.createImportConfigUsingIntegrationsTileButton(dataImportName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaTile(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportName);
     });
   });
 
   test('Create a Data Import via the "Create Import Configuration" button on the data import home page', async ({
-    dataImportsAdminPage,
-    editDataImportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -126,22 +108,21 @@ test.describe('data import', () => {
     dataImportsToDelete.push(dataImportName);
 
     await test.step('Navigate to the data import home page', async () => {
-      await dataImportsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataImportTasks.goto());
     });
 
     await test.step('Create the data import', async () => {
-      await dataImportsAdminPage.createDataImport(dataImportName);
-      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.create(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was created', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportName);
     });
   });
 
   test('Create a copy of a Data Import via the create button in the header of the admin home page', async ({
-    adminHomePage,
-    editDataImportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -153,28 +134,27 @@ test.describe('data import', () => {
     dataImportsToDelete.push(dataImportToCopyName, dataImportCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import to copy', async () => {
-      await adminHomePage.createImportConfig(dataImportToCopyName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportToCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Create a copy of the data import', async () => {
-      await adminHomePage.goto();
-      await adminHomePage.createImportCopyUsingHeaderCreateButton(dataImportToCopyName, dataImportCopyName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.browse().goto('/Admin/Home');
+      await sysAdminActor.attemptsTo(DataImportTasks.createCopyViaHeader(dataImportToCopyName, dataImportCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportCopyName);
     });
   });
 
   test('Create a copy of a Data Import via the create button on the Integrations tile on the admin home page', async ({
-    adminHomePage,
-    editDataImportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -186,28 +166,27 @@ test.describe('data import', () => {
     dataImportsToDelete.push(dataImportToCopyName, dataImportCopyName);
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import to copy', async () => {
-      await adminHomePage.createImportConfig(dataImportToCopyName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportToCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Create a copy of the data import', async () => {
-      await adminHomePage.goto();
-      await adminHomePage.createImportCopyUsingIntegrationsTileButton(dataImportToCopyName, dataImportCopyName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.browse().goto('/Admin/Home');
+      await sysAdminActor.attemptsTo(DataImportTasks.createCopyViaTile(dataImportToCopyName, dataImportCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportCopyName);
     });
   });
 
   test('Create a copy of a Data Import via the "Create Import Configuration" button on the data import home page', async ({
-    dataImportsAdminPage,
-    editDataImportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -219,32 +198,28 @@ test.describe('data import', () => {
     dataImportsToDelete.push(dataImportToCopyName, dataImportCopyName);
 
     await test.step('Navigate to the data import home page', async () => {
-      await dataImportsAdminPage.goto();
+      await sysAdminActor.attemptsTo(DataImportTasks.goto());
     });
 
     await test.step('Create the data import to copy', async () => {
-      await dataImportsAdminPage.createDataImport(dataImportToCopyName);
-      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.create(dataImportToCopyName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Create a copy of the data import', async () => {
-      await dataImportsAdminPage.goto();
-      await dataImportsAdminPage.createDataImportCopy(dataImportToCopyName, dataImportCopyName);
-      await dataImportsAdminPage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DataImportTasks.goto(),
+        DataImportTasks.createCopy(dataImportToCopyName, dataImportCopyName)
+      );
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Verify the data import was copied', async () => {
-      await expect(editDataImportPage.dataFileTab.nameInput).toHaveValue(dataImportCopyName);
+      await sysAdminActor.browse().check(EditDataImportPageTargets.dataFileTab.nameInput).hasValue(dataImportCopyName);
     });
   });
 
-  test('Update a Data Import', async ({
-    sysAdminPage,
-    adminHomePage,
-    editDataImportPage,
-    dataImportsAdminPage,
-    targetApp,
-  }) => {
+  test('Update a Data Import', async ({ sysAdminActor, targetApp }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-342',
@@ -265,10 +240,7 @@ test.describe('data import', () => {
     let importFilePath: string;
 
     await test.step('Create the fields to import data into', async () => {
-      const appAdminPage = new AppAdminPage(sysAdminPage);
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id), AppTasks.addTextField(textField.name));
     });
 
     await test.step('Create the import file to be imported', () => {
@@ -277,40 +249,43 @@ test.describe('data import', () => {
     });
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import to be updated', async () => {
-      await adminHomePage.createImportConfig(dataImportName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Update the data import', async () => {
-      await editDataImportPage.dataFileTab.nameInput.fill(updatedDataImportName);
-      await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
-      await editDataImportPage.dataFileTab.addImportFile(importFilePath);
-
-      await editDataImportPage.dataMappingTabButton.click();
-      const fieldMapping = editDataImportPage.dataMappingTab.getFieldMapping(textField.name);
       const regex = new RegExp(textField.name, 'i');
-      await expect(fieldMapping.appField).toHaveText(regex);
-      await expect(fieldMapping.mappedField).toHaveText(regex);
 
-      await editDataImportPage.save();
+      await sysAdminActor.attemptsTo(
+        DataImportTasks.updateName(updatedDataImportName),
+        DataImportTasks.selectTargetApp(targetApp.name),
+        DataImportTasks.uploadImportFile(importFilePath),
+        DataImportTasks.openDataMappingTab()
+      );
+
+      await sysAdminActor
+        .browse()
+        .check(EditDataImportPageTargets.dataMappingTab.appFieldByName(textField.name))
+        .hasText(regex);
+      await sysAdminActor
+        .browse()
+        .check(EditDataImportPageTargets.dataMappingTab.mappedFieldByName(textField.name))
+        .hasText(regex);
+
+      await sysAdminActor.attemptsTo(DataImportTasks.save());
     });
 
     await test.step('Verify the data import was updated', async () => {
-      await dataImportsAdminPage.goto();
-
-      const updatedDataImportRow = dataImportsAdminPage.dataImportGrid.getByRole('row', {
-        name: updatedDataImportName,
-      });
-
-      await expect(updatedDataImportRow).toBeVisible();
+      await sysAdminActor.attemptsTo(DataImportTasks.goto(), DataImportTasks.scrollAllIntoView());
+      await sysAdminActor.browse().check(DataImportsPageTargets.rowByName(updatedDataImportName)).isVisible();
     });
   });
 
-  test('Delete a Data Import', async ({ adminHomePage, editDataImportPage, dataImportsAdminPage }) => {
+  test('Delete a Data Import', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-343',
@@ -319,29 +294,24 @@ test.describe('data import', () => {
     const dataImportName = FakeDataFactory.createFakeDataImportName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import to be deleted', async () => {
-      await adminHomePage.createImportConfig(dataImportName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Delete the data import', async () => {
-      await dataImportsAdminPage.goto();
-      await dataImportsAdminPage.deleteDataImports([dataImportName]);
+      await sysAdminActor.attemptsTo(DataImportTasks.goto(), DataImportTasks.delete(dataImportName));
     });
 
     await test.step('Verify the data import was deleted', async () => {
-      const dataImportRow = dataImportsAdminPage.dataImportGrid.getByRole('row', {
-        name: dataImportName,
-      });
-
-      await expect(dataImportRow).toBeHidden();
+      await sysAdminActor.browse().check(DataImportsPageTargets.rowByName(dataImportName)).isHidden();
     });
   });
 
-  test('Run a Data Import', async ({ sysAdminPage, adminHomePage, editDataImportPage, targetApp, sysAdminEmail }) => {
+  test('Run a Data Import', async ({ sysAdminActor, targetApp, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-341',
@@ -393,24 +363,23 @@ test.describe('data import', () => {
     let importFilePath: string;
 
     await test.step('Create the fields to import data into', async () => {
-      const appAdminPage = new AppAdminPage(sysAdminPage);
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.gotoApp(targetApp.id), AppTasks.openLayoutDesigner());
 
       for (const [i, field] of fields.entries()) {
-        await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(field);
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: 'Tab 2',
-          sectionName: 'Section 1',
-          sectionColumn: 0,
-          sectionRow: i,
-          fieldName: field.name,
-        });
-        await appAdminPage.layoutTab.layoutDesignerModal.saveLayout();
+        await sysAdminActor.attemptsTo(
+          AppTasks.addLayoutItemInLayoutDesigner(field),
+          AppTasks.dragFieldOntoLayout({
+            tabName: 'Tab 2',
+            sectionName: 'Section 1',
+            column: 0,
+            row: i,
+            fieldName: field.name,
+          }),
+          AppTasks.saveLayout()
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.closeButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.closeLayout());
     });
 
     await test.step('Create the import file to be imported', () => {
@@ -419,35 +388,40 @@ test.describe('data import', () => {
     });
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.browse().goto('/Admin/Home');
     });
 
     await test.step('Create the data import to be updated', async () => {
-      await adminHomePage.createImportConfig(dataImportName);
-      await adminHomePage.page.waitForURL(editDataImportPage.pathRegex);
+      await sysAdminActor.attemptsTo(DataImportTasks.createViaHeader(dataImportName));
+      await sysAdminActor.browse().checkPage().hasUrl(EditDataImportPageTargets.pathRegex);
     });
 
     await test.step('Run the data import', async () => {
-      await editDataImportPage.dataFileTab.selectTargetApp(targetApp.name);
-      await editDataImportPage.dataFileTab.addImportFile(importFilePath);
-
-      await editDataImportPage.dataMappingTabButton.click();
+      await sysAdminActor.attemptsTo(
+        DataImportTasks.selectTargetApp(targetApp.name),
+        DataImportTasks.uploadImportFile(importFilePath),
+        DataImportTasks.openDataMappingTab()
+      );
 
       const mappedFields = importData.map(data => data.field.name);
 
       for (const field of mappedFields) {
-        const fieldMapping = editDataImportPage.dataMappingTab.getFieldMapping(field);
-
         const regex = new RegExp(field, 'i');
-        await expect(fieldMapping.appField).toHaveText(regex);
-        await expect(fieldMapping.mappedField).toHaveText(regex);
+        await sysAdminActor
+          .browse()
+          .check(EditDataImportPageTargets.dataMappingTab.appFieldByName(field))
+          .hasText(regex);
+        await sysAdminActor
+          .browse()
+          .check(EditDataImportPageTargets.dataMappingTab.mappedFieldByName(field))
+          .hasText(regex);
       }
 
-      await editDataImportPage.saveAndRun();
+      await sysAdminActor.attemptsTo(DataImportTasks.saveAndRun());
     });
 
     await test.step('Verify the data import was run', async () => {
-      await expect(editDataImportPage.importProcessingMessage).toBeVisible();
+      await sysAdminActor.browse().check(EditDataImportPageTargets.importProcessingMessage).isVisible();
 
       await expect(async () => {
         const searchCriteria = [['TEXT', dataImportName]];
@@ -467,19 +441,17 @@ test.describe('data import', () => {
         timeout: 300_000,
       });
 
-      const viewContentPage = new ViewContentPage(sysAdminPage);
-      await viewContentPage.goto(targetApp.id, 1);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoView(targetApp.id, 1));
 
       for (const { field, value } of importData) {
-        const fieldComponent = await viewContentPage.form.getField({
-          tabName: 'Tab 2',
-          sectionName: 'Section 1',
-          fieldName: field.name,
-          fieldType: field.type as FieldType,
-        });
-
-        await expect(fieldComponent).toBeVisible();
-        await expect(fieldComponent).toHaveText(value);
+        await sysAdminActor.attemptsTo(
+          ContentTasks.checkReadOnlyFieldText({
+            tabName: 'Tab 2',
+            sectionName: 'Section 1',
+            fieldName: field.name,
+            expectedText: value,
+          })
+        );
       }
     });
   });
