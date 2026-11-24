@@ -150,10 +150,10 @@ export const ContentTasks = {
     }): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const sectionTarget = await resolveSectionTarget(actor, tabName, sectionName);
-      await actor
-        .browse()
-        .check(ContentRecordTargets.readOnlyTextFieldInSection(sectionTarget, fieldName))
-        .hasText(expectedText, timeout ? { timeout } : undefined);
+      const fieldTarget = ContentRecordTargets.readOnlyTextFieldInSection(sectionTarget, fieldName);
+      const checkOptions = timeout ? { timeout } : undefined;
+      await actor.browse().check(fieldTarget).isVisible(checkOptions);
+      await actor.browse().check(fieldTarget).hasText(expectedText, checkOptions);
     },
 
   saveRecord:

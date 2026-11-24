@@ -1,5 +1,13 @@
 import { Response } from '@playwright/test';
-import { DateField, LayoutItem, ListField, ReferenceField, TextField } from '@stevanfreeborn/onspring-models';
+import {
+  DateField,
+  LayoutItem,
+  ListField,
+  NumberField,
+  ReferenceField,
+  TextField,
+  TimeSpanField,
+} from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -415,7 +423,9 @@ export const AppTasks = {
           item instanceof TextField ||
           item instanceof ListField ||
           item instanceof DateField ||
-          item instanceof ReferenceField
+          item instanceof ReferenceField ||
+          item instanceof NumberField ||
+          item instanceof TimeSpanField
         )
       ) {
         throw new Error(`Unsupported layout item type "${item.type}" in addLayoutItemInLayoutDesigner.`);
@@ -540,6 +550,23 @@ export const AppTasks = {
 
       const dropzone = await resolveClampedLayoutDropzone(actor, sectionTarget, column, row);
       await actor.browse().dragWithMouse(designer.fieldFromBank(fieldName), dropzone, designer.dropLocation);
+    },
+
+  saveLayout:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const saveResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => AppLayoutTabTargets.saveLayoutPathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(AppLayoutTabTargets.designer.saveButton);
+      await saveResponse;
+    },
+
+  closeLayout:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(AppLayoutTabTargets.designer.closeButton);
+      await actor.browse().waitForState(AppLayoutTabTargets.designer.dialog, 'hidden');
     },
 
   saveAndCloseLayout:
