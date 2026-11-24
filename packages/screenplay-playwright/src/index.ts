@@ -258,6 +258,23 @@ export class BrowserActions {
     return downloadPromise;
   }
 
+  async uploadViaFileChooser(
+    triggerTarget: Target,
+    files: string | string[],
+    options?: { waitForResponseUrl?: string | RegExp | ((response: Response) => boolean | Promise<boolean>) }
+  ): Promise<void> {
+    const [fileChooser] = await Promise.all([
+      this.page.waitForEvent('filechooser'),
+      resolveTarget(this.page, triggerTarget).click(),
+    ]);
+
+    if (options?.waitForResponseUrl) {
+      await Promise.all([this.page.waitForResponse(options.waitForResponseUrl), fileChooser.setFiles(files)]);
+    } else {
+      await fileChooser.setFiles(files);
+    }
+  }
+
   async clickAndOpenNewTab(target: Target, actorName: string = 'NewTab'): Promise<WebActor> {
     const pagePromise = this.page.context().waitForEvent('page');
     await resolveTarget(this.page, target).click();
