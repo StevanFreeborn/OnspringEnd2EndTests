@@ -1,13 +1,31 @@
 import { Response } from '@playwright/test';
-import { FormattedText, Question as SurveyQuestionModel, SurveyPage } from '@stevanfreeborn/onspring-models';
+import {
+  BaseListValue,
+  FormattedText,
+  LikertQuestion,
+  ListValue,
+  MatrixQuestion,
+  MultiSelectQuestion,
+  Question as SurveyQuestionModel,
+  QuestionType,
+  ReferenceQuestion,
+  SingleSelectQuestion,
+  SurveyPage,
+} from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { TabbedColorPickerTasks } from '../common/controls/tabbedColorPicker.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import {
   AddOrEditSurveyPageModalTargets,
+  ImportQuestionModalTargets,
+  ListValuesGridPosition,
   SurveyDesignerTargets,
   SurveyFormattedTextFormTargets,
+  SurveyListValuesGridTargets,
   SurveyQuestionFormTargets,
+  SurveyReferenceQuestionFormTargets,
+  surveyDesignerFrameOwner,
 } from './surveyDesigner.targets.js';
 
 export type DeleteQuestionRequest = {
@@ -16,10 +34,95 @@ export type DeleteQuestionRequest = {
   questionText?: string;
 };
 
-async function saveInlineSurveyItemEdit(actor: WebActor): Promise<void> {
-  await actor.browse().click(SurveyDesignerTargets.editingDragBar);
-  await actor.browse().waitForState(SurveyDesignerTargets.editingSurveyItem, 'hidden');
-  await actor.browse().waitForState(SurveyDesignerTargets.saveIndicator, 'hidden');
+const questionTypeButtonTargets: Record<QuestionType, Target> = {
+  Attachment: SurveyDesignerTargets.attachmentButton,
+  'Date/Time': SurveyDesignerTargets.dateButton,
+  Number: SurveyDesignerTargets.numberButton,
+  Text: SurveyDesignerTargets.textButton,
+  'Single Select': SurveyDesignerTargets.singleSelectButton,
+  'Multi Select': SurveyDesignerTargets.multiSelectButton,
+  'Likert Scale': SurveyDesignerTargets.likertScaleButton,
+  Matrix: SurveyDesignerTargets.matrixButton,
+  Reference: SurveyDesignerTargets.referenceButton,
+};
+
+async function clearGridRows(
+  actor: WebActor,
+  rowsTarget: Target,
+  lastRowTarget: Target,
+  deleteButtonTarget: Target
+): Promise<void> {
+  let rowCount = await actor.browse().count(rowsTarget);
+
+  while (rowCount > 0) {
+    await actor.browse().hover(lastRowTarget);
+    await actor.browse().click(deleteButtonTarget);
+    await actor
+      .browse()
+      .check(rowsTarget)
+      .hasCount(rowCount - 1);
+    rowCount -= 1;
+  }
+}
+
+async function addListValues(
+  actor: WebActor,
+  position: ListValuesGridPosition,
+  values: (BaseListValue | ListValue)[]
+): Promise<void> {
+  for (const value of values) {
+    await actor.browse().click(SurveyListValuesGridTargets.addValueButton(position));
+    await actor.browse().fill(SurveyListValuesGridTargets.lastRowValueInput(position), value.value);
+    await actor
+      .browse()
+      .fill(SurveyListValuesGridTargets.lastRowNumericValueInput(position), value.numericValue.toString());
+
+    if ('color' in value && value.color) {
+      await actor.attemptsTo(
+        TabbedColorPickerTasks.selectColor(
+          SurveyListValuesGridTargets.lastRowColorPicker(position),
+          value.color,
+          surveyDesignerFrameOwner
+        )
+      );
+    }
+  }
+}
+
+async function clearListValuesGrid(actor: WebActor, position: ListValuesGridPosition): Promise<void> {
+  await clearGridRows(
+    actor,
+    SurveyListValuesGridTargets.rows(position),
+    SurveyListValuesGridTargets.lastRow(position),
+    SurveyListValuesGridTargets.lastRowDeleteButton(position)
+  );
+}
+
+async function fillReferenceQuestionFields(actor: WebActor, question: ReferenceQuestion): Promise<void> {
+  if (await actor.browse().isVisible(SurveyReferenceQuestionFormTargets.appReferenceSelect)) {
+    await actor.browse().click(SurveyReferenceQuestionFormTargets.appReferenceSelect);
+    await actor.browse().click(SurveyReferenceQuestionFormTargets.appReferenceOption(question.appReference));
+  }
+
+  if (question.answerValues !== 'ALL') {
+    throw new Error(`Adding specific reference answer values is not implemented: ${question.answerValues.join(', ')}`);
+  }
+
+  const modal = SurveyReferenceQuestionFormTargets.addAllValuesModal;
+  await actor.browse().click(SurveyReferenceQuestionFormTargets.addAllValuesButton);
+  await actor.browse().waitForState(modal.dialog, 'visible');
+
+  if (await actor.browse().isVisible(modal.okButton)) {
+    const addAllValuesResponse = actor
+      .browse()
+      .waitForResponse(SurveyReferenceQuestionFormTargets.getSurveyAnswerValuesPathRegex);
+    await actor.browse().click(modal.okButton);
+    await addAllValuesResponse;
+  } else {
+    await actor.browse().click(modal.closeButton);
+  }
+
+  await actor.browse().waitForState(modal.dialog, 'hidden');
 }
 
 async function fillBaseQuestionForm(actor: WebActor, question: SurveyQuestionModel): Promise<void> {
@@ -51,12 +154,65 @@ async function clearBaseQuestionForm(actor: WebActor): Promise<void> {
 }
 
 async function fillQuestionFormByType(actor: WebActor, question: SurveyQuestionModel): Promise<void> {
+  await fillBaseQuestionForm(actor, question);
+
   switch (question.type) {
     case 'Text':
-      await fillBaseQuestionForm(actor, question);
+    case 'Number':
+    case 'Date/Time':
+    case 'Attachment':
+      break;
+    case 'Single Select':
+    case 'Multi Select':
+    case 'Likert Scale':
+      await addListValues(
+        actor,
+        'first',
+        (question as SingleSelectQuestion | MultiSelectQuestion | LikertQuestion).answerValues
+      );
+      break;
+    case 'Matrix': {
+      const matrix = question as MatrixQuestion;
+      await addListValues(actor, 'first', matrix.rowValues);
+      await addListValues(actor, 'last', matrix.columnValues);
+      break;
+    }
+    case 'Reference':
+      await fillReferenceQuestionFields(actor, question as ReferenceQuestion);
       break;
     default:
-      throw new Error(`Question type ${question.type} is not implemented yet.`);
+      throw new Error(`Question type ${question.type} is not supported.`);
+  }
+}
+
+async function clearQuestionFormByType(actor: WebActor, questionType: QuestionType): Promise<void> {
+  await clearBaseQuestionForm(actor);
+
+  switch (questionType) {
+    case 'Text':
+    case 'Number':
+    case 'Date/Time':
+    case 'Attachment':
+      break;
+    case 'Single Select':
+    case 'Multi Select':
+    case 'Likert Scale':
+      await clearListValuesGrid(actor, 'first');
+      break;
+    case 'Matrix':
+      await clearListValuesGrid(actor, 'first');
+      await clearListValuesGrid(actor, 'last');
+      break;
+    case 'Reference':
+      await clearGridRows(
+        actor,
+        SurveyReferenceQuestionFormTargets.rows,
+        SurveyReferenceQuestionFormTargets.lastRow,
+        SurveyReferenceQuestionFormTargets.lastRowDeleteButton
+      );
+      break;
+    default:
+      throw new Error(`Question type ${questionType} is not supported.`);
   }
 }
 
@@ -118,20 +274,22 @@ async function moveDesignerItemAbove(actor: WebActor, options: MoveDesignerItemO
 }
 
 export const SurveyDesignerTasks = {
+  saveInlineEdit:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDesignerTargets.editingDragBar);
+      await actor.browse().waitForState(SurveyDesignerTargets.editingSurveyItem, 'hidden');
+      await actor.browse().waitForState(SurveyDesignerTargets.saveIndicator, 'hidden');
+    },
+
   addQuestion:
     (question: SurveyQuestionModel): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      switch (question.type) {
-        case 'Text':
-          await actor.browse().click(SurveyDesignerTargets.textButton);
-          break;
-        default:
-          throw new Error(`Question type ${question.type} is not implemented yet.`);
-      }
-
+      const buttonTarget = questionTypeButtonTargets[question.type];
+      await actor.browse().click(buttonTarget);
       await actor.browse().waitForFocused(SurveyQuestionFormTargets.questionTextFocusTarget, { timeout: 30_000 });
       await fillQuestionFormByType(actor, question);
-      await saveInlineSurveyItemEdit(actor);
+      await actor.attemptsTo(SurveyDesignerTasks.saveInlineEdit());
     },
 
   updateQuestion:
@@ -139,9 +297,45 @@ export const SurveyDesignerTasks = {
     async (actor: WebActor): Promise<void> => {
       await actor.browse().click(SurveyDesignerTargets.surveyItemDisplay(surveyItemId));
       await actor.browse().waitForFocused(SurveyQuestionFormTargets.questionTextFocusTarget, { timeout: 30_000 });
-      await clearBaseQuestionForm(actor);
+      await clearQuestionFormByType(actor, question.type);
       await fillQuestionFormByType(actor, question);
-      await saveInlineSurveyItemEdit(actor);
+      await actor.attemptsTo(SurveyDesignerTasks.saveInlineEdit());
+    },
+
+  importQuestion:
+    (sourceSurveyName: string, sourceQuestion: SurveyQuestionModel): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDesignerTargets.importQuestionButton);
+      await actor.browse().click(ImportQuestionModalTargets.surveySourceSelect);
+      await actor.browse().click(ImportQuestionModalTargets.surveySourceOption(sourceSurveyName));
+
+      const searchResponse = actor
+        .browse()
+        .waitForResponse(ImportQuestionModalTargets.searchPathRegex, { timeout: 10_000 })
+        .catch(() => null);
+      await actor
+        .browse()
+        .type(ImportQuestionModalTargets.filterInput, sourceQuestion.questionId, { delay: 125, clear: false });
+      await searchResponse;
+
+      const row = ImportQuestionModalTargets.searchResultRow(sourceQuestion.questionId);
+      await actor.browse().isVisibleWithin(row, 5_000);
+
+      while (
+        !(await actor.browse().isVisible(row)) &&
+        (await actor.browse().canScrollDown(ImportQuestionModalTargets.scrollableResults))
+      ) {
+        await actor.browse().scrollToBottom(ImportQuestionModalTargets.scrollableResults);
+      }
+
+      await actor.browse().click(ImportQuestionModalTargets.searchResultCheckbox(sourceQuestion.questionId));
+      await actor.browse().click(ImportQuestionModalTargets.selectButton);
+      await actor.browse().click(ImportQuestionModalTargets.importButton);
+
+      await actor
+        .browse()
+        .waitForState(SurveyDesignerTargets.surveyItemDataByText(sourceQuestion.questionText), 'visible');
+      await actor.browse().waitForState(SurveyDesignerTargets.saveIndicator, 'hidden');
     },
 
   updateFormattedText:
@@ -154,7 +348,7 @@ export const SurveyDesignerTasks = {
       await actor.browse().clear(SurveyFormattedTextFormTargets.formattedTextEditor);
       await actor.browse().fill(SurveyFormattedTextFormTargets.formattedTextEditor, formattedText.formattedText);
       await actor.browse().fill(SurveyFormattedTextFormTargets.objectIdInput, formattedText.objectId);
-      await saveInlineSurveyItemEdit(actor);
+      await actor.attemptsTo(SurveyDesignerTasks.saveInlineEdit());
     },
 
   addPage:

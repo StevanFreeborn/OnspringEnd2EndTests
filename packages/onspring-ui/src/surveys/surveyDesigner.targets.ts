@@ -1,10 +1,20 @@
 import { FrameLocator, Locator, Page } from '@playwright/test';
+import { FrameOwner } from '../common/controls/frameOwner.js';
 
 const designerFrame = (page: Page): FrameLocator =>
   page
     .getByRole('dialog', { name: /Survey Designer/ })
     .frameLocator('iframe')
     .first();
+
+export const surveyDesignerFrameOwner: FrameOwner = (page: Page) => designerFrame(page);
+
+export type ListValuesGridPosition = 'first' | 'last';
+
+const listValuesGrid = (page: Page, position: ListValuesGridPosition): Locator =>
+  position === 'first'
+    ? designerFrame(page).locator('.list-values').first()
+    : designerFrame(page).locator('.list-values').last();
 
 export const AutoSaveDialogTargets = {
   dialog: (page: Page): Locator => page.getByRole('dialog', { name: 'Working with Autosave' }),
@@ -152,4 +162,81 @@ export const SurveyFormattedTextFormTargets = {
   dragBar: (page: Page): Locator => designerFrame(page).locator('.survey-item.edit-mode .drag-bar'),
   formattedTextEditor: (page: Page): Locator => designerFrame(page).locator('.content-area.mce-content-body'),
   objectIdInput: (page: Page): Locator => designerFrame(page).getByLabel('Object Id'),
+};
+
+export const SurveyListValuesGridTargets = {
+  addValueButton:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position).getByRole('button', { name: 'Add Value' }),
+  rows:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position).locator('div.k-grid-content').getByRole('row'),
+  lastRow:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position).locator('div.k-grid-content').getByRole('row').last(),
+  lastRowValueInput:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position)
+        .locator('div.k-grid-content')
+        .getByRole('row')
+        .last()
+        .locator('td[data-field="name"] input'),
+  lastRowNumericValueInput:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position)
+        .locator('div.k-grid-content')
+        .getByRole('row')
+        .last()
+        .locator('td[data-field="numericValue"] input.k-formatted-value'),
+  lastRowColorPicker:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position)
+        .locator('div.k-grid-content')
+        .getByRole('row')
+        .last()
+        .locator('td[data-field="color"] span.k-colorpicker'),
+  lastRowDeleteButton:
+    (position: ListValuesGridPosition) =>
+    (page: Page): Locator =>
+      listValuesGrid(page, position)
+        .locator('div.k-grid-content')
+        .getByRole('row')
+        .last()
+        .getByTitle('Delete List Value'),
+};
+
+export const SurveyReferenceQuestionFormTargets = {
+  getSurveyAnswerValuesPathRegex: /\/Admin\/App\/\d+\/SurveyReference\/GetListPage/,
+  appReferenceSelect: (page: Page): Locator => designerFrame(page).getByRole('listbox', { name: 'App Reference' }),
+  appReferenceOption:
+    (name: string) =>
+    (page: Page): Locator =>
+      designerFrame(page).getByRole('option', { name }),
+  addAllValuesButton: (page: Page): Locator =>
+    designerFrame(page).locator('.list-values').first().getByRole('button', { name: 'Add All Values' }),
+  rows: (page: Page): Locator =>
+    designerFrame(page).locator('.list-values').first().locator('.k-grid-content').getByRole('row'),
+  lastRow: (page: Page): Locator =>
+    designerFrame(page).locator('.list-values').first().locator('.k-grid-content').getByRole('row').last(),
+  lastRowDeleteButton: (page: Page): Locator =>
+    designerFrame(page)
+      .locator('.list-values')
+      .first()
+      .locator('.k-grid-content')
+      .getByRole('row')
+      .last()
+      .getByTitle('Delete'),
+  addAllValuesModal: {
+    dialog: (page: Page): Locator => page.getByRole('dialog', { name: 'Add All Values' }),
+    okButton: (page: Page): Locator =>
+      page.getByRole('dialog', { name: 'Add All Values' }).getByRole('button', { name: 'Ok' }),
+    closeButton: (page: Page): Locator =>
+      page.getByRole('dialog', { name: 'Add All Values' }).getByRole('button', { name: 'Close' }),
+  },
 };
