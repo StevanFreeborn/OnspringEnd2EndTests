@@ -163,11 +163,11 @@ export const ContentRecordTargets = {
       resolveTarget(page, sectionTarget)
         .locator(`${fieldContainerSelector(fieldName)} div.type-image .k-upload-button`)
         .first(),
-  readOnlyImageByFileIdInSection:
-    (sectionTarget: Target, fieldName: string, fileId: number): Target =>
+  readOnlyImageInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
     (page: Page): Locator =>
       resolveTarget(page, sectionTarget)
-        .locator(`${fieldContainerSelector(fieldName)} div.type-image .image[src*="fileId=${fileId}"]`)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-image .image`)
         .first(),
   referenceFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>

@@ -139,6 +139,23 @@ async function saveFieldModal(actor: WebActor): Promise<void> {
   await saveFieldResponse;
 }
 
+async function saveCopiedFieldModal(
+  actor: WebActor,
+  expectedCopyName: string,
+  frameNumber: number,
+  waitForSelectedGridFields?: boolean
+): Promise<void> {
+  const nameInput = FieldTargets.modal.nameInput(frameNumber);
+  await actor.browse().waitForState(nameInput, 'visible');
+  await actor.browse().check(nameInput).hasValue(expectedCopyName);
+
+  if (waitForSelectedGridFields) {
+    await actor.browse().waitForState(FieldTargets.modal.selectedGridFields(frameNumber), 'visible');
+  }
+
+  await saveFieldModal(actor);
+}
+
 async function ensureDesignerFieldsTabSelected(actor: WebActor): Promise<void> {
   const designer = AppLayoutTabTargets.designer;
   if (await actor.browse().isVisible(designer.addObjectButton)) {
@@ -187,15 +204,16 @@ export const FieldTasks = {
     },
 
   copyFromGridRow:
-    (sourceFieldName: string, expectedCopyName: string): Task<WebActor> =>
+    (
+      sourceFieldName: string,
+      expectedCopyName: string,
+      options?: { waitForSelectedGridFields?: boolean }
+    ): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().hover(FieldTargets.rowByName(sourceFieldName));
       await actor.browse().click(FieldTargets.copyButtonInRow(sourceFieldName));
 
-      const nameInput = FieldTargets.modal.nameInput(0);
-      await actor.browse().waitForState(nameInput, 'visible');
-      await actor.browse().check(nameInput).hasValue(expectedCopyName);
-      await saveFieldModal(actor);
+      await saveCopiedFieldModal(actor, expectedCopyName, 0, options?.waitForSelectedGridFields);
     },
 
   copyFromAddFieldButton:
@@ -208,10 +226,7 @@ export const FieldTasks = {
       await actor.browse().click(FieldTargets.addLayoutItemDialog.copyFromOption(sourceFieldName));
       await actor.browse().click(FieldTargets.addLayoutItemDialog.continueButton);
 
-      const nameInput = FieldTargets.modal.nameInput(0);
-      await actor.browse().waitForState(nameInput, 'visible');
-      await actor.browse().check(nameInput).hasValue(expectedCopyName);
-      await saveFieldModal(actor);
+      await saveCopiedFieldModal(actor, expectedCopyName, 0, itemType === 'Reference');
     },
 
   copyFromLayoutDesigner:
@@ -227,10 +242,7 @@ export const FieldTasks = {
       await actor.browse().click(FieldTargets.addLayoutItemDialog.copyFromOption(sourceFieldName));
       await actor.browse().click(FieldTargets.addLayoutItemDialog.continueButton);
 
-      const nameInput = FieldTargets.modal.nameInput(1);
-      await actor.browse().waitForState(nameInput, 'visible');
-      await actor.browse().check(nameInput).hasValue(expectedCopyName);
-      await saveFieldModal(actor);
+      await saveCopiedFieldModal(actor, expectedCopyName, 1, itemType === 'Reference');
     },
 
   updateNameFromGrid:

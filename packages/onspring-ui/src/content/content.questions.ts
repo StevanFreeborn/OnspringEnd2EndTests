@@ -66,7 +66,8 @@ export const ContentQuestions = {
       sectionName,
       fieldName,
       filePath,
-    }: ContentFieldLocation & { filePath: string }): Question<WebActor, number> =>
+      timeout,
+    }: ContentFieldLocation & { filePath: string; timeout?: number }): Question<WebActor, number> =>
     async (actor: WebActor): Promise<number> => {
       const sectionTarget = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
       const response = await actor
@@ -74,7 +75,7 @@ export const ContentQuestions = {
         .uploadViaFileChooser(
           ContentRecordTargets.attachmentUploadButtonInSection(sectionTarget, fieldName),
           filePath,
-          { waitForResponseUrl: ContentRecordTargets.saveAttachmentPathRegex }
+          { waitForResponseUrl: ContentRecordTargets.saveAttachmentPathRegex, timeout }
         );
 
       if (!response) {
