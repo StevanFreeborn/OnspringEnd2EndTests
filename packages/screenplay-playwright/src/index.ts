@@ -82,6 +82,22 @@ export class BrowserActions {
     await resolveTarget(this.page, target).waitFor({ state, ...options });
   }
 
+  async waitForFocused(target: Target, options?: { timeout?: number }): Promise<void> {
+    await expect(resolveTarget(this.page, target)).toBeFocused(options);
+  }
+
+  async addLocatorHandler(
+    target: Target,
+    handler: () => Promise<void>,
+    options?: { noWaitAfter?: boolean; times?: number }
+  ): Promise<void> {
+    await this.page.addLocatorHandler(resolveTarget(this.page, target), handler, options);
+  }
+
+  async boundingBox(target: Target): Promise<BoundingBox | null> {
+    return resolveTarget(this.page, target).boundingBox();
+  }
+
   async waitForTimeout(ms: number): Promise<void> {
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(ms);
@@ -337,7 +353,7 @@ export class BrowserActions {
   }
 }
 
-type BoundingBox = {
+export type BoundingBox = {
   x: number;
   y: number;
   width: number;
