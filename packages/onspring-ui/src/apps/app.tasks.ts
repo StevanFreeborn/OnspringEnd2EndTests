@@ -1,17 +1,13 @@
 import { Response } from '@playwright/test';
-import {
-  DateField,
-  LayoutItem,
-  ListField,
-  NumberField,
-  ReferenceField,
-  TextField,
-  TimeSpanField,
-} from '@stevanfreeborn/onspring-models';
+import { LayoutItem, TextField } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
-import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
-import { TabbedColorPickerTasks } from '../common/controls/tabbedColorPicker.js';
+import { FieldTasks } from '../fields/fields.tasks.js';
+import { AppQuestions } from './app.questions.js';
 import {
   AppDetailTargets,
   AppLayoutTabTargets,
@@ -25,54 +21,9 @@ import {
   EditGeocodingSettingsModalTargets,
   EditNotesSettingsModalTargets,
   ExportFieldsAndObjectsReportOptions,
+  LayoutDropzoneLocation,
   OptionTargets,
 } from './apps.targets.js';
-import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
-import { KendoGridTasks } from '../common/controls/kendoGrid.js';
-import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
-
-async function resolveClampedLayoutDropzone(
-  actor: WebActor,
-  sectionTarget: Target,
-  desiredColumn: number,
-  desiredRow: number
-): Promise<Target> {
-  await actor.browse().waitForState(sectionTarget, 'visible');
-
-  const itemsTarget = AppLayoutTabTargets.designer.renderedItemsInSection(sectionTarget);
-  const columnAttrs = await actor.browse().getAttributes(itemsTarget, 'data-column');
-  const rowAttrs = await actor.browse().getAttributes(itemsTarget, 'data-row');
-
-  let maxColumn = -1;
-  for (const col of columnAttrs) {
-    if (col === null) continue;
-    const colNum = parseInt(col, 10);
-    if (colNum > maxColumn) maxColumn = colNum;
-  }
-
-  if (maxColumn < 0) {
-    throw new Error('Invalid column number');
-  }
-
-  const column = Math.min(desiredColumn, maxColumn);
-
-  let maxRow = -1;
-  for (let i = 0; i < columnAttrs.length; i++) {
-    const col = columnAttrs[i];
-    const row = rowAttrs[i];
-    if (col !== null && parseInt(col, 10) === column && row !== null) {
-      maxRow += 1;
-    }
-  }
-
-  if (maxRow < 0) {
-    throw new Error('Invalid row number');
-  }
-
-  const row = Math.min(desiredRow, maxRow);
-
-  return AppLayoutTabTargets.designer.dropzoneInSectionAt(sectionTarget, column, row);
-}
 
 export const AppTasks = {
   goto:
@@ -89,6 +40,14 @@ export const AppTasks = {
     (appId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().goto(`/Admin/App/${appId}`);
+    },
+
+  gotoAppLayoutTab:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(`/Admin/App/${appId}`);
+      await actor.browse().click(AppDetailTargets.layoutTabButton);
+      await actor.browse().waitForState(AppLayoutTabTargets.layoutsGrid, 'visible');
     },
 
   filterBy:
@@ -371,34 +330,20 @@ export const AppTasks = {
   addTextField:
     (fieldName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.browse().click(AppDetailTargets.layoutTabButton);
-      await actor.browse().click(AppLayoutTabTargets.addFieldButton);
-      await actor.browse().click(AppLayoutTabTargets.addLayoutItemMenu('Text'));
-
-      const addItemResponse = actor
-        .browse()
-        .waitForResponse((r: Response) => AppLayoutTabTargets.addItemPathRegex.test(r.url()) && r.status() === 200);
-      await actor.browse().click(AppLayoutTabTargets.addLayoutItemDialogContinueButton);
-      await addItemResponse;
-
-      const modal = AppLayoutTabTargets.fieldModal;
-      await actor.browse().fill(modal.nameInput(), fieldName);
-
-      await actor.browse().click(modal.securityTabButton());
-      await actor.browse().click(modal.securityViewSelect());
-      await actor.browse().click(modal.securityOption('Public'));
-
-      const saveFieldResponse = actor
-        .browse()
-        .waitForResponse((r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200);
-      await actor.browse().click(modal.saveButton);
-      await saveFieldResponse;
+      if (!(await actor.browse().isVisible(AppLayoutTabTargets.addFieldButton))) {
+        await actor.browse().click(AppDetailTargets.layoutTabButton);
+      }
+      await actor.attemptsTo(FieldTasks.addFromGrid(new TextField({ name: fieldName })));
     },
 
   openLayoutDesigner:
     (layoutName: string = 'Default Layout'): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.browse().click(AppDetailTargets.layoutTabButton);
+      if (!(await actor.browse().isVisible(AppLayoutTabTargets.layoutsGrid))) {
+        await actor.browse().click(AppDetailTargets.layoutTabButton);
+        await actor.browse().waitForState(AppLayoutTabTargets.layoutsGrid, 'visible');
+      }
+
       const getLayoutDesignResponse = actor
         .browse()
         .waitForResponse(
@@ -418,98 +363,7 @@ export const AppTasks = {
   addLayoutItemInLayoutDesigner:
     (item: LayoutItem): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      if (
-        !(
-          item instanceof TextField ||
-          item instanceof ListField ||
-          item instanceof DateField ||
-          item instanceof ReferenceField ||
-          item instanceof NumberField ||
-          item instanceof TimeSpanField
-        )
-      ) {
-        throw new Error(`Unsupported layout item type "${item.type}" in addLayoutItemInLayoutDesigner.`);
-      }
-
-      const designer = AppLayoutTabTargets.designer;
-      const frameNumber = 1;
-
-      if (await actor.browse().isVisible(designer.addObjectButton)) {
-        await actor.browse().click(designer.fieldsTabButton);
-      }
-
-      await actor.browse().waitForState(designer.addFieldButton, 'visible');
-      await actor.browse().click(designer.addFieldButton);
-      await actor.browse().click(designer.addFieldMenuOption(item.type));
-
-      const addItemResponse = actor
-        .browse()
-        .waitForResponse((r: Response) => AppLayoutTabTargets.addItemPathRegex.test(r.url()) && r.status() === 200);
-      await actor.browse().click(AppLayoutTabTargets.addLayoutItemDialogContinueButton);
-      await addItemResponse;
-
-      const modal = AppLayoutTabTargets.fieldModal;
-      await actor.browse().waitForState(modal.nameInput(frameNumber), 'visible');
-      await actor.browse().fill(modal.nameInput(frameNumber), item.name);
-
-      if (item instanceof ListField) {
-        for (const listValue of item.values) {
-          await actor.browse().click(modal.listValuesGrid.addValueButton(frameNumber));
-          await actor.browse().fill(modal.listValuesGrid.lastRowValueInput(frameNumber), listValue.value);
-          await actor
-            .browse()
-            .fill(modal.listValuesGrid.lastRowNumericValueInput(frameNumber), listValue.numericValue.toString());
-
-          if (listValue.color) {
-            await actor.attemptsTo(
-              TabbedColorPickerTasks.selectColor(
-                modal.listValuesGrid.lastRowColorPicker(frameNumber),
-                listValue.color,
-                modal.frame(frameNumber)
-              )
-            );
-          }
-        }
-      } else if (item instanceof DateField) {
-        await actor.browse().click(modal.dateDisplaySelect(frameNumber));
-        await actor.browse().click(modal.dateDisplayOption(item.display, frameNumber));
-      } else if (item instanceof ReferenceField) {
-        const initialDisplayFieldResponse = actor
-          .browse()
-          .waitForResponse((r: Response) => modal.referenceDisplayFieldsPathRegex.test(r.url()) && r.status() === 200);
-        await actor.browse().click(modal.referenceSelect(frameNumber));
-        await initialDisplayFieldResponse;
-
-        const referenceSelectText = await actor.browse().getText(modal.referenceSelect(frameNumber));
-        if (referenceSelectText.includes(item.reference)) {
-          await actor.browse().click(modal.referenceOption(item.reference, frameNumber));
-        } else {
-          const displayFieldResponse = actor
-            .browse()
-            .waitForResponse(
-              (r: Response) => modal.referenceDisplayFieldsPathRegex.test(r.url()) && r.status() === 200
-            );
-          await actor.browse().click(modal.referenceOption(item.reference, frameNumber));
-          await displayFieldResponse;
-        }
-
-        await actor.browse().waitForState(modal.selectedGridFields(frameNumber), 'visible');
-      }
-
-      if (item.permissions.length > 0) {
-        throw new Error('Role-based field permissions in addLayoutItemInLayoutDesigner are not implemented.');
-      }
-
-      await actor.browse().click(modal.securityTabButton(frameNumber));
-      await actor.browse().click(modal.securityViewSelect(frameNumber));
-      await actor.browse().click(modal.securityOption('Public', frameNumber));
-
-      const saveFieldResponse = actor
-        .browse()
-        .waitForResponse((r: Response) => AppLayoutTabTargets.addOrEditPathRegex.test(r.url()) && r.status() === 200);
-      await actor.browse().click(modal.saveButton);
-      await saveFieldResponse;
-      await actor.browse().waitForState(designer.fieldFromBank(item.name), 'visible');
+      await actor.attemptsTo(FieldTasks.addFromLayoutDesigner(item));
     },
 
   dragFieldOntoLayout:
@@ -533,23 +387,16 @@ export const AppTasks = {
         await actor.browse().click(designer.fieldsTabButton);
       }
 
-      let sectionTarget: Target;
-
-      if (tabName === undefined) {
-        sectionTarget = designer.standaloneSectionByName(sectionName);
-      } else if (!(await actor.browse().isVisible(designer.canvasTabStrip))) {
-        sectionTarget = designer.canvasSectionByName(sectionName);
-      } else {
-        await actor.browse().click(designer.canvasTabText(tabName));
-        const tabId = await actor.browse().getAttribute(designer.canvasTabButton(tabName), 'data-canvas-tab');
-        if (tabId === null) {
-          throw new Error(`Layout designer tab "${tabName}" did not expose a data-canvas-tab attribute.`);
-        }
-        sectionTarget = designer.canvasSectionInTab(tabId, sectionName);
-      }
-
-      const dropzone = await resolveClampedLayoutDropzone(actor, sectionTarget, column, row);
+      const dropzone = await actor.asks(AppQuestions.layoutDropzone({ tabName, sectionName, column, row }));
       await actor.browse().dragWithMouse(designer.fieldFromBank(fieldName), dropzone, designer.dropLocation);
+    },
+
+  removeFieldFromLayout:
+    (location: LayoutDropzoneLocation): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const dropzone = await actor.asks(AppQuestions.layoutDropzone(location));
+      await actor.browse().hover(dropzone);
+      await actor.browse().click(AppLayoutTabTargets.designer.removeFieldFromDropzoneButton(dropzone));
     },
 
   saveLayout:

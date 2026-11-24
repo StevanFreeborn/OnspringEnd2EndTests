@@ -1,12 +1,17 @@
 import { Page } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { DatePickerTasks } from './datePicker.js';
 
 const dateFieldTargets = {
   input:
     (controlTarget: Target): Target =>
     (page: Page) =>
       resolveTarget(page, controlTarget).locator('input'),
+  calendarButton:
+    (controlTarget: Target): Target =>
+    (page: Page) =>
+      resolveTarget(page, controlTarget).locator('.k-link-date'),
 };
 
 function formatDate(date: Date): string {
@@ -34,5 +39,12 @@ export const DateFieldControlTasks = {
       const input = dateFieldTargets.input(controlTarget);
       await actor.browse().fill(input, '');
       await actor.browse().blur(input);
+    },
+
+  selectDateUsingCalendar:
+    (controlTarget: Target, year: number, month: number, day: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(dateFieldTargets.calendarButton(controlTarget));
+      await actor.attemptsTo(DatePickerTasks.selectDate(year, month, day));
     },
 };

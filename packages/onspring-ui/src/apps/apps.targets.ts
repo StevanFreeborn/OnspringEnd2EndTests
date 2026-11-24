@@ -22,6 +22,13 @@ export type ExportFieldsAndObjectsReportOptions = {
   messageCenterAlertsOnly?: boolean;
 };
 
+export type LayoutDropzoneLocation = {
+  tabName?: string;
+  sectionName: string;
+  column: number;
+  row: number;
+};
+
 function createSettingSelector(settingName: string) {
   return `td:nth-match(td:has-text("${settingName}") + td, 1)`;
 }
@@ -315,6 +322,10 @@ export const AppLayoutTabTargets = {
         resolveTarget(page, sectionTarget)
           .locator(`.rendered-item[data-column="${column}"][data-row="${row}"]`)
           .first(),
+    removeFieldFromDropzoneButton:
+      (dropzoneTarget: Target): Target =>
+      (page: Page) =>
+        resolveTarget(page, dropzoneTarget).getByTitle('Remove Field from Layout'),
     dropLocation: (page: Page) => layoutDesignerFrame(page).locator('.canvas-section').first().locator('#dropLocation'),
     saveButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save', exact: true }),
     saveAndCloseButton: (page: Page) => layoutDesignerDialog(page).getByRole('button', { name: 'Save & Close' }),

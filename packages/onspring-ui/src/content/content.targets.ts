@@ -1,6 +1,15 @@
 import { Locator, Page } from '@playwright/test';
 import { resolveTarget, Target } from '@stevanfreeborn/screenplay-playwright';
 
+export type ContentSectionLocation = {
+  tabName?: string;
+  sectionName: string;
+};
+
+export type ContentFieldLocation = ContentSectionLocation & {
+  fieldName: string;
+};
+
 function toPascalCase(text: string): string {
   return text
     .split(' ')
@@ -12,7 +21,19 @@ function escapeCssClassPart(text: string): string {
   return text.replace(/([^\w-])/g, '\\$1');
 }
 
+function fieldContainerSelector(fieldName: string): string {
+  return `.data-${escapeCssClassPart(toPascalCase(fieldName))}`;
+}
+
 const contentContainer = (page: Page): Locator => page.locator('div.contentContainer').first();
+
+const createRecordDialog = (page: Page): Locator =>
+  page
+    .getByRole('dialog')
+    .filter({
+      has: page.locator('.ui-dialog-title').filter({ hasText: /Create Record/ }),
+    })
+    .first();
 
 export const ContentRecordTargets = {
   addRoute: (appId: number) => `/Content/${appId}/Add`,
@@ -20,6 +41,9 @@ export const ContentRecordTargets = {
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
   appContentPathRegex: /\/Content\/\d+\/App/,
+  saveAttachmentPathRegex: /\/Content\/(\d+\/)?\d+\/SaveAttachments/,
+  saveImagePathRegex: /\/Content\/(\d+\/)?\d+\/SaveImages/,
+  fileUploadErrorDialog: (page: Page): Locator => page.getByRole('dialog', { name: 'File Upload Error' }),
   dropdownOption:
     (name: string): Target =>
     (page: Page): Locator =>
@@ -62,38 +86,130 @@ export const ContentRecordTargets = {
         .first(),
   textFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
-    (page: Page): Locator => {
-      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
-      return resolveTarget(page, sectionTarget)
-        .locator(`.data-${escapedPascal} input[data-field-type="textBox"]`)
-        .first();
-    },
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} input[data-field-type="textBox"]`)
+        .first(),
+  numberFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} input[data-field-type="number"]`)
+        .first(),
   listFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
-    (page: Page): Locator => {
-      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
-      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.type-list`).getByRole('listbox');
-    },
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-list`)
+        .getByRole('listbox'),
   dateFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
-    (page: Page): Locator => {
-      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
-      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} span.k-datetimepicker`).first();
-    },
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} span.k-datetimepicker`)
+        .first(),
+  dateFieldInputInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} span.k-datetimepicker input`)
+        .first(),
+  dateFieldCalendarButtonInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} span.k-datetimepicker .k-link-date`)
+        .first(),
+  timeSpanFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.timespan-base`)
+        .first(),
+  formulaFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.data-text-only`)
+        .first(),
+  attachmentFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-attachment`)
+        .first(),
+  attachmentUploadButtonInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-attachment .k-upload-button`)
+        .first(),
+  attachmentRowInSection:
+    (sectionTarget: Target, fieldName: string, fileName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-attachment .k-grid-content tr`)
+        .filter({ hasText: fileName })
+        .first(),
+  imageFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-image`)
+        .first(),
+  imageBrowseButtonInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-image .k-upload-button`)
+        .first(),
+  readOnlyImageByFileIdInSection:
+    (sectionTarget: Target, fieldName: string, fileId: number): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-image .image[src*="fileId=${fileId}"]`)
+        .first(),
   referenceFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
-    (page: Page): Locator => {
-      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
-      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.onx-reference-grid`).first();
-    },
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.onx-reference-grid`)
+        .first(),
+  referenceCreateNewButtonInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.onx-reference-grid`)
+        .first()
+        .getByTitle('Create New'),
+  readOnlyReferenceFieldInSection:
+    (sectionTarget: Target, fieldName: string): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-reference`)
+        .first(),
+  readOnlyReferenceRecordRowInSection:
+    (sectionTarget: Target, fieldName: string, recordId: number): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.type-reference`)
+        .first()
+        .getByRole('row', { name: recordId.toString() }),
   readOnlyTextFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
-    (page: Page): Locator => {
-      const escapedPascal = escapeCssClassPart(toPascalCase(fieldName));
-      return resolveTarget(page, sectionTarget).locator(`.data-${escapedPascal} div.data-text-only`).first();
-    },
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.data-text-only`)
+        .first(),
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
   saveAndCloseButton: (page: Page): Locator => page.getByRole('link', { name: 'Save & Close' }),
+
+  createRecordModal: {
+    popupAddPathRegex: /\/Content\/\d+\/PopupAdd/,
+    getReferenceRecordsPathRegex: /\/Content\/ReferenceGrid\/GetReferenceRecords/,
+    dialog: createRecordDialog,
+    saveButton: (page: Page): Locator => createRecordDialog(page).getByRole('button', { name: 'Save' }),
+  },
 
   tab:
     (tabName: string) =>

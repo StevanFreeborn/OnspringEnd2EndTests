@@ -13,6 +13,7 @@ export * from './common/controls/mappingGrid.js';
 export * from './common/controls/referenceFieldGrid.js';
 export * from './common/controls/statusSwitch.js';
 export * from './common/controls/tabbedColorPicker.js';
+export * from './common/controls/timeSpanFieldControl.js';
 export * from './common/controls/treeviewSelector.js';
 
 // Feature domains
@@ -21,6 +22,9 @@ export * from './apiKeys/apiKey.tasks.js';
 export * from './apps/apps.targets.js';
 export * from './apps/app.questions.js';
 export * from './apps/app.tasks.js';
+export * from './fields/fields.targets.js';
+export * from './fields/fields.questions.js';
+export * from './fields/fields.tasks.js';
 export * from './groups/groups.targets.js';
 export * from './groups/group.tasks.js';
 export * from './roles/roles.targets.js';

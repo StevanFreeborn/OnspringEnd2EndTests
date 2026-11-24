@@ -11,6 +11,19 @@ import {
   RolesSecurityPageTargets,
 } from './roles.targets.js';
 
+async function setAppPermissionCheckbox(
+  actor: WebActor,
+  appName: string,
+  rowName: string,
+  permType: 'create' | 'read' | 'update' | 'delete' | 'enabled',
+  checked: boolean
+): Promise<void> {
+  const checkbox = AddRolePageTargets.appPermTab.permissionCheckbox(appName, rowName, permType);
+  if ((await actor.browse().isVisible(checkbox)) && (await actor.browse().isEnabled(checkbox))) {
+    await actor.browse().setChecked(checkbox, checked);
+  }
+}
+
 export const RoleTasks = {
   goto:
     (): Task<WebActor> =>
@@ -50,14 +63,78 @@ export const RoleTasks = {
             await actor.browse().click(AddRolePageTargets.appPermTab.appSectionHeading(appPerm.appName));
           }
 
-          if (appPerm.contentRecords.read) {
-            const readCheckboxTarget = AddRolePageTargets.appPermTab.permissionCheckbox(
-              appPerm.appName,
-              'Content Records',
-              'read'
-            );
-            await actor.browse().checkControl(readCheckboxTarget);
-          }
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Content Records',
+            'create',
+            appPerm.contentRecords.create
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Content Records',
+            'read',
+            appPerm.contentRecords.read
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Content Records',
+            'update',
+            appPerm.contentRecords.update
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Content Records',
+            'delete',
+            appPerm.contentRecords.delete
+          );
+
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Referenced Records',
+            'read',
+            appPerm.referencedRecords.read
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Referenced Records',
+            'update',
+            appPerm.referencedRecords.update
+          );
+
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Version History',
+            'read',
+            appPerm.versionHistory.read
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Content Administrator',
+            'enabled',
+            appPerm.contentAdmin.enable
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Report Administrator',
+            'enabled',
+            appPerm.reportAdmin.enable
+          );
+          await setAppPermissionCheckbox(
+            actor,
+            appPerm.appName,
+            'Private to me Reports',
+            'enabled',
+            appPerm.privateReportAdmin.enable
+          );
         }
       }
 
