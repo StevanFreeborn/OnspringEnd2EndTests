@@ -1,52 +1,38 @@
+import {
+  App,
+  AttachmentField,
+  DynamicDocument,
+  FakeDataFactory,
+  SavedReportAsReportDataOnly,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppDocumentsTabTargets,
+  AppTasks,
+  ContentQuestions,
+  ContentRecordTargets,
+  ContentTasks,
+  DynamicDocumentAdminPageTargets,
+  DynamicDocumentTasks,
+  EditDynamicDocumentPageTargets,
+  FieldTasks,
+  ReportTasks,
+} from '@stevanfreeborn/onspring-ui';
 import { Document, Paragraph } from 'docx';
-import { GetAttachmentFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { Locator, test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { AttachmentField } from '../../models/attachmentField';
-import { DynamicDocument } from '../../models/dynamicDocument';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { DocumentAdminPage } from '../../pageObjectModels/documents/documentAdminPage';
-import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
-import { ReportAppPage } from '../../pageObjectModels/reports/reportAppPage';
-import { ReportPage } from '../../pageObjectModels/reports/reportPage';
+import { AppFixture, test as base, expect } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-import { SavedReportAsReportDataOnly } from './../../models/report';
 
 type DynamicDocumentTestFixtures = {
   app: App;
-  adminHomePage: AdminHomePage;
-  editDocumentPage: EditDocumentPage;
-  documentAdminPage: DocumentAdminPage;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  reportAppPage: ReportAppPage;
-  reportPage: ReportPage;
 };
 
 const test = base.extend<DynamicDocumentTestFixtures>({
-  app: app,
-  adminHomePage: async ({ sysAdminPage }, use) => await use(new AdminHomePage(sysAdminPage)),
-  editDocumentPage: async ({ sysAdminPage }, use) => await use(new EditDocumentPage(sysAdminPage)),
-  documentAdminPage: async ({ sysAdminPage }, use) => await use(new DocumentAdminPage(sysAdminPage)),
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
-  reportAppPage: async ({ sysAdminPage }, use) => await use(new ReportAppPage(sysAdminPage)),
-  reportPage: async ({ sysAdminPage }, use) => await use(new ReportPage(sysAdminPage)),
+  app: AppFixture.create().build(),
 });
 
 test.describe('Dynamic Documents', () => {
   test('Create a dynamic document via the create button on the header of the admin home page', async ({
     app,
-    adminHomePage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -56,23 +42,24 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create the dynamic document', async () => {
-      await adminHomePage.createDynamicDocumentUsingHeaderCreateButton(app.name, documentName);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createViaHeader(app.name, documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test('Create a dynamic document via the create button on the Documents tile on the admin home page', async ({
     app,
-    adminHomePage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -82,23 +69,24 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create the dynamic document', async () => {
-      await adminHomePage.createDynamicDocumentUsingDocumentTileButton(app.name, documentName);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createViaDocumentsTile(app.name, documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test('Create a dynamic document via the "Create Document" button on the Documents admin page', async ({
     app,
-    documentAdminPage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -108,23 +96,24 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document', async () => {
-      await documentAdminPage.createDocument(app.name, documentName);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAdminPage(app.name, documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test("Create a dynamic document via the Add Document button on an app's Documents tab", async ({
     app,
-    appAdminPage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -134,24 +123,24 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document', async () => {
-      await appAdminPage.documentsTab.createDocument(documentName);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAppDocumentsTab(documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test('Create a copy of a dynamic document via the create button on the header of the admin home page', async ({
     app,
-    adminHomePage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -162,32 +151,32 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create the dynamic document to copy', async () => {
-      await adminHomePage.createDynamicDocumentUsingHeaderCreateButton(app.name, documentToCopy);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createViaHeader(app.name, documentToCopy));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create a copy of the dynamic document', async () => {
-      await adminHomePage.createDynamicDocumentCopyUsingHeaderCreateButton(app.name, documentToCopy, documentName);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createCopyViaHeader(app.name, documentToCopy, documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test('Create a copy of a dynamic document via the create button on the Documents tile on the admin home page', async ({
     app,
-    adminHomePage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -198,32 +187,34 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create the dynamic document to copy', async () => {
-      await adminHomePage.createDynamicDocumentUsingDocumentTileButton(app.name, documentToCopy);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createViaDocumentsTile(app.name, documentToCopy));
     });
 
     await test.step('Navigate back to the admin home page', async () => {
-      await adminHomePage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.gotoAdminHome());
     });
 
     await test.step('Create a copy of the dynamic document', async () => {
-      await adminHomePage.createDynamicDocumentCopyUsingDocumentTileButton(app.name, documentToCopy, documentName);
-      await adminHomePage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createCopyViaDocumentsTile(app.name, documentToCopy, documentName)
+      );
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test('Create a copy of a dynamic document via the "Create Document" button on the Documents admin page', async ({
     app,
-    documentAdminPage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -234,32 +225,34 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document to copy', async () => {
-      await documentAdminPage.createDocument(app.name, documentToCopy);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAdminPage(app.name, documentToCopy));
     });
 
     await test.step('Navigate back to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create a copy of the dynamic document', async () => {
-      await documentAdminPage.createDocumentCopy(app.name, documentToCopy, documentName);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createCopyFromAdminPage(app.name, documentToCopy, documentName)
+      );
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test("Create a copy of a dynamic document via the Add Document button on an app's Documents tab", async ({
     app,
-    appAdminPage,
-    editDocumentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -270,105 +263,83 @@ test.describe('Dynamic Documents', () => {
     const documentName = FakeDataFactory.createFakeDocumentName();
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document to copy', async () => {
-      await appAdminPage.documentsTab.createDocument(documentToCopy);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAppDocumentsTab(documentToCopy));
     });
 
     await test.step('Navigate back to the app Documents tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create a copy of the dynamic document', async () => {
-      await appAdminPage.documentsTab.createDocumentCopy(documentToCopy, documentName);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createCopyFromAppDocumentsTab(documentToCopy, documentName));
     });
 
     await test.step('Verify the dynamic document was created', async () => {
-      await expect(editDocumentPage.informationTab.documentNameInput).toHaveValue(documentName);
+      await sysAdminActor
+        .browse()
+        .check(EditDynamicDocumentPageTargets.informationTab.documentNameInput)
+        .hasValue(documentName);
     });
   });
 
   test("Update a dynamic document's configurations on an app from an app's Documents tab", async ({
     app,
-    appAdminPage,
+    sysAdminActor,
     dynamicDocumentService,
-    editDocumentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-245',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: true,
     });
-
     const updatedName = FakeDataFactory.createFakeDocumentName();
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document', async () => {
-      await appAdminPage.documentsTab.createDocument(document.name);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAppDocumentsTab(document.name));
     });
 
     await test.step("Navigate back to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Update the dynamic document', async () => {
-      const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: document.name });
-
-      await documentRow.hover();
-      await documentRow.getByTitle('Edit Document').click();
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
+      const originalName = document.name;
       document.name = updatedName;
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.openForEditFromAppDocumentsTab(originalName),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document was updated', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
-
-      const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: updatedName });
-
-      await expect(documentRow).toBeVisible();
-      await expect(documentRow).toHaveText(/enabled/i);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
+      const documentRow = AppDocumentsTabTargets.rowByName(updatedName);
+      await sysAdminActor.browse().check(documentRow).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(documentRow)
+        .hasText(/enabled/i);
     });
   });
 
   test("Update a dynamic document's configurations from the Documents admin page", async ({
     app,
-    documentAdminPage,
-    editDocumentPage,
+    sysAdminActor,
     dynamicDocumentService,
   }) => {
     test.info().annotations.push({
@@ -376,473 +347,317 @@ test.describe('Dynamic Documents', () => {
       description: 'Test-246',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: true,
     });
-
     const updatedName = FakeDataFactory.createFakeDocumentName();
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document', async () => {
-      await documentAdminPage.createDocument(app.name, document.name);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAdminPage(app.name, document.name));
     });
 
     await test.step('Navigate back to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Update the dynamic document', async () => {
-      const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: document.name });
-
-      await documentRow.hover();
-      await documentRow.getByTitle('Edit Document').click();
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
+      const originalName = document.name;
       document.name = updatedName;
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.openForEditFromAdminPage(originalName),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document was updated', async () => {
-      await documentAdminPage.goto();
-
-      const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: updatedName });
-
-      await expect(documentRow).toBeVisible();
-      await expect(documentRow).toHaveText(/enabled/i);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
+      const documentRow = DynamicDocumentAdminPageTargets.rowByName(updatedName);
+      await sysAdminActor.browse().check(documentRow).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(documentRow)
+        .hasText(/enabled/i);
     });
   });
 
-  test("Delete a dynamic document on an app from an app's Documents tab", async ({
-    app,
-    appAdminPage,
-    editDocumentPage,
-  }) => {
+  test("Delete a dynamic document on an app from an app's Documents tab", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-247',
     });
 
     const documentName = FakeDataFactory.createFakeDocumentName();
-    const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: documentName });
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document to delete', async () => {
-      await appAdminPage.documentsTab.createDocument(documentName);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAppDocumentsTab(documentName));
     });
 
     await test.step("Navigate back to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Delete the dynamic document', async () => {
-      await documentRow.hover();
-      await documentRow.getByTitle('Delete Document').click();
-
-      await appAdminPage.documentsTab.deleteDocumentDialog.deleteButton.click();
-      await appAdminPage.documentsTab.deleteDocumentDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.deleteFromAppDocumentsTab(documentName));
     });
 
     await test.step('Verify the dynamic document was deleted', async () => {
-      await expect(documentRow).not.toBeAttached();
+      await sysAdminActor.browse().check(AppDocumentsTabTargets.rowByName(documentName)).isNotAttached();
     });
   });
 
-  test('Delete a dynamic document from the Documents admin page', async ({
-    app,
-    documentAdminPage,
-    editDocumentPage,
-  }) => {
+  test('Delete a dynamic document from the Documents admin page', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-248',
     });
 
     const documentName = FakeDataFactory.createFakeDocumentName();
-    const documentRow = documentAdminPage.documentsGrid.getByRole('row', { name: documentName });
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document to delete', async () => {
-      await documentAdminPage.createDocument(app.name, documentName);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAdminPage(app.name, documentName));
     });
 
     await test.step('Navigate back to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Delete the dynamic document', async () => {
-      await documentRow.hover();
-      await documentRow.getByTitle('Delete Document').click();
-
-      await documentAdminPage.deleteDocumentDialog.deleteButton.click();
-      await documentAdminPage.deleteDocumentDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.deleteFromAdminPage(documentName));
     });
 
     await test.step('Verify the dynamic document was deleted', async () => {
-      await expect(documentRow).not.toBeAttached();
+      await sysAdminActor.browse().check(DynamicDocumentAdminPageTargets.rowByName(documentName)).isNotAttached();
     });
   });
 
   test("Disable a dynamic document from an app's Documents tab", async ({
     app,
-    appAdminPage,
-    editDocumentPage,
+    sysAdminActor,
     dynamicDocumentService,
-    addContentPage,
-    editContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-254',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: true,
     });
-
     let recordId: number;
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document to disable', async () => {
-      await appAdminPage.documentsTab.createDocument(document.name);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createFromAppDocumentsTab(document.name),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is enabled', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
+      await sysAdminActor.attemptsTo(ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isVisible();
     });
 
     await test.step('Disable the dynamic document', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
-
-      const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: document.name });
-
-      await documentRow.hover();
-      await documentRow.getByTitle('Edit Document').click();
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.informationTab.updateStatus(false);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppDocumentsTab(app.id),
+        DynamicDocumentTasks.openForEditFromAppDocumentsTab(document.name),
+        DynamicDocumentTasks.updateStatus(false),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is disabled', async () => {
-      await editContentPage.goto(app.id, recordId);
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoEdit(app.id, recordId), ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isHidden();
     });
   });
 
   test('Disable a dynamic document from the Documents admin page', async ({
     app,
-    documentAdminPage,
-    editDocumentPage,
+    sysAdminActor,
     dynamicDocumentService,
-    addContentPage,
-    editContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-255',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: true,
     });
-
     let recordId: number;
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document to disable', async () => {
-      await documentAdminPage.createDocument(app.name, document.name);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createFromAdminPage(app.name, document.name),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is enabled', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
+      await sysAdminActor.attemptsTo(ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isVisible();
     });
 
     await test.step('Disable the dynamic document', async () => {
-      await documentAdminPage.goto();
-      await documentAdminPage.documentsGrid.getByRole('row', { name: document.name }).click();
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.informationTab.updateStatus(false);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.goto(),
+        DynamicDocumentTasks.openForEditFromAdminPage(document.name),
+        DynamicDocumentTasks.updateStatus(false),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is disabled', async () => {
-      await editContentPage.goto(app.id, recordId);
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoEdit(app.id, recordId), ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isHidden();
     });
   });
 
   test("Enable a dynamic document from an app's Documents tab", async ({
     app,
-    appAdminPage,
+    sysAdminActor,
     dynamicDocumentService,
-    editDocumentPage,
-    addContentPage,
-    editContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-256',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: false,
     });
-
     let recordId: number;
 
     await test.step("Navigate to the app's Documents tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create the dynamic document to enable', async () => {
-      await appAdminPage.documentsTab.createDocument(document.name);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createFromAppDocumentsTab(document.name),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is disabled', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
+      await sysAdminActor.attemptsTo(ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isHidden();
     });
 
     await test.step('Enable the dynamic document', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.documentsTabButton.click();
-
-      const documentRow = appAdminPage.documentsTab.documentsGrid.getByRole('row', { name: document.name });
-
-      await documentRow.hover();
-      await documentRow.getByTitle('Edit Document').click();
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.informationTab.updateStatus(true);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppDocumentsTab(app.id),
+        DynamicDocumentTasks.openForEditFromAppDocumentsTab(document.name),
+        DynamicDocumentTasks.updateStatus(true),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is enabled', async () => {
-      await editContentPage.goto(app.id, recordId);
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoEdit(app.id, recordId), ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isVisible();
     });
   });
 
   test('Enable a dynamic document from the Documents admin page', async ({
     app,
-    documentAdminPage,
+    sysAdminActor,
     dynamicDocumentService,
-    editDocumentPage,
-    addContentPage,
-    editContentPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-257',
     });
 
-    const template = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: 'This was generated for record: {:Record Id}',
-            }),
-          ],
-        },
-      ],
-    });
-
-    const templatePath = await dynamicDocumentService.createTemplate(template);
-
+    const templatePath = await dynamicDocumentService.createTemplate(createRecordIdTemplate());
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: false,
     });
-
     let recordId: number;
 
     await test.step('Navigate to the Documents admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create the dynamic document to enable', async () => {
-      await documentAdminPage.createDocument(app.name, document.name);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createFromAdminPage(app.name, document.name),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is disabled', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeHidden();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
+      await sysAdminActor.attemptsTo(ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isHidden();
     });
 
     await test.step('Enable the dynamic document', async () => {
-      await documentAdminPage.goto();
-      await documentAdminPage.documentsGrid.getByRole('row', { name: document.name }).click();
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-
-      await editDocumentPage.informationTab.updateStatus(true);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.goto(),
+        DynamicDocumentTasks.openForEditFromAdminPage(document.name),
+        DynamicDocumentTasks.updateStatus(true),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step('Verify the dynamic document is enabled', async () => {
-      await editContentPage.goto(app.id, recordId);
-
-      await editContentPage.actionMenuButton.click();
-
-      await expect(editContentPage.actionMenu.generateDocumentLink).toBeVisible();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoEdit(app.id, recordId), ContentTasks.openActionMenu());
+      await sysAdminActor.browse().check(ContentRecordTargets.actionMenuOption('Generate Document')).isVisible();
     });
   });
 
   test('Add a report token to a dynamic document', async ({
     app,
-    reportAppPage,
-    reportPage,
-    appAdminPage,
+    sysAdminActor,
     dynamicDocumentService,
-    documentAdminPage,
-    editDocumentPage,
-    addContentPage,
-    editContentPage,
     downloadService,
     pdfParser,
   }) => {
@@ -857,32 +672,29 @@ test.describe('Dynamic Documents', () => {
     });
 
     await test.step('Create report to reference in dynamic document', async () => {
-      await reportAppPage.goto(app.id);
-      await reportAppPage.createReport(report);
-      await reportAppPage.page.waitForURL(reportPage.pathRegex);
+      await sysAdminActor.attemptsTo(ReportTasks.createSavedDataReport(app.id, report));
     });
 
     const attachmentField = new AttachmentField({
       name: FakeDataFactory.createFakeFieldName(),
     });
-
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
 
     await test.step('Create an attachment field and add to app layout to save generated document in', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
-
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        fieldName: attachmentField.name,
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.gotoAppLayoutTab(app.id),
+        FieldTasks.addFromGrid(attachmentField),
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          fieldName: attachmentField.name,
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     const template = new Document({
@@ -896,12 +708,10 @@ test.describe('Dynamic Documents', () => {
         },
       ],
     });
-
     const templatePath = await dynamicDocumentService.createTemplate(template);
-
     const document = new DynamicDocument({
       name: FakeDataFactory.createFakeDocumentName(),
-      templatePath: templatePath,
+      templatePath,
       status: true,
       saveToFieldAccess: 'Allowed',
       attachmentField: attachmentField.name,
@@ -909,51 +719,40 @@ test.describe('Dynamic Documents', () => {
     });
 
     await test.step('Navigate to the document admin page', async () => {
-      await documentAdminPage.goto();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.goto());
     });
 
     await test.step('Create a dynamic document', async () => {
-      await documentAdminPage.createDocument(app.name, document.name);
-      await documentAdminPage.page.waitForURL(editDocumentPage.pathRegex);
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.createFromAdminPage(app.name, document.name));
     });
 
     await test.step('Add a report token to the dynamic document', async () => {
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(DynamicDocumentTasks.fillForm(document), DynamicDocumentTasks.save());
     });
+
+    let recordId: number;
 
     await test.step('Generate the dynamic document', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      await editContentPage.actionMenuButton.click();
-      await editContentPage.actionMenu.generateDocumentLink.click();
-      await editContentPage.generateDocumentModal.fillOutForm({
-        fileType: 'PDF',
-        documentAction: 'Save to an attachment field',
-      });
-      await editContentPage.generateDocumentModal.okButton.click();
-      await editContentPage.generateDocumentModal.closeButton.click();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
+      await sysAdminActor.attemptsTo(
+        ContentTasks.generateDynamicDocument({
+          fileType: 'PDF',
+          documentAction: 'Save to an attachment field',
+        })
+      );
     });
-
-    let generatedDocumentRow: Locator;
 
     await test.step('Verify the dynamic document was generated', async () => {
       await expect(async () => {
-        await editContentPage.page.reload();
-
-        const attachmentControl = await editContentPage.form.getField({
-          fieldName: attachmentField.name,
-          fieldType: attachmentField.type as FieldType,
-          tabName,
-          sectionName,
-        } as GetAttachmentFieldParams);
-
-        const attachmentName = `${editContentPage.getRecordIdFromUrl()} - ${document.name}.pdf`;
-        generatedDocumentRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
-
-        await expect(generatedDocumentRow).toBeVisible({ timeout: 5_000 });
+        await sysAdminActor.browse().reload();
+        const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+        const generatedDocumentRow = ContentRecordTargets.attachmentRowInSection(
+          section,
+          attachmentField.name,
+          `${recordId} - ${document.name}.pdf`
+        );
+        await sysAdminActor.browse().check(generatedDocumentRow).isVisible({ timeout: 5_000 });
       }).toPass({
         intervals: [5_000],
         timeout: 300_000,
@@ -961,13 +760,31 @@ test.describe('Dynamic Documents', () => {
     });
 
     await test.step('Verify the dynamic document contains the report data', async () => {
-      const pdfDownload = editContentPage.page.waitForEvent('download');
-      await generatedDocumentRow.click();
-      const pdf = await pdfDownload;
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      const generatedDocumentRow = ContentRecordTargets.attachmentRowInSection(
+        section,
+        attachmentField.name,
+        `${recordId} - ${document.name}.pdf`
+      );
+      const pdf = await sysAdminActor.browse().clickAndWaitForDownload(generatedDocumentRow);
       const pdfFilePath = await downloadService.saveDownload(pdf);
-      const foundCreatedByText = await pdfParser.findTextInPDF(pdfFilePath, ['Record Id', '1']);
+      const foundReportData = await pdfParser.findTextInPDF(pdfFilePath, ['Record Id', '1']);
 
-      expect(foundCreatedByText).toBe(true);
+      expect(foundReportData).toBe(true);
     });
   });
 });
+
+function createRecordIdTemplate(): Document {
+  return new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            text: 'This was generated for record: {:Record Id}',
+          }),
+        ],
+      },
+    ],
+  });
+}
