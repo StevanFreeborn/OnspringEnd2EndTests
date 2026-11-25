@@ -1,24 +1,20 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
-import { Trigger } from '../../models/trigger';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import {
+  App,
+  FakeDataFactory,
+  ObjectVisibilityOutcome,
+  ObjectVisibilitySection,
+  Trigger,
+} from '@stevanfreeborn/onspring-models';
+import { AppTasks, AppTriggersTabTargets, TriggerModalTargets, TriggerTasks } from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type TriggersTestFixtures = {
-  app: App;
-  appAdminPage: AppAdminPage;
-};
-
-const test = base.extend<TriggersTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+const test = base.extend<{ app: App }>({
+  app: AppFixture.create().build(),
 });
 
 test.describe('Triggers', () => {
-  test('Add a trigger to an app', async ({ app, appAdminPage }) => {
+  test('Add a trigger to an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-186',
@@ -30,21 +26,19 @@ test.describe('Triggers', () => {
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new trigger', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Verify the trigger was added', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await expect(triggerRow).toBeVisible();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isVisible();
     });
   });
 
-  test('Enable a trigger on an app', async ({ app, appAdminPage }) => {
+  test('Enable a trigger on an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-187',
@@ -57,23 +51,24 @@ test.describe('Triggers', () => {
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new enabled trigger', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Verify the trigger was enabled', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await expect(triggerRow).toBeVisible();
-      await expect(triggerRow).toHaveText(/enabled/i);
+      const triggerRow = AppTriggersTabTargets.triggerRowByName(trigger.name);
+      await sysAdminActor.browse().check(triggerRow).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(triggerRow)
+        .hasText(/enabled/i);
     });
   });
 
-  test('Disable a trigger on an app', async ({ app, appAdminPage }) => {
+  test('Disable a trigger on an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-188',
@@ -86,31 +81,32 @@ test.describe('Triggers', () => {
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new enabled trigger', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Disable the trigger', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await triggerRow.click();
-      await appAdminPage.triggersTab.addOrEditTriggerModal.generalTab.statusToggle.click();
-      await appAdminPage.triggersTab.addOrEditTriggerModal.saveButton.click();
+      await sysAdminActor.attemptsTo(
+        TriggerTasks.openTrigger(trigger.name),
+        TriggerTasks.setModalStatus(false),
+        TriggerTasks.saveModal()
+      );
     });
 
     await test.step('Verify the trigger was disabled', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await expect(triggerRow).toBeVisible();
-      await expect(triggerRow).toHaveText(/disabled/i);
+      const triggerRow = AppTriggersTabTargets.triggerRowByName(trigger.name);
+      await sysAdminActor.browse().check(triggerRow).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(triggerRow)
+        .hasText(/disabled/i);
     });
   });
 
-  test('Update the configuration of a trigger on an app', async ({ app, appAdminPage }) => {
+  test('Update the configuration of a trigger on an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-189',
@@ -124,30 +120,25 @@ test.describe('Triggers', () => {
     const updatedTriggerName = FakeDataFactory.createFakeTriggerName();
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new trigger', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Update the trigger configuration', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await triggerRow.click();
-      await appAdminPage.triggersTab.addOrEditTriggerModal.generalTab.nameInput.fill(updatedTriggerName);
-      await appAdminPage.triggersTab.addOrEditTriggerModal.saveButton.click();
+      await sysAdminActor.attemptsTo(TriggerTasks.openTrigger(trigger.name));
+      await sysAdminActor.browse().fill(TriggerModalTargets.generalTab.nameInput, updatedTriggerName);
+      await sysAdminActor.attemptsTo(TriggerTasks.saveModal());
     });
 
     await test.step('Verify the trigger was updated', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: updatedTriggerName });
-
-      await expect(triggerRow).toBeVisible();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(updatedTriggerName)).isVisible();
     });
   });
 
-  test('Delete a trigger from an app', async ({ app, appAdminPage }) => {
+  test('Delete a trigger from an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-190',
@@ -159,31 +150,24 @@ test.describe('Triggers', () => {
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new trigger', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
-
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await expect(triggerRow).toBeVisible();
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isVisible();
     });
 
     await test.step('Delete the trigger', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
-      await appAdminPage.triggersTab.deleteTrigger(trigger.name);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id), TriggerTasks.deleteTrigger(trigger.name));
     });
 
     await test.step('Verify the trigger was deleted', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await expect(triggerRow).toBeHidden();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isHidden();
     });
   });
 
-  test('Filter triggers by outcome type', async ({ app, appAdminPage }) => {
+  test('Filter triggers by outcome type', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-191',
@@ -206,22 +190,19 @@ test.describe('Triggers', () => {
     });
 
     await test.step('Navigate to the app triggers tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with an outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Filter triggers by outcome type', async () => {
-      await appAdminPage.triggersTab.filterTriggersByOutcome('Create One Record');
+      await sysAdminActor.attemptsTo(TriggerTasks.filterTriggersByOutcome('Create One Record'));
     });
 
     await test.step('Verify the trigger is not displayed', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-
-      await expect(triggerRow).toBeHidden();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isHidden();
     });
   });
 });
