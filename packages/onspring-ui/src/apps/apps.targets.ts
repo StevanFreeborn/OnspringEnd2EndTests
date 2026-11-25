@@ -71,6 +71,7 @@ export const AppDetailTargets = {
   triggersTabButton: (page: Page) => page.getByRole('tab', { name: 'Triggers' }),
   documentsTabButton: (page: Page) => page.getByRole('tab', { name: 'Documents' }),
   messagingTabButton: (page: Page) => page.getByRole('tab', { name: 'Messaging' }),
+  recordRetentionTabButton: (page: Page) => page.getByRole('tab', { name: 'Record Retention' }),
 
   generalTab: {
     name: (page: Page) => page.locator(createSettingSelector('Name')),

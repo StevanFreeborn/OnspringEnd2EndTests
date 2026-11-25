@@ -92,3 +92,5 @@ export * from './triggers/outcomes.targets.js';
 export * from './triggers/outcomes.tasks.js';
 export * from './triggers/triggers.targets.js';
 export * from './triggers/triggers.tasks.js';
+export * from './recordRetentionRules/recordRetentionRules.targets.js';
+export * from './recordRetentionRules/recordRetentionRules.tasks.js';

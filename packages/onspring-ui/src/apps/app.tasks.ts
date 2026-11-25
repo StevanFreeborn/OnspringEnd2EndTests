@@ -8,6 +8,7 @@ import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { FieldTasks } from '../fields/fields.tasks.js';
+import { AppRecordRetentionTabTargets } from '../recordRetentionRules/recordRetentionRules.targets.js';
 import { AppTriggersTabTargets } from '../triggers/triggers.targets.js';
 import { AppQuestions } from './app.questions.js';
 import {
@@ -128,6 +129,14 @@ export const AppTasks = {
       await actor.browse().goto(`/Admin/App/${appId}`);
       await actor.browse().click(AppDetailTargets.triggersTabButton);
       await actor.browse().waitForState(AppTriggersTabTargets.triggersGrid, 'visible');
+    },
+
+  gotoAppRecordRetentionTab:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(`/Admin/App/${appId}`);
+      await actor.browse().click(AppDetailTargets.recordRetentionTabButton);
+      await actor.browse().waitForState(AppRecordRetentionTabTargets.rulesGrid, 'visible');
     },
 
   filterBy:
