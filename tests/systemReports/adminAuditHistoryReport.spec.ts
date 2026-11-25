@@ -1,63 +1,49 @@
-import { test as base, expect, Page } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { User, UserStatus } from '../../models/user';
-import { AdminAuditHistoryPage } from '../../pageObjectModels/systemReports/adminAuditHistoryPage';
+import { App, User } from '@stevanfreeborn/onspring-models';
+import {
+  AdminAuditHistoryReportTargets,
+  AdminAuditHistoryReportTasks,
+  SystemReportQuestions,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type AdminAuditHistoryTestFixtures = {
   app: App;
-  adminAuditHistoryPage: AdminAuditHistoryPage;
-  testUser: User;
-  testUserPage: Page;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<AdminAuditHistoryTestFixtures>({
-  app: app,
-  adminAuditHistoryPage: async ({ sysAdminPage }, use) => await use(new AdminAuditHistoryPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  app: AppFixture.create().build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('admin audit history report', function () {
-  test('Filter the Audit History Report', async ({ adminAuditHistoryPage, sysAdminUser, app }) => {
+  test('Filter the Audit History Report', async ({ sysAdminActor, sysAdminUser, app }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-280',
     });
 
     await test.step('Navigate to the audit history report', async () => {
-      await adminAuditHistoryPage.goto();
+      await sysAdminActor.attemptsTo(AdminAuditHistoryReportTasks.goto());
     });
 
     await test.step('Filter the audit history report', async () => {
-      await adminAuditHistoryPage.applyFilter({
-        user: sysAdminUser.fullName,
-        saveType: 'Added',
-        itemType: 'App',
-        appOrSurvey: app.name,
-      });
+      await sysAdminActor.attemptsTo(
+        AdminAuditHistoryReportTasks.applyFilter({
+          user: sysAdminUser.fullName,
+          saveType: 'Added',
+          itemType: 'App',
+          appOrSurvey: app.name,
+        })
+      );
     });
 
     await test.step('Verify the audit history report has been filtered', async () => {
-      const rows = await adminAuditHistoryPage.getRows();
-
-      expect(rows).toHaveLength(1);
+      await sysAdminActor.browse().check(AdminAuditHistoryReportTargets.rows).hasCount(1);
     });
   });
 
@@ -65,8 +51,8 @@ test.describe('admin audit history report', function () {
     app,
     sysAdminUser,
     sysAdminEmail,
-    testUser,
-    testUserPage,
+    user: testUser,
+    testUserActor,
     downloadService,
     sheetParser,
   }) => {
@@ -77,23 +63,23 @@ test.describe('admin audit history report', function () {
 
     test.slow();
 
-    const adminAuditHistoryPage = new AdminAuditHistoryPage(testUserPage);
-
     await test.step('Navigate to the audit history report', async () => {
-      await adminAuditHistoryPage.goto();
+      await testUserActor.attemptsTo(AdminAuditHistoryReportTasks.goto());
     });
 
     await test.step('Filter the audit history report', async () => {
-      await adminAuditHistoryPage.applyFilter({
-        user: sysAdminUser.fullName,
-        saveType: 'Added',
-        itemType: 'App',
-        appOrSurvey: app.name,
-      });
+      await testUserActor.attemptsTo(
+        AdminAuditHistoryReportTasks.applyFilter({
+          user: sysAdminUser.fullName,
+          saveType: 'Added',
+          itemType: 'App',
+          appOrSurvey: app.name,
+        })
+      );
     });
 
     await test.step('Export the audit history report', async () => {
-      await adminAuditHistoryPage.exportReport();
+      await testUserActor.attemptsTo(AdminAuditHistoryReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -117,12 +103,7 @@ test.describe('admin audit history report', function () {
     let reportPath: string;
 
     await test.step('Download the exported admin history report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 

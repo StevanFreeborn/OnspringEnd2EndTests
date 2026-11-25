@@ -1,38 +1,32 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { expect, test as base } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { EmailBody } from '../../models/emailBody';
-import { TextRuleWithValue } from '../../models/rule';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { TextField } from '../../models/textField';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
-import { AutomatedEmailMessageSourcesPage } from '../../pageObjectModels/systemReports/automatedEmailMessageSourcesPage';
+import {
+  App,
+  EmailBody,
+  FakeDataFactory,
+  SimpleRuleLogic,
+  TextField,
+  TextRuleWithValue,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  AutomatedEmailMessageSourcesReportTargets,
+  AutomatedEmailMessageSourcesReportTasks,
+  EmailBodyTasks,
+  FieldTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type AutomatedEmailMessageSourcesReportTestFixtures = {
   app: App;
-  appAdminPage: AppAdminPage;
-  editEmailBodyPage: EditEmailBodyPage;
-  automatedMessageSourcesPage: AutomatedEmailMessageSourcesPage;
 };
 
 const test = base.extend<AutomatedEmailMessageSourcesReportTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  editEmailBodyPage: async ({ sysAdminPage }, use) => await use(new EditEmailBodyPage(sysAdminPage)),
-  automatedMessageSourcesPage: async ({ sysAdminPage }, use) =>
-    await use(new AutomatedEmailMessageSourcesPage(sysAdminPage)),
+  app: AppFixture.create().build(),
 });
 
 test.describe('automated email message sources report', () => {
-  test('Filter the Automated Email Message Sources Report', async ({
-    app,
-    appAdminPage,
-    editEmailBodyPage,
-    automatedMessageSourcesPage,
-  }) => {
+  test('Filter the Automated Email Message Sources Report', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-282',
@@ -42,30 +36,26 @@ test.describe('automated email message sources report', () => {
     const emailBody = buildEmailBody(app, textField);
 
     await test.step('Create an email body', async () => {
-      await createTextField(appAdminPage, app, textField);
-      await createEmailBody(appAdminPage, app, editEmailBodyPage, emailBody);
+      await createTextField(sysAdminActor, app, textField);
+      await createEmailBody(sysAdminActor, app, emailBody);
     });
 
     await test.step('Navigate to the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.goto();
+      await sysAdminActor.attemptsTo(AutomatedEmailMessageSourcesReportTasks.goto());
     });
 
     await test.step('Filter the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
+      await sysAdminActor.attemptsTo(
+        AutomatedEmailMessageSourcesReportTasks.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name })
+      );
     });
 
     await test.step('Verify the automated email message sources report is filtered', async () => {
-      const rows = await automatedMessageSourcesPage.getRows();
-      expect(rows).toHaveLength(1);
+      await sysAdminActor.browse().check(AutomatedEmailMessageSourcesReportTargets.rows).hasCount(1);
     });
   });
 
-  test('Edit an item in the Automated Email Message Sources Report', async ({
-    app,
-    appAdminPage,
-    editEmailBodyPage,
-    automatedMessageSourcesPage,
-  }) => {
+  test('Edit an item in the Automated Email Message Sources Report', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-284',
@@ -76,41 +66,38 @@ test.describe('automated email message sources report', () => {
     const emailBody = buildEmailBody(app, textField);
 
     await test.step('Create an email body', async () => {
-      await createTextField(appAdminPage, app, textField);
-      await createEmailBody(appAdminPage, app, editEmailBodyPage, emailBody);
+      await createTextField(sysAdminActor, app, textField);
+      await createEmailBody(sysAdminActor, app, emailBody);
     });
 
     await test.step('Navigate to the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.goto();
+      await sysAdminActor.attemptsTo(AutomatedEmailMessageSourcesReportTasks.goto());
     });
 
     await test.step('Edit the email body from the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
-
-      const rows = await automatedMessageSourcesPage.getRows();
-      await rows[0].click();
-      await automatedMessageSourcesPage.page.waitForURL(editEmailBodyPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        AutomatedEmailMessageSourcesReportTasks.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name }),
+        AutomatedEmailMessageSourcesReportTasks.openItemAt(0)
+      );
 
       emailBody.name = updatedEmailBodyName;
-      await editEmailBodyPage.updateEmailBody(emailBody);
-      await editEmailBodyPage.save();
+      await sysAdminActor.attemptsTo(EmailBodyTasks.update(emailBody), EmailBodyTasks.save());
     });
 
     await test.step('Verify the email body was edited', async () => {
-      await automatedMessageSourcesPage.goto();
-      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
+      await sysAdminActor.attemptsTo(
+        AutomatedEmailMessageSourcesReportTasks.goto(),
+        AutomatedEmailMessageSourcesReportTasks.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name })
+      );
 
-      const rows = await automatedMessageSourcesPage.getRows();
-      await expect(rows[0]).toHaveText(new RegExp(updatedEmailBodyName));
+      await sysAdminActor
+        .browse()
+        .check(AutomatedEmailMessageSourcesReportTargets.rowAt(0))
+        .hasText(new RegExp(updatedEmailBodyName));
     });
   });
 
-  test('Sort the Automated Email Message Sources Report', async ({
-    app,
-    appAdminPage,
-    editEmailBodyPage,
-    automatedMessageSourcesPage,
-  }) => {
+  test('Sort the Automated Email Message Sources Report', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-313',
@@ -121,24 +108,31 @@ test.describe('automated email message sources report', () => {
     const secondEmailBody = buildEmailBody(app, textField, `2-${FakeDataFactory.createFakeEmailBodyName()}`);
 
     await test.step('Create two email bodies', async () => {
-      await createTextField(appAdminPage, app, textField);
-      await createEmailBody(appAdminPage, app, editEmailBodyPage, firstEmailBody);
-      await createEmailBody(appAdminPage, app, editEmailBodyPage, secondEmailBody);
+      await createTextField(sysAdminActor, app, textField);
+      await createEmailBody(sysAdminActor, app, firstEmailBody);
+      await createEmailBody(sysAdminActor, app, secondEmailBody);
     });
 
     await test.step('Navigate to the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.goto();
+      await sysAdminActor.attemptsTo(AutomatedEmailMessageSourcesReportTasks.goto());
     });
 
     await test.step('Sort the automated email message sources report', async () => {
-      await automatedMessageSourcesPage.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name });
-      await automatedMessageSourcesPage.sortGridBy('Item Name', 'ascending');
+      await sysAdminActor.attemptsTo(
+        AutomatedEmailMessageSourcesReportTasks.applyFilter({ emailType: 'Email Body', appOrSurvey: app.name }),
+        AutomatedEmailMessageSourcesReportTasks.sortGridBy('Item Name', 'ascending')
+      );
     });
 
     await test.step('Verify the automated email message sources report is sorted', async () => {
-      const rows = await automatedMessageSourcesPage.getRows();
-      await expect(rows[0]).toHaveText(new RegExp(firstEmailBody.name));
-      await expect(rows[1]).toHaveText(new RegExp(secondEmailBody.name));
+      await sysAdminActor
+        .browse()
+        .check(AutomatedEmailMessageSourcesReportTargets.rowAt(0))
+        .hasText(new RegExp(firstEmailBody.name));
+      await sysAdminActor
+        .browse()
+        .check(AutomatedEmailMessageSourcesReportTargets.rowAt(1))
+        .hasText(new RegExp(secondEmailBody.name));
     });
   });
 });
@@ -166,22 +160,15 @@ function buildEmailBody(app: App, textField: TextField, emailBodyName?: string) 
   });
 }
 
-async function createTextField(appAdminPage: AppAdminPage, app: App, textField: TextField) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+async function createTextField(actor: WebActor, app: App, textField: TextField) {
+  await actor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id), FieldTasks.addFromGrid(textField));
 }
 
-async function createEmailBody(
-  appAdminPage: AppAdminPage,
-  app: App,
-  editEmailBodyPage: EditEmailBodyPage,
-  emailBody: EmailBody
-) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.messagingTabButton.click();
-  await appAdminPage.messagingTab.createEmailBody(emailBody.name);
-  await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
-  await editEmailBodyPage.updateEmailBody(emailBody);
-  await editEmailBodyPage.save();
+async function createEmailBody(actor: WebActor, app: App, emailBody: EmailBody) {
+  await actor.attemptsTo(
+    AppTasks.gotoAppMessagingTab(app.id),
+    EmailBodyTasks.createFromAppMessagingTab(emailBody.name),
+    EmailBodyTasks.update(emailBody),
+    EmailBodyTasks.save()
+  );
 }

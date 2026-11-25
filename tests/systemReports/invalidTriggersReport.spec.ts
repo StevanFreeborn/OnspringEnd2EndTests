@@ -1,34 +1,36 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Locator } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
-import { TextRule } from '../../models/rule';
-import { FilterRuleLogic, SimpleRuleLogic } from '../../models/ruleLogic';
-import { TextField } from '../../models/textField';
-import { Trigger } from '../../models/trigger';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { InvalidTriggersReportPage } from '../../pageObjectModels/systemReports/invalidTriggersReportPage';
+import {
+  App,
+  FakeDataFactory,
+  FilterRuleLogic,
+  ObjectVisibilityOutcome,
+  ObjectVisibilitySection,
+  SimpleRuleLogic,
+  TextField,
+  TextRule,
+  Trigger,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  AppTriggersTabTargets,
+  FieldTasks,
+  InvalidTriggersReportTargets,
+  InvalidTriggersReportTasks,
+  TriggerTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { AppFixture, expect, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type InvalidTriggersReportTestFixtures = {
   testApp: App;
-  appAdminPage: AppAdminPage;
-  invalidTriggersReportPage: InvalidTriggersReportPage;
 };
 
 const test = base.extend<InvalidTriggersReportTestFixtures>({
-  testApp: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  invalidTriggersReportPage: async ({ sysAdminPage }, use) => await use(new InvalidTriggersReportPage(sysAdminPage)),
+  testApp: AppFixture.create().build(),
 });
 
 test.describe('invalid triggers report', () => {
-  test('Filter the invalid triggers and outcomes report', async ({
-    testApp,
-    appAdminPage,
-    invalidTriggersReportPage,
-  }) => {
+  test('Filter the invalid triggers and outcomes report', async ({ testApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-538',
@@ -61,31 +63,29 @@ test.describe('invalid triggers report', () => {
     });
 
     await test.step('Create invalid triggers', async () => {
-      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
+      await createInvalidTriggers(testApp, sysAdminActor, textField, trigger);
     });
 
     await test.step('Navigate to the invalid triggers report', async () => {
-      await invalidTriggersReportPage.goto();
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.goto());
     });
 
     await test.step('Filter the invalid triggers report', async () => {
-      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.filterReport({ appFilter: testApp.name }));
     });
 
     await test.step('Verify the invalid triggers report is filtered', async () => {
       await expect(async () => {
-        await invalidTriggersReportPage.reload();
-
-        await expect(invalidTriggersReportPage.getRowByText(trigger.name)).toBeVisible({ timeout: 1_000 });
+        await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.reload());
+        await sysAdminActor
+          .browse()
+          .check(InvalidTriggersReportTargets.rowByText(trigger.name))
+          .isVisible({ timeout: 1_000 });
       }).toPass({ timeout: 300_000, intervals: [1_000] });
     });
   });
 
-  test('Sort the invalid triggers and outcomes report', async ({
-    testApp,
-    appAdminPage,
-    invalidTriggersReportPage,
-  }) => {
+  test('Sort the invalid triggers and outcomes report', async ({ testApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-539',
@@ -123,56 +123,42 @@ test.describe('invalid triggers report', () => {
     const invalidTriggers = [invalidTriggerOne, invalidTriggerTwo];
 
     await test.step('Create invalid triggers', async () => {
-      await createInvalidTriggers(testApp, appAdminPage, textField, ...invalidTriggers);
+      await createInvalidTriggers(testApp, sysAdminActor, textField, ...invalidTriggers);
     });
 
     await test.step('Navigate to the invalid formulas report', async () => {
-      await invalidTriggersReportPage.goto();
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.goto());
     });
 
     await test.step('Sort the invalid formulas report', async () => {
-      await invalidTriggersReportPage.clearSort();
-      await invalidTriggersReportPage.sortGridBy('Last Saved', 'descending');
+      await sysAdminActor.attemptsTo(
+        InvalidTriggersReportTasks.clearSort(),
+        InvalidTriggersReportTasks.sortGridBy('Last Saved', 'descending')
+      );
     });
 
     await test.step('Verify the invalid triggers report is sorted', async () => {
-      let rows: Locator[] = [];
-
-      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.filterReport({ appFilter: testApp.name }));
 
       await expect(async () => {
-        await invalidTriggersReportPage.reload();
+        await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.reload());
 
-        rows = await invalidTriggersReportPage.getRows();
-        expect(rows.length).toBeGreaterThanOrEqual(invalidTriggers.length);
+        const rowCount = await sysAdminActor.browse().count(InvalidTriggersReportTargets.rows);
+        expect(rowCount).toBeGreaterThanOrEqual(invalidTriggers.length);
       }).toPass({ timeout: 300_000, intervals: [1_000] });
 
-      const timestamps: number[] = [];
+      const lastSavedTexts = await sysAdminActor.browse().getAllTexts(InvalidTriggersReportTargets.lastSavedCells);
 
-      for (const row of rows) {
-        const lastSavedText = await row.locator('td').nth(3).innerText();
-        const lastSavedDate = new Date(lastSavedText.trim()).getTime();
-        timestamps.push(lastSavedDate);
-      }
-
-      for (let i = 0; i < rows.length - 1; i++) {
-        const lastSavedDateColumnIndex = 3;
-        const currentRowLastSavedText = await rows[i].locator('td').nth(lastSavedDateColumnIndex).innerText();
-        const nextRowLastSavedText = await rows[i + 1].locator('td').nth(lastSavedDateColumnIndex).innerText();
-
-        const currentRowTimestamp = new Date(currentRowLastSavedText.trim()).getTime();
-        const nextRowTimestamp = new Date(nextRowLastSavedText.trim()).getTime();
+      for (let i = 0; i < lastSavedTexts.length - 1; i++) {
+        const currentRowTimestamp = new Date(lastSavedTexts[i].trim()).getTime();
+        const nextRowTimestamp = new Date(lastSavedTexts[i + 1].trim()).getTime();
 
         expect(currentRowTimestamp).toBeGreaterThanOrEqual(nextRowTimestamp);
       }
     });
   });
 
-  test('Edit a trigger and outcome in the invalid triggers and outcomes report', async ({
-    testApp,
-    appAdminPage,
-    invalidTriggersReportPage,
-  }) => {
+  test('Edit a trigger and outcome in the invalid triggers and outcomes report', async ({ testApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-540',
@@ -205,41 +191,43 @@ test.describe('invalid triggers report', () => {
     });
 
     await test.step('Create invalid triggers', async () => {
-      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
+      await createInvalidTriggers(testApp, sysAdminActor, textField, trigger);
     });
 
     await test.step('Navigate to the invalid triggers report', async () => {
-      await invalidTriggersReportPage.goto();
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.goto());
     });
 
     await test.step('Edit the invalid trigger', async () => {
-      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.filterReport({ appFilter: testApp.name }));
 
       await expect(async () => {
-        await invalidTriggersReportPage.reload();
-        const row = invalidTriggersReportPage.getRowByText(trigger.name);
-        await expect(row).toBeVisible({ timeout: 100 });
+        await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.reload());
+        await sysAdminActor
+          .browse()
+          .check(InvalidTriggersReportTargets.rowByText(trigger.name))
+          .isVisible({ timeout: 100 });
       }).toPass({ timeout: 300_000, intervals: [1_000] });
 
       trigger.status = false;
       trigger.ruleSet = new SimpleRuleLogic({ rules: [] });
 
-      await invalidTriggersReportPage.updateTrigger(trigger);
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.updateTrigger(trigger));
     });
 
     await test.step('Verify the trigger was edited successfully', async () => {
-      await appAdminPage.goto(testApp.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(testApp.id));
 
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await expect(triggerRow).toHaveText(/Disabled/);
+      await sysAdminActor
+        .browse()
+        .check(AppTriggersTabTargets.triggerRowByName(trigger.name))
+        .hasText(/Disabled/);
     });
   });
 
   test('Delete a trigger and outcome in the invalid triggers and outcomes report', async ({
     testApp,
-    appAdminPage,
-    invalidTriggersReportPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -273,52 +261,41 @@ test.describe('invalid triggers report', () => {
     });
 
     await test.step('Create the invalid trigger', async () => {
-      await createInvalidTriggers(testApp, appAdminPage, textField, trigger);
+      await createInvalidTriggers(testApp, sysAdminActor, textField, trigger);
     });
 
     await test.step('Navigate to the invalid triggers report', async () => {
-      await invalidTriggersReportPage.goto();
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.goto());
     });
 
     await test.step('Delete the invalid trigger', async () => {
-      await invalidTriggersReportPage.filterReport({ appFilter: testApp.name });
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.filterReport({ appFilter: testApp.name }));
 
       await expect(async () => {
-        await invalidTriggersReportPage.reload();
-        const row = invalidTriggersReportPage.getRowByText(trigger.name);
-        await expect(row).toBeVisible({ timeout: 100 });
+        await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.reload());
+        await sysAdminActor
+          .browse()
+          .check(InvalidTriggersReportTargets.rowByText(trigger.name))
+          .isVisible({ timeout: 100 });
       }).toPass({ timeout: 300_000, intervals: [1_000] });
 
-      await invalidTriggersReportPage.deleteTrigger(trigger);
+      await sysAdminActor.attemptsTo(InvalidTriggersReportTasks.deleteTrigger(trigger.name));
     });
 
     await test.step('Verify the trigger was deleted successfully', async () => {
-      await appAdminPage.goto(testApp.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(testApp.id));
 
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await expect(triggerRow).toBeHidden();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isHidden();
     });
   });
 });
 
-async function createInvalidTriggers(
-  testApp: App,
-  appAdminPage: AppAdminPage,
-  fieldToDelete: TextField,
-  ...triggers: Trigger[]
-) {
-  await appAdminPage.goto(testApp.id);
-
-  await appAdminPage.layoutTabButton.click();
-
-  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(fieldToDelete);
+async function createInvalidTriggers(testApp: App, actor: WebActor, fieldToDelete: TextField, ...triggers: Trigger[]) {
+  await actor.attemptsTo(AppTasks.gotoAppLayoutTab(testApp.id), FieldTasks.addFromGrid(fieldToDelete));
 
   for (const trigger of triggers) {
-    await appAdminPage.triggersTabButton.click();
-    await appAdminPage.triggersTab.addTrigger(trigger);
+    await actor.attemptsTo(AppTasks.gotoAppTriggersTab(testApp.id), TriggerTasks.addTrigger(trigger));
   }
 
-  await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.deleteLayoutItemFromFieldsAndObjectsGrid(fieldToDelete);
+  await actor.attemptsTo(AppTasks.gotoAppLayoutTab(testApp.id), FieldTasks.deleteFromGrid(fieldToDelete.name));
 }

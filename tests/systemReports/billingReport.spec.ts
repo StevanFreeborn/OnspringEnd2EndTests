@@ -1,88 +1,61 @@
-import { test as base, expect, Page, Response } from '../../fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { User, UserStatus } from '../../models/user';
-import { BillingReportPage } from '../../pageObjectModels/systemReports/billingReportPage';
+import { User } from '@stevanfreeborn/onspring-models';
+import { BillingReportTargets, BillingReportTasks, SystemReportQuestions } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type BillingReportTestFixtures = {
-  billingReportPage: BillingReportPage;
-  testUser: User;
-  testUserPage: Page;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<BillingReportTestFixtures>({
-  billingReportPage: async ({ sysAdminPage }, use) => await use(new BillingReportPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('billing report', () => {
-  test('Filter the Usage History Report', async ({ billingReportPage }) => {
+  test('Filter the Usage History Report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-291',
     });
 
     await test.step('Navigate to the billing report', async () => {
-      await billingReportPage.goto();
+      await sysAdminActor.attemptsTo(BillingReportTasks.goto());
     });
 
-    let filterResponse: Response;
+    let filterResult: { ok: boolean; hasSeriesData: boolean };
 
     await test.step('Filter the usage history report', async () => {
-      filterResponse = await billingReportPage.applyUsageHistoryFilter({
-        type: 'Custom Dates',
-        increment: 'Year',
-        startDate: new Date(2024, 5, 26),
-        endDate: new Date(2025, 5, 26),
-      });
+      filterResult = await sysAdminActor.asks(
+        SystemReportQuestions.applyBillingUsageHistoryFilter({
+          type: 'Custom Dates',
+          increment: 'Year',
+          startDate: new Date(2024, 5, 26),
+          endDate: new Date(2025, 5, 26),
+        })
+      );
     });
 
     await test.step('Verify the usage history report is filtered', async () => {
-      const xAxisStartYearLabel = billingReportPage.page.locator(
-        '#usage-chart-container [class*="dataset-axis"]:has-text("2024")'
-      );
-      const xAxisEndYearLabel = billingReportPage.page.locator(
-        '#usage-chart-container [class*="dataset-axis"]:has-text("2025")'
-      );
-
-      expect(filterResponse.ok()).toBe(true);
-
-      const responseBody = await filterResponse.json();
-      const dataset = responseBody.dataset;
-      const hasSeriesData = dataset.some((d: { data: never[] }) => d.data && d.data.length > 0);
+      expect(filterResult.ok).toBe(true);
 
       // NOTE: These are conditional because
       // the data in this chart is supplied only if
       // a particular scheduled task has been setup in the environment
       // if there is no data then the x-axis labels will not be present
       // eslint-disable-next-line playwright/no-conditional-in-test
-      if (hasSeriesData) {
-        // eslint-disable-next-line playwright/no-conditional-expect
-        await expect(xAxisStartYearLabel).toBeVisible();
-        // eslint-disable-next-line playwright/no-conditional-expect
-        await expect(xAxisEndYearLabel).toBeVisible();
+      if (filterResult.hasSeriesData) {
+        await sysAdminActor.browse().check(BillingReportTargets.usageHistory.xAxisYearLabel('2024')).isVisible();
+        await sysAdminActor.browse().check(BillingReportTargets.usageHistory.xAxisYearLabel('2025')).isVisible();
       }
     });
   });
 
   test('Export the Detailed Data Usage By App Statistics report', async ({
-    testUser,
-    testUserPage,
+    user: testUser,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -94,14 +67,12 @@ test.describe('billing report', () => {
 
     test.slow();
 
-    const testUserBillingReportPage = new BillingReportPage(testUserPage);
-
     await test.step('Navigate to the billing report', async () => {
-      await testUserBillingReportPage.goto();
+      await testUserActor.attemptsTo(BillingReportTasks.goto());
     });
 
     await test.step('Export the Detailed Data Usage By App Statistics report', async () => {
-      await testUserBillingReportPage.exportDetailedDataUsageByAppStatisticsReport();
+      await testUserActor.attemptsTo(BillingReportTasks.exportDataUsageReport());
     });
 
     let exportEmailContent: string;
@@ -125,12 +96,7 @@ test.describe('billing report', () => {
     let reportPath: string;
 
     await test.step('Download the exported Detailed Data Usage By App Statistics report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 
@@ -151,29 +117,30 @@ test.describe('billing report', () => {
     });
   });
 
-  test('Sort the Detailed Data usage By App Statistics report', async ({ billingReportPage }) => {
+  test('Sort the Detailed Data usage By App Statistics report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-883',
     });
 
     await test.step('Navigate to the billing report', async () => {
-      await billingReportPage.goto();
+      await sysAdminActor.attemptsTo(BillingReportTasks.goto());
     });
 
     await test.step('Sort the Detailed Data usage By App Statistics report', async () => {
-      await billingReportPage.clearDetailedDataUsageByAppStatisticsReportSorting();
-      await billingReportPage.sortDetailedDataUsageByAppStatisticsReport('App ID', 'ascending');
+      await sysAdminActor.attemptsTo(
+        BillingReportTasks.clearDataUsageSort(),
+        BillingReportTasks.sortDataUsageBy('App ID', 'ascending')
+      );
     });
 
     await test.step('Verify the report is sorted', async () => {
-      const rows = await billingReportPage.getDetailedDataUsageByAppStatisticsReportRows();
+      const appIds = await sysAdminActor.browse().getAllTexts(BillingReportTargets.dataUsage.firstColumnCells);
+      expect(appIds.length).toBeGreaterThanOrEqual(2);
 
-      for (let i = 0; i < rows.length - 1; i++) {
-        const currentAppId = await rows[i].locator('td').first().textContent();
-        const nextAppId = await rows[i + 1].locator('td').first().textContent();
-        const currentAppIdNumber = parseInt(currentAppId || '0');
-        const nextAppIdNumber = parseInt(nextAppId || '0');
+      for (let i = 0; i < appIds.length - 1; i++) {
+        const currentAppIdNumber = parseInt(appIds[i] || '0', 10);
+        const nextAppIdNumber = parseInt(appIds[i + 1] || '0', 10);
 
         expect(currentAppIdNumber).toBeLessThanOrEqual(nextAppIdNumber);
       }
@@ -181,8 +148,8 @@ test.describe('billing report', () => {
   });
 
   test('Export the Detailed File Storage By App Statistics report', async ({
-    testUser,
-    testUserPage,
+    user: testUser,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -192,14 +159,12 @@ test.describe('billing report', () => {
       description: 'Test-884',
     });
 
-    const testUserBillingReportPage = new BillingReportPage(testUserPage);
-
     await test.step('Navigate to the billing report', async () => {
-      await testUserBillingReportPage.goto();
+      await testUserActor.attemptsTo(BillingReportTasks.goto());
     });
 
     await test.step('Export the Detailed File Storage By App Statistics report', async () => {
-      await testUserBillingReportPage.exportDetailedFileStorageByAppStatisticsReport();
+      await testUserActor.attemptsTo(BillingReportTasks.exportFileStorageReport());
     });
 
     let exportEmailContent: string;
@@ -223,12 +188,7 @@ test.describe('billing report', () => {
     let reportPath: string;
 
     await test.step('Download the exported Detailed File Storage By App Statistics report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 
@@ -249,29 +209,30 @@ test.describe('billing report', () => {
     });
   });
 
-  test('Sort the Detailed File Storage By App Statistics report', async ({ billingReportPage }) => {
+  test('Sort the Detailed File Storage By App Statistics report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-885',
     });
 
     await test.step('Navigate to the billing report', async () => {
-      await billingReportPage.goto();
+      await sysAdminActor.attemptsTo(BillingReportTasks.goto());
     });
 
     await test.step('Sort the Detailed File Storage By App Statistics report', async () => {
-      await billingReportPage.clearDetailedFileStorageByAppStatisticsReportSorting();
-      await billingReportPage.sortDetailedFileStorageByAppStatisticsReport('App ID', 'ascending');
+      await sysAdminActor.attemptsTo(
+        BillingReportTasks.clearFileStorageSort(),
+        BillingReportTasks.sortFileStorageBy('App ID', 'ascending')
+      );
     });
 
     await test.step('Verify the report is sorted', async () => {
-      const rows = await billingReportPage.getDetailedFileStorageByAppStatisticsReportRows();
+      const appIds = await sysAdminActor.browse().getAllTexts(BillingReportTargets.fileStorage.firstColumnCells);
+      expect(appIds.length).toBeGreaterThanOrEqual(2);
 
-      for (let i = 0; i < rows.length - 1; i++) {
-        const currentAppId = await rows[i].locator('td').first().textContent();
-        const nextAppId = await rows[i + 1].locator('td').first().textContent();
-        const currentAppIdNumber = parseInt(currentAppId || '0');
-        const nextAppIdNumber = parseInt(nextAppId || '0');
+      for (let i = 0; i < appIds.length - 1; i++) {
+        const currentAppIdNumber = parseInt(appIds[i] || '0', 10);
+        const nextAppIdNumber = parseInt(appIds[i + 1] || '0', 10);
 
         expect(currentAppIdNumber).toBeLessThanOrEqual(nextAppIdNumber);
       }

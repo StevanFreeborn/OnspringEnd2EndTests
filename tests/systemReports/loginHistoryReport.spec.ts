@@ -1,37 +1,21 @@
-import { test as base, expect, Page } from '../../fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { User, UserStatus } from '../../models/user';
-import { LoginHistoryPage } from '../../pageObjectModels/systemReports/loginHistoryPage';
+import { User } from '@stevanfreeborn/onspring-models';
+import { LoginHistoryReportTargets, LoginHistoryReportTasks, SystemReportQuestions } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type LoginHistoryReportTestFixtures = {
-  loginHistoryPage: LoginHistoryPage;
-  testUser: User;
-  testUserPage: Page;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<LoginHistoryReportTestFixtures>({
-  loginHistoryPage: async ({ sysAdminPage }, use) => await use(new LoginHistoryPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('login history report', () => {
-  test('Filter the login history report', async ({ loginHistoryPage, sysAdminUser }) => {
+  test('Filter the login history report', async ({ sysAdminActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-549',
@@ -40,62 +24,64 @@ test.describe('login history report', () => {
     const today = new Date();
 
     await test.step('Navigate to the login history report', async () => {
-      await loginHistoryPage.goto();
+      await sysAdminActor.attemptsTo(LoginHistoryReportTasks.goto());
     });
 
     await test.step('Filter the login history report', async () => {
-      await loginHistoryPage.filterReport({
-        user: sysAdminUser.fullName,
-        dateFilter: {
-          type: 'Custom Dates',
-          from: today,
-          to: today,
-        },
-      });
+      await sysAdminActor.attemptsTo(
+        LoginHistoryReportTasks.filterReport({
+          user: sysAdminUser.fullName,
+          dateFilter: {
+            type: 'Custom Dates',
+            from: today,
+            to: today,
+          },
+        })
+      );
     });
 
     await test.step('Verify the report is filtered correctly', async () => {
-      const rows = await loginHistoryPage.getReportRows();
+      const loginDateValues = await sysAdminActor.browse().getAllTexts(LoginHistoryReportTargets.loginDateCells);
+      const usernameValues = await sysAdminActor.browse().getAllTexts(LoginHistoryReportTargets.usernameCells);
 
-      expect(rows.length).toBeGreaterThanOrEqual(1);
+      expect(loginDateValues.length).toBeGreaterThanOrEqual(1);
+      expect(usernameValues).toHaveLength(loginDateValues.length);
 
-      for (const row of rows) {
-        const loginDateCell = row.getByRole('gridcell').nth(1);
-        const usernameCell = row.getByRole('gridcell').nth(3);
-        const loginDateValue = await loginDateCell.textContent();
-        const usernameValue = await usernameCell.textContent();
-        const loginDay = loginDateValue?.trim().split(' ')[0];
+      const expectedDay = today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
 
-        expect(loginDay).toBe(`${today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' })}`);
-        expect(usernameValue?.trim().toLowerCase()).toBe(sysAdminUser.username.toLowerCase());
+      for (let i = 0; i < loginDateValues.length; i++) {
+        const loginDay = loginDateValues[i]?.trim().split(' ')[0];
+        expect(loginDay).toBe(expectedDay);
+        expect(usernameValues[i]?.trim().toLowerCase()).toBe(sysAdminUser.username.toLowerCase());
       }
     });
   });
 
-  test('Display users currently logged in', async ({ loginHistoryPage, sysAdminUser }) => {
+  test('Display users currently logged in', async ({ sysAdminActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-550',
     });
 
     await test.step('Navigate to the login history report', async () => {
-      await loginHistoryPage.goto();
+      await sysAdminActor.attemptsTo(LoginHistoryReportTasks.goto());
     });
 
     await test.step('Display the users currently logged in', async () => {
-      await loginHistoryPage.filterReport({ displayLoggedInUsersOnly: true });
+      await sysAdminActor.attemptsTo(LoginHistoryReportTasks.filterReport({ displayLoggedInUsersOnly: true }));
     });
 
     await test.step('Verify the currently logged in users are displayed', async () => {
-      const adminRows = await loginHistoryPage.getReportRowsByText(sysAdminUser.username);
-
-      expect(adminRows.length).toBeGreaterThanOrEqual(1);
+      const adminRowCount = await sysAdminActor
+        .browse()
+        .count(LoginHistoryReportTargets.rowsByText(sysAdminUser.username));
+      expect(adminRowCount).toBeGreaterThanOrEqual(1);
     });
   });
 
   test('Export the login history report', async ({
-    testUser,
-    testUserPage,
+    user: testUser,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -108,25 +94,26 @@ test.describe('login history report', () => {
     test.slow();
 
     const today = new Date();
-    const testUserLoginPage = new LoginHistoryPage(testUserPage);
 
     await test.step('Navigate to the login history report', async () => {
-      await testUserLoginPage.goto();
+      await testUserActor.attemptsTo(LoginHistoryReportTasks.goto());
     });
 
     await test.step('Filter the login history report to limit results', async () => {
-      await testUserLoginPage.filterReport({
-        user: testUser.fullName,
-        dateFilter: {
-          type: 'Custom Dates',
-          from: today,
-          to: today,
-        },
-      });
+      await testUserActor.attemptsTo(
+        LoginHistoryReportTasks.filterReport({
+          user: testUser.fullName,
+          dateFilter: {
+            type: 'Custom Dates',
+            from: today,
+            to: today,
+          },
+        })
+      );
     });
 
     await test.step('Export the login history report', async () => {
-      await testUserLoginPage.exportReport();
+      await testUserActor.attemptsTo(LoginHistoryReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -155,12 +142,7 @@ test.describe('login history report', () => {
     let reportPath: string;
 
     await test.step('Download the exported login history report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 

@@ -1,28 +1,31 @@
-import { Page } from '@playwright/test';
+import {
+  AdminReportPermission,
+  App,
+  AppPermission,
+  EmailBody,
+  FakeDataFactory,
+  LayoutItem,
+  Permission,
+  Role,
+  SimpleRuleLogic,
+  TextField,
+  TextRuleWithValue,
+  User,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentQuestions,
+  ContentTasks,
+  EditEmailBodyPageTargets,
+  EditUserPageTargets,
+  EmailBodyTasks,
+  EmailMessageHistoryReportTargets,
+  EmailMessageHistoryReportTasks,
+  SystemReportQuestions,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { env } from '../../env';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { activeUserWithRole } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { EmailBody } from '../../models/emailBody';
-import { LayoutItem } from '../../models/layoutItem';
-import { AdminReportPermission, AppPermission, Permission, Role } from '../../models/role';
-import { TextRuleWithValue } from '../../models/rule';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { TextField } from '../../models/textField';
-import { User } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { EditEmailBodyPage } from '../../pageObjectModels/messaging/editEmailBodyPage';
-import { EmailBodyAdminPage } from '../../pageObjectModels/messaging/emailBodyAdminPage';
-import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
-import { EmailHistoryPage } from '../../pageObjectModels/systemReports/emailHistoryPage';
-import { UserAdminPage } from '../../pageObjectModels/users/userAdminPage';
+import { ActorFixture, AppFixture, expect, RoleFixture, test as base, UserFixture } from '../../fixtures';
 import { EmailService } from '../../services/emailService';
 import { AnnotationType } from '../annotations';
 
@@ -30,74 +33,37 @@ type EmailHistoryReportTestFixtures = {
   app: App;
   role: Role;
   user: User;
-  testUserPage: Page;
-  emailHistoryPage: EmailHistoryPage;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  emailBodyAdminPage: EmailBodyAdminPage;
-  editEmailBodyPage: EditEmailBodyPage;
-  userAdminPage: UserAdminPage;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<EmailHistoryReportTestFixtures>({
-  app: app,
-  role: async ({ sysAdminPage, app }, use) => {
-    const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
-    const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-    const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
-    const roleName = FakeDataFactory.createFakeRoleName();
-    const role = new Role({
-      name: roleName,
-      status: 'Active',
-      appPermissions: [
-        new AppPermission({
-          appName: app.name,
-          contentRecords: new Permission({ read: true }),
-        }),
-      ],
-      adminReportPermissions: [
-        new AdminReportPermission({
-          reportName: 'Email Message History',
-          permission: { read: true },
-        }),
-      ],
-    });
-
-    await addRoleAdminPage.addRole(role);
-    await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
-    await editRoleAdminPage.page.waitForLoadState();
-
-    role.id = editRoleAdminPage.getRoleIdFromUrl();
-
-    await use(role);
-
-    await roleSecurityAdminPage.deleteRoles([roleName]);
-  },
-  user: activeUserWithRole,
-  testUserPage: createTestUserPageFixture,
-  emailHistoryPage: async ({ sysAdminPage }, use) => use(new EmailHistoryPage(sysAdminPage)),
-  appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
-  emailBodyAdminPage: async ({ sysAdminPage }, use) => use(new EmailBodyAdminPage(sysAdminPage)),
-  editEmailBodyPage: async ({ sysAdminPage }, use) => use(new EditEmailBodyPage(sysAdminPage)),
-  userAdminPage: async ({ sysAdminPage }, use) => use(new UserAdminPage(sysAdminPage)),
+  app: AppFixture.create().build(),
+  role: RoleFixture.create()
+    .withStatus('Active')
+    .withAppPermissions(({ app }) => [
+      new AppPermission({
+        appName: app.name,
+        contentRecords: new Permission({ read: true }),
+      }),
+    ])
+    .withAdminReportPermissions([
+      new AdminReportPermission({
+        reportName: 'Email Message History',
+        permission: { read: true },
+      }),
+    ])
+    .build(),
+  user: UserFixture.create()
+    .withStatus('Active')
+    .withRoles(({ role }) => [role.name])
+    .build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('email message history report', () => {
   test.slow();
 
-  test('Filter the email message history report', async ({
-    emailHistoryPage,
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
-    sysAdminEmail,
-  }) => {
+  test('Filter the email message history report', async ({ sysAdminActor, app, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-351',
@@ -123,9 +89,9 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -133,30 +99,19 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Verify the email message history report is filtered', async () => {
-      const emailCount = emailHistoryPage.emailsGridBody.locator('tr');
-      await expect(emailCount).toHaveCount(1);
+      await sysAdminActor.browse().check(EmailMessageHistoryReportTargets.rows).hasCount(1);
     });
   });
 
-  test('Sort the email message history report', async ({
-    emailHistoryPage,
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
-    sysAdminEmail,
-  }) => {
+  test('Sort the email message history report', async ({ sysAdminActor, app, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-352',
@@ -186,13 +141,13 @@ test.describe('email message history report', () => {
     );
 
     await test.step('Add field for email send logic', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
     });
 
     for (const [index, emailBody] of emailBodies.entries()) {
       await test.step(`Send email number ${index + 1} from specific app`, async () => {
-        await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-        await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+        await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+        await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
       });
     }
 
@@ -203,25 +158,27 @@ test.describe('email message history report', () => {
     }
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Sort the email message history report', async () => {
-      await emailHistoryPage.clearGridSorting();
-      await emailHistoryPage.sortGridBy('Subject');
+      await sysAdminActor.attemptsTo(
+        EmailMessageHistoryReportTasks.clearGridSorting(),
+        EmailMessageHistoryReportTasks.sortGridBy('Subject')
+      );
     });
 
     await test.step('Verify the email message history report is sorted', async () => {
-      const firstEmail = emailHistoryPage.emailsGridBody.locator('tr').first();
-      const lastEmail = emailHistoryPage.emailsGridBody.locator('tr').last();
-
-      const firstEmailSubject = await firstEmail.locator('td').nth(4).innerText();
-      const lastEmailSubject = await lastEmail.locator('td').nth(4).innerText();
+      const firstEmailSubject = await sysAdminActor
+        .browse()
+        .getText(EmailMessageHistoryReportTargets.firstRowSubjectCell);
+      const lastEmailSubject = await sysAdminActor
+        .browse()
+        .getText(EmailMessageHistoryReportTargets.lastRowSubjectCell);
 
       expect(firstEmailSubject).toContain(emailBodies[0].subject);
       expect(lastEmailSubject).toContain(emailBodies[1].subject);
@@ -231,13 +188,9 @@ test.describe('email message history report', () => {
   test('Export the email message history report', async ({
     user,
     app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
+    sysAdminActor,
     sysAdminEmail,
-    testUserPage,
+    testUserActor,
     downloadService,
     sheetParser,
   }) => {
@@ -246,7 +199,6 @@ test.describe('email message history report', () => {
       description: 'Test-353',
     });
 
-    const emailHistoryPage = new EmailHistoryPage(testUserPage);
     const emailBodyName = FakeDataFactory.createFakeEmailBodyName();
     const testEmailSubject = `${emailBodyName} - Test Subject`;
     const testFromAddress = FakeDataFactory.createFakeEmailFromAddress();
@@ -269,9 +221,9 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -279,16 +231,15 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await testUserActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await testUserActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Export the email message history report', async () => {
-      await emailHistoryPage.exportReport();
+      await testUserActor.attemptsTo(EmailMessageHistoryReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -312,11 +263,7 @@ test.describe('email message history report', () => {
     let reportPath: string;
 
     await test.step('Download the exported email message history report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 
@@ -339,16 +286,7 @@ test.describe('email message history report', () => {
     });
   });
 
-  test('View the details of an email message history report item', async ({
-    emailHistoryPage,
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
-    sysAdminEmail,
-  }) => {
+  test('View the details of an email message history report item', async ({ sysAdminActor, app, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-354',
@@ -374,9 +312,9 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -384,33 +322,26 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Open the details of an email message history report item', async () => {
-      await emailHistoryPage.emailsGridBody.getByRole('row', { name: emailBody.subject }).click();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.openMessageDetails(emailBody.subject));
     });
 
     await test.step('Verify the email message history report item details are displayed', async () => {
-      await expect(emailHistoryPage.messageDetailModal.subject).toHaveText(emailBody.subject);
+      await sysAdminActor
+        .browse()
+        .check(EmailMessageHistoryReportTargets.messageDetailModal.subject)
+        .hasText(emailBody.subject);
     });
   });
 
-  test('Resend an email message history report item', async ({
-    emailHistoryPage,
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
-    sysAdminEmail,
-  }) => {
+  test('Resend an email message history report item', async ({ sysAdminActor, app, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-355',
@@ -436,9 +367,9 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -446,18 +377,15 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Resend the email', async () => {
-      const emailRow = emailHistoryPage.emailsGridBody.getByRole('row', { name: emailBody.subject });
-      await emailRow.getByRole('link', { name: 'Resend' }).click();
-      await emailHistoryPage.resendEmailDialog.okButton.click();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.resendEmail(emailBody.subject));
     });
 
     await test.step('Verify the email was resent', async () => {
@@ -473,17 +401,7 @@ test.describe('email message history report', () => {
     });
   });
 
-  test('Use the To Name link in the email message history report', async ({
-    emailHistoryPage,
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
-    sysAdminEmail,
-    userAdminPage,
-  }) => {
+  test('Use the To Name link in the email message history report', async ({ sysAdminActor, app, sysAdminEmail }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-356',
@@ -509,9 +427,9 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -519,34 +437,26 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Navigate to the email message history report', async () => {
-      await emailHistoryPage.goto();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the email message history report', async () => {
-      await emailHistoryPage.selectTypeFilter('Messaging');
-      await emailHistoryPage.selectAppFilter(app);
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
     });
 
     await test.step('Click on the To Name link', async () => {
-      const emailRow = emailHistoryPage.emailsGridBody.getByRole('row', { name: emailBody.subject });
-      await emailRow.getByRole('gridcell').nth(1).getByRole('link').click();
+      await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.clickToNameLink(emailBody.subject));
     });
 
     await test.step("Verify the To Name link opens the user's security record", async () => {
-      await expect(emailHistoryPage.page).toHaveURL(userAdminPage.pathRegex);
+      await sysAdminActor.browse().checkPage().hasUrl(EditUserPageTargets.pathRegex);
     });
   });
 
   test('Use the links in the email message history report detail view', async ({
-    emailHistoryPage,
+    sysAdminActor,
     app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    emailBodyAdminPage,
-    editEmailBodyPage,
     sysAdminEmail,
-    userAdminPage,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -571,12 +481,12 @@ test.describe('email message history report', () => {
         rules: [rule],
       }),
     });
-    let recordId: number;
+    let recordId = 0;
 
     await test.step('Send email from specific app', async () => {
-      await addItemToAppLayout({ appAdminPage, app, item: textField, tabName, sectionName });
-      await createAndConfigureEmailBody({ app, appAdminPage, emailBody, emailBodyAdminPage, editEmailBodyPage });
-      recordId = await addRecordToTriggerEmail({ addContentPage, app, editContentPage, rule, tabName, sectionName });
+      await addItemToAppLayout({ actor: sysAdminActor, app, item: textField, tabName, sectionName });
+      await createAndConfigureEmailBody({ actor: sysAdminActor, app, emailBody });
+      recordId = await addRecordToTriggerEmail({ actor: sysAdminActor, app, rule, tabName, sectionName });
     });
 
     await test.step('Wait for email to be received', async () => {
@@ -586,141 +496,135 @@ test.describe('email message history report', () => {
     const links = [
       {
         linkName: 'To',
-        locator: emailHistoryPage.messageDetailModal.toLink,
-        expectedPathRegex: userAdminPage.pathRegex,
+        target: EmailMessageHistoryReportTargets.messageDetailModal.toLink,
+        expectedPathRegex: EditUserPageTargets.pathRegex,
       },
       {
         linkName: 'Email Body',
-        locator: emailHistoryPage.messageDetailModal.emailBodyLink,
-        expectedPathRegex: editEmailBodyPage.pathRegex,
+        target: EmailMessageHistoryReportTargets.messageDetailModal.emailBodyLink,
+        expectedPathRegex: EditEmailBodyPageTargets.pathRegex,
       },
       {
         linkName: 'Record',
-        locator: emailHistoryPage.messageDetailModal.recordLink,
-        expectedPathRegex: new RegExp(`/Content/${app.id}/${recordId!}`),
+        target: EmailMessageHistoryReportTargets.messageDetailModal.recordLink,
+        expectedPathRegex: new RegExp(`/Content/${app.id}/${recordId}`),
       },
     ];
 
     for (const link of links) {
       await test.step('Navigate to the email message history report', async () => {
-        await emailHistoryPage.goto();
+        await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
       });
 
       await test.step('Filter the email message history report', async () => {
-        await emailHistoryPage.selectTypeFilter('Messaging');
-        await emailHistoryPage.selectAppFilter(app);
+        await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.filterReport({ emailType: 'Messaging', app }));
       });
 
       await test.step('Open the details of the email message history report item', async () => {
-        await emailHistoryPage.emailsGridBody.getByRole('row', { name: emailBody.subject }).click();
+        await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.openMessageDetails(emailBody.subject));
       });
 
       await test.step(`Click on the ${link.linkName} link`, async () => {
-        await link.locator.click();
+        await sysAdminActor.browse().click(link.target);
       });
 
       await test.step("Verify the To Name link opens the user's security record", async () => {
-        await expect(emailHistoryPage.page).toHaveURL(link.expectedPathRegex);
+        await sysAdminActor.browse().checkPage().hasUrl(link.expectedPathRegex);
       });
 
       await test.step('Navigate back to the email message history report', async () => {
-        await emailHistoryPage.goto();
+        await sysAdminActor.attemptsTo(EmailMessageHistoryReportTasks.goto());
       });
     }
   });
 });
 
 async function addItemToAppLayout({
-  appAdminPage,
+  actor,
   app,
   item,
   tabName,
   sectionName,
 }: {
-  appAdminPage: AppAdminPage;
+  actor: WebActor;
   app: App;
   item: LayoutItem;
   tabName: string;
   sectionName: string;
 }) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.openLayout();
-  await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(item);
+  await actor.attemptsTo(
+    AppTasks.gotoAppLayoutTab(app.id),
+    AppTasks.openLayoutDesigner(),
+    AppTasks.addLayoutItemInLayoutDesigner(item)
+  );
 
   if (item.type === 'Formatted Text Block') {
-    await appAdminPage.layoutTab.layoutDesignerModal.dragObjectOnToLayout({
-      objectName: item.name,
-      tabName: tabName,
-      sectionName: sectionName,
-      sectionRow: 0,
-      sectionColumn: 0,
-    });
+    await actor.attemptsTo(
+      AppTasks.dragObjectOntoLayout({
+        objectName: item.name,
+        tabName,
+        sectionName,
+        row: 0,
+        column: 0,
+      })
+    );
   } else {
-    await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-      fieldName: item.name,
-      tabName: tabName,
-      sectionName: sectionName,
-      sectionRow: 0,
-      sectionColumn: 0,
-    });
+    await actor.attemptsTo(
+      AppTasks.dragFieldOntoLayout({
+        fieldName: item.name,
+        tabName,
+        sectionName,
+        row: 0,
+        column: 0,
+      })
+    );
   }
 
-  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+  await actor.attemptsTo(AppTasks.saveAndCloseLayout());
 }
 
 async function createAndConfigureEmailBody({
+  actor,
   app,
-  appAdminPage,
   emailBody,
-  emailBodyAdminPage,
-  editEmailBodyPage,
 }: {
+  actor: WebActor;
   app: App;
-  appAdminPage: AppAdminPage;
   emailBody: EmailBody;
-  emailBodyAdminPage: EmailBodyAdminPage;
-  editEmailBodyPage: EditEmailBodyPage;
 }) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.messagingTabButton.click();
-  await appAdminPage.messagingTab.createEmailBody(emailBody.name);
-  await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
-  await emailBodyAdminPage.goto();
-  const emailBodyRow = emailBodyAdminPage.emailBodyGrid.getByRole('row', { name: emailBody.name });
-  await emailBodyRow.hover();
-  await emailBodyRow.getByTitle('Edit Email Body').click();
-  await appAdminPage.page.waitForURL(editEmailBodyPage.pathRegex);
-  await editEmailBodyPage.updateEmailBody(emailBody);
-  await editEmailBodyPage.save();
+  await actor.attemptsTo(
+    AppTasks.gotoAppMessagingTab(app.id),
+    EmailBodyTasks.createFromAppMessagingTab(emailBody.name),
+    EmailBodyTasks.update(emailBody),
+    EmailBodyTasks.save()
+  );
 }
 
 async function addRecordToTriggerEmail({
-  addContentPage,
+  actor,
   app,
-  editContentPage,
   rule,
   tabName,
   sectionName,
 }: {
-  addContentPage: AddContentPage;
+  actor: WebActor;
   app: App;
-  editContentPage: EditContentPage;
   rule: TextRuleWithValue;
   tabName: string;
   sectionName: string;
-}) {
-  await addContentPage.goto(app.id);
-  const editableTextField = await addContentPage.form.getField({
-    fieldName: rule.fieldName,
-    fieldType: rule.fieldType,
-    tabName: tabName,
-    sectionName: sectionName,
-  });
-  await editableTextField.fill(rule.value);
-  await addContentPage.saveRecordButton.click();
-  await addContentPage.page.waitForURL(editContentPage.pathRegex);
-  return editContentPage.getRecordIdFromUrl();
+}): Promise<number> {
+  await actor.attemptsTo(
+    ContentTasks.gotoAdd(app.id),
+    ContentTasks.fillTextField({
+      tabName,
+      sectionName,
+      fieldName: rule.fieldName,
+      value: rule.value,
+    }),
+    ContentTasks.saveRecord()
+  );
+
+  return actor.asks(ContentQuestions.currentRecordId());
 }
 
 async function verifyEmailReceived({

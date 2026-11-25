@@ -1,99 +1,75 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect, Page } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { App } from '../../models/app';
-import { ReferenceField } from '../../models/referenceField';
-import { User, UserStatus } from '../../models/user';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { UserUsagePage } from '../../pageObjectModels/systemReports/userUsagePage';
+import { App, FakeDataFactory, ReferenceField, User } from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentTasks,
+  FieldTasks,
+  SystemReportQuestions,
+  UserUsageReportTargets,
+  UserUsageReportTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, AppFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type UserUsageReportTextFixtures = {
+type UserUsageReportTestFixtures = {
   app: App;
   user: User;
-  testUserPage: Page;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  userUsagePage: UserUsagePage;
+  testUserActor: WebActor;
 };
 
-const test = base.extend<UserUsageReportTextFixtures>({
-  app: app,
-  user: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        userStatus: UserStatus.Active,
-        sysAdmin: true,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: createTestUserPageFixture,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
-  userUsagePage: async ({ sysAdminPage }, use) => await use(new UserUsagePage(sysAdminPage)),
+const test = base.extend<UserUsageReportTestFixtures>({
+  app: AppFixture.create().build(),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('user usage report', () => {
-  test('Filter the user usage report', async ({ userUsagePage, sysAdminUser }) => {
+  test('Filter the user usage report', async ({ sysAdminActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-886',
     });
 
     await test.step('Navigate to the user usage report page', async () => {
-      await userUsagePage.goto();
+      await sysAdminActor.attemptsTo(UserUsageReportTasks.goto());
     });
 
     await test.step('Filter the user usage report', async () => {
-      await userUsagePage.filterReport({
-        name: sysAdminUser.fullName,
-        status: 'Active',
-        tier: 'Full User',
-      });
+      await sysAdminActor.attemptsTo(
+        UserUsageReportTasks.filterReport({
+          name: sysAdminUser.fullName,
+          status: 'Active',
+          tier: 'Full User',
+        })
+      );
     });
 
     await test.step('Verify the report is filtered', async () => {
-      const rows = await userUsagePage.getRows();
-      expect(rows).toHaveLength(1);
-      await expect(rows[0]).toHaveText(new RegExp(sysAdminUser.fullName));
+      await sysAdminActor.browse().check(UserUsageReportTargets.rows).hasCount(1);
+      await sysAdminActor.browse().check(UserUsageReportTargets.rowAt(0)).hasText(new RegExp(sysAdminUser.fullName));
     });
   });
 
-  test('Sort the user usage report', async ({ userUsagePage }) => {
+  test('Sort the user usage report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-887',
     });
 
     await test.step('Navigate to the user usage report page', async () => {
-      await userUsagePage.goto();
+      await sysAdminActor.attemptsTo(UserUsageReportTasks.goto());
     });
 
     await test.step('Sort the user usage report', async () => {
-      await userUsagePage.filterReport({ status: 'Active' });
-      await userUsagePage.clearSort();
-      await userUsagePage.sortGridBy('Username', 'ascending');
+      await sysAdminActor.attemptsTo(
+        UserUsageReportTasks.filterReport({ status: 'Active' }),
+        UserUsageReportTasks.clearSort(),
+        UserUsageReportTasks.sortGridBy('Username', 'ascending')
+      );
     });
 
     await test.step('Verify the report is sorted', async () => {
-      const rows = await userUsagePage.getRows();
-      const usernames = await Promise.all(
-        rows.map(async row => {
-          const usernameCell = row.locator('td').nth(1);
-          return usernameCell.innerText();
-        })
-      );
+      const usernames = await sysAdminActor.browse().getAllTexts(UserUsageReportTargets.usernameCells);
       const sortedUsernames = [...usernames].sort((a, b) => a.localeCompare(b));
 
       expect(usernames).toEqual(sortedUsernames);
@@ -101,7 +77,7 @@ test.describe('user usage report', () => {
   });
 
   test('Click on the Usage link for a user in the report to view the usage details', async ({
-    userUsagePage,
+    sysAdminActor,
     sysAdminUser,
   }) => {
     test.info().annotations.push({
@@ -110,31 +86,22 @@ test.describe('user usage report', () => {
     });
 
     await test.step('Navigate to the user usage report page', async () => {
-      await userUsagePage.goto();
+      await sysAdminActor.attemptsTo(UserUsageReportTasks.goto());
     });
 
     await test.step('Click on the Usage link for a user', async () => {
-      await userUsagePage.filterReport({ name: sysAdminUser.fullName, status: 'Active' });
-
-      const userRow = await userUsagePage.getRowByName(new RegExp(sysAdminUser.fullName));
-      const usageLink = userRow.getByRole('link', { name: 'Usage' });
-      await usageLink.click();
+      await sysAdminActor.attemptsTo(
+        UserUsageReportTasks.filterReport({ name: sysAdminUser.fullName, status: 'Active' }),
+        UserUsageReportTasks.openUsageDialogForUser(sysAdminUser.fullName)
+      );
     });
 
     await test.step('Verify the usage details dialog is displayed', async () => {
-      const dialog = userUsagePage.page.getByRole('dialog', { name: 'User Usage' });
-      await expect(dialog).toBeVisible();
+      await sysAdminActor.browse().check(UserUsageReportTargets.usageDialog.dialog).isVisible();
     });
   });
 
-  test('Click on a "Link" link within the usage details dialog', async ({
-    app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    user: testUser,
-    userUsagePage,
-  }) => {
+  test('Click on a "Link" link within the usage details dialog', async ({ app, sysAdminActor, user: testUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-889',
@@ -148,54 +115,37 @@ test.describe('user usage report', () => {
     });
 
     await test.step("Create a reference field to the user's app", async () => {
-      await createReferenceFieldToUsersApp(appAdminPage, app, tabName, sectionName, referenceField);
+      await createReferenceFieldToUsersApp(sysAdminActor, app, tabName, sectionName, referenceField);
     });
 
     await test.step('Create a record with a reference to a user', async () => {
-      await createRecordWithReferenceToUser(
-        addContentPage,
-        editContentPage,
-        app,
-        tabName,
-        sectionName,
-        referenceField,
-        testUser
-      );
+      await createRecordWithReferenceToUser(sysAdminActor, app, tabName, sectionName, referenceField, testUser);
     });
 
     await test.step('Navigate to the user usage report page', async () => {
-      await userUsagePage.goto();
+      await sysAdminActor.attemptsTo(UserUsageReportTasks.goto());
     });
 
     await test.step('Click on the Usage link for a user', async () => {
-      await userUsagePage.filterReport({ name: testUser.fullName, status: 'Active' });
-      const userRow = await userUsagePage.getRowByName(new RegExp(testUser.fullName));
-      const usageLink = userRow.getByRole('link', { name: 'Usage' });
-      await usageLink.click();
+      await sysAdminActor.attemptsTo(
+        UserUsageReportTasks.filterReport({ name: testUser.fullName, status: 'Active' }),
+        UserUsageReportTasks.openUsageDialogForUser(testUser.fullName)
+      );
     });
 
     await test.step('Verify that clicking on the "Link" link within the usage details dialog takes the user to the correct page', async () => {
-      const usageDialog = userUsagePage.page.getByRole('dialog', { name: 'User Usage' });
-      const contentReferencesGrid = usageDialog.locator('#contentGrid');
-      const contentReferenceRow = contentReferencesGrid.getByRole('row', { name: new RegExp(app.name) });
-      const link = contentReferenceRow.getByRole('link', { name: 'Link' });
-
-      const context = userUsagePage.page.context();
-      const reportPagePromise = context.waitForEvent('page');
-      await link.click();
-      const reportPage = await reportPagePromise;
-
-      await expect(reportPage).toHaveURL(/\/Report\/[a-f0-9]{24}\/DisplayTemp/);
+      await sysAdminActor
+        .browse()
+        .check(UserUsageReportTargets.usageDialog.contentReferenceLink(app.name))
+        .opensNewTabWithUrl(/\/Report\/[a-f0-9]{24}\/DisplayTemp/);
     });
   });
 
   test('Export the User Usage details for a user', async ({
     app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
+    sysAdminActor,
     user: testUser,
-    testUserPage,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -215,42 +165,26 @@ test.describe('user usage report', () => {
     });
 
     await test.step("Create a reference field to the user's app", async () => {
-      await createReferenceFieldToUsersApp(appAdminPage, app, tabName, sectionName, referenceField);
+      await createReferenceFieldToUsersApp(sysAdminActor, app, tabName, sectionName, referenceField);
     });
 
     await test.step('Create a record with a reference to a user', async () => {
-      await createRecordWithReferenceToUser(
-        addContentPage,
-        editContentPage,
-        app,
-        tabName,
-        sectionName,
-        referenceField,
-        testUser
-      );
+      await createRecordWithReferenceToUser(sysAdminActor, app, tabName, sectionName, referenceField, testUser);
     });
 
-    const testUserUsagePage = new UserUsagePage(testUserPage);
-
     await test.step('Navigate to the user usage report page', async () => {
-      await testUserUsagePage.goto();
+      await testUserActor.attemptsTo(UserUsageReportTasks.goto());
     });
 
     await test.step('Click on the Usage link for a user', async () => {
-      await testUserUsagePage.filterReport({ name: testUser.fullName, status: 'Active' });
-      const userRow = await testUserUsagePage.getRowByName(new RegExp(testUser.fullName));
-      const usageLink = userRow.getByRole('link', { name: 'Usage' });
-      await usageLink.click();
+      await testUserActor.attemptsTo(
+        UserUsageReportTasks.filterReport({ name: testUser.fullName, status: 'Active' }),
+        UserUsageReportTasks.openUsageDialogForUser(testUser.fullName)
+      );
     });
 
     await test.step('Click the Export button within the usage details dialog', async () => {
-      const usageDialog = testUserUsagePage.page.getByRole('dialog', { name: 'User Usage' });
-      const exportButtonLink = usageDialog.getByRole('link', { name: 'Export' });
-      await exportButtonLink.click();
-
-      const exportReportDialog = testUserUsagePage.page.getByRole('dialog', { name: 'Export Report' });
-      const exportButton = exportReportDialog.getByRole('button', { name: 'Export' });
-      await exportButton.click();
+      await testUserActor.attemptsTo(UserUsageReportTasks.exportFromUsageDialog());
     });
 
     let exportEmailContent: string;
@@ -279,12 +213,7 @@ test.describe('user usage report', () => {
     let reportPath: string;
 
     await test.step('Download the exported user usage details', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 
@@ -353,43 +282,44 @@ test.describe('user usage report', () => {
 });
 
 async function createReferenceFieldToUsersApp(
-  appAdminPage: AppAdminPage,
+  actor: WebActor,
   app: App,
   tabName: string,
   sectionName: string,
   referenceField: ReferenceField
 ) {
-  await appAdminPage.goto(app.id);
-  await appAdminPage.layoutTabButton.click();
-  await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
-  await appAdminPage.layoutTab.openLayout();
-  await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-    fieldName: referenceField.name,
-    tabName: tabName,
-    sectionName: sectionName,
-    sectionColumn: 0,
-    sectionRow: 0,
-  });
-  await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+  await actor.attemptsTo(
+    AppTasks.gotoAppLayoutTab(app.id),
+    FieldTasks.addFromGrid(referenceField),
+    AppTasks.openLayoutDesigner(),
+    AppTasks.dragFieldOntoLayout({
+      fieldName: referenceField.name,
+      tabName,
+      sectionName,
+      column: 0,
+      row: 0,
+    }),
+    AppTasks.saveAndCloseLayout()
+  );
 }
 
 async function createRecordWithReferenceToUser(
-  addContentPage: AddContentPage,
-  editContentPage: EditContentPage,
+  actor: WebActor,
   app: App,
   tabName: string,
   sectionName: string,
   referenceField: ReferenceField,
   testUser: User
 ) {
-  await addContentPage.goto(app.id);
-  const editableReferenceField = await addContentPage.form.getField({
-    tabName: tabName,
-    sectionName: sectionName,
-    fieldName: referenceField.name,
-    fieldType: 'Reference',
-  });
-  await editableReferenceField.searchForAndSelectRecord(testUser.fullName);
-  await addContentPage.saveRecordButton.click();
-  await addContentPage.page.waitForURL(editContentPage.pathRegex);
+  await actor.attemptsTo(
+    ContentTasks.gotoAdd(app.id),
+    ContentTasks.selectReferenceField({
+      tabName,
+      sectionName,
+      fieldName: referenceField.name,
+      searchTerm: testUser.fullName,
+      controlType: 'radio',
+    }),
+    ContentTasks.saveRecord()
+  );
 }

@@ -1,37 +1,21 @@
-import { test as base, expect, Locator, Page } from '../../fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { User, UserStatus } from '../../models/user';
-import { PageHistoryReportPage } from '../../pageObjectModels/systemReports/pageHistoryReportPage';
+import { User } from '@stevanfreeborn/onspring-models';
+import { PageHistoryReportTargets, PageHistoryReportTasks, SystemReportQuestions } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type PageHistoryReportTestFixtures = {
-  pageHistoryReportPage: PageHistoryReportPage;
-  testUser: User;
-  testUserPage: Page;
+  user: User;
+  testUserActor: WebActor;
 };
 
 const test = base.extend<PageHistoryReportTestFixtures>({
-  pageHistoryReportPage: async ({ sysAdminPage }, use) => await use(new PageHistoryReportPage(sysAdminPage)),
-  testUser: async ({ browser, sysAdminPage }, use, testInfo) => {
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    );
-  },
-  testUserPage: async ({ browser, testUser }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testUser }, use, testInfo),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testUserActor: ActorFixture.forUser().build(),
 });
 
 test.describe('page history report', () => {
-  test('Filter page history report', async ({ pageHistoryReportPage }) => {
+  test('Filter page history report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-580',
@@ -40,76 +24,71 @@ test.describe('page history report', () => {
     const today = new Date();
 
     await test.step('Navigate to the page history report', async () => {
-      await pageHistoryReportPage.goto();
+      await sysAdminActor.attemptsTo(PageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the page history report', async () => {
-      await pageHistoryReportPage.filterReport({
-        dateFilter: {
-          type: 'Custom Dates',
-          from: today,
-          to: today,
-        },
-      });
+      await sysAdminActor.attemptsTo(
+        PageHistoryReportTasks.filterReport({
+          dateFilter: {
+            type: 'Custom Dates',
+            from: today,
+            to: today,
+          },
+        })
+      );
     });
 
     await test.step('Verify the report is filtered correctly', async () => {
-      const rows = await pageHistoryReportPage.getReportRows();
+      const dateValues = await sysAdminActor.browse().getAllTexts(PageHistoryReportTargets.dateCells);
+      expect(dateValues.length).toBeGreaterThanOrEqual(1);
 
-      expect(rows.length).toBeGreaterThanOrEqual(1);
+      const expectedDay = today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
 
-      for (const row of rows) {
-        const dateCell = row.getByRole('gridcell').nth(0);
-
-        const dateValue = await dateCell.textContent();
+      for (const dateValue of dateValues) {
         const activityDay = dateValue?.trim().split(' ')[0];
-
-        expect(activityDay).toBe(`${today.toLocaleDateString('en-US', { timeZone: 'America/Chicago' })}`);
+        expect(activityDay).toBe(expectedDay);
       }
     });
   });
 
-  test('Sort page history report', async ({ pageHistoryReportPage }) => {
+  test('Sort page history report', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-581',
     });
 
     await test.step('Navigate to the page history report', async () => {
-      await pageHistoryReportPage.goto();
+      await sysAdminActor.attemptsTo(PageHistoryReportTasks.goto());
     });
 
-    let initialRows: Locator[];
     let initialFirstRowContent: string;
 
     await test.step('Get initial grid rows', async () => {
       await expect(async () => {
-        initialRows = await pageHistoryReportPage.getReportRows();
-        expect(initialRows.length).toBeGreaterThan(1);
+        const initialRowCount = await sysAdminActor.browse().count(PageHistoryReportTargets.rows);
+        expect(initialRowCount).toBeGreaterThan(1);
       }).toPass();
 
-      const firstRowCells = await initialRows[0].getByRole('gridcell').all();
-      initialFirstRowContent = await Promise.all(firstRowCells.map(c => c.textContent())).then(arr => arr.join(''));
+      const firstRowCellTexts = await sysAdminActor.browse().getAllTexts(PageHistoryReportTargets.firstRowCells);
+      initialFirstRowContent = firstRowCellTexts.join('');
     });
 
     await test.step('Sort the grid by Date', async () => {
-      await pageHistoryReportPage.sortGridBy('Date', 'ascending');
+      await sysAdminActor.attemptsTo(PageHistoryReportTasks.sortGridBy('Date', 'ascending'));
     });
 
     await test.step('Verify the grid is sorted', async () => {
-      const sortedRows = await pageHistoryReportPage.getReportRows();
-      const sortedFirstRowCells = await sortedRows[0].getByRole('gridcell').all();
-      const sortedFirstRowContent = await Promise.all(sortedFirstRowCells.map(c => c.textContent())).then(arr =>
-        arr.join('')
-      );
+      const sortedFirstRowCellTexts = await sysAdminActor.browse().getAllTexts(PageHistoryReportTargets.firstRowCells);
+      const sortedFirstRowContent = sortedFirstRowCellTexts.join('');
 
       expect(initialFirstRowContent).not.toEqual(sortedFirstRowContent);
     });
   });
 
   test('Export page history report', async ({
-    testUser,
-    testUserPage,
+    user: testUser,
+    testUserActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -122,24 +101,25 @@ test.describe('page history report', () => {
     test.slow();
 
     const today = new Date();
-    const testUserPageHistoryPage = new PageHistoryReportPage(testUserPage);
 
     await test.step('Navigate to the page history report', async () => {
-      await testUserPageHistoryPage.goto();
+      await testUserActor.attemptsTo(PageHistoryReportTasks.goto());
     });
 
     await test.step('Filter the page history report to limit results', async () => {
-      await testUserPageHistoryPage.filterReport({
-        dateFilter: {
-          type: 'Custom Dates',
-          from: today,
-          to: today,
-        },
-      });
+      await testUserActor.attemptsTo(
+        PageHistoryReportTasks.filterReport({
+          dateFilter: {
+            type: 'Custom Dates',
+            from: today,
+            to: today,
+          },
+        })
+      );
     });
 
     await test.step('Export the page history report', async () => {
-      await testUserPageHistoryPage.exportReport();
+      await testUserActor.attemptsTo(PageHistoryReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -168,12 +148,7 @@ test.describe('page history report', () => {
     let reportPath: string;
 
     await test.step('Download the exported page history report', async () => {
-      await testUserPage.setContent(exportEmailContent);
-
-      const reportDownload = testUserPage.waitForEvent('download');
-      await testUserPage.getByRole('link', { name: 'Download the export file' }).click();
-
-      const report = await reportDownload;
+      const report = await testUserActor.asks(SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent));
       reportPath = await downloadService.saveDownload(report);
     });
 

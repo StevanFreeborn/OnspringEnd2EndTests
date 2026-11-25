@@ -1,40 +1,28 @@
-import { test as base, expect, Page } from '../../fixtures';
-import { createTestUserPageFixture } from '../../fixtures/auth.fixtures';
-import { createUserFixture } from '../../fixtures/user.fixtures';
-import { User, UserStatus } from '../../models/user';
+import { User } from '@stevanfreeborn/onspring-models';
+import {
+  SystemAdministratorListingReportTargets,
+  SystemAdministratorListingReportTasks,
+  SystemReportQuestions,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { ActorFixture, expect, test as base, UserFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-import { SystemAdministratorListingPage } from './../../pageObjectModels/systemReports/systemAdministratorListingPage';
 
 type SystemAdministratorListingReportFixtures = {
-  systemAdministratorListingPage: SystemAdministratorListingPage;
-  testSystemAdmin: User;
-  testSystemAdminPage: Page;
+  user: User;
+  testSystemAdminActor: WebActor;
 };
 
 const test = base.extend<SystemAdministratorListingReportFixtures>({
-  systemAdministratorListingPage: async ({ sysAdminPage }, use) =>
-    await use(new SystemAdministratorListingPage(sysAdminPage)),
-  testSystemAdmin: async ({ browser, sysAdminPage }, use, testInfo) =>
-    await createUserFixture(
-      {
-        browser,
-        sysAdminPage,
-        sysAdmin: true,
-        userStatus: UserStatus.Active,
-        roles: [],
-      },
-      use,
-      testInfo
-    ),
-  testSystemAdminPage: async ({ browser, testSystemAdmin }, use, testInfo) =>
-    await createTestUserPageFixture({ browser, user: testSystemAdmin }, use, testInfo),
+  user: UserFixture.create().withStatus('Active').withSysAdmin(true).build(),
+  testSystemAdminActor: ActorFixture.forUser().build(),
 });
 
 test.describe('system administrator listing report', () => {
   test('Sort the system administrator listing report', async ({
-    systemAdministratorListingPage,
+    sysAdminActor,
     sysAdminUser,
-    testSystemAdmin,
+    user: testSystemAdmin,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -42,17 +30,15 @@ test.describe('system administrator listing report', () => {
     });
 
     await test.step('Navigate to the system administrator listing report page', async () => {
-      await systemAdministratorListingPage.goto();
+      await sysAdminActor.attemptsTo(SystemAdministratorListingReportTasks.goto());
     });
 
     await test.step('Sort the email messaging configurations report', async () => {
-      await systemAdministratorListingPage.sortGridBy('Added', 'ascending');
+      await sysAdminActor.attemptsTo(SystemAdministratorListingReportTasks.sortGridBy('Added', 'ascending'));
     });
 
     await test.step('Verify the email messaging configurations report is sorted', async () => {
-      const rows = await systemAdministratorListingPage.getRows();
-
-      const usernames = await Promise.all(rows.map(row => row.getByRole('gridcell').nth(1).textContent()));
+      const usernames = await sysAdminActor.browse().getAllTexts(SystemAdministratorListingReportTargets.usernameCells);
       const sysAdminIndex = usernames.findIndex(u => u?.trim().includes(sysAdminUser.username));
       const testAdminIndex = usernames.findIndex(u => u?.trim().includes(testSystemAdmin.username));
 
@@ -61,8 +47,8 @@ test.describe('system administrator listing report', () => {
   });
 
   test('Export the system administrator listing report', async ({
-    testSystemAdmin,
-    testSystemAdminPage,
+    user: testSystemAdmin,
+    testSystemAdminActor,
     sysAdminEmail,
     downloadService,
     sheetParser,
@@ -72,14 +58,12 @@ test.describe('system administrator listing report', () => {
       description: 'Test-479',
     });
 
-    const systemAdministratorListingPage = new SystemAdministratorListingPage(testSystemAdminPage);
-
     await test.step('Navigate to the system administrator listing report page', async () => {
-      await systemAdministratorListingPage.goto();
+      await testSystemAdminActor.attemptsTo(SystemAdministratorListingReportTasks.goto());
     });
 
     await test.step('Export the system administrator listing report', async () => {
-      await systemAdministratorListingPage.exportReport();
+      await testSystemAdminActor.attemptsTo(SystemAdministratorListingReportTasks.exportReport());
     });
 
     let exportEmailContent: string;
@@ -103,11 +87,9 @@ test.describe('system administrator listing report', () => {
     let reportPath: string;
 
     await test.step('Download the exported system administrator listing report', async () => {
-      await testSystemAdminPage.setContent(exportEmailContent);
-
-      const reportDownload = testSystemAdminPage.waitForEvent('download');
-      await testSystemAdminPage.getByRole('link', { name: 'Download the export file' }).click();
-      const report = await reportDownload;
+      const report = await testSystemAdminActor.asks(
+        SystemReportQuestions.downloadedExportFromEmailHtml(exportEmailContent)
+      );
       reportPath = await downloadService.saveDownload(report);
     });
 
@@ -127,29 +109,29 @@ test.describe('system administrator listing report', () => {
     });
   });
 
-  test('Filter the system administrator listing report', async ({
-    systemAdministratorListingPage,
-    testSystemAdmin,
-  }) => {
+  test('Filter the system administrator listing report', async ({ sysAdminActor, user: testSystemAdmin }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-480',
     });
 
     await test.step('Navigate to the system administrator listing report page', async () => {
-      await systemAdministratorListingPage.goto();
+      await sysAdminActor.attemptsTo(SystemAdministratorListingReportTasks.goto());
     });
 
     await test.step('Filter the system administrator listing report', async () => {
-      await systemAdministratorListingPage.filterReport({
-        dateFilter: { type: 'Last 24 Hours' },
-      });
+      await sysAdminActor.attemptsTo(
+        SystemAdministratorListingReportTasks.filterReport({
+          dateFilter: { type: 'Last 24 Hours' },
+        })
+      );
     });
 
     await test.step('Verify the system administrator listing report is filtered', async () => {
-      const row = await systemAdministratorListingPage.getRowByText(testSystemAdmin.email);
-
-      await expect(row).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(SystemAdministratorListingReportTargets.rowByText(testSystemAdmin.email))
+        .isVisible();
     });
   });
 });
