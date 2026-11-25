@@ -138,6 +138,18 @@ export const RoleTasks = {
         }
       }
 
+      if (role.adminReportPermissions.length > 0) {
+        await actor.browse().click(AddRolePageTargets.adminPermissionsTabButton);
+
+        for (const adminReportPermission of role.adminReportPermissions) {
+          if (adminReportPermission.permission.read) {
+            await actor
+              .browse()
+              .click(AddRolePageTargets.adminPermTab.adminReportReadCheckbox(adminReportPermission.reportName));
+          }
+        }
+      }
+
       const editPageUrlWait = actor.browse().waitForUrl(AddRolePageTargets.editPathRegex);
       await actor.browse().click(AddRolePageTargets.saveRecordButton);
       await editPageUrlWait;

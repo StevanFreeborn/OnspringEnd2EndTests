@@ -267,6 +267,30 @@ export const FieldTasks = {
       await saveFieldModal(actor);
     },
 
+  updateOpenFormulaModal:
+    ({
+      status,
+      formula,
+      frameNumber = 0,
+    }: {
+      status?: 'Enabled' | 'Disabled' | 'Invalid';
+      formula?: string;
+      frameNumber?: number;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(FieldTargets.modal.generalSettingsTabButton(frameNumber));
+
+      if (status !== undefined) {
+        await actor.browse().click(FieldTargets.modal.statusButton(status, frameNumber));
+      }
+
+      if (formula !== undefined) {
+        await actor.browse().setCodeMirrorValue(FieldTargets.modal.formulaEditor(frameNumber), formula);
+      }
+
+      await saveFieldModal(actor);
+    },
+
   deleteFromGrid:
     (fieldName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {

@@ -72,6 +72,12 @@ export const FieldTargets = {
       (frameNumber: number = 0): Target =>
       (page: Page) =>
         modalFrame(page, frameNumber).getByLabel('Field', { exact: true }),
+    statusButton:
+      (status: 'Enabled' | 'Disabled' | 'Invalid', frameNumber: number = 0): Target =>
+      (page: Page) =>
+        modalFrame(page, frameNumber)
+          .locator('.label:has-text("Status") + .data .button-status-container')
+          .getByRole('button', { name: status }),
     listValuesGrid: {
       addValueButton:
         (frameNumber: number = 0): Target =>

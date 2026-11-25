@@ -15,6 +15,7 @@ import {
   AppDetailTargets,
   AppDocumentsTabTargets,
   AppLayoutTabTargets,
+  AppMessagingTabTargets,
   AppsPageTargets,
   CreateAppDialogTargets,
   CreateAppModalTargets,
@@ -121,6 +122,14 @@ export const AppTasks = {
       await actor.browse().goto(`/Admin/App/${appId}`);
       await actor.browse().click(AppDetailTargets.documentsTabButton);
       await actor.browse().waitForState(AppDocumentsTabTargets.documentsGrid, 'visible');
+    },
+
+  gotoAppMessagingTab:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(`/Admin/App/${appId}`);
+      await actor.browse().click(AppDetailTargets.messagingTabButton);
+      await actor.browse().waitForState(AppMessagingTabTargets.emailBodyGrid, 'visible');
     },
 
   gotoAppTriggersTab:

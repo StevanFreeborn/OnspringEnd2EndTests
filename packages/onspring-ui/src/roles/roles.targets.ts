@@ -58,6 +58,16 @@ export const AddRolePageTargets = {
           .locator(`[data-permission-type="${permType}"]`)
           .first(),
   },
+
+  adminPermTab: {
+    adminReportReadCheckbox: (reportName: string) => (page: Page) =>
+      page
+        .locator('section')
+        .filter({ has: page.getByRole('heading', { name: 'System Reports' }) })
+        .getByRole('table')
+        .getByRole('row', { name: reportName })
+        .getByRole('checkbox'),
+  },
 };
 
 export const EditRolePageTargets = {

@@ -1,5 +1,13 @@
 import { Page } from '@playwright/test';
-import { App, AppPermission, FakeDataFactory, Permission, Role, RoleStatus } from '@stevanfreeborn/onspring-models';
+import {
+  AdminReportPermission,
+  App,
+  AppPermission,
+  FakeDataFactory,
+  Permission,
+  Role,
+  RoleStatus,
+} from '@stevanfreeborn/onspring-models';
 import { RoleTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 
@@ -7,6 +15,7 @@ export class RoleFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sy
   private name?: string;
   private status: RoleStatus = 'Active';
   private appPermissions: AppPermission[] = [];
+  private adminReportPermissions: AdminReportPermission[] = [];
   private appPermissionsFactory?: (deps: { app: App }) => AppPermission[];
 
   withName(name: string): this {
@@ -33,6 +42,11 @@ export class RoleFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sy
     return this as unknown as RoleFixtureBuilder<TDeps & { app: App }>;
   }
 
+  withAdminReportPermissions(permissions: AdminReportPermission[]): this {
+    this.adminReportPermissions.push(...permissions);
+    return this;
+  }
+
   private async runFixture(
     sysAdminActor: WebActor,
     appPermissions: AppPermission[],
@@ -42,6 +56,7 @@ export class RoleFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { sy
       name: this.name ?? FakeDataFactory.createFakeRoleName(),
       status: this.status,
       appPermissions,
+      adminReportPermissions: [...this.adminReportPermissions],
     });
 
     await sysAdminActor.attemptsTo(RoleTasks.create(role));
