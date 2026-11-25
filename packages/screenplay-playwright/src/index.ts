@@ -126,6 +126,10 @@ export class BrowserActions {
     return resolveTarget(this.page, target).isEditable();
   }
 
+  async isChecked(target: Target): Promise<boolean> {
+    return resolveTarget(this.page, target).isChecked();
+  }
+
   async setChecked(target: Target, checked: boolean): Promise<void> {
     await resolveTarget(this.page, target).setChecked(checked);
   }
@@ -136,6 +140,10 @@ export class BrowserActions {
 
   async textContent(target: Target): Promise<string | null> {
     return resolveTarget(this.page, target).textContent();
+  }
+
+  async getSessionStorageItem(key: string): Promise<string | null> {
+    return this.page.evaluate(storageKey => sessionStorage.getItem(storageKey), key);
   }
 
   async count(target: Target): Promise<number> {
