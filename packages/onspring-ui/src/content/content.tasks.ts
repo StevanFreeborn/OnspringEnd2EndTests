@@ -1,3 +1,4 @@
+import { Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { DateFieldControlTasks } from '../common/controls/dateFieldControl.js';
@@ -85,6 +86,19 @@ export const ContentTasks = {
     async (actor: WebActor): Promise<void> => {
       const sectionTarget = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
       await actor.browse().fill(ContentRecordTargets.textFieldInSection(sectionTarget, fieldName), value);
+    },
+
+  typeTextField:
+    ({
+      tabName,
+      sectionName,
+      fieldName,
+      value,
+      delay = 150,
+    }: ContentFieldLocation & { value: string; delay?: number }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const sectionTarget = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await actor.browse().type(ContentRecordTargets.textFieldInSection(sectionTarget, fieldName), value, { delay });
     },
 
   fillNumberField:
@@ -208,5 +222,17 @@ export const ContentTasks = {
       await actor.browse().click(ContentRecordTargets.saveRecordButton);
       await navPromise;
       await actor.browse().waitForLoadState();
+    },
+
+  saveEditedRecord:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const saveResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => ContentRecordTargets.editPathRegex.test(r.url()) && r.request().method() === 'POST'
+        );
+      await actor.browse().click(ContentRecordTargets.saveRecordButton);
+      await saveResponse;
     },
 };

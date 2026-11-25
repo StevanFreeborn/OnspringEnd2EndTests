@@ -398,8 +398,8 @@ export class TargetAssertions {
     await expect(this.locator).toBeDisabled();
   }
 
-  async hasValue(expected: string | RegExp): Promise<void> {
-    await expect(this.locator).toHaveValue(expected);
+  async hasValue(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+    await expect(this.locator).toHaveValue(expected, options);
   }
 
   async doesNotHaveValue(expected: string | RegExp): Promise<void> {

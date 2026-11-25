@@ -223,6 +223,14 @@ export const ContentRecordTargets = {
         .locator(`${fieldContainerSelector(fieldName)} div.onx-reference-grid`)
         .first()
         .getByTitle('Create New'),
+  referenceRecordRowInSection:
+    (sectionTarget: Target, fieldName: string, rowName: string | RegExp): Target =>
+    (page: Page): Locator =>
+      resolveTarget(page, sectionTarget)
+        .locator(`${fieldContainerSelector(fieldName)} div.onx-reference-grid`)
+        .first()
+        .getByRole('grid')
+        .getByRole('row', { name: rowName }),
   readOnlyReferenceFieldInSection:
     (sectionTarget: Target, fieldName: string): Target =>
     (page: Page): Locator =>
@@ -248,6 +256,7 @@ export const ContentRecordTargets = {
       resolveTarget(page, sectionTarget).locator(`td.object-cell-${objectName}`).first(),
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
   saveAndCloseButton: (page: Page): Locator => page.getByRole('link', { name: 'Save & Close' }),
+  validationErrors: (page: Page): Locator => page.locator('#validation-error-popover'),
 
   createRecordModal: {
     popupAddPathRegex: /\/Content\/\d+\/PopupAdd/,
