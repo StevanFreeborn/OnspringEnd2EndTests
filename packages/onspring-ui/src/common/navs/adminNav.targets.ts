@@ -16,6 +16,10 @@ export const SidebarNavTargets = {
   contentTab: (page: Page): Locator => page.locator('#content-tab'),
   adminGearIcon: (page: Page): Locator => page.locator('#admin-tab'),
   pinnedContent: (page: Page): Locator => page.locator('#pinned-items'),
+  pinnedRecordLink:
+    (appId: number, recordId: number) =>
+    (page: Page): Locator =>
+      page.locator('#pinned-items').locator(`a[href="/Content/${appId}/${recordId}"]`),
   userImage: (page: Page): Locator => page.locator('#user-image'),
   userMenu: (page: Page): Locator => page.locator('#user-menu'),
   profileLink: (page: Page): Locator => page.locator('#user-menu').getByText('Profile'),

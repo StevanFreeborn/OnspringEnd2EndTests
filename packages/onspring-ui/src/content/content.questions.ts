@@ -1,4 +1,4 @@
-import { Response } from '@playwright/test';
+import { Download, Response } from '@playwright/test';
 import { Question } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { ContentFieldLocation, ContentRecordTargets, ContentSectionLocation } from './content.targets.js';
@@ -141,5 +141,24 @@ export const ContentQuestions = {
 
       const body = (await createRecordResponse.json()) as { data: { recordId: number } };
       return body.data.recordId;
+    },
+
+  printRecordToPdf:
+    (): Question<WebActor, Download> =>
+    async (actor: WebActor): Promise<Download> => {
+      await actor.browse().click(ContentRecordTargets.actionMenuButton);
+      await actor.browse().waitForState(ContentRecordTargets.actionMenu, 'visible');
+      await actor.browse().click(ContentRecordTargets.actionMenuOption('Print Record'));
+      await actor.browse().waitForState(ContentRecordTargets.printRecordModal.dialog, 'visible');
+      await actor.browse().click(ContentRecordTargets.printRecordModal.printActionSelect);
+      await actor.browse().click(ContentRecordTargets.dropdownOption('Print to a PDF and download'));
+      return actor.browse().clickAndWaitForDownload(ContentRecordTargets.printRecordModal.okButton);
+    },
+
+  downloadedVersionHistoryExportFromEmailHtml:
+    (html: string): Question<WebActor, Download> =>
+    async (actor: WebActor): Promise<Download> => {
+      await actor.browse().setContent(html);
+      return actor.browse().clickAndWaitForDownload(ContentRecordTargets.versionHistoryEmailDownloadLink);
     },
 };

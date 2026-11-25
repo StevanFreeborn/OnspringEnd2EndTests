@@ -38,14 +38,34 @@ const createRecordDialog = (page: Page): Locator =>
 const generateDocumentDialog = (page: Page): Locator =>
   page.getByRole('dialog', { name: /generate dynamic document/i });
 
+const printRecordDialog = (page: Page): Locator => page.getByRole('dialog', { name: 'Print Content Record' });
+
+const versionHistoryDialog = (page: Page): Locator => page.getByRole('dialog', { name: 'Version History' });
+
+const versionHistoryExportReportDialog = (page: Page): Locator => page.getByRole('dialog', { name: 'Export Report' });
+
+const concurrentEditAlertDialog = (page: Page): Locator =>
+  page.getByRole('dialog', { name: 'Concurrent Editing Alert' });
+
+const quickContentAddContainer = (page: Page): Locator => page.locator('form', { hasText: 'Quick Content Add' });
+
 export const ContentRecordTargets = {
+  homeRoute: '/Content',
   appContentRoute: (appId: number) => `/Content/${appId}/App`,
   addRoute: (appId: number) => `/Content/${appId}/Add`,
   editRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/Edit`,
   viewRoute: (appId: number, recordId: number) => `/Content/${appId}/${recordId}/View`,
   addPathRegex: /\/Content\/\d+\/Add/,
   editPathRegex: /\/Content\/\d+\/\d+\/Edit/,
+  viewPathRegex: /\/Content\/\d+\/\d+\/View/,
+  copyPathRegex: /\/Content\/\d+\/\d+\/CopyRecord/,
   appContentPathRegex: /\/Content\/\d+\/App/,
+  backToOriginPathRegex: /BackToOrigin/,
+  createContentButton: (page: Page): Locator => page.getByRole('button', { name: 'Create Content' }),
+  createContentMenuOption:
+    (appName: string): Target =>
+    (page: Page): Locator =>
+      page.locator('#create-menu').getByText(appName),
   actionMenuButton: (page: Page): Locator => page.locator('#action-menu-button'),
   actionMenu: (page: Page): Locator => page.locator('#action-menu'),
   actionMenuOption:
@@ -68,7 +88,12 @@ export const ContentRecordTargets = {
     cancelButton: (page: Page): Locator => generateDocumentDialog(page).getByRole('button', { name: 'Cancel' }),
     closeButton: (page: Page): Locator => generateDocumentDialog(page).getByRole('button', { name: 'Close' }),
   },
-  quickContentAddForm: (page: Page): Locator => page.locator('form', { hasText: 'Quick Content Add' }),
+  quickContentAddForm: quickContentAddContainer,
+  quickContentAdd: {
+    openAfterSaveCheckbox: (page: Page): Locator =>
+      quickContentAddContainer(page).getByRole('checkbox', { name: 'Open this content record on save' }),
+    saveButton: (page: Page): Locator => quickContentAddContainer(page).getByRole('button', { name: 'Save' }),
+  },
   tabByName:
     (tabName: string): Target =>
     (page: Page): Locator =>
@@ -256,7 +281,46 @@ export const ContentRecordTargets = {
       resolveTarget(page, sectionTarget).locator(`td.object-cell-${objectName}`).first(),
   saveRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Save Record' }),
   saveAndCloseButton: (page: Page): Locator => page.getByRole('link', { name: 'Save & Close' }),
+  viewRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'View Record' }),
+  editRecordButton: (page: Page): Locator => page.getByRole('link', { name: 'Edit Record' }),
+  cancelButton: (page: Page): Locator => page.getByRole('link', { name: 'Cancel' }),
+  pinRecordButton: (page: Page): Locator => page.getByTitle('Pin Record', { exact: true }),
+  notFoundMessage: (page: Page): Locator => page.getByText("Oops! The page you're trying to view doesn't exist"),
+  versionHistoryEmailDownloadLink: (page: Page): Locator => page.getByRole('link'),
   validationErrors: (page: Page): Locator => page.locator('#validation-error-popover'),
+
+  concurrentEditAlertModal: {
+    dialog: concurrentEditAlertDialog,
+    closeButton: (page: Page): Locator => concurrentEditAlertDialog(page).getByRole('button', { name: 'Close' }),
+  },
+
+  printRecordModal: {
+    dialog: printRecordDialog,
+    printActionSelect: (page: Page): Locator => printRecordDialog(page).getByRole('listbox', { name: 'Print Action' }),
+    orientationSelect: (page: Page): Locator => printRecordDialog(page).getByRole('listbox', { name: 'Orientation' }),
+    contentVisibilitySelect: (page: Page): Locator =>
+      printRecordDialog(page).getByRole('listbox', { name: 'Content Visibility' }),
+    okButton: (page: Page): Locator => printRecordDialog(page).getByRole('button', { name: 'OK' }),
+    cancelButton: (page: Page): Locator => printRecordDialog(page).getByRole('button', { name: 'Cancel' }),
+  },
+
+  versionHistoryModal: {
+    getRecordVersionsPathRegex: /\/Content\/\d+\/\d+\/GetRecordVersionsPaged/,
+    filterRecordVersionsPathRegex: /\/Content\/\d+\/\d+\/GetRecordVersionsPage/,
+    dialog: versionHistoryDialog,
+    fromDateField: (page: Page): Locator => versionHistoryDialog(page).locator('.k-datetimepicker').first(),
+    toDateField: (page: Page): Locator => versionHistoryDialog(page).locator('.k-datetimepicker').last(),
+    versionRows: (page: Page): Locator => versionHistoryDialog(page).locator('.k-grid-content tr.k-master-row'),
+    exportReportButton: (page: Page): Locator =>
+      versionHistoryDialog(page).getByRole('button', { name: 'Export Report' }),
+    exportReportDialog: {
+      dialog: versionHistoryExportReportDialog,
+      exportButton: (page: Page): Locator =>
+        versionHistoryExportReportDialog(page).getByRole('button', { name: 'Export' }),
+      closeButton: (page: Page): Locator =>
+        versionHistoryExportReportDialog(page).getByRole('button', { name: 'Close' }),
+    },
+  },
 
   createRecordModal: {
     popupAddPathRegex: /\/Content\/\d+\/PopupAdd/,
