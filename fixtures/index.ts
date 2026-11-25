@@ -3,10 +3,8 @@ import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { App } from '../models/app';
 import { Role } from '../models/role';
-import { Survey } from '../models/survey';
 import { User } from '../models/user';
 import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
-import { SurveyAdminPage } from '../pageObjectModels/surveys/surveyAdminPage';
 import { DownloadService } from '../services/downloadService';
 import { DynamicDocumentService } from '../services/dynamicDocumentService';
 import { EmailService } from '../services/emailService';
@@ -28,7 +26,6 @@ import {
   sheetParser,
   sysAdminEmailService,
 } from './services.fixtures';
-import { survey } from './survey.fixtures';
 import { activeUserWithRole } from './user.fixtures';
 
 FakeDataFactory.configure({
@@ -75,12 +72,6 @@ type FieldTestFixtures = {
   testUserPage: Page;
 };
 
-type QuestionTestFixtures = {
-  surveyAdminPage: SurveyAdminPage;
-  sourceSurvey: Survey;
-  targetSurvey: Survey;
-};
-
 export const test = base.extend<Fixtures>({
   environment: {
     getEnvironment: () => env.TEST_ENV,
@@ -125,15 +116,6 @@ export const layoutItemTest = test.extend<FieldTestFixtures>({
   testUserPage: createTestUserPageFixture,
 });
 
-export const surveyQuestionTest = test.extend<QuestionTestFixtures>({
-  surveyAdminPage: async ({ sysAdminPage }, use) => {
-    const surveyAdminPage = new SurveyAdminPage(sysAdminPage);
-    await use(surveyAdminPage);
-  },
-  sourceSurvey: survey,
-  targetSurvey: survey,
-});
-
 export { expect } from './matchers.fixtures';
 export { ActorFixture, ActorFixtureBuilder, createAuthenticatedActor } from './auth.fixtures';
 export { AppFixture, AppFixtureBuilder, createAppWithActor } from './app.fixtures';
@@ -160,7 +142,7 @@ export { DataConnectorFixture, DataConnectorFixtureBuilder } from './dataConnect
 export type { DataConnectorFixtureData } from './dataConnector.fixtures';
 export { DataImportFixture, DataImportFixtureBuilder, dataImport } from './dataImport.fixtures';
 export type { DataImportFixtureData } from './dataImport.fixtures';
-export { SurveyFixture, SurveyFixtureBuilder, createSurveyWithActor } from './survey.fixtures';
+export { SurveyFixture, SurveyFixtureBuilder } from './survey.fixtures';
 export { ReportFixture, ReportFixtureBuilder } from './report.fixtures';
 
 export * from '@playwright/test';
