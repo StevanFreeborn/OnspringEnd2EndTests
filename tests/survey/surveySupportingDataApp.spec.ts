@@ -1,48 +1,29 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { Role } from '../../models/role';
-import { TextField } from '../../models/textField';
-import { UserStatus } from '../../models/user';
-import { AdminHomePage } from '../../pageObjectModels/adminHomePage';
-import { AddGroupAdminPage } from '../../pageObjectModels/groups/addGroupAdminPage';
-import { EditGroupAdminPage } from '../../pageObjectModels/groups/editGroupAdminPage';
-import { GroupsSecurityAdminPage } from '../../pageObjectModels/groups/groupsSecurityAdminPage';
-import { AddRoleAdminPage } from '../../pageObjectModels/roles/addRoleAdminPage';
-import { EditRoleAdminPage } from '../../pageObjectModels/roles/editRoleAdminPage';
-import { RolesSecurityAdminPage } from '../../pageObjectModels/roles/rolesSecurityAdminPage';
-import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
-import { SurveysAdminPage } from '../../pageObjectModels/surveys/surveysAdminPage';
-import { AddUserAdminPage } from '../../pageObjectModels/users/addUserAdminPage';
-import { EditUserAdminPage } from '../../pageObjectModels/users/editUserAdminPage';
-import { UsersSecurityAdminPage } from '../../pageObjectModels/users/usersSecurityAdminPage';
+import { Response } from '@playwright/test';
+import { FakeDataFactory, Role } from '@stevanfreeborn/onspring-models';
+import {
+  AdminNavTargets,
+  AppDetailTargets,
+  AppTasks,
+  DeleteDialogTargets,
+  EditAdminSettingsModalTargets,
+  EditDisplaySettingsModalTargets,
+  EditGeneralSettingsModalTargets,
+  EditGeocodingSettingsModalTargets,
+  EditNotesSettingsModalTargets,
+  GroupTasks,
+  OptionTargets,
+  RoleTasks,
+  SurveyDetailTargets,
+  SurveysPageTargets,
+  SurveyTasks,
+  UserTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type SurveyTestFixtures = {
-  adminHomePage: AdminHomePage;
-  surveysAdminPage: SurveysAdminPage;
-  surveyAdminPage: SurveyAdminPage;
-};
-
-const test = base.extend<SurveyTestFixtures>({
-  adminHomePage: async ({ sysAdminPage }, use) => {
-    const adminHomePage = new AdminHomePage(sysAdminPage);
-    await use(adminHomePage);
-  },
-  surveysAdminPage: async ({ sysAdminPage }, use) => {
-    const surveysAdminPage = new SurveysAdminPage(sysAdminPage);
-    await use(surveysAdminPage);
-  },
-  surveyAdminPage: async ({ sysAdminPage }, use) => {
-    const surveyAdminPage = new SurveyAdminPage(sysAdminPage);
-    await use(surveyAdminPage);
-  },
-});
-
 test.describe('survey supporting data app', () => {
-  const surveysToDelete: string[] = [];
-
-  test.beforeEach(async ({ adminHomePage }) => {
-    await adminHomePage.goto();
+  test.beforeEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.browse().goto(AdminNavTargets.homeRoute);
   });
 
   // TODO: Not handling cleanup here because when
@@ -50,36 +31,27 @@ test.describe('survey supporting data app', () => {
   // occurs when another user simultaneously
   // loads the surveys admin page.
   // reference: https://corp.onspring.com/Content/8/4162
-  // test.afterEach(async ({ surveysAdminPage }) => {
-  //   await surveysAdminPage.deleteSurveys(surveysToDelete);
-  //   surveysToDelete = [];
-  // });
 
-  test('Create a survey via the create button on the header of on the admin home page', async ({
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test('Create a survey via the create button on the header of on the admin home page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-858',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey', async () => {
-      await adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.createViaHeader(surveyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(surveyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(surveyName);
     });
   });
 
   test('Create a survey via the create button on the Surveys tile on the admin home page', async ({
-    adminHomePage,
-    surveyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -87,48 +59,41 @@ test.describe('survey supporting data app', () => {
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey', async () => {
-      await adminHomePage.createSurveyUsingSurveyTileButton(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.createViaTile(surveyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(surveyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(surveyName);
     });
   });
 
-  test('Create a survey via the Create Survey button on the Surveys admin page', async ({
-    adminHomePage,
-    surveysAdminPage,
-    surveyAdminPage,
-  }) => {
+  test('Create a survey via the Create Survey button on the Surveys admin page', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-860',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Navigate to the surveys admin page', async () => {
-      await adminHomePage.surveyTileLink.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.openFromTile());
     });
 
     await test.step('Create the survey', async () => {
-      await surveysAdminPage.createSurvey(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.createFromSurveysPage(surveyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(surveyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(surveyName);
     });
   });
 
   test('Create a copy of a survey via the create button on the header of the admin home page', async ({
-    adminHomePage,
-    surveyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -137,48 +102,27 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
-    surveysToDelete.push(surveyName, expectedSurveyCopyName);
 
     await test.step('Create the survey to be copied', async () => {
-      await adminHomePage.createSurveyUsingHeaderCreateButton(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.createViaHeader(surveyName));
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await surveyAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().goto(AdminNavTargets.homeRoute);
     });
 
     await test.step('Create the copy of the survey', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.adminNav.adminCreateButton.hover();
-
-      await expect(adminHomePage.adminNav.adminCreateMenu).toBeVisible();
-
-      await adminHomePage.adminNav.surveyCreateMenuOption.click();
-
-      await expect(adminHomePage.createSurveyDialog.copyFromRadioButton).toBeVisible();
-
-      await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
-      await adminHomePage.createSurveyDialog.copyFromDropdown.click();
-      await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
-      await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
-      await adminHomePage.createSurveyDialog.continueButton.click();
-
-      await expect(adminHomePage.createSurveyModal.nameInput).toBeVisible();
-      await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
-
-      await adminHomePage.createSurveyModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.copyViaHeader(surveyName, expectedSurveyCopyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(expectedSurveyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedSurveyCopyName);
     });
   });
 
   test('Create a copy of a survey via the Create Survey button on the Surveys admin page', async ({
-    adminHomePage,
-    surveysAdminPage,
-    surveyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -187,50 +131,31 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
-    surveysToDelete.push(surveyName, expectedSurveyCopyName);
 
     await test.step('Navigate to the surveys admin page', async () => {
-      await adminHomePage.surveyTileLink.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.openFromTile());
     });
 
     await test.step('Create the survey to be copied', async () => {
-      await surveysAdminPage.page.waitForLoadState();
-      await surveysAdminPage.createSurvey(surveyName);
-      await surveyAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.createFromSurveysPage(surveyName));
     });
 
     await test.step('Navigate back to surveys admin page', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.surveyTileLink.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.goto());
     });
 
     await test.step('Create the copy of the survey', async () => {
-      await surveysAdminPage.page.waitForLoadState();
-      await surveysAdminPage.createSurveyButton.click();
-
-      await expect(surveysAdminPage.createSurveyDialog.copyFromRadioButton).toBeVisible();
-
-      await surveysAdminPage.createSurveyDialog.copyFromRadioButton.click();
-      await surveysAdminPage.createSurveyDialog.copyFromDropdown.click();
-      await surveysAdminPage.createSurveyDialog.getSurveyToCopy(surveyName).click();
-      await surveysAdminPage.createSurveyDialog.copyResponsesAppCheckbox.check();
-      await surveysAdminPage.createSurveyDialog.continueButton.click();
-
-      await expect(surveysAdminPage.createSurveyModal.nameInput).toBeVisible();
-      await expect(surveysAdminPage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
-
-      await surveysAdminPage.createSurveyModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.copyFromSurveysPage(surveyName, expectedSurveyCopyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(expectedSurveyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedSurveyCopyName);
     });
   });
 
   test('Create a copy of a survey via the create button on the Surveys tile on the admin home page', async ({
-    adminHomePage,
-    surveyAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -239,46 +164,26 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const expectedSurveyCopyName = `${surveyName} (1)`;
-    surveysToDelete.push(surveyName, expectedSurveyCopyName);
 
     await test.step('Create the survey to be copied', async () => {
-      await adminHomePage.createSurveyUsingSurveyTileButton(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.createViaTile(surveyName));
     });
 
     await test.step('Navigate back to admin home page', async () => {
-      await surveyAdminPage.sidebar.adminGearIcon.click();
+      await sysAdminActor.browse().goto(AdminNavTargets.homeRoute);
     });
 
     await test.step('Create the copy of the survey', async () => {
-      await adminHomePage.page.waitForLoadState();
-      await adminHomePage.surveyTileLink.hover();
-
-      await expect(adminHomePage.surveyTileCreateButton).toBeVisible();
-
-      await adminHomePage.surveyTileCreateButton.click();
-
-      await expect(adminHomePage.createSurveyDialog.copyFromRadioButton).toBeVisible();
-
-      await adminHomePage.createSurveyDialog.copyFromRadioButton.click();
-      await adminHomePage.createSurveyDialog.copyFromDropdown.click();
-      await adminHomePage.createSurveyDialog.getSurveyToCopy(surveyName).click();
-      await adminHomePage.createSurveyDialog.copyResponsesAppCheckbox.check();
-      await adminHomePage.createSurveyDialog.continueButton.click();
-
-      await expect(adminHomePage.createSurveyModal.nameInput).toBeVisible();
-
-      await expect(adminHomePage.createSurveyModal.nameInput).toHaveValue(expectedSurveyCopyName);
-
-      await adminHomePage.createSurveyModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.copyViaTile(surveyName, expectedSurveyCopyName));
     });
 
     await test.step('Verify the survey was created correctly', async () => {
-      await expect(surveyAdminPage.page).toHaveURL(surveyAdminPage.pathRegex);
-      await expect(surveyAdminPage.generalTab.name).toHaveText(expectedSurveyCopyName);
+      await sysAdminActor.browse().checkPage().hasUrl(SurveyDetailTargets.pathRegex);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(expectedSurveyCopyName);
     });
   });
 
-  test("Update a survey supporting data app's name", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's name", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-696',
@@ -286,64 +191,46 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const updatedSurveyName = `${surveyName}-updated`;
-    surveysToDelete.push(updatedSurveyName);
 
     await test.step('Create the survey supporting data app whose name will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
     });
 
     await test.step("Update the survey supporting data app's name", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.nameInput).toHaveValue(surveyName);
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.nameInput.fill(updatedSurveyName);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.nameInput).hasValue(surveyName);
+      await sysAdminActor.browse().fill(EditGeneralSettingsModalTargets.nameInput, updatedSurveyName);
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step('Verify the survey supporting data app was updated correctly', async () => {
-      await expect(surveyAdminPage.generalTab.name).toHaveText(updatedSurveyName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(updatedSurveyName);
     });
   });
 
-  test('Disable a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
+  test('Disable a survey supporting data app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-697',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app to be disabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
 
     await test.step('Disable the survey supporting data app', async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.disable());
     });
 
     await test.step('Verify the survey supporting data app was disabled correctly', async () => {
-      await expect(surveyAdminPage.generalTab.status).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
   });
 
-  test('Enable a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
+  test('Enable a survey supporting data app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-698',
@@ -352,54 +239,25 @@ test.describe('survey supporting data app', () => {
     const surveyName = FakeDataFactory.createFakeSurveyName();
 
     await test.step('Create the survey supporting data app to be enabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
 
     await test.step('Disable the survey supporting data app', async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-
-      await expect(surveyAdminPage.generalTab.status).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.disable());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
 
     await test.step('Enable the survey supporting data app', async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.statusToggle.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.enable());
     });
 
     await test.step('Verify the survey supporting data app was enabled correctly', async () => {
-      await expect(surveyAdminPage.generalTab.status).toHaveText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
   });
 
-  test("Update a survey supporting data app's description", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's description", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-699',
@@ -407,449 +265,419 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const updatedDescription = 'This is an updated description';
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose description will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.description).toHaveText('');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.description).hasText('');
     });
 
     await test.step("Update the survey supporting data app's description", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor).toHaveText('');
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor.fill(updatedDescription);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.descriptionEditor).hasText('');
+      await sysAdminActor.browse().fill(EditGeneralSettingsModalTargets.descriptionEditor, updatedDescription);
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's description was updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.description).toHaveText(updatedDescription);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.description).hasText(updatedDescription);
     });
   });
 
-  test("Disable a survey supporting data app's content versioning", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Disable a survey supporting data app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-700',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be disabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the survey supporting data app's content versioning", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'true');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isVisible();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.contentVersionStatusToggle);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'false');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isHidden();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's content versioning was disabled correctly", async () => {
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Disabled');
     });
   });
 
-  test("Enable a survey supporting data app's content versioning", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Enable a survey supporting data app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-701',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be enabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Disable the survey supporting data app's content versioning", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('disabled'));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Disabled');
     });
 
     await test.step("Enable the survey supporting data app's content versioning", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'false');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isHidden();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.contentVersionStatusToggle);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'true');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isVisible();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeHidden();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's content versioning was enabled correctly", async () => {
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
   });
 
-  test("Change the save types of a survey supporting data app's content versioning", async ({
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test("Change the save types of a survey supporting data app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-702',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose content versioning will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText('Enabled - Direct User Saves');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves');
     });
 
     await test.step("Change the survey supporting data app's content versioning", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.contentVersionStatusSwitch)
+        .hasAttribute('aria-checked', 'true');
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.contentVersionTypes).isVisible();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.directUserSavesCheckbox).isChecked();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusSwitch).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.indirectUserSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.apiSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.systemSavesCheckbox);
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.contentVersionTypes).toBeVisible();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.indirectUserSavesCheckbox).isChecked();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.apiSavesCheckbox).isChecked();
+      await sysAdminActor.browse().check(EditGeneralSettingsModalTargets.systemSavesCheckbox).isChecked();
 
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.directUserSavesCheckbox).toBeChecked();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox.check();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox.check();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox.check();
-
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox).toBeChecked();
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox).toBeChecked();
-      await expect(surveyAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox).toBeChecked();
-
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's content versioning was changed correctly", async () => {
-      await expect(surveyAdminPage.generalTab.contentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
-      );
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves');
     });
   });
 
-  test("Disable a survey supporting data app's concurrent edit alert", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Disable a survey supporting data app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-703',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose concurrent edit alert will be disabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
 
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(false));
     });
 
     await test.step("Verify survey supporting data app's concurrent edit alert was disabled correctly", async () => {
-      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Disabled');
     });
   });
 
-  test("Enable a survey supporting data app's concurrent edit alert", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Enable a survey supporting data app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-704',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose concurrent edit alert will be enabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
 
     await test.step("Disable the survey supporting data app's concurrent edit alert", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
-      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(false));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Disabled');
     });
 
     await test.step("Enable the survey supporting data app's concurrent edit alert", async () => {
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(true));
     });
 
     await test.step("Verify survey supporting data app's concurrent edit alert was enabled correctly", async () => {
-      await expect(surveyAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Enabled');
     });
   });
 
-  test("Update a survey supporting data's display link field", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data's display link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-705',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose display link field will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.displayLink).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayLink).hasText('Record Id');
     });
 
     await test.step("Update the survey supporting data app's display link field", async () => {
-      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.displayLinkSelect.click();
-      await surveyAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateDisplayLinkField('Created Date'));
     });
 
     await test.step("Verify survey supporting data app's display link field was updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.displayLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayLink).hasText('Created Date');
     });
   });
 
-  test("Update a survey supporting data app's integration link field", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's integration link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-706',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose integration link field will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.integrationLink).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.integrationLink).hasText('Record Id');
     });
 
     await test.step("Update the survey supporting data app's integration link field", async () => {
-      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.integrationLinkSelect.click();
-      await surveyAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateIntegrationLinkField('Created Date'));
     });
 
     await test.step("Verify survey supporting data app's integration link field was updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.integrationLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.integrationLink).hasText('Created Date');
     });
   });
 
-  test("Update a survey supporting data app's display fields", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's display fields", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-707',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose display fields will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.displayFields).toHaveText('Record Id');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayFields).hasText('Record Id');
     });
 
     await test.step("Update the survey supporting data app's display fields", async () => {
-      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.addDisplayField('Created Date'));
     });
 
     await test.step("Verify survey supporting data app's display fields were updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
-      await expect(surveyAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Record Id/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Created Date/);
     });
   });
 
-  test("Update a survey supporting data app's primary sort field", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's primary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-708',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose primary sort field will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.sort).toHaveText('None');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('None');
     });
 
     await test.step("Update the survey supporting data app's primary sort field", async () => {
-      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
-      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
-        'Ascending'
-      );
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.primarySortDirectionSelect)
+        .hasText('Ascending');
 
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's primary sort field was updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('Record Id (Ascending)');
     });
   });
 
-  test("Update a survey supporting data app's secondary sort field", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's secondary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-709',
     });
 
-    const appName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(appName);
+    const surveyName = FakeDataFactory.createFakeSurveyName();
 
     await test.step('Create the survey supporting data app whose secondary sort field will be updated', async () => {
-      await adminHomePage.createSurvey(appName);
-      await expect(surveyAdminPage.generalTab.sort).toHaveText('None');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('None');
     });
 
     await test.step("Update the survey supporting data app's secondary sort field", async () => {
-      await surveyAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.displayFieldsSelect);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.unselectedDisplayOption('Created Date'));
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.selectorCloseButton);
 
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
-      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect).toHaveText(
-        'Ascending'
-      );
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.secondarySortSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Created Date'));
 
-      await surveyAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect)
+        .hasText('Ascending');
+
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's secondary sort field was updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
-      await expect(surveyAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Record Id \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Created Date \(Ascending\)/);
     });
   });
 
-  test("Change a survey supporting data app's administration permissions to private", async ({
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test("Change a survey supporting data app's administration permissions to private", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-710',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
 
     await test.step("Change the survey supporting data app's administration permissions to private", async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Private'));
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isVisible();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isVisible();
 
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Verify survey supporting data app's administration permissions were set to private", async () => {
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
     });
   });
 
-  test('Give survey supporting data app administration permissions to specific users', async ({
-    sysAdminPage,
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test('Give survey supporting data app administration permissions to specific users', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-711',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    const newUser = FakeDataFactory.createFakeUser(UserStatus.Inactive);
-    surveysToDelete.push(surveyName);
-    const usersToDelete = [newUser.username];
+    const newUser = FakeDataFactory.createFakeUser('Inactive');
 
     await test.step('Create user that will be given admin permissions', async () => {
-      const addUserAdminPage = new AddUserAdminPage(sysAdminPage);
-      const editUserAdminPage = new EditUserAdminPage(sysAdminPage);
-      await addUserAdminPage.addUser(newUser);
-      await addUserAdminPage.page.waitForURL(editUserAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(UserTasks.create(newUser));
     });
 
-    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-    });
+    try {
+      await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+        await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      });
 
-    await test.step('Give survey supporting data app admin permissions to user', async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await test.step('Give survey supporting data app admin permissions to user', async () => {
+        await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { user: newUser.fullName }));
+      });
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeVisible();
-
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectUser(newUser.fullName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
-    });
-
-    await test.step('Verify survey supporting data app admin permissions were given to user', async () => {
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(surveyAdminPage.generalTab.adminUsers).toHaveText(newUser.fullName);
-    });
-
-    await test.step('Delete user', async () => {
-      const usersSecurityAdminPage = new UsersSecurityAdminPage(sysAdminPage);
-      await usersSecurityAdminPage.deleteUsers(usersToDelete);
-    });
+      await test.step('Verify survey supporting data app admin permissions were given to user', async () => {
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminUsers).hasText(newUser.fullName);
+      });
+    } finally {
+      await test.step('Delete user', async () => {
+        await sysAdminActor.attemptsTo(UserTasks.deleteUsers([newUser.username]));
+      });
+    }
   });
 
-  test('Give survey supporting data app administration permissions to specific roles', async ({
-    sysAdminPage,
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test('Give survey supporting data app administration permissions to specific roles', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-712',
@@ -857,46 +685,32 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const roleName = FakeDataFactory.createFakeRoleName();
-    surveysToDelete.push(surveyName);
-    const rolesToDelete = [roleName];
 
     await test.step('Create role that will be given admin permissions', async () => {
-      const addRoleAdminPage = new AddRoleAdminPage(sysAdminPage);
-      const editRoleAdminPage = new EditRoleAdminPage(sysAdminPage);
-      await addRoleAdminPage.addRole(new Role({ name: roleName }));
-      await addRoleAdminPage.page.waitForURL(editRoleAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(RoleTasks.create(new Role({ name: roleName })));
     });
 
-    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-    });
+    try {
+      await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+        await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      });
 
-    await test.step('Give survey supporting data app admin permissions to role', async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await test.step('Give survey supporting data app admin permissions to role', async () => {
+        await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { role: roleName }));
+      });
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeVisible();
-
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectRole(roleName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
-    });
-
-    await test.step('Verify survey supporting data app admin permissions were given to role', async () => {
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(surveyAdminPage.generalTab.adminRoles).toHaveText(roleName);
-    });
-
-    await test.step('Delete role', async () => {
-      const roleSecurityAdminPage = new RolesSecurityAdminPage(sysAdminPage);
-      await roleSecurityAdminPage.deleteRoles(rolesToDelete);
-    });
+      await test.step('Verify survey supporting data app admin permissions were given to role', async () => {
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminRoles).hasText(roleName);
+      });
+    } finally {
+      await test.step('Delete role', async () => {
+        await sysAdminActor.attemptsTo(RoleTasks.deleteRoles([roleName]));
+      });
+    }
   });
 
-  test('Give survey supporting data app administration permissions to specific groups', async ({
-    sysAdminPage,
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test('Give survey supporting data app administration permissions to specific groups', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-713',
@@ -904,142 +718,133 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const groupName = FakeDataFactory.createFakeGroupName();
-    surveysToDelete.push(surveyName);
-    const groupsToDelete = [groupName];
 
     await test.step('Create group that will be given admin permissions', async () => {
-      const addGroupAdminPage = new AddGroupAdminPage(sysAdminPage);
-      const editGroupAdminPage = new EditGroupAdminPage(sysAdminPage);
-      await addGroupAdminPage.addGroup(groupName);
-      await addGroupAdminPage.page.waitForURL(editGroupAdminPage.pathRegex);
+      await sysAdminActor.attemptsTo(GroupTasks.create(groupName));
     });
 
-    await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-    });
+    try {
+      await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
+        await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      });
 
-    await test.step('Give survey supporting data app admin permissions to group', async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
+      await test.step('Give survey supporting data app admin permissions to group', async () => {
+        await sysAdminActor.attemptsTo(AppTasks.setAdminPermissions('Private', { group: groupName }));
+      });
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeVisible();
-
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectGroup(groupName);
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
-    });
-
-    await test.step('Verify survey supporting data app admin permissions were given to group', async () => {
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Private');
-      await expect(surveyAdminPage.generalTab.adminGroups).toHaveText(groupName);
-    });
-
-    await test.step('Delete group', async () => {
-      const groupSecurityAdminPage = new GroupsSecurityAdminPage(sysAdminPage);
-      await groupSecurityAdminPage.deleteGroups(groupsToDelete);
-    });
+      await test.step('Verify survey supporting data app admin permissions were given to group', async () => {
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Private');
+        await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminGroups).hasText(groupName);
+      });
+    } finally {
+      await test.step('Delete group', async () => {
+        await sysAdminActor.attemptsTo(GroupTasks.deleteGroups([groupName]));
+      });
+    }
   });
 
-  test("Change a survey supporting data app's administration permissions to public", async ({
-    adminHomePage,
-    surveyAdminPage,
-  }) => {
+  test("Change a survey supporting data app's administration permissions to public", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-714',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose administration permissions will be changed', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
 
     await test.step("Change the survey supporting data app's administration permissions to private", async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Private');
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Private'));
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Change the survey supporting data app's administration permissions to public", async () => {
-      await surveyAdminPage.generalTab.editAdminSettingsLink.click();
-      await surveyAdminPage.generalTab.editAdminSettingsModal.selectAdminPermissions('Public');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editAdminSettingsLink);
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.adminPermissionsSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Public'));
 
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.usersDualPaneSelector.locator()).toBeHidden();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.groupsDualPaneSelector.locator()).toBeHidden();
-      await expect(surveyAdminPage.generalTab.editAdminSettingsModal.rolesDualPaneSelector.locator()).toBeHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.usersSelector).isHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.groupsSelector).isHidden();
+      await sysAdminActor.browse().check(EditAdminSettingsModalTargets.rolesSelector).isHidden();
 
-      await surveyAdminPage.generalTab.editAdminSettingsModal.save();
+      await sysAdminActor.browse().click(EditAdminSettingsModalTargets.saveButton);
+      await sysAdminActor.browse().waitForState(EditAdminSettingsModalTargets.modal, 'hidden');
     });
 
     await test.step("Verify survey supporting data app's administration permissions were set to public", async () => {
-      await expect(surveyAdminPage.generalTab.adminPermissions).toHaveText('Public');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.adminPermissions).hasText('Public');
     });
   });
 
-  test('Enable geocoding for a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
+  test('Enable geocoding for a survey supporting data app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-715',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
-
     const addressFieldName = FakeDataFactory.createFakeFieldName('address');
     const cityFieldName = FakeDataFactory.createFakeFieldName('city');
     const stateFieldName = FakeDataFactory.createFakeFieldName('state');
     const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
-
     const fieldNames = [addressFieldName, cityFieldName, stateFieldName, zipFieldName];
 
     await test.step('Create survey supporting data app whose geocoding will be enabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Create fields for geocoding mapping', async () => {
-      await surveyAdminPage.layoutTabButton.click();
-
       for (const fieldName of fieldNames) {
-        await surveyAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(new TextField({ name: fieldName }));
+        await sysAdminActor.attemptsTo(AppTasks.addTextField(fieldName));
       }
     });
 
     await test.step('Enable geocoding for survey supporting data app', async () => {
-      await surveyAdminPage.generalTabButton.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTabButton);
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeocodingSettingsLink);
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.statusToggle);
 
-      await expect(surveyAdminPage.generalTab.editGeocodingSettingsModal.geocodingDataGrid).toBeVisible();
+      await sysAdminActor.browse().check(EditGeocodingSettingsModalTargets.geocodingDataGrid).isVisible();
 
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(addressFieldName);
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectCityField(cityFieldName);
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectStateField(stateFieldName);
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectZipField(zipFieldName);
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName(addressFieldName));
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.citySelect);
+      await sysAdminActor.browse().click(OptionTargets.byName(cityFieldName));
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.stateSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName(stateFieldName));
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.zipSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName(zipFieldName));
+
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
 
     await test.step('Verify geocoding was enabled correctly', async () => {
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
-      await expect(surveyAdminPage.generalTab.geocodingData.grid).toBeVisible();
-      await expect(surveyAdminPage.generalTab.geocodingData.address).toHaveText(addressFieldName);
-      await expect(surveyAdminPage.generalTab.geocodingData.city).toHaveText(cityFieldName);
-      await expect(surveyAdminPage.generalTab.geocodingData.state).toHaveText(stateFieldName);
-      await expect(surveyAdminPage.generalTab.geocodingData.zip).toHaveText(zipFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isVisible();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingAddress).hasText(addressFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingCity).hasText(cityFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingState).hasText(stateFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingZip).hasText(zipFieldName);
     });
   });
 
-  test("Update a survey supporting data app's geocoding field mapping", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's geocoding field mapping", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-716',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
-
     const addressFieldName = FakeDataFactory.createFakeFieldName('address');
     const cityFieldName = FakeDataFactory.createFakeFieldName('city');
     const stateFieldName = FakeDataFactory.createFakeFieldName('state');
@@ -1047,80 +852,79 @@ test.describe('survey supporting data app', () => {
     const secondAddressFieldName = FakeDataFactory.createFakeFieldName('address-2');
 
     await test.step('Create survey supporting data app whose geocode mapping will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Enable geocoding for survey supporting data app', async () => {
-      await surveyAdminPage.enableGeocoding({
-        address: new TextField({ name: addressFieldName }),
-        city: new TextField({ name: cityFieldName }),
-        state: new TextField({ name: stateFieldName }),
-        zip: new TextField({ name: zipFieldName }),
-      });
-    });
-
-    await test.step('Create field to update geocoding mapping', async () => {
-      await surveyAdminPage.layoutTabButton.click();
-      await surveyAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(
-        new TextField({ name: secondAddressFieldName })
+      await sysAdminActor.attemptsTo(
+        AppTasks.enableGeocoding({
+          address: addressFieldName,
+          city: cityFieldName,
+          state: stateFieldName,
+          zip: zipFieldName,
+        })
       );
     });
 
+    await test.step('Create field to update geocoding mapping', async () => {
+      await sysAdminActor.attemptsTo(AppTasks.addTextField(secondAddressFieldName));
+    });
+
     await test.step('Update geocoding field mapping', async () => {
-      await surveyAdminPage.generalTabButton.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.selectAddressField(secondAddressFieldName);
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTabButton);
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeocodingSettingsLink);
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.addressSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName(secondAddressFieldName));
+      await sysAdminActor.browse().click(EditGeocodingSettingsModalTargets.saveButton);
     });
 
     await test.step('Verify geocoding was updated correctly', async () => {
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Enabled');
-      await expect(surveyAdminPage.generalTab.geocodingData.grid).toBeVisible();
-      await expect(surveyAdminPage.generalTab.geocodingData.address).toHaveText(secondAddressFieldName);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Enabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isVisible();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingAddress).hasText(secondAddressFieldName);
     });
   });
 
-  test('Disable geocoding for a survey supporting data app', async ({ adminHomePage, surveyAdminPage }) => {
+  test('Disable geocoding for a survey supporting data app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-717',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    surveysToDelete.push(surveyName);
     const addressFieldName = FakeDataFactory.createFakeFieldName('address');
     const cityFieldName = FakeDataFactory.createFakeFieldName('city');
     const stateFieldName = FakeDataFactory.createFakeFieldName('state');
     const zipFieldName = FakeDataFactory.createFakeFieldName('zip');
 
     await test.step('Create survey supporting data app whose geocoding will be disabled', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
     });
 
     await test.step('Enable geocoding for survey supporting data app', async () => {
-      await surveyAdminPage.enableGeocoding({
-        address: new TextField({ name: addressFieldName }),
-        city: new TextField({ name: cityFieldName }),
-        state: new TextField({ name: stateFieldName }),
-        zip: new TextField({ name: zipFieldName }),
-      });
+      await sysAdminActor.attemptsTo(
+        AppTasks.enableGeocoding({
+          address: addressFieldName,
+          city: cityFieldName,
+          state: stateFieldName,
+          zip: zipFieldName,
+        })
+      );
     });
 
     await test.step('Disable geocoding for survey supporting data app', async () => {
-      await surveyAdminPage.generalTab.editGeocodingSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.statusToggle.click();
-      await surveyAdminPage.generalTab.editGeocodingSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.disableGeocoding());
     });
 
     await test.step('Verify geocoding was disabled correctly', async () => {
-      await expect(surveyAdminPage.generalTab.geocodingStatus).toHaveText('Disabled');
-      await expect(surveyAdminPage.generalTab.geocodingData.grid).toBeHidden();
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingStatus).hasText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.geocodingGrid).isHidden();
     });
   });
 
-  test("Update a survey supporting data app's survey notes", async ({ adminHomePage, surveyAdminPage }) => {
+  test("Update a survey supporting data app's survey notes", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-718',
@@ -1128,80 +932,68 @@ test.describe('survey supporting data app', () => {
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
     const note = 'This is a note';
-    surveysToDelete.push(surveyName);
 
     await test.step('Create the survey supporting data app whose survey notes will be updated', async () => {
-      await adminHomePage.createSurvey(surveyName);
-      await expect(surveyAdminPage.generalTab.notes).toHaveText('');
+      await sysAdminActor.attemptsTo(SurveyTasks.create(surveyName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.notes).hasText('');
     });
 
     await test.step("Update the survey supporting data app's survey notes", async () => {
-      await surveyAdminPage.generalTab.editNotesSettingLink.click();
-
-      await expect(surveyAdminPage.generalTab.editNotesSettingsModal.notesEditor).toHaveText('');
-
-      await surveyAdminPage.generalTab.editNotesSettingsModal.notesEditor.fill(note);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editNotesSettingLink);
+      await sysAdminActor.browse().check(EditNotesSettingsModalTargets.notesEditor).hasText('');
+      await sysAdminActor.browse().fill(EditNotesSettingsModalTargets.notesEditor, note);
+      await sysAdminActor.browse().click(EditNotesSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey supporting data app's survey notes were updated correctly", async () => {
-      await expect(surveyAdminPage.generalTab.notes).toHaveText(note);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.notes).hasText(note);
     });
   });
 
-  test('Delete a survey supporting data app', async ({ surveysAdminPage, surveyAdminPage }) => {
+  test('Delete a survey supporting data app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-865',
     });
 
     const surveyName = FakeDataFactory.createFakeSurveyName();
-    const surveyRow = surveysAdminPage.surveyGrid.getByRole('row', { name: surveyName }).first();
-    const surveyDeleteButton = surveyRow.getByTitle('Delete Survey');
+    const surveyRow = SurveysPageTargets.surveyRow(surveyName);
+    const deleteButton = SurveysPageTargets.deleteSurveyButtonForRow(surveyName);
 
     await test.step('Navigate to the Surveys admin page', async () => {
-      await surveysAdminPage.goto();
+      await sysAdminActor.attemptsTo(SurveyTasks.goto());
     });
 
     await test.step('Create the survey supporting data app to be deleted', async () => {
-      await surveysAdminPage.createSurvey(surveyName);
-      await surveyAdminPage.page.waitForLoadState();
-      await surveyAdminPage.closeButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.createFromSurveysPage(surveyName));
+      await sysAdminActor.browse().waitForLoadState();
+      await sysAdminActor.browse().click(AppDetailTargets.closeButton);
     });
 
     await test.step('Navigate to the surveys admin page', async () => {
-      await surveysAdminPage.goto();
+      await sysAdminActor.attemptsTo(SurveyTasks.goto(), SurveyTasks.scrollAllIntoView());
+      await sysAdminActor.browse().check(surveyRow).isVisible();
     });
 
     await test.step('Delete the survey supporting data app', async () => {
-      const scrollableElement = surveysAdminPage.surveyGrid.locator('.k-grid-content.k-auto-scrollable').first();
-      let isVisible = await surveyRow.isVisible();
+      await sysAdminActor.browse().hover(surveyRow);
+      await sysAdminActor.browse().click(deleteButton);
 
-      while (isVisible === false) {
-        await scrollableElement.evaluate(el => (el.scrollTop = el.scrollHeight));
-        isVisible = await surveyRow.isVisible();
-      }
+      await sysAdminActor.browse().check(SurveysPageTargets.deleteConfirmationInput).isVisible();
+      await sysAdminActor.browse().type(SurveysPageTargets.deleteConfirmationInput, 'OK', { delay: 100 });
+      await sysAdminActor.browse().check(SurveysPageTargets.deleteConfirmationInput).hasValue('OK');
+      await sysAdminActor.browse().check(DeleteDialogTargets.deleteButton).isEnabled();
 
-      await surveyRow.hover();
-      await surveyDeleteButton.click();
-
-      await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toBeVisible();
-
-      await surveysAdminPage.deleteSurveyDialog.confirmationInput.pressSequentially('OK', {
-        delay: 100,
-      });
-
-      await expect(surveysAdminPage.deleteSurveyDialog.confirmationInput).toHaveValue('OK');
-      await expect(surveysAdminPage.deleteSurveyDialog.deleteButton).toBeEnabled();
-
-      const deleteSurveyResponse = surveysAdminPage.page.waitForResponse(surveysAdminPage.deleteSurveyPathRegex);
-      await surveysAdminPage.deleteSurveyDialog.deleteButton.click();
+      const deleteSurveyResponse = sysAdminActor
+        .browse()
+        .waitForResponse((r: Response) => SurveysPageTargets.deleteSurveyPathRegex.test(r.url()) && r.status() === 200);
+      await sysAdminActor.browse().click(DeleteDialogTargets.deleteButton);
       await deleteSurveyResponse;
-      await surveysAdminPage.deleteSurveyDialog.waitForDialogToBeDismissed();
+      await sysAdminActor.browse().waitForDetached(DeleteDialogTargets.dialog, DeleteDialogTargets.overlay);
     });
 
     await test.step('Verify the survey supporting data app was deleted', async () => {
-      await expect(surveyRow).not.toBeAttached();
+      await sysAdminActor.browse().check(surveyRow).isNotAttached();
     });
   });
 });

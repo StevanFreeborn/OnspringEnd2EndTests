@@ -1,20 +1,18 @@
-import { test as base, expect } from '../../fixtures';
-import { survey } from '../../fixtures/survey.fixtures';
-import { Survey } from '../../models/survey';
-import { SurveyAdminPage } from '../../pageObjectModels/surveys/surveyAdminPage';
-import { SurveyResponsesAdminPage } from '../../pageObjectModels/surveys/surveyResponsesAdminPage';
+import { Survey } from '@stevanfreeborn/onspring-models';
+import {
+  AppDetailTargets,
+  AppTasks,
+  EditDisplaySettingsModalTargets,
+  EditGeneralSettingsModalTargets,
+  OptionTargets,
+  SurveyQuestions,
+  SurveyTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type SurveyResponsesAppTestFixtures = {
-  survey: Survey;
-  surveyAdminPage: SurveyAdminPage;
-  surveyResponsesAdminPage: SurveyResponsesAdminPage;
-};
-
-const test = base.extend<SurveyResponsesAppTestFixtures>({
-  survey: survey,
-  surveyAdminPage: async ({ sysAdminPage }, use) => await use(new SurveyAdminPage(sysAdminPage)),
-  surveyResponsesAdminPage: async ({ sysAdminPage }, use) => await use(new SurveyResponsesAdminPage(sysAdminPage)),
+const test = base.extend<{ targetSurvey: Survey }>({
+  targetSurvey: SurveyFixture.create().build(),
 });
 
 test.describe('survey responses app', () => {
@@ -25,19 +23,17 @@ test.describe('survey responses app', () => {
   let targetSurvey: Survey;
   let targetSurveyResponsesAppId: number;
 
-  test.beforeAll('Create target survey', async ({ survey, surveyAdminPage, surveyResponsesAdminPage }) => {
+  test.beforeAll('Create target survey', async ({ targetSurvey: survey, sysAdminActor }) => {
     targetSurvey = survey;
-    await surveyAdminPage.configureResponseAppLink.click();
-    await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
-
-    targetSurveyResponsesAppId = surveyResponsesAdminPage.getIdFromUrl();
+    await sysAdminActor.attemptsTo(SurveyTasks.openResponseApp());
+    targetSurveyResponsesAppId = await sysAdminActor.asks(SurveyQuestions.idFromUrl());
   });
 
-  test.beforeEach(async ({ surveyResponsesAdminPage }) => {
-    await surveyResponsesAdminPage.goto(targetSurveyResponsesAppId);
+  test.beforeEach(async ({ sysAdminActor }) => {
+    await sysAdminActor.attemptsTo(SurveyTasks.gotoSurvey(targetSurveyResponsesAppId));
   });
 
-  test("Update a survey responses app's name", async ({ surveyResponsesAdminPage, surveyAdminPage }) => {
+  test("Update a survey responses app's name", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-719',
@@ -46,316 +42,302 @@ test.describe('survey responses app', () => {
     const updatedName = `${targetSurvey.name} Updated`;
 
     await test.step("Verify the survey responses app matches survey's name", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.name).toHaveText(`${targetSurvey.name} Responses`);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(`${targetSurvey.name} Responses`);
     });
 
     await test.step("Verify the survey responses app's name cannot be updated", async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await expect(surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.nameInput).toHaveAttribute(
-        'disabled',
-        'disabled'
-      );
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.nameInput)
+        .hasAttribute('disabled', 'disabled');
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.cancelButton);
+      await sysAdminActor.browse().waitForState(EditGeneralSettingsModalTargets.cancelButton, 'hidden');
     });
 
     await test.step("Update the survey's name", async () => {
-      await surveyResponsesAdminPage.configureSurveyLinK.click();
-      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
-
-      await surveyAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.nameInput.fill(updatedName);
-      await surveyAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.openSurveyFromResponseApp(), AppTasks.updateName(updatedName));
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(updatedName);
     });
 
     await test.step("Verify the survey responses app's name matches the updated survey's name", async () => {
-      await surveyAdminPage.configureResponseAppLink.click();
-      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
-
-      await expect(surveyResponsesAdminPage.generalTab.name).toHaveText(`${updatedName} Responses`);
+      await sysAdminActor.attemptsTo(SurveyTasks.openResponseApp());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.name).hasText(`${updatedName} Responses`);
     });
   });
 
-  test('Disable a survey responses app', async ({ surveyResponsesAdminPage, surveyAdminPage }) => {
+  test('Disable a survey responses app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-720',
     });
 
     await test.step("Verify the survey responses app's status is readonly", async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await expect(surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveClass(
-        /k-state-disabled/i
-      );
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.statusSwitch)
+        .hasClass(/k-state-disabled/i);
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.cancelButton);
+      await sysAdminActor.browse().waitForState(EditGeneralSettingsModalTargets.cancelButton, 'hidden');
     });
 
     await test.step("Update the survey's status to disabled", async () => {
-      await surveyResponsesAdminPage.configureSurveyLinK.click();
-      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.openSurveyFromResponseApp(), AppTasks.disable());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
 
     await test.step("Verify the survey responses app's status is disabled", async () => {
-      await surveyAdminPage.configureResponseAppLink.click();
-      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
-
-      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText('Disabled');
+      await sysAdminActor.attemptsTo(SurveyTasks.openResponseApp());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Disabled');
     });
   });
 
-  test('Enable a survey responses app', async ({ surveyResponsesAdminPage, surveyAdminPage }) => {
+  test('Enable a survey responses app', async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-721',
     });
 
     await test.step("Verify the survey responses app's status is readonly", async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await expect(surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch).toHaveClass(
-        /k-state-disabled/i
-      );
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.cancelButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor
+        .browse()
+        .check(EditGeneralSettingsModalTargets.statusSwitch)
+        .hasClass(/k-state-disabled/i);
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.cancelButton);
+      await sysAdminActor.browse().waitForState(EditGeneralSettingsModalTargets.cancelButton, 'hidden');
     });
 
     await test.step("Update the survey's status to enabled", async () => {
-      await surveyResponsesAdminPage.configureSurveyLinK.click();
-      await surveyResponsesAdminPage.page.waitForURL(surveyAdminPage.pathRegex);
-
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.statusSwitch.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(SurveyTasks.openSurveyFromResponseApp(), AppTasks.enable());
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.status).hasText('Enabled');
     });
 
     await test.step("Verify the survey responses app's status is enabled", async () => {
-      await surveyAdminPage.configureResponseAppLink.click();
-      await surveyAdminPage.page.waitForURL(surveyResponsesAdminPage.pathRegex);
-
-      await expect(surveyResponsesAdminPage.generalTab.status).toHaveText(/enabled/i);
+      await sysAdminActor.attemptsTo(SurveyTasks.openResponseApp());
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.status)
+        .hasText(/enabled/i);
     });
   });
 
-  test("Update a survey responses app's description", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's description", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-722',
     });
 
-    const description = `Test Description`;
+    const description = 'Test Description';
 
     await test.step("Update the survey responses app's description", async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.descriptionEditor.fill(description);
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateDescription(description));
     });
 
     await test.step("Verify the survey responses app's description is updated", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.description).toHaveText(description);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.description).hasText(description);
     });
   });
 
-  test("Disable a survey responses app's content versioning", async ({ surveyResponsesAdminPage }) => {
+  test("Disable a survey responses app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-723',
     });
 
     await test.step('Disable the survey responses app content versioning', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('disabled'));
     });
 
     await test.step('Verify the survey responses app content versioning is disabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.contentVersionStatus).hasText('Disabled');
     });
   });
 
-  test("Enable a survey responses app's content versioning", async ({ surveyResponsesAdminPage }) => {
+  test("Enable a survey responses app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-724',
     });
 
     await test.step('Enable the survey responses app content versioning', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.contentVersionStatusToggle.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.toggleContentVersioning('enabled'));
     });
 
     await test.step('Verify the survey responses app content versioning is enabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText(/enabled/i);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText(/enabled/i);
     });
   });
 
-  test("Change the save types of a survey responses app's content versioning", async ({ surveyResponsesAdminPage }) => {
+  test("Change the save types of a survey responses app's content versioning", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-725',
     });
 
     await test.step("Change the survey responses app's content versioning", async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.indirectUserSavesCheckbox.check();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.apiSavesCheckbox.check();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.systemSavesCheckbox.check();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editGeneralSettingsLink);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.indirectUserSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.apiSavesCheckbox);
+      await sysAdminActor.browse().checkControl(EditGeneralSettingsModalTargets.systemSavesCheckbox);
+      await sysAdminActor.browse().click(EditGeneralSettingsModalTargets.saveButton);
     });
 
     await test.step("Verify the survey responses app's content versioning is updated", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.contentVersionStatus).toHaveText(
-        'Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves'
-      );
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.contentVersionStatus)
+        .hasText('Enabled - Direct User Saves, Indirect User Saves, API Saves, System Saves');
     });
   });
 
-  test("Disable a survey responses app's concurrent edit alert", async ({ surveyResponsesAdminPage }) => {
+  test("Disable a survey responses app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-726',
     });
 
     await test.step('Disable the survey responses app concurrent edit alert', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(false);
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(false));
     });
 
     await test.step('Verify the survey responses app concurrent edit alert is disabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.concurrentEditAlertStatus).toHaveText('Disabled');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.concurrentEditAlertStatus).hasText('Disabled');
     });
   });
 
-  test("Enable a survey responses app's concurrent edit alert", async ({ surveyResponsesAdminPage }) => {
+  test("Enable a survey responses app's concurrent edit alert", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-727',
     });
 
     await test.step('Enable the survey responses app concurrent edit alert', async () => {
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.concurrentEditAlertStatusSwitch.toggle(true);
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateConcurrentEditAlert(true));
     });
 
     await test.step('Verify the survey responses app concurrent edit alert is enabled', async () => {
-      await expect(surveyResponsesAdminPage.generalTab.concurrentEditAlertStatus).toHaveText(/enabled/i);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.concurrentEditAlertStatus)
+        .hasText(/enabled/i);
     });
   });
 
-  test("Update a survey responses app's display link field", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's display link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-728',
     });
 
     await test.step("Update the survey responses app's display link field", async () => {
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.displayLinkSelect.click();
-      await surveyResponsesAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateDisplayLinkField('Created Date'));
     });
 
     await test.step("Verify the survey responses app's display link field is updated", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.displayLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.displayLink).hasText('Created Date');
     });
   });
 
-  test("Update a survey responses app's integration link field", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's integration link field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-729',
     });
 
     await test.step("Update the survey responses app's integration link field", async () => {
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.integrationLinkSelect.click();
-      await surveyResponsesAdminPage.page.getByRole('option', { name: 'Created Date' }).click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateIntegrationLinkField('Created Date'));
     });
 
     await test.step("Verify the survey responses app's integration link field is updated", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.integrationLink).toHaveText('Created Date');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.integrationLink).hasText('Created Date');
     });
   });
 
-  test("Update a survey responses app's display fields", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's display fields", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-730',
     });
 
     await test.step("Update the survey responses app's display fields", async () => {
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.addDisplayField('Created Date');
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.addDisplayField('Created Date'));
     });
 
     await test.step("Verify survey responses app's display fields were updated correctly", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.displayFields).toHaveText(/Record Id/);
-      await expect(surveyResponsesAdminPage.generalTab.displayFields).toHaveText(/Created Date/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Record Id/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.displayFields)
+        .hasText(/Created Date/);
     });
   });
 
-  test("Update a survey responses app's primary sort field", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's primary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-731',
     });
 
     await test.step("Update the survey responses app's primary sort field", async () => {
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectPrimarySortField('Record Id');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.primarySortSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Record Id'));
 
-      await expect(
-        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect
-      ).toBeVisible();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.primarySortDirectionSelect).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.primarySortDirectionSelect)
+        .hasText('Ascending');
 
-      await expect(surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.primarySortDirectionSelect).toHaveText(
-        'Ascending'
-      );
-
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey responses app's primary sort field was updated correctly", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText('Record Id (Ascending)');
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.sort).hasText('Record Id (Ascending)');
     });
   });
 
-  test("Update a survey responses app's secondary sort field", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's secondary sort field", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-732',
     });
 
     await test.step("Update the survey responses app's secondary sort field", async () => {
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsLink.click();
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.selectSecondarySortField('Created Date');
+      await sysAdminActor.browse().click(AppDetailTargets.generalTab.editDisplaySettingsLink);
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.secondarySortSelect);
+      await sysAdminActor.browse().click(OptionTargets.byName('Created Date'));
 
-      await expect(
-        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect
-      ).toBeVisible();
+      await sysAdminActor.browse().check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(EditDisplaySettingsModalTargets.secondarySortDirectionSelect)
+        .hasText('Ascending');
 
-      await expect(
-        surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.secondarySortDirectionSelect
-      ).toHaveText('Ascending');
-
-      await surveyResponsesAdminPage.generalTab.editDisplaySettingsModal.saveButton.click();
+      await sysAdminActor.browse().click(EditDisplaySettingsModalTargets.saveButton);
     });
 
     await test.step("Verify survey responses app's secondary sort field was updated correctly", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText(/Record Id \(Ascending\)/);
-      await expect(surveyResponsesAdminPage.generalTab.sort).toHaveText(/Created Date \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Record Id \(Ascending\)/);
+      await sysAdminActor
+        .browse()
+        .check(AppDetailTargets.generalTab.sort)
+        .hasText(/Created Date \(Ascending\)/);
     });
   });
 
-  test("Update a survey responses app's app notes", async ({ surveyResponsesAdminPage }) => {
+  test("Update a survey responses app's app notes", async ({ sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-733',
@@ -364,13 +346,11 @@ test.describe('survey responses app', () => {
     const note = 'This is a note';
 
     await test.step("Update the app's app notes", async () => {
-      await surveyResponsesAdminPage.generalTab.editNotesSettingLink.click();
-      await surveyResponsesAdminPage.generalTab.editNotesSettingsModal.notesEditor.fill(note);
-      await surveyResponsesAdminPage.generalTab.editGeneralSettingsModal.saveButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.updateNotes(note));
     });
 
     await test.step("Verify app's app notes were updated correctly", async () => {
-      await expect(surveyResponsesAdminPage.generalTab.notes).toHaveText(note);
+      await sysAdminActor.browse().check(AppDetailTargets.generalTab.notes).hasText(note);
     });
   });
 });
