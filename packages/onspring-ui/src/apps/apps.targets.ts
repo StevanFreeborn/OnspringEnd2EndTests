@@ -138,6 +138,7 @@ export const EditGeneralSettingsModalTargets = {
   concurrentEditAlertStatusToggle: (page: Page) =>
     page.locator('.label:has-text("Concurrent Edit Alert") + .data').getByRole('switch').locator('span').nth(3),
   saveButton: (page: Page) => page.getByRole('button', { name: 'Save' }),
+  cancelButton: (page: Page) => page.getByRole('button', { name: 'Cancel' }),
 };
 
 export const EditDisplaySettingsModalTargets = {

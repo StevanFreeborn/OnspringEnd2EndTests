@@ -2,6 +2,7 @@ import { Locator, Page } from '@playwright/test';
 
 export const SurveysPageTargets = {
   route: '/Admin/Survey',
+  getSurveysListPath: '/Admin/Survey/SurveyListRead',
   readSurveyListPathRegex: /\/Admin\/Survey\/SurveyListRead/,
   deleteSurveyPathRegex: /\/Admin\/Survey\/\d+\/Delete/,
   createSurveyButton: (page: Page): Locator => page.locator('.create-button'),
@@ -15,6 +16,12 @@ export const SurveysPageTargets = {
     (page: Page): Locator =>
       page.locator('#grid').getByRole('row', { name }).first().getByTitle('Delete Survey'),
   deleteConfirmationInput: (page: Page): Locator => page.getByLabel('Delete Survey').getByRole('textbox'),
+  deleteSurveyDialog: (page: Page): Locator =>
+    page.locator('.ui-dialog:has(.ui-dialog-title:has-text("Delete Survey"))'),
+};
+
+export const CreateSurveyDialogTargets = {
+  copyResponsesAppCheckbox: (page: Page): Locator => page.getByLabel('Copy Responses app also'),
 };
 
 export const CreateSurveyModalTargets = {
@@ -27,6 +34,7 @@ export const SurveyDetailTargets = {
   pathRegex: /\/Admin\/Survey\/\d+/,
   designPathRegex: /\/Admin\/Survey\/\d+\/Design/,
   configureResponseAppLink: (page: Page): Locator => page.getByRole('link', { name: 'Configure Response App' }),
+  configureSurveyLink: (page: Page): Locator => page.getByRole('link', { name: 'Configure Survey' }),
   generalTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('General'),
   designTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Design'),
   layoutTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Layout'),

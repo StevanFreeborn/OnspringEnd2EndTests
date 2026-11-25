@@ -2,10 +2,16 @@ import { Response } from '@playwright/test';
 import { TEST_SURVEY_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { AutoSaveDialogTargets, SurveyDesignerTargets } from './surveyDesigner.targets.js';
-import { CreateSurveyModalTargets, SurveyDetailTargets, SurveysPageTargets } from './surveys.targets.js';
+import {
+  CreateSurveyDialogTargets,
+  CreateSurveyModalTargets,
+  SurveyDetailTargets,
+  SurveysPageTargets,
+} from './surveys.targets.js';
 
 async function completeCreateSurveyModal(actor: WebActor, surveyName: string): Promise<void> {
   await actor.browse().waitForState(CreateDialogTargets.continueButton, 'visible');
@@ -13,6 +19,31 @@ async function completeCreateSurveyModal(actor: WebActor, surveyName: string): P
 
   await actor.browse().waitForState(CreateSurveyModalTargets.nameInput, 'visible');
   await actor.browse().fill(CreateSurveyModalTargets.nameInput, surveyName);
+
+  const navPromise = actor.browse().waitForUrl(SurveyDetailTargets.pathRegex);
+  await actor.browse().click(CreateSurveyModalTargets.saveButton);
+  await navPromise;
+}
+
+async function completeCopySurveyModal(
+  actor: WebActor,
+  sourceSurveyName: string,
+  expectedCopyName: string,
+  copyResponsesApp: boolean = true
+): Promise<void> {
+  await actor.browse().check(CreateDialogTargets.copyFromRadioButton).isVisible();
+  await actor.browse().click(CreateDialogTargets.copyFromRadioButton);
+  await actor.browse().click(CreateDialogTargets.copyFromDropdown);
+  await actor.browse().click(CreateDialogTargets.optionToCopy(sourceSurveyName));
+
+  if (copyResponsesApp) {
+    await actor.browse().checkControl(CreateSurveyDialogTargets.copyResponsesAppCheckbox);
+  }
+
+  await actor.browse().click(CreateDialogTargets.continueButton);
+
+  await actor.browse().check(CreateSurveyModalTargets.nameInput).isVisible();
+  await actor.browse().check(CreateSurveyModalTargets.nameInput).hasValue(expectedCopyName);
 
   const navPromise = actor.browse().waitForUrl(SurveyDetailTargets.pathRegex);
   await actor.browse().click(CreateSurveyModalTargets.saveButton);
@@ -56,10 +87,42 @@ export const SurveyTasks = {
       await getSurveysResponse;
     },
 
+  openFromTile:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const getSurveysResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => SurveysPageTargets.readSurveyListPathRegex.test(r.url()) && r.status() === 200
+        );
+      await actor.browse().click(AdminTileTargets.surveyTileLink);
+      await getSurveysResponse;
+    },
+
+  scrollAllIntoView: (): Task<WebActor> =>
+    KendoGridTasks.scrollAllIntoView({
+      grid: SurveysPageTargets.surveyGrid,
+      getListPagePath: SurveysPageTargets.getSurveysListPath,
+    }),
+
   gotoSurvey:
     (surveyId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().goto(`${SurveyDetailTargets.pathPrefix}${surveyId}`);
+    },
+
+  openResponseApp:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDetailTargets.configureResponseAppLink);
+      await actor.browse().waitForState(SurveyDetailTargets.configureSurveyLink, 'visible');
+    },
+
+  openSurveyFromResponseApp:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDetailTargets.configureSurveyLink);
+      await actor.browse().waitForState(SurveyDetailTargets.configureResponseAppLink, 'visible');
     },
 
   openDesignTab:
@@ -115,9 +178,45 @@ export const SurveyTasks = {
   createFromSurveysPage:
     (surveyName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.attemptsTo(SurveyTasks.goto());
+      if (!(await actor.browse().isVisible(SurveysPageTargets.createSurveyButton))) {
+        await actor.attemptsTo(SurveyTasks.goto());
+      }
+
       await actor.browse().click(SurveysPageTargets.createSurveyButton);
       await completeCreateSurveyModal(actor, surveyName);
+    },
+
+  copyViaHeader:
+    (sourceSurveyName: string, expectedCopyName: string, copyResponsesApp: boolean = true): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().hover(AdminNavTargets.adminCreateButton);
+      await actor.browse().check(AdminNavTargets.adminCreateMenu).isVisible();
+      await actor.browse().click(AdminNavTargets.menuOption('Survey'));
+      await completeCopySurveyModal(actor, sourceSurveyName, expectedCopyName, copyResponsesApp);
+    },
+
+  copyViaTile:
+    (sourceSurveyName: string, expectedCopyName: string, copyResponsesApp: boolean = true): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (!(await actor.browse().isVisible(AdminTileTargets.surveyTileLink))) {
+        await actor.browse().goto(AdminNavTargets.homeRoute);
+      }
+
+      await actor.browse().hover(AdminTileTargets.surveyTileLink);
+      await actor.browse().check(AdminTileTargets.surveyTileCreateButton).isVisible();
+      await actor.browse().click(AdminTileTargets.surveyTileCreateButton);
+      await completeCopySurveyModal(actor, sourceSurveyName, expectedCopyName, copyResponsesApp);
+    },
+
+  copyFromSurveysPage:
+    (sourceSurveyName: string, expectedCopyName: string, copyResponsesApp: boolean = true): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (!(await actor.browse().isVisible(SurveysPageTargets.createSurveyButton))) {
+        await actor.attemptsTo(SurveyTasks.goto());
+      }
+
+      await actor.browse().click(SurveysPageTargets.createSurveyButton);
+      await completeCopySurveyModal(actor, sourceSurveyName, expectedCopyName, copyResponsesApp);
     },
 
   /**
@@ -128,7 +227,7 @@ export const SurveyTasks = {
   deleteSurveys:
     (surveyNames: string[]): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.attemptsTo(SurveyTasks.goto());
+      await actor.attemptsTo(SurveyTasks.goto(), SurveyTasks.scrollAllIntoView());
 
       for (const surveyName of surveyNames) {
         const row = SurveysPageTargets.surveyRow(surveyName);
