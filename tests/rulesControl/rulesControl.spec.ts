@@ -1,26 +1,22 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { Trigger } from '../../models/trigger';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { App, FakeDataFactory, SimpleRuleLogic, Trigger } from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  AppTriggersTabTargets,
+  RuleControlTargets,
+  TriggerModalTargets,
+  TriggerTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type RulesControlTestFixtures = {
-  app: App;
-  appAdminPage: AppAdminPage;
-};
-
-const test = base.extend<RulesControlTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+const test = base.extend<{ app: App }>({
+  app: AppFixture.create().build(),
 });
 
 test.describe('rules control', () => {
   test('Verify Record is New rules can be added and are maintained after closing control and re-opening', async ({
     app,
-    appAdminPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -34,27 +30,24 @@ test.describe('rules control', () => {
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a new trigger with a "Record is New" rule', async () => {
-      await appAdminPage.triggersTab.addTrigger(trigger);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(trigger));
     });
 
     await test.step('Verify the trigger was added', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await expect(triggerRow).toBeVisible();
+      await sysAdminActor.browse().check(AppTriggersTabTargets.triggerRowByName(trigger.name)).isVisible();
     });
 
     await test.step('Re-open the trigger and verify the "Record is New" rule is still selected', async () => {
-      const triggerRow = appAdminPage.triggersTab.triggersGrid.getByRole('row', { name: trigger.name });
-      await triggerRow.click();
-
-      await appAdminPage.triggersTab.addOrEditTriggerModal.rulesTabButton.click();
-      const rulesList = appAdminPage.triggersTab.addOrEditTriggerModal.rulesTab.ruleSet.getRulesList();
-
-      await expect(rulesList).toHaveText(/Record is New/);
+      await sysAdminActor.attemptsTo(TriggerTasks.openTrigger(trigger.name));
+      await sysAdminActor.browse().click(TriggerModalTargets.rulesTabButton);
+      await sysAdminActor
+        .browse()
+        .check(RuleControlTargets.rulesList(TriggerModalTargets.rulesTab.ruleSetControl))
+        .hasText(/Record is New/);
     });
   });
 });
