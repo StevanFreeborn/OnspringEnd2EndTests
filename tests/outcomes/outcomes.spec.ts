@@ -1,75 +1,70 @@
-import { Document, Paragraph } from 'docx';
-import { GetAttachmentFieldParams, GetDateFieldParams } from '../../componentObjectModels/forms/addOrEditRecordForm';
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { AttachmentField } from '../../models/attachmentField';
 import {
+  App,
+  AttachmentField,
+  AutoNumberRuleWithValue,
   CmroOnSaveWithCustomBatchOutcome,
   CmroOnSaveWithDefinedLibraryOutcome,
   CmroOnSaveWithDynamicLibraryOutcome,
+  CreateOneRecordOnSaveOutcome,
   CustomBatchContentDefinition,
+  DateField,
   DefinedLibraryContentDefinition,
+  DynamicDocument,
   DynamicLibraryContentDefinition,
-} from '../../models/createMultipleRecordsOutcome';
-import { CreateOneRecordOnSaveOutcome } from '../../models/createOneRecordOutcome';
-import { DateField } from '../../models/dateField';
-import { DynamicDocument } from '../../models/dynamicDocument';
-import { FilterListValueOutcome, FilterListValueRule } from '../../models/filterListValueOutcome';
-import { GenerateDocumentOutcome } from '../../models/generateDocumentOutcome';
-import { ListValue } from '../../models/listValue';
-import { ObjectVisibilityOutcome, ObjectVisibilitySection } from '../../models/objectVisibilityOutcome';
-import { ParallelReferenceField } from '../../models/parallelReferenceField';
-import { PrintContentRecordOutcome } from '../../models/printContentRecordOutcome';
-import { ReferenceField } from '../../models/referenceField';
-import { RequiredFieldsOutcome } from '../../models/requiredFieldsOutcome';
-import { RestApiOutcome } from '../../models/restApiOutcome';
-import { AutoNumberRuleWithValue, ListRuleWithValues } from '../../models/rule';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { SetDateOutcome, SetDateToCurrentDateRule } from '../../models/setDateOutcome';
-import { SetListValueOutcome, SetSingleListValueRule } from '../../models/setListValueOutcome';
-import { SetReferenceOutcome, SetSpecificSingleReferenceConfig } from '../../models/setReferenceOutcome';
-import { StopCalculationOutcome } from '../../models/stopCalculationOutcome';
-import { TextField } from '../../models/textField';
-import { TextFormulaField } from '../../models/textFormulaField';
-import { Trigger } from '../../models/trigger';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
-import { EditDocumentPage } from '../../pageObjectModels/documents/editDocumentPage';
+  FakeDataFactory,
+  FilterListValueOutcome,
+  FilterListValueRule,
+  GenerateDocumentOutcome,
+  ListField,
+  ListRuleWithValues,
+  ListValue,
+  ObjectVisibilityOutcome,
+  ObjectVisibilitySection,
+  ParallelReferenceField,
+  PrintContentRecordOutcome,
+  ReferenceField,
+  RequiredFieldsOutcome,
+  RestApiOutcome,
+  SetDateOutcome,
+  SetDateToCurrentDateRule,
+  SetListValueOutcome,
+  SetReferenceOutcome,
+  SetSingleListValueRule,
+  SetSpecificSingleReferenceConfig,
+  SimpleRuleLogic,
+  StopCalculationOutcome,
+  TextField,
+  TextFormulaField,
+  Trigger,
+} from '@stevanfreeborn/onspring-models';
+import {
+  AppTasks,
+  ContentQuestions,
+  ContentRecordTargets,
+  ContentTasks,
+  DynamicDocumentTasks,
+  FieldTasks,
+  TriggerTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { Retry } from '@stevanfreeborn/screenplay-playwright';
+import { Document, Paragraph } from 'docx';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
-import { ListField } from './../../models/listField';
-import { GetReferenceFieldParams } from './../../pageObjectModels/content/editableContentPage';
 
 type OutcomesTestFixtures = {
   triggerApp: App;
   sourceApp: App;
   targetApp: App;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
-  editDocumentPage: EditDocumentPage;
 };
 
 const test = base.extend<OutcomesTestFixtures>({
-  triggerApp: app,
-  sourceApp: app,
-  targetApp: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => await use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => await use(new EditContentPage(sysAdminPage)),
-  editDocumentPage: async ({ sysAdminPage }, use) => await use(new EditDocumentPage(sysAdminPage)),
+  triggerApp: AppFixture.create().build(),
+  sourceApp: AppFixture.create().build(),
+  targetApp: AppFixture.create().build(),
 });
 
 test.describe('Outcomes', () => {
-  test('Configure a stop calculation outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a stop calculation outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-750',
@@ -114,113 +109,104 @@ test.describe('Outcomes', () => {
     const tabName = 'Tab 2';
     const sectionName = 'Section 1';
 
-    const getTextFieldParams = {
-      fieldName: textField.name,
-      fieldType: textField.type as FieldType,
-      tabName,
-      sectionName,
-    };
-
-    const getFormulaFieldParams = {
-      fieldName: formulaField.name,
-      fieldType: formulaField.type as FieldType,
-      tabName,
-      sectionName,
-    };
-
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(fields.textField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(fields.textField));
     });
 
     await test.step('Create a formula field to return same value as text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(fields.formulaField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(fields.formulaField));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(fields.listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(fields.listField));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const [index, field] of Object.values(fields).entries()) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: index,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: index,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with stop calculation outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithStopCalcOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithStopCalcOutcome));
     });
 
     await test.step('Create a record with text field value', async () => {
-      await addContentPage.goto(app.id);
-      const editableTextField = await addContentPage.form.getField(getTextFieldParams);
-
-      await editableTextField.fill('Test Value');
-
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoAdd(app.id),
+        ContentTasks.fillTextField({
+          tabName,
+          sectionName,
+          fieldName: textField.name,
+          value: 'Test Value',
+        }),
+        ContentTasks.saveRecord()
+      );
     });
 
     await test.step('Verify formula field value is the same as text field value', async () => {
-      const textFormulaField = await editContentPage.form.getField(getFormulaFieldParams);
-
-      await expect(textFormulaField).toHaveText(/test value/i);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.formulaFieldInSection(section, formulaField.name))
+        .hasText(/test value/i);
     });
 
     await test.step('Update list field to yes and save record', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: listValueRule.values[0] }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: listValueRule.values[0],
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Change text field value', async () => {
-      const editableTextField = await editContentPage.form.getField(getTextFieldParams);
-
-      await editableTextField.clear();
-      await editableTextField.pressSequentially('Updated Value', { delay: 150 });
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.typeTextField({
+          tabName,
+          sectionName,
+          fieldName: textField.name,
+          value: 'Updated Value',
+          delay: 150,
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify formula field value is the same as previous text field value', async () => {
-      const textFormulaField = await editContentPage.form.getField(getFormulaFieldParams);
-
-      await expect(textFormulaField).toHaveText(/test value/i);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.formulaFieldInSection(section, formulaField.name))
+        .hasText(/test value/i);
     });
   });
 
-  test('Configure an object visibility outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure an object visibility outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-744',
@@ -252,7 +238,7 @@ test.describe('Outcomes', () => {
           status: true,
           sections: [
             new ObjectVisibilitySection({
-              tabName: tabName,
+              tabName,
               name: sectionToHide,
               visibility: 'Hidden',
             }),
@@ -261,105 +247,101 @@ test.describe('Outcomes', () => {
       ],
     });
 
-    const getTextFieldParams = {
-      fieldName: textField.name,
-      fieldType: textField.type as FieldType,
-      tabName,
-      sectionName: sectionToHide,
-    };
-
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add list field to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: 'Section 1',
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: listField.name,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName: 'Section 1',
+          column: 0,
+          row: 0,
+          fieldName: listField.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step('Create a text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(textField));
     });
 
     await test.step('Create a section and place text field in it', async () => {
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.addSection({
-        tabName: tabName,
-        sectionName: sectionToHide,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionToHide,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: textField.name,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addLayoutSection({
+          tabName,
+          sectionName: sectionToHide,
+        }),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName: sectionToHide,
+          column: 0,
+          row: 0,
+          fieldName: textField.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with object visibility outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithObjectVisibilityOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithObjectVisibilityOutcome));
     });
 
     await test.step('Create a record with text field value', async () => {
-      await addContentPage.goto(app.id);
-      const editableTextField = await addContentPage.form.getField(getTextFieldParams);
-
-      await editableTextField.fill('Test Value');
-
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoAdd(app.id),
+        ContentTasks.fillTextField({
+          tabName,
+          sectionName: sectionToHide,
+          fieldName: textField.name,
+          value: 'Test Value',
+        }),
+        ContentTasks.saveRecord()
+      );
     });
 
     await test.step('Verify text field is visible', async () => {
-      const editableTextField = await editContentPage.form.getField(getTextFieldParams);
-
-      await expect(editableTextField).toBeVisible();
+      const hiddenSection = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName: sectionToHide }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.textFieldInSection(hiddenSection, textField.name))
+        .isVisible();
     });
 
     await test.step('Update list field to yes and save record', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName: 'Section 1',
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName: 'Section 1',
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify text field is not visible', async () => {
-      const editableTextField = await editContentPage.form.getField(getTextFieldParams);
-
-      await expect(editableTextField).toBeHidden();
+      const hiddenSection = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName: sectionToHide }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.textFieldInSection(hiddenSection, textField.name))
+        .isHidden();
     });
   });
 
-  test('Configure a set date outcome', async ({ triggerApp: app, appAdminPage, addContentPage, editContentPage }) => {
+  test('Configure a set date outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-747',
@@ -395,91 +377,83 @@ test.describe('Outcomes', () => {
       ],
     });
 
-    const getDateFieldParams = {
-      fieldName: dateField.name,
-      fieldType: dateField.type,
-      tabName,
-      sectionName,
-    } as GetDateFieldParams;
-
     const expectedDateValue = new Date().toLocaleDateString(undefined, { timeZone: 'America/Chicago' });
 
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a date field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(dateField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(dateField));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [dateField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with set date outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithSetDateOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithSetDateOutcome));
     });
 
     await test.step('Create a record', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        })
+      );
     });
 
     await test.step('Verify date field value is set', async () => {
-      const editableDateField = await editContentPage.form.getField(getDateFieldParams);
-      await expect(editableDateField.input).toHaveValue(expectedDateValue);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.dateFieldInputInSection(section, dateField.name))
+        .hasValue(expectedDateValue);
     });
 
     await test.step('Save record', async () => {
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(ContentTasks.saveEditedRecord());
     });
 
     await test.step('Verify date field value is still set', async () => {
-      const editableDateField = await editContentPage.form.getField(getDateFieldParams);
-      await expect(editableDateField.input).toHaveValue(expectedDateValue);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.dateFieldInputInSection(section, dateField.name))
+        .hasValue(expectedDateValue);
     });
   });
 
-  test('Configure a set list value outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a set list value outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-748',
@@ -525,92 +499,81 @@ test.describe('Outcomes', () => {
       ],
     });
 
-    const getListFieldSet = {
-      fieldName: listFieldToSet.name,
-      fieldType: listFieldToSet.type as FieldType,
-      tabName,
-      sectionName,
-    };
-
     await test.step('Navigate to the app layout tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create a list to set', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listFieldToSet);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listFieldToSet));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [listFieldToSet, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Navigate to the app trigger tab', async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with set list value outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithSetListValueOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithSetListValueOutcome));
     });
 
     await test.step('Create a record', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        })
+      );
     });
 
     await test.step('Verify list field value is set', async () => {
-      const listFieldSet = await editContentPage.form.getField(getListFieldSet);
-
-      await expect(listFieldSet).toHaveText(expectedListValue.value);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.listFieldInSection(section, listFieldToSet.name))
+        .hasText(expectedListValue.value);
     });
 
     await test.step('Save record', async () => {
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(ContentTasks.saveEditedRecord());
     });
 
     await test.step('Verify list field value is still set', async () => {
-      const listFieldSet = await editContentPage.form.getField(getListFieldSet);
-
-      await expect(listFieldSet).toHaveText(expectedListValue.value);
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.listFieldInSection(section, listFieldToSet.name))
+        .hasText(expectedListValue.value);
     });
   });
 
-  test('Configure a set reference outcome', async ({
-    sourceApp,
-    triggerApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a set reference outcome', async ({ sourceApp, triggerApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-749',
@@ -654,99 +617,82 @@ test.describe('Outcomes', () => {
       ],
     });
 
-    const getReferenceFieldParams = {
-      fieldName: referenceField.name,
-      fieldType: referenceField.type as FieldType,
-      tabName,
-      sectionName,
-    } as GetReferenceFieldParams;
-
     await test.step('Create a record in the source app', async () => {
-      await addContentPage.goto(sourceApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      setRefConfig.value = editContentPage.getRecordIdFromUrl().toString();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
+      setRefConfig.value = (await sysAdminActor.asks(ContentQuestions.currentRecordId())).toString();
     });
 
     await test.step('Create a list field in the trigger app', async () => {
-      await appAdminPage.goto(triggerApp.id);
-      await appAdminPage.layoutTabButton.click();
-
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(triggerApp.id), FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create a reference field in the trigger app that targets source app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceField));
     });
 
     await test.step('Add fields to the trigger app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const [index, field] of [listField, referenceField].entries()) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: index,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: index,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the trigger app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(triggerApp.id));
     });
 
     await test.step('Add a trigger with set reference outcome to trigger app', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithSetReferenceOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithSetReferenceOutcome));
     });
 
     await test.step('Create a record in the trigger app', async () => {
-      await addContentPage.goto(triggerApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(triggerApp.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        })
+      );
     });
 
     await test.step('Verify reference field value is set', async () => {
-      const referenceField = await editContentPage.form.getField(getReferenceFieldParams);
-      const recordRow = referenceField.gridTable.getByRole('row', { name: setRefConfig.value });
-
-      await expect(recordRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, referenceField.name, setRefConfig.value))
+        .isVisible();
     });
 
     await test.step('Save record', async () => {
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(ContentTasks.saveEditedRecord());
     });
 
     await test.step('Verify reference field value is still set', async () => {
-      const referenceField = await editContentPage.form.getField(getReferenceFieldParams);
-      const recordRow = referenceField.gridTable.getByRole('row', { name: setRefConfig.value });
-
-      await expect(recordRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, referenceField.name, setRefConfig.value))
+        .isVisible();
     });
   });
 
-  test('Configure a required fields outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a required fields outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-746',
@@ -785,100 +731,91 @@ test.describe('Outcomes', () => {
     });
 
     await test.step('Navigate to the app layout tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create field to be required', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(requiredField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(requiredField));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [requiredField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Navigate to the app trigger tab', async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with required fields outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithRequiredFieldsOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithRequiredFieldsOutcome));
     });
 
     await test.step('Create a record', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-    });
-
-    await test.step('Verify required field is required', async () => {
-      const textField = await editContentPage.form.getField({
-        fieldName: requiredField.name,
-        fieldType: requiredField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await expect(textField).toHaveAttribute('data-val', 'true');
-
-      await editContentPage.saveRecordButton.click();
-
-      await expect(editContentPage.validationErrors).toBeVisible();
-      await expect(editContentPage.validationErrors).toHaveText(
-        new RegExp(`${requiredField.name} is a required field`)
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        })
       );
     });
 
+    await test.step('Verify required field is required', async () => {
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.textFieldInSection(section, requiredField.name))
+        .hasAttribute('data-val', 'true');
+
+      await sysAdminActor.browse().click(ContentRecordTargets.saveRecordButton);
+
+      await sysAdminActor.browse().check(ContentRecordTargets.validationErrors).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.validationErrors)
+        .hasText(new RegExp(`${requiredField.name} is a required field`));
+    });
+
     await test.step('Verify record can be saved after filling required field', async () => {
-      const editableRequiredField = await editContentPage.form.getField({
-        fieldName: requiredField.name,
-        fieldType: requiredField.type as FieldType,
-        tabName,
-        sectionName,
-      });
+      await sysAdminActor.attemptsTo(
+        ContentTasks.typeTextField({
+          tabName,
+          sectionName,
+          fieldName: requiredField.name,
+          value: 'Test Value',
+          delay: 150,
+        }),
+        ContentTasks.saveEditedRecord()
+      );
 
-      await editableRequiredField.pressSequentially('Test Value', { delay: 150 });
-
-      await editContentPage.save();
-
-      await expect(editContentPage.validationErrors).toBeHidden();
+      await sysAdminActor.browse().check(ContentRecordTargets.validationErrors).isHidden();
     });
   });
 
-  test('Configure a filter list value outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a filter list value outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-742',
@@ -925,101 +862,79 @@ test.describe('Outcomes', () => {
       ],
     });
 
-    const getFilteredFieldParams = {
-      fieldName: listFieldToFilter.name,
-      fieldType: listFieldToFilter.type as FieldType,
-      tabName,
-      sectionName,
-    };
-
     await test.step('Navigate to the app layout tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create a list field to filter', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listFieldToFilter);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listFieldToFilter));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [listFieldToFilter, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with a filter list value outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithFilterListValueOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithFilterListValueOutcome));
     });
 
     await test.step('Create a content record in the app', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update the list field to the value yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        })
+      );
     });
 
     await test.step('Verify the list field has been filtered', async () => {
-      const filteredField = await editContentPage.form.getField(getFilteredFieldParams);
-
-      await filteredField.click();
-      const optionNotToFilter = filteredField.page().getByRole('option', { name: valueNotToFilter.value });
-      const optionToFilter = filteredField.page().getByRole('option', { name: valueToFilter.value });
-
-      await expect(optionNotToFilter).toBeVisible();
-      await expect(optionToFilter).toBeHidden();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor.browse().click(ContentRecordTargets.listFieldInSection(section, listFieldToFilter.name));
+      await sysAdminActor.browse().check(ContentRecordTargets.dropdownOption(valueNotToFilter.value)).isVisible();
+      await sysAdminActor.browse().check(ContentRecordTargets.dropdownOption(valueToFilter.value)).isHidden();
     });
 
     await test.step('Save the record', async () => {
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(ContentTasks.saveEditedRecord());
     });
 
     await test.step('Verify the list field is still filtered', async () => {
-      const filteredField = await editContentPage.form.getField(getFilteredFieldParams);
-
-      await filteredField.click();
-      const optionNotToFilter = filteredField.page().getByRole('option', { name: valueNotToFilter.value });
-      const optionToFilter = filteredField.page().getByRole('option', { name: valueToFilter.value });
-
-      await expect(optionNotToFilter).toBeVisible();
-      await expect(optionToFilter).toBeHidden();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor.browse().click(ContentRecordTargets.listFieldInSection(section, listFieldToFilter.name));
+      await sysAdminActor.browse().check(ContentRecordTargets.dropdownOption(valueNotToFilter.value)).isVisible();
+      await sysAdminActor.browse().check(ContentRecordTargets.dropdownOption(valueToFilter.value)).isHidden();
     });
   });
 
-  test('Configure a print content record outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a print content record outcome', async ({ triggerApp: app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-745',
@@ -1060,93 +975,83 @@ test.describe('Outcomes', () => {
     let recordId: number;
 
     await test.step('Navigate to the app layout tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create an attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(attachmentField));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [attachmentField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Navigate to the app trigger tab', async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with print content record outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithPrintContentRecordOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithPrintContentRecordOutcome));
     });
 
     await test.step('Create a record', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify the content record is printed', async () => {
-      await expect(async () => {
-        await editContentPage.page.reload();
-
-        const attachmentControl = await editContentPage.form.getField({
-          fieldName: attachmentField.name,
-          fieldType: attachmentField.type as FieldType,
-          tabName,
-          sectionName,
-        } as GetAttachmentFieldParams);
-
-        const attachmentName = `${recordId}.pdf`;
-        const printedRecordRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
-
-        await expect(printedRecordRow).toBeVisible({ timeout: 5000 });
-      }).toPass({
-        intervals: [5_000],
-        timeout: 300_000,
-      });
+      await sysAdminActor.attemptsTo(
+        Retry.until(
+          async actor => {
+            await actor.browse().reload();
+            const section = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
+            const printedRecordRow = ContentRecordTargets.attachmentRowInSection(
+              section,
+              attachmentField.name,
+              `${recordId}.pdf`
+            );
+            await actor.browse().check(printedRecordRow).isVisible({ timeout: 5_000 });
+          },
+          {
+            intervals: [5_000],
+            timeout: 300_000,
+          }
+        )
+      );
     });
   });
 
-  test('Configure a create one record outcome', async ({
-    triggerApp,
-    targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a create one record outcome', async ({ triggerApp, targetApp, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-741',
@@ -1190,87 +1095,76 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the target app's layout tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(targetApp.id));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceField));
     });
 
     await test.step("Navigate to the trigger app's layout tab", async () => {
-      await appAdminPage.goto(triggerApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(triggerApp.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add the list field and parallel reference field to the trigger app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [parallelReferenceField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the trigger app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(triggerApp.id));
     });
 
     await test.step('Add a trigger with create one record outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithCreateOneRecordOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithCreateOneRecordOutcome));
     });
 
     await test.step('Create a record in the trigger app', async () => {
-      await addContentPage.goto(triggerApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(triggerApp.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify a record is created in the target app', async () => {
-      const parallelRefFieldControl = await editContentPage.form.getField({
-        fieldName: targetApp.name,
-        fieldType: parallelReferenceField.type as FieldType,
-        tabName,
-        sectionName,
-      } as GetReferenceFieldParams);
-
-      const recordRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
-
-      await expect(recordRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, targetApp.name, '1'))
+        .isVisible();
     });
   });
 
   test('Configure a create multiple records outcome with a custom batch', async ({
     triggerApp,
     targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -1324,80 +1218,73 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the target app's layout tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(targetApp.id));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceField));
     });
 
     await test.step("Navigate to the trigger app's layout tab", async () => {
-      await appAdminPage.goto(triggerApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(triggerApp.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add the list field and parallel reference field to the trigger app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [parallelReferenceField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the trigger app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(triggerApp.id));
     });
 
     await test.step('Add a trigger with create multiple records outcome that has a custom batch definition', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithCreateMultipleRecordsOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithCreateMultipleRecordsOutcome));
     });
 
     await test.step('Create a record in the trigger app', async () => {
-      await addContentPage.goto(triggerApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(triggerApp.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify records are created in the target app', async () => {
-      const parallelRefFieldControl = await editContentPage.form.getField({
-        fieldName: targetApp.name,
-        fieldType: parallelReferenceField.type as FieldType,
-        tabName,
-        sectionName,
-      } as GetReferenceFieldParams);
-
-      const batchOneRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
-      const batchTwoRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '2' });
-
-      await expect(batchOneRow).toBeVisible();
-      await expect(batchTwoRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, targetApp.name, '1'))
+        .isVisible();
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, targetApp.name, '2'))
+        .isVisible();
     });
   });
 
@@ -1405,9 +1292,7 @@ test.describe('Outcomes', () => {
     sourceApp,
     triggerApp,
     targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -1476,99 +1361,86 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the source app's layout tab", async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(sourceApp.id));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldSourceToTrigger);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldSourceToTrigger));
     });
 
     await test.step('Create a record in the source app', async () => {
-      await addContentPage.goto(sourceApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      filterRule.value = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
+      filterRule.value = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step("Navigate to the target app's layout tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(targetApp.id));
     });
 
     await test.step('Create a reference field that targets the source app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldTargetToSource);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldTargetToSource));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldTargetToTrigger);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldTargetToTrigger));
     });
 
     await test.step("Navigate to the trigger app's layout tab", async () => {
-      await appAdminPage.goto(triggerApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(triggerApp.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add the list field and parallel reference field to the trigger app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [parallelReferenceField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the trigger app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(triggerApp.id));
     });
 
     await test.step('Add a trigger with create multiple records outcome that has a defined batch definition', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithCreateMultipleRecordsOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithCreateMultipleRecordsOutcome));
     });
 
     await test.step('Create a record in the trigger app', async () => {
-      await addContentPage.goto(triggerApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(triggerApp.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify records are created in the target app', async () => {
-      const parallelRefFieldControl = await editContentPage.form.getField({
-        fieldName: targetApp.name,
-        fieldType: parallelReferenceField.type as FieldType,
-        tabName,
-        sectionName,
-      } as GetReferenceFieldParams);
-
-      const recordRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
-
-      await expect(recordRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, targetApp.name, '1'))
+        .isVisible();
     });
   });
 
@@ -1576,9 +1448,7 @@ test.describe('Outcomes', () => {
     sourceApp,
     triggerApp,
     targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
+    sysAdminActor,
   }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
@@ -1647,110 +1517,90 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the source app's layout tab", async () => {
-      await appAdminPage.goto(sourceApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(sourceApp.id));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldSourceToTrigger);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldSourceToTrigger));
     });
 
     await test.step('Create a record in the source app', async () => {
-      await addContentPage.goto(sourceApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      filterRule.value = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(sourceApp.id), ContentTasks.saveRecord());
+      filterRule.value = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step("Navigate to the target app's layout tab", async () => {
-      await appAdminPage.goto(targetApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(targetApp.id));
     });
 
     await test.step('Create a reference field that targets the source app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldTargetToSource);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldTargetToSource));
     });
 
     await test.step('Create a reference field that targets the trigger app', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(referenceFieldTargetToTrigger);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(referenceFieldTargetToTrigger));
     });
 
     await test.step("Navigate to the trigger app's layout tab", async () => {
-      await appAdminPage.goto(triggerApp.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(triggerApp.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Add the list field and parallel reference field to the trigger app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [parallelReferenceField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step("Navigate to the trigger app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(triggerApp.id));
     });
 
     await test.step('Add a trigger with create multiple records outcome that has a dynamic batch definition', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithCreateMultipleRecordsOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithCreateMultipleRecordsOutcome));
     });
 
     await test.step('Create a record in the trigger app', async () => {
-      await addContentPage.goto(triggerApp.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(triggerApp.id), ContentTasks.saveRecord());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify records are created in the target app', async () => {
-      const parallelRefFieldControl = await editContentPage.form.getField({
-        fieldName: targetApp.name,
-        fieldType: parallelReferenceField.type as FieldType,
-        tabName,
-        sectionName,
-      } as GetReferenceFieldParams);
-
-      const recordRow = parallelRefFieldControl.gridTable.getByRole('row', { name: '1' });
-
-      await expect(recordRow).toBeVisible();
+      const section = await sysAdminActor.asks(ContentQuestions.section({ tabName, sectionName }));
+      await sysAdminActor
+        .browse()
+        .check(ContentRecordTargets.referenceRecordRowInSection(section, targetApp.name, '1'))
+        .isVisible();
     });
   });
 
-  test('Configure a generate document outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    editDocumentPage,
-    dynamicDocumentService,
-    addContentPage,
-    editContentPage,
-  }) => {
+  test('Configure a generate document outcome', async ({ triggerApp: app, dynamicDocumentService, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-743',
@@ -1810,33 +1660,36 @@ test.describe('Outcomes', () => {
       ],
     });
 
+    let recordId: number;
+
     await test.step('Navigate to the app layout tab', async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a list field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(listField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(listField));
     });
 
     await test.step('Create an attachment field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(attachmentField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(attachmentField));
     });
 
     await test.step('Add fields to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
+      await sysAdminActor.attemptsTo(AppTasks.openLayoutDesigner());
 
       for (const field of [attachmentField, listField]) {
-        await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-          tabName: tabName,
-          sectionName: sectionName,
-          sectionColumn: 0,
-          sectionRow: 0,
-          fieldName: field.name,
-        });
+        await sysAdminActor.attemptsTo(
+          AppTasks.dragFieldOntoLayout({
+            tabName,
+            sectionName,
+            column: 0,
+            row: 0,
+            fieldName: field.name,
+          })
+        );
       }
 
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(AppTasks.saveAndCloseLayout());
     });
 
     await test.step('Create dynamic document template', async () => {
@@ -1844,74 +1697,65 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the app's document tab", async () => {
-      await appAdminPage.documentsTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppDocumentsTab(app.id));
     });
 
     await test.step('Create a dynamic document', async () => {
-      await appAdminPage.documentsTab.createDocument(document.name);
-      await appAdminPage.page.waitForURL(editDocumentPage.pathRegex);
-      await editDocumentPage.fillOutForm(document);
-      await editDocumentPage.save();
+      await sysAdminActor.attemptsTo(
+        DynamicDocumentTasks.createFromAppDocumentsTab(document.name),
+        DynamicDocumentTasks.fillForm(document),
+        DynamicDocumentTasks.save()
+      );
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with generate document outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithGenerateDocumentOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithGenerateDocumentOutcome));
     });
 
     await test.step('Create a record in the app', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Update list field to yes', async () => {
-      const editableListField = await editContentPage.form.getField({
-        fieldName: listField.name,
-        fieldType: listField.type as FieldType,
-        tabName,
-        sectionName,
-      });
-
-      await editableListField.click();
-      await editableListField.page().getByRole('option', { name: 'Yes' }).click();
-
-      await editContentPage.save();
+      await sysAdminActor.attemptsTo(
+        ContentTasks.selectListField({
+          tabName,
+          sectionName,
+          fieldName: listField.name,
+          value: 'Yes',
+        }),
+        ContentTasks.saveEditedRecord()
+      );
     });
 
     await test.step('Verify the document is generated', async () => {
-      await expect(async () => {
-        await editContentPage.page.reload();
-
-        const attachmentControl = await editContentPage.form.getField({
-          fieldName: attachmentField.name,
-          fieldType: attachmentField.type as FieldType,
-          tabName,
-          sectionName,
-        } as GetAttachmentFieldParams);
-
-        const attachmentName = `${editContentPage.getRecordIdFromUrl()} - ${document.name}.docx`;
-        const generatedDocumentRow = attachmentControl.attachmentGridBody.getByRole('row', { name: attachmentName });
-
-        await expect(generatedDocumentRow).toBeVisible({ timeout: 5_000 });
-      }).toPass({
-        intervals: [5_000],
-        timeout: 300_000,
-      });
+      await sysAdminActor.attemptsTo(
+        Retry.until(
+          async actor => {
+            await actor.browse().reload();
+            const section = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
+            const generatedDocumentRow = ContentRecordTargets.attachmentRowInSection(
+              section,
+              attachmentField.name,
+              `${recordId} - ${document.name}.docx`
+            );
+            await actor.browse().check(generatedDocumentRow).isVisible({ timeout: 5_000 });
+          },
+          {
+            intervals: [5_000],
+            timeout: 300_000,
+          }
+        )
+      );
     });
   });
 
-  test('Configure a REST outcome', async ({
-    triggerApp: app,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
-    sysAdminUser,
-  }) => {
+  test('Configure a REST outcome', async ({ triggerApp: app, sysAdminActor, sysAdminUser }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-891',
@@ -1944,62 +1788,59 @@ test.describe('Outcomes', () => {
     });
 
     await test.step("Navigate to the app's layout tab", async () => {
-      await appAdminPage.goto(app.id);
-      await appAdminPage.layoutTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppLayoutTab(app.id));
     });
 
     await test.step('Create a text field', async () => {
-      await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(textField);
+      await sysAdminActor.attemptsTo(FieldTasks.addFromGrid(textField));
     });
 
     await test.step('Add the text field to the app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionColumn: 0,
-        sectionRow: 0,
-        fieldName: textField.name,
-      });
-
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.dragFieldOntoLayout({
+          tabName,
+          sectionName,
+          column: 0,
+          row: 0,
+          fieldName: textField.name,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step("Navigate to the app's trigger tab", async () => {
-      await appAdminPage.triggersTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppTriggersTab(app.id));
     });
 
     await test.step('Add a trigger with REST outcome', async () => {
-      await appAdminPage.triggersTab.addTrigger(triggerWithRestOutcome);
+      await sysAdminActor.attemptsTo(TriggerTasks.addTrigger(triggerWithRestOutcome));
     });
 
     let recordId: number;
 
     await test.step('Create a record in the app', async () => {
-      await addContentPage.goto(app.id);
-      await addContentPage.saveRecordButton.click();
-      await addContentPage.page.waitForURL(editContentPage.pathRegex);
-
-      recordId = editContentPage.getRecordIdFromUrl();
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+      recordId = await sysAdminActor.asks(ContentQuestions.currentRecordId());
     });
 
     await test.step('Verify the REST outcome is triggered', async () => {
-      await expect(async () => {
-        await editContentPage.page.reload();
-
-        const field = await editContentPage.form.getField({
-          fieldName: textField.name,
-          fieldType: textField.type as FieldType,
-          tabName: tabName,
-          sectionName: sectionName,
-        });
-
-        await expect(field).toHaveValue(recordId.toString(), { timeout: 5_000 });
-      }).toPass({
-        intervals: [5_000],
-        timeout: 300_000,
-      });
+      await sysAdminActor.attemptsTo(
+        Retry.until(
+          async actor => {
+            await actor.browse().reload();
+            const section = await actor.asks(ContentQuestions.section({ tabName, sectionName }));
+            await actor
+              .browse()
+              .check(ContentRecordTargets.textFieldInSection(section, textField.name))
+              .hasValue(recordId.toString(), { timeout: 5_000 });
+          },
+          {
+            intervals: [5_000],
+            timeout: 300_000,
+          }
+        )
+      );
     });
   });
 });
