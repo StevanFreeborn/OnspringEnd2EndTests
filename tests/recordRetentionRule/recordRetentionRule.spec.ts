@@ -1,25 +1,14 @@
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
-import { test as base, expect } from '../../fixtures';
-import { app } from '../../fixtures/app.fixtures';
-import { App } from '../../models/app';
-import { RecordRetentionRule } from '../../models/recordRetentionRule';
-import { DateRule } from '../../models/rule';
-import { SimpleRuleLogic } from '../../models/ruleLogic';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
+import { App, DateRule, FakeDataFactory, RecordRetentionRule, SimpleRuleLogic } from '@stevanfreeborn/onspring-models';
+import { AppRecordRetentionTabTargets, AppTasks, RecordRetentionRuleTasks } from '@stevanfreeborn/onspring-ui';
+import { AppFixture, test as base } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type RecordRetentionRuleTestFixtures = {
-  app: App;
-  appAdminPage: AppAdminPage;
-};
-
-const test = base.extend<RecordRetentionRuleTestFixtures>({
-  app: app,
-  appAdminPage: async ({ sysAdminPage }, use) => await use(new AppAdminPage(sysAdminPage)),
+const test = base.extend<{ app: App }>({
+  app: AppFixture.create().build(),
 });
 
 test.describe('record retention rule', () => {
-  test('Create a record retention rule from the Record Retention tab of an app', async ({ app, appAdminPage }) => {
+  test('Create a record retention rule from the Record Retention tab of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-249',
@@ -32,25 +21,23 @@ test.describe('record retention rule', () => {
       }),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Navigate to the record retention tab', async () => {
-      await appAdminPage.recordRetentionTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppRecordRetentionTab(app.id));
     });
 
     await test.step('Create the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.addRule(recordRetentionRule));
     });
 
     await test.step('Verify the record retention rule was created', async () => {
-      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(recordRetentionRule.name);
-      await expect(row).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(AppRecordRetentionTabTargets.ruleRowByName(recordRetentionRule.name))
+        .isVisible();
     });
   });
 
-  test('Update a record retention rule from the Record Retention tab of an app', async ({ app, appAdminPage }) => {
+  test('Update a record retention rule from the Record Retention tab of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-250',
@@ -66,31 +53,29 @@ test.describe('record retention rule', () => {
       }),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Navigate to the record retention tab', async () => {
-      await appAdminPage.recordRetentionTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppRecordRetentionTab(app.id));
     });
 
     await test.step('Create the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.addRule(updatedRecordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.addRule(updatedRecordRetentionRule));
     });
 
     updatedRecordRetentionRule.name = newName;
 
     await test.step('Update the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.updateRule(originalName, updatedRecordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.updateRule(originalName, updatedRecordRetentionRule));
     });
 
     await test.step('Verify the record retention rule was updated', async () => {
-      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(updatedRecordRetentionRule.name);
-      await expect(row).toBeVisible();
+      await sysAdminActor
+        .browse()
+        .check(AppRecordRetentionTabTargets.ruleRowByName(updatedRecordRetentionRule.name))
+        .isVisible();
     });
   });
 
-  test('Delete a record retention rule from the Record Retention tab of an app', async ({ app, appAdminPage }) => {
+  test('Delete a record retention rule from the Record Retention tab of an app', async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-251',
@@ -103,29 +88,27 @@ test.describe('record retention rule', () => {
       }),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Navigate to the record retention tab', async () => {
-      await appAdminPage.recordRetentionTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppRecordRetentionTab(app.id));
     });
 
     await test.step('Create the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.addRule(recordRetentionRule));
     });
 
     await test.step('Delete the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.deleteRule(recordRetentionRule.name);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.deleteRule(recordRetentionRule.name));
     });
 
     await test.step('Verify the record retention rule was deleted', async () => {
-      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(recordRetentionRule.name);
-      await expect(row).toBeHidden();
+      await sysAdminActor
+        .browse()
+        .check(AppRecordRetentionTabTargets.ruleRowByName(recordRetentionRule.name))
+        .isHidden();
     });
   });
 
-  test("Enable a record retention rule from an app's Record Retention tab", async ({ app, appAdminPage }) => {
+  test("Enable a record retention rule from an app's Record Retention tab", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-252',
@@ -138,31 +121,31 @@ test.describe('record retention rule', () => {
       }),
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Navigate to the record retention tab', async () => {
-      await appAdminPage.recordRetentionTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppRecordRetentionTab(app.id));
     });
 
     await test.step('Create the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.addRule(recordRetentionRule));
     });
 
     recordRetentionRule.status = true;
 
     await test.step('Enable the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.updateRule(recordRetentionRule.name, recordRetentionRule);
+      await sysAdminActor.attemptsTo(
+        RecordRetentionRuleTasks.updateRule(recordRetentionRule.name, recordRetentionRule)
+      );
     });
 
     await test.step('Verify the record retention rule is enabled', async () => {
-      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(recordRetentionRule.name);
-      await expect(row).toHaveText(/enabled/i);
+      await sysAdminActor
+        .browse()
+        .check(AppRecordRetentionTabTargets.ruleRowByName(recordRetentionRule.name))
+        .hasText(/enabled/i);
     });
   });
 
-  test("Disable a record retention rule from an app's Record Retention tab", async ({ app, appAdminPage }) => {
+  test("Disable a record retention rule from an app's Record Retention tab", async ({ app, sysAdminActor }) => {
     test.info().annotations.push({
       type: AnnotationType.TestId,
       description: 'Test-253',
@@ -176,27 +159,27 @@ test.describe('record retention rule', () => {
       status: true,
     });
 
-    await test.step('Navigate to the app admin page', async () => {
-      await appAdminPage.goto(app.id);
-    });
-
     await test.step('Navigate to the record retention tab', async () => {
-      await appAdminPage.recordRetentionTabButton.click();
+      await sysAdminActor.attemptsTo(AppTasks.gotoAppRecordRetentionTab(app.id));
     });
 
     await test.step('Create the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.addRule(recordRetentionRule);
+      await sysAdminActor.attemptsTo(RecordRetentionRuleTasks.addRule(recordRetentionRule));
     });
 
     recordRetentionRule.status = false;
 
     await test.step('Disable the record retention rule', async () => {
-      await appAdminPage.recordRetentionTab.updateRule(recordRetentionRule.name, recordRetentionRule);
+      await sysAdminActor.attemptsTo(
+        RecordRetentionRuleTasks.updateRule(recordRetentionRule.name, recordRetentionRule)
+      );
     });
 
     await test.step('Verify the record retention rule is disabled', async () => {
-      const row = await appAdminPage.recordRetentionTab.getRuleRowByName(recordRetentionRule.name);
-      await expect(row).toHaveText(/disabled/i);
+      await sysAdminActor
+        .browse()
+        .check(AppRecordRetentionTabTargets.ruleRowByName(recordRetentionRule.name))
+        .hasText(/disabled/i);
     });
   });
 });
