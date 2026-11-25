@@ -94,3 +94,6 @@ export * from './triggers/triggers.targets.js';
 export * from './triggers/triggers.tasks.js';
 export * from './recordRetentionRules/recordRetentionRules.targets.js';
 export * from './recordRetentionRules/recordRetentionRules.tasks.js';
+export * from './systemReports/systemReports.targets.js';
+export * from './systemReports/systemReports.questions.js';
+export * from './systemReports/systemReports.tasks.js';
