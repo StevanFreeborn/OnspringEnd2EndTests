@@ -68,6 +68,7 @@ export const AppDetailTargets = {
   closeButton: (page: Page) => page.locator('a:has-text("Close")'),
   generalTabButton: (page: Page) => page.getByRole('tab', { name: 'General' }),
   layoutTabButton: (page: Page) => page.getByRole('tab', { name: 'Layout' }),
+  triggersTabButton: (page: Page) => page.getByRole('tab', { name: 'Triggers' }),
   documentsTabButton: (page: Page) => page.getByRole('tab', { name: 'Documents' }),
   messagingTabButton: (page: Page) => page.getByRole('tab', { name: 'Messaging' }),
 

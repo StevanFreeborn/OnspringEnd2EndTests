@@ -8,6 +8,7 @@ import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { FieldTasks } from '../fields/fields.tasks.js';
+import { AppTriggersTabTargets } from '../triggers/triggers.targets.js';
 import { AppQuestions } from './app.questions.js';
 import {
   AppDetailTargets,
@@ -119,6 +120,14 @@ export const AppTasks = {
       await actor.browse().goto(`/Admin/App/${appId}`);
       await actor.browse().click(AppDetailTargets.documentsTabButton);
       await actor.browse().waitForState(AppDocumentsTabTargets.documentsGrid, 'visible');
+    },
+
+  gotoAppTriggersTab:
+    (appId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().goto(`/Admin/App/${appId}`);
+      await actor.browse().click(AppDetailTargets.triggersTabButton);
+      await actor.browse().waitForState(AppTriggersTabTargets.triggersGrid, 'visible');
     },
 
   filterBy:
