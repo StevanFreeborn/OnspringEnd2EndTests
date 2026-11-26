@@ -14,7 +14,6 @@ const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
   allConfig: js.configs.all,
 });
-const tsconfigPath = path.join(__dirname, 'tsconfig.json');
 
 export default defineConfig([
   globalIgnores([

@@ -4,11 +4,18 @@
   "description": "A suite of automated web app tests for the Onspring platform.",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui",
+    "clean:packages": "npm run clean --workspaces --if-present",
+    "build:packages:clean": "npm run clean:packages && npm run build:packages",
+    "test:packages": "npm run test --workspaces --if-present",
+    "pack:check": "npm pack --dry-run --workspaces",
     "test": "npx playwright test",
     "test:pwservice": "npx playwright test --config=playwright.service.config.ts",
     "test:chrome": "npx playwright test --project chrome",
@@ -46,7 +53,6 @@
     "@typescript-eslint/parser": "^8.58.2",
     "cross-env": "^10.1.0",
     "cross-replace": "^0.2.0",
-    "css.escape": "^1.5.1",
     "docx": "^9.6.1",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
