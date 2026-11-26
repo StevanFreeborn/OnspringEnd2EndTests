@@ -4,9 +4,9 @@ A suite of automated web application tests for the [Onspring](https://onspring.c
 
 - [TypeScript](https://www.typescriptlang.org/)
 - [Playwright](https://playwright.dev)
-- [Screenplay Pattern](docs/ARCHITECTURE.md)
+- [Screenplay Pattern](docs/architecture.md)
 
-For detailed architectural principles, design contracts, and development conventions, see the [Architecture Guide](docs/ARCHITECTURE.md).
+For conceptual Screenplay design rules, see the [Architecture Guide](docs/architecture.md). For contributor workflows, code placement, conventions, and pre-PR checks, see the [Contributing Guide](CONTRIBUTING.md).
 
 ## Getting Started
 
@@ -103,7 +103,7 @@ Runs Playwright tests in GitHub Actions and allows supplying an environment vari
 
 ### [Lint_and_Format](./.github/workflows/lint_format.yml)
 
-Runs ESLint and Prettier across the codebase to ensure code quality and consistency. Runs on any pull request targeting `master`.
+Builds workspace packages, runs package unit tests, and runs ESLint and Prettier across the codebase to ensure code quality and consistency. Runs on any pull request targeting `master`.
 
 ### [Acceptance_Test](./.github/workflows/accept_tests.yml)
 
