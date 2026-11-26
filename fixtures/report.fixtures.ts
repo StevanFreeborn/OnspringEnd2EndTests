@@ -1,16 +1,6 @@
-import { Page } from '@playwright/test';
-import {
-  App as ScreenplayApp,
-  FakeDataFactory,
-  ReportSecurity,
-  SavedReportAsReportDataOnly,
-} from '@stevanfreeborn/onspring-models';
+import { App, FakeDataFactory, ReportSecurity, SavedReportAsReportDataOnly } from '@stevanfreeborn/onspring-models';
 import { ReportQuestions, ReportTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { App } from '../models/app';
-import { SavedReport } from '../models/report';
-import { ReportAppPage } from '../pageObjectModels/reports/reportAppPage';
-import { ReportPage } from '../pageObjectModels/reports/reportPage';
 
 export class ReportFixtureBuilder {
   private name?: string;
@@ -28,7 +18,7 @@ export class ReportFixtureBuilder {
 
   build() {
     return async (
-      { sysAdminActor, app }: { sysAdminActor: WebActor; app: ScreenplayApp },
+      { sysAdminActor, app }: { sysAdminActor: WebActor; app: App },
       use: (report: SavedReportAsReportDataOnly) => Promise<void>
     ) => {
       const report = new SavedReportAsReportDataOnly({
@@ -48,16 +38,4 @@ export class ReportFixture {
   static create(): ReportFixtureBuilder {
     return new ReportFixtureBuilder();
   }
-}
-
-export async function createReport(sysAdminPage: Page, app: App, report: SavedReport) {
-  const reportAppPage = new ReportAppPage(sysAdminPage);
-  const reportPage = new ReportPage(sysAdminPage);
-
-  await reportAppPage.goto(app.id);
-  await reportAppPage.createReport(report);
-  await reportAppPage.page.waitForURL(reportPage.pathRegex);
-  await reportPage.waitUntilLoaded();
-  report.id = reportPage.getReportIdFromUrl();
-  return report;
 }

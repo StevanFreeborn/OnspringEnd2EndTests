@@ -5,7 +5,6 @@ import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import fs from 'fs';
 import path from 'path';
 import { env } from '../env';
-import { User as LegacyUser } from '../models/user';
 import { BASE_URL, SYS_ADMIN_AUTH_PATH, isCI } from '../playwright.config';
 
 export async function sysAdminPage(
@@ -69,20 +68,6 @@ export class ActorFixture {
   static forUser(): ActorFixtureBuilder {
     return new ActorFixtureBuilder();
   }
-}
-
-export async function createTestUserPageFixture(
-  {
-    browser,
-    user,
-  }: {
-    browser: Browser;
-    user: LegacyUser;
-  },
-  use: (r: Page) => Promise<void>,
-  testInfo: TestInfo
-) {
-  await createBaseAuthPage({ browser }, use, testInfo, user.authStoragePath);
 }
 
 // This is necessary because videos currently are not supported

@@ -1,13 +1,6 @@
-import { Page } from '@playwright/test';
 import { App, FakeDataFactory } from '@stevanfreeborn/onspring-models';
 import { AppTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
-
-export async function appAdminPage({ sysAdminPage }: { sysAdminPage: Page }, use: (r: AppAdminPage) => Promise<void>) {
-  const appAdminPage = new AppAdminPage(sysAdminPage);
-  await use(appAdminPage);
-}
 
 export class AppFixtureBuilder {
   private name?: string;
@@ -46,9 +39,4 @@ export async function createAppWithActor(
   const urlParts = url.split('/');
   const appId = parseInt(urlParts[urlParts.length - 1]);
   return new App({ id: appId, name: appName });
-}
-
-export async function createApp(sysAdminPage: Page, appName: string = FakeDataFactory.createFakeAppName()) {
-  const actor = WebActor.using('SysAdmin', sysAdminPage);
-  return createAppWithActor(actor, appName);
 }

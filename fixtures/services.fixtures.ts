@@ -1,11 +1,13 @@
+import {
+  DownloadService,
+  DynamicDocumentService,
+  EmailService,
+  PdfParser,
+  RemoteTestFileService,
+  SftpService,
+  SheetParser,
+} from '@stevanfreeborn/testing-services';
 import { env } from '../env';
-import { DownloadService } from '../services/downloadService';
-import { DynamicDocumentService } from '../services/dynamicDocumentService';
-import { EmailService } from '../services/emailService';
-import { PdfParser } from '../services/pdfParser';
-import { RemoteTestFileService } from '../services/remoteTestFileService';
-import { SftpService } from '../services/sftpService';
-import { SheetParser } from '../services/sheetParser';
 
 export async function sysAdminEmailService({}, use: (r: EmailService) => Promise<void>) {
   const imapConfig = {

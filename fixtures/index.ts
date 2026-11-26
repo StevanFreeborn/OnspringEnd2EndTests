@@ -1,22 +1,19 @@
 import { Page, test as base } from '@playwright/test';
-import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import { FakeDataFactory, User } from '@stevanfreeborn/onspring-models';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { App } from '../models/app';
-import { Role } from '../models/role';
-import { User } from '../models/user';
-import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
-import { DownloadService } from '../services/downloadService';
-import { DynamicDocumentService } from '../services/dynamicDocumentService';
-import { EmailService } from '../services/emailService';
-import { PdfParser } from '../services/pdfParser';
-import { RemoteTestFileService } from '../services/remoteTestFileService';
-import { SftpService } from '../services/sftpService';
-import { SheetParser } from '../services/sheetParser';
+import {
+  DownloadService,
+  DynamicDocumentService,
+  EmailService,
+  PdfParser,
+  RemoteTestFileService,
+  SftpService,
+  SheetParser,
+  TestFile,
+} from '@stevanfreeborn/testing-services';
 import { env } from './../env';
-import { app, appAdminPage } from './app.fixtures';
-import { createTestUserPageFixture, sysAdminPage } from './auth.fixtures';
-import { TestFile, jpgFile, large149mbTxtFile, large151mbTxtFile, txtFile } from './file.fixtures';
-import { activeRoleWithPermissions } from './role.fixtures';
+import { sysAdminPage } from './auth.fixtures';
+import { jpgFile, large149mbTxtFile, large151mbTxtFile, txtFile } from './file.fixtures';
 import {
   downloadService,
   dynamicDocumentService,
@@ -26,7 +23,6 @@ import {
   sheetParser,
   sysAdminEmailService,
 } from './services.fixtures';
-import { activeUserWithRole } from './user.fixtures';
 
 FakeDataFactory.configure({
   defaultEmailSendingDomain: env.TEST_ENV === 'FEDSPRING_IST' ? 'fedspring.ist' : 'onspring.tech',
@@ -62,14 +58,6 @@ type Fixtures = {
   large151mbTxtFile: TestFile;
   apiURL: string;
   useCachedApiSetup: boolean;
-};
-
-type FieldTestFixtures = {
-  appAdminPage: AppAdminPage;
-  app: App;
-  role: Role;
-  user: User;
-  testUserPage: Page;
 };
 
 export const test = base.extend<Fixtures>({
@@ -108,15 +96,6 @@ export const test = base.extend<Fixtures>({
   apiURL: ['', { option: true }],
 });
 
-export const layoutItemTest = test.extend<FieldTestFixtures>({
-  appAdminPage: appAdminPage,
-  app: app,
-  role: activeRoleWithPermissions,
-  user: activeUserWithRole,
-  testUserPage: createTestUserPageFixture,
-});
-
-export { expect } from './matchers.fixtures';
 export { ActorFixture, ActorFixtureBuilder, createAuthenticatedActor } from './auth.fixtures';
 export { AppFixture, AppFixtureBuilder, createAppWithActor } from './app.fixtures';
 export { FieldFixture, FieldFixtureBuilder, createFieldsWithActor } from './field.fixtures';

@@ -1,14 +1,11 @@
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
+import { RemoteTestFileService, TestFile } from '@stevanfreeborn/testing-services';
 import fs from 'fs';
 import path from 'path';
-import { FakeDataFactory } from '../factories/fakeDataFactory';
-import { RemoteTestFileService } from '../services/remoteTestFileService';
+
+export type { TestFile } from '@stevanfreeborn/testing-services';
 
 type FileExtension = '.jpg' | '.txt';
-
-export type TestFile = {
-  name: string;
-  path: string;
-};
 
 async function getTestFileWithExtension(extension: FileExtension) {
   const testFilesDir = path.join(process.cwd(), 'fixtures', 'testFiles');

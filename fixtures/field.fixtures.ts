@@ -1,10 +1,6 @@
-import { Page } from '@playwright/test';
 import { App, FormattedTextBlock, LayoutItem } from '@stevanfreeborn/onspring-models';
 import { AppTasks, FieldQuestions, FieldTasks } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
-import { App as LegacyApp } from '../models/app';
-import { LayoutItem as LegacyLayoutItem } from '../models/layoutItem';
-import { AppAdminPage } from '../pageObjectModels/apps/appAdminPage';
 
 export type FieldLayoutPlacement = {
   tabName?: string;
@@ -90,22 +86,4 @@ export class FieldFixture {
   static create<TField extends LayoutItem>(fieldOrFactory: TField | (() => TField)): FieldFixtureBuilder<TField> {
     return new FieldFixtureBuilder<TField>(fieldOrFactory);
   }
-}
-
-// Legacy helper for un-migrated callers (e.g. api.fixtures.ts)
-export async function createFields(sysAdminPage: Page, app: LegacyApp, fields: LegacyLayoutItem[]) {
-  const appAdminPage = new AppAdminPage(sysAdminPage);
-
-  await appAdminPage.goto(app.id);
-  await appAdminPage.layoutTabButton.click();
-
-  const createdFields: LegacyLayoutItem[] = [];
-
-  for (const field of fields) {
-    await appAdminPage.layoutTab.addLayoutItemFromFieldsAndObjectsGrid(field);
-    const fieldId = await appAdminPage.layoutTab.getFieldIdFromFieldsAndObjectsGrid(field);
-    createdFields.push({ ...field, id: fieldId });
-  }
-
-  return createdFields;
 }
