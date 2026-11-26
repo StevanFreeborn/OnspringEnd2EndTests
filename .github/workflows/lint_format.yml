@@ -15,6 +15,10 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm install
+      - name: Build workspace packages
+        run: npm run build:packages
+      - name: Run package unit tests
+        run: npm run test:packages
       - name: Check and fix linting issues
         run: npm run lint:fix
       - name: Check and fix formatting issues

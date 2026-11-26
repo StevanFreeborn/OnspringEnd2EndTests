@@ -40,6 +40,9 @@ on:
       - .github/**
       - scripts/**
       - '**/README.md'
+      - CONTRIBUTING.md
+      - License.md
+      - '**/LICENSE'
       - '**/example.env'
       - '**/.gitignore'
       - '**/.env.vault'
@@ -141,6 +144,8 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm install
+      - name: Build workspace packages
+        run: npm run build:packages
       - name: Run your tests
         run: |
           echo "Running tests for ${{ matrix.project }} shard ${{ matrix.shard }}"
@@ -259,5 +264,7 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm install
+      - name: Build workspace packages
+        run: npm run build:packages
       - name: Run your tests
         run: npm run cleanup

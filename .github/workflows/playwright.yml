@@ -132,6 +132,8 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm install
+      - name: Build workspace packages
+        run: npm run build:packages
       - name: Run your tests
         run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
       - name: Rename blob-reports
@@ -241,5 +243,7 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm install
+      - name: Build workspace packages
+        run: npm run build:packages
       - name: Run your tests
         run: npm run cleanup
