@@ -1,6 +1,6 @@
 {
   "name": "@stevanfreeborn/screenplay",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "A lightweight, zero-dependency TypeScript implementation of the Screenplay Pattern.",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,14 +12,23 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
+    "clean": "node -e \"import('node:fs').then(m=>{m.rmSync('dist',{recursive:true,force:true});m.rmSync('tsconfig.tsbuildinfo',{force:true})})\"",
     "build": "tsc -b",
-    "prepublishOnly": "npm run build"
+    "test": "node --test tests/*.test.mjs",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
   },
   "keywords": [
     "screenplay",
@@ -27,6 +36,15 @@
     "bdd",
     "automation"
   ],
-  "author": "stevan freeborn",
-  "license": "MIT"
+  "author": "Stevan Freeborn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StevanFreeborn/OnspringEnd2EndTests.git",
+    "directory": "packages/screenplay"
+  },
+  "homepage": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/tree/main/packages/screenplay#readme",
+  "bugs": {
+    "url": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/issues"
+  }
 }

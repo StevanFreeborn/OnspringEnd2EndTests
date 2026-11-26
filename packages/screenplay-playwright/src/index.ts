@@ -47,10 +47,6 @@ export class BrowserActions {
     await this.page.goto(url);
   }
 
-  async navigateTo(url: string): Promise<void> {
-    await this.page.goto(url);
-  }
-
   async reload(): Promise<void> {
     await this.page.reload();
   }
@@ -368,78 +364,82 @@ export type BoundingBox = {
   height: number;
 };
 
+export type TimeoutOptions = {
+  timeout?: number;
+};
+
 export class TargetAssertions {
   constructor(
     private readonly page: Page,
     private readonly locator: Locator
   ) {}
 
-  async isVisible(options?: { timeout?: number }): Promise<void> {
+  async isVisible(options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).toBeVisible(options);
   }
 
-  async isHidden(): Promise<void> {
-    await expect(this.locator).toBeHidden();
+  async isHidden(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toBeHidden(options);
   }
 
-  async isAttached(): Promise<void> {
-    await expect(this.locator).toBeAttached();
+  async isAttached(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toBeAttached(options);
   }
 
-  async isNotAttached(): Promise<void> {
-    await expect(this.locator).not.toBeAttached();
+  async isNotAttached(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).not.toBeAttached(options);
   }
 
-  async isChecked(): Promise<void> {
-    await expect(this.locator).toBeChecked();
+  async isChecked(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toBeChecked(options);
   }
 
-  async isNotChecked(): Promise<void> {
-    await expect(this.locator).not.toBeChecked();
+  async isNotChecked(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).not.toBeChecked(options);
   }
 
-  async isEnabled(): Promise<void> {
-    await expect(this.locator).toBeEnabled();
+  async isEnabled(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toBeEnabled(options);
   }
 
-  async isDisabled(): Promise<void> {
-    await expect(this.locator).toBeDisabled();
+  async isDisabled(options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toBeDisabled(options);
   }
 
-  async hasValue(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+  async hasValue(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).toHaveValue(expected, options);
   }
 
-  async doesNotHaveValue(expected: string | RegExp): Promise<void> {
-    await expect(this.locator).not.toHaveValue(expected);
+  async doesNotHaveValue(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).not.toHaveValue(expected, options);
   }
 
-  async hasText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+  async hasText(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).toHaveText(expected, options);
   }
 
-  async doesNotHaveText(expected: string | RegExp, options?: { timeout?: number }): Promise<void> {
+  async doesNotHaveText(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).not.toHaveText(expected, options);
   }
 
-  async hasClass(expected: string | RegExp): Promise<void> {
-    await expect(this.locator).toHaveClass(expected);
+  async hasClass(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toHaveClass(expected, options);
   }
 
-  async doesNotHaveClass(expected: string | RegExp): Promise<void> {
-    await expect(this.locator).not.toHaveClass(expected);
+  async doesNotHaveClass(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).not.toHaveClass(expected, options);
   }
 
-  async hasCount(count: number, options?: { timeout?: number }): Promise<void> {
+  async hasCount(count: number, options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).toHaveCount(count, options);
   }
 
-  async hasAttribute(name: string, value: string | RegExp): Promise<void> {
-    await expect(this.locator).toHaveAttribute(name, value);
+  async hasAttribute(name: string, value: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toHaveAttribute(name, value, options);
   }
 
-  async hasCSS(name: string, value: string | RegExp): Promise<void> {
-    await expect(this.locator).toHaveCSS(name, value);
+  async hasCSS(name: string, value: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toHaveCSS(name, value, options);
   }
 
   async hasScreenshot(options?: {
@@ -455,7 +455,7 @@ export class TargetAssertions {
     other: Target,
     relation: string,
     predicate: (main: BoundingBox, relative: BoundingBox) => boolean,
-    options?: { timeout?: number }
+    options?: TimeoutOptions
   ): Promise<void> {
     const otherLocator = resolveTarget(this.page, other);
     await expect
@@ -473,19 +473,19 @@ export class TargetAssertions {
       .toBeTruthy();
   }
 
-  async isLeftOf(other: Target, options?: { timeout?: number }): Promise<void> {
+  async isLeftOf(other: Target, options?: TimeoutOptions): Promise<void> {
     await this.assertRelativePosition(other, 'left of', (a, b) => a.x + a.width <= b.x, options);
   }
 
-  async isRightOf(other: Target, options?: { timeout?: number }): Promise<void> {
+  async isRightOf(other: Target, options?: TimeoutOptions): Promise<void> {
     await this.assertRelativePosition(other, 'right of', (a, b) => a.x >= b.x + b.width, options);
   }
 
-  async isAbove(other: Target, options?: { timeout?: number }): Promise<void> {
+  async isAbove(other: Target, options?: TimeoutOptions): Promise<void> {
     await this.assertRelativePosition(other, 'above', (a, b) => a.y + a.height <= b.y, options);
   }
 
-  async isBelow(other: Target, options?: { timeout?: number }): Promise<void> {
+  async isBelow(other: Target, options?: TimeoutOptions): Promise<void> {
     await this.assertRelativePosition(other, 'below', (a, b) => a.y >= b.y + b.height, options);
   }
 
@@ -505,8 +505,8 @@ export class TargetAssertions {
 export class PageAssertions {
   constructor(private readonly page: Page) {}
 
-  async hasUrl(expected: string | RegExp): Promise<void> {
-    await expect(this.page).toHaveURL(expected);
+  async hasUrl(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.page).toHaveURL(expected, options);
   }
 }
 
@@ -514,14 +514,9 @@ export class PageAssertions {
  * An Actor equipped with the ability to browse the web.
  */
 export class WebActor extends Actor {
-  private readonly page: Page;
-  private readonly browserActions: BrowserActions;
-
   constructor(name: string, page: Page) {
     super(name);
-    this.page = page;
     this.whoCan(BrowseTheWeb.using(page));
-    this.browserActions = new BrowserActions(page);
   }
 
   static using(name: string, page: Page): WebActor {
@@ -529,7 +524,7 @@ export class WebActor extends Actor {
   }
 
   browse(): BrowserActions {
-    return this.browserActions;
+    return this.usesAbility(BrowseTheWeb).to;
   }
 }
 
@@ -554,4 +549,5 @@ export const Retry = {
     },
 };
 
-export { Ability, AbilityType, Actor, Question, Task } from '@stevanfreeborn/screenplay';
+export { Actor } from '@stevanfreeborn/screenplay';
+export type { Ability, AbilityType, Question, Task } from '@stevanfreeborn/screenplay';

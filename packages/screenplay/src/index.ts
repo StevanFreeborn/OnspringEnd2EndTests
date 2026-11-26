@@ -1,27 +1,24 @@
 /**
  * Marker interface for capabilities an Actor can possess (e.g., BrowseTheWeb, CallAnApi).
  */
-export interface Ability {
+export type Ability = {
   readonly name?: string;
-}
+};
 
 /**
  * Constructor type for an Ability class.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-export type AbilityType<T extends Ability = Ability> = Function & { prototype: T };
+export type AbilityType<T extends Ability = Ability> = abstract new (...args: never[]) => T;
 
 /**
  * A reusable task that an Actor can perform to cause a state change or side effect.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Task<TActor = any> = (actor: TActor) => Promise<void>;
+export type Task<TActor extends Actor = Actor> = (actor: TActor) => Promise<void>;
 
 /**
  * A question that queries information from the application state without causing side effects.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Question<TActor = any, TAnswer = any> = (actor: TActor) => Promise<TAnswer>;
+export type Question<TActor extends Actor = Actor, TAnswer = unknown> = (actor: TActor) => Promise<TAnswer>;
 
 /**
  * Represents a user or system interacting with the application under test.
@@ -72,8 +69,7 @@ export class Actor {
   /**
    * Executes one or more Tasks in sequence.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async attemptsTo(...tasks: Task<any>[]): Promise<void> {
+  async attemptsTo(...tasks: Task<this>[]): Promise<void> {
     for (const task of tasks) {
       await task(this);
     }
