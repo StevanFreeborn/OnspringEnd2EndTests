@@ -24,9 +24,9 @@ import {
   SystemReportQuestions,
 } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { EmailService } from '@stevanfreeborn/testing-services';
 import { env } from '../../env';
 import { ActorFixture, AppFixture, expect, RoleFixture, test as base, UserFixture } from '../../fixtures';
-import { EmailService } from '../../services/emailService';
 import { AnnotationType } from '../annotations';
 
 type EmailHistoryReportTestFixtures = {

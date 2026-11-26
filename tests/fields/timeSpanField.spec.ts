@@ -20,8 +20,8 @@ import {
   TimeSpanUnits,
 } from '@stevanfreeborn/onspring-ui';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { escapeRegExp } from '@stevanfreeborn/testing-services';
 import { ActorFixture, AppFixture, test as base, RoleFixture, UserFixture } from '../../fixtures';
-import { escapeRegExp } from '../../utils';
 import { AnnotationType } from '../annotations';
 
 type TimeSpanFieldTestFixtures = {

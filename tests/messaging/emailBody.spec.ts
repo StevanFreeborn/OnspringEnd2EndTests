@@ -1,4 +1,3 @@
-import { FieldType } from '../../componentObjectModels/menus/addFieldTypeMenu';
 import {
   App,
   EmailBody,
@@ -11,29 +10,20 @@ import {
   AppDetailTargets,
   AppMessagingTabTargets,
   AppTasks,
-  ContentRecordTargets,
+  ContentTasks,
   EditEmailBodyPageTargets,
   EmailBodyAdminPageTargets,
   EmailBodyTasks,
 } from '@stevanfreeborn/onspring-ui';
 import { AppFixture, test as base, expect } from '../../fixtures';
-import { AppAdminPage } from '../../pageObjectModels/apps/appAdminPage';
-import { AddContentPage } from '../../pageObjectModels/content/addContentPage';
-import { EditContentPage } from '../../pageObjectModels/content/editContentPage';
 import { AnnotationType } from '../annotations';
 
 type EmailBodyTestFixtures = {
   targetApp: App;
-  appAdminPage: AppAdminPage;
-  addContentPage: AddContentPage;
-  editContentPage: EditContentPage;
 };
 
 const test = base.extend<EmailBodyTestFixtures>({
   targetApp: AppFixture.create().build(),
-  appAdminPage: async ({ sysAdminPage }, use) => use(new AppAdminPage(sysAdminPage)),
-  addContentPage: async ({ sysAdminPage }, use) => use(new AddContentPage(sysAdminPage)),
-  editContentPage: async ({ sysAdminPage }, use) => use(new EditContentPage(sysAdminPage)),
 });
 
 test.describe('email body', () => {
@@ -223,9 +213,6 @@ test.describe('email body', () => {
 
   test("Update an Email Body's configurations on an app from an app's Messaging tab", async ({
     targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
     sysAdminEmail,
     sysAdminActor,
   }) => {
@@ -269,16 +256,18 @@ test.describe('email body', () => {
     });
 
     await test.step('Create a field and add to app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        fieldName: textField.name,
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionRow: 0,
-        sectionColumn: 0,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addLayoutItemInLayoutDesigner(textField),
+        AppTasks.dragFieldOntoLayout({
+          fieldName: textField.name,
+          tabName: tabName,
+          sectionName: sectionName,
+          row: 0,
+          column: 0,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
@@ -305,19 +294,16 @@ test.describe('email body', () => {
     });
 
     await test.step('Add a content record that satisfies send logic', async () => {
-      await addContentPage.goto(targetApp.id);
-      const editableTextField = await addContentPage.form.getField({
-        fieldName: textField.name,
-        fieldType: textField.type as FieldType,
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-
-      await editableTextField.fill(rule.value);
-
-      const navPromise = sysAdminActor.browse().waitForUrl(editContentPage.pathRegex);
-      await sysAdminActor.browse().click(ContentRecordTargets.saveRecordButton);
-      await navPromise;
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoAdd(targetApp.id),
+        ContentTasks.fillTextField({
+          tabName: tabName,
+          sectionName: sectionName,
+          fieldName: textField.name,
+          value: rule.value,
+        }),
+        ContentTasks.saveRecord()
+      );
     });
 
     await test.step('Verify the email body was updated', async () => {
@@ -340,9 +326,6 @@ test.describe('email body', () => {
 
   test("Update an Email Body's configurations on an app from the Email Body page", async ({
     targetApp,
-    appAdminPage,
-    addContentPage,
-    editContentPage,
     sysAdminEmail,
     sysAdminActor,
   }) => {
@@ -386,16 +369,18 @@ test.describe('email body', () => {
     });
 
     await test.step('Create a field and add to the app layout', async () => {
-      await appAdminPage.layoutTab.openLayout();
-      await appAdminPage.layoutTab.addLayoutItemFromLayoutDesigner(textField);
-      await appAdminPage.layoutTab.layoutDesignerModal.dragFieldOnToLayout({
-        fieldName: textField.name,
-        tabName: tabName,
-        sectionName: sectionName,
-        sectionRow: 0,
-        sectionColumn: 0,
-      });
-      await appAdminPage.layoutTab.layoutDesignerModal.saveAndCloseLayout();
+      await sysAdminActor.attemptsTo(
+        AppTasks.openLayoutDesigner(),
+        AppTasks.addLayoutItemInLayoutDesigner(textField),
+        AppTasks.dragFieldOntoLayout({
+          fieldName: textField.name,
+          tabName: tabName,
+          sectionName: sectionName,
+          row: 0,
+          column: 0,
+        }),
+        AppTasks.saveAndCloseLayout()
+      );
     });
 
     await test.step("Navigate to the app's messaging tab", async () => {
@@ -421,19 +406,16 @@ test.describe('email body', () => {
     });
 
     await test.step('Add a content record that satisfies send logic', async () => {
-      await addContentPage.goto(targetApp.id);
-      const editableTextField = await addContentPage.form.getField({
-        fieldName: textField.name,
-        fieldType: textField.type as FieldType,
-        tabName: tabName,
-        sectionName: sectionName,
-      });
-
-      await editableTextField.fill(rule.value);
-
-      const navPromise = sysAdminActor.browse().waitForUrl(editContentPage.pathRegex);
-      await sysAdminActor.browse().click(ContentRecordTargets.saveRecordButton);
-      await navPromise;
+      await sysAdminActor.attemptsTo(
+        ContentTasks.gotoAdd(targetApp.id),
+        ContentTasks.fillTextField({
+          tabName: tabName,
+          sectionName: sectionName,
+          fieldName: textField.name,
+          value: rule.value,
+        }),
+        ContentTasks.saveRecord()
+      );
     });
 
     await test.step('Verify the email body was updated', async () => {

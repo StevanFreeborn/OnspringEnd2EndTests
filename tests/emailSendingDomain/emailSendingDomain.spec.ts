@@ -1,3 +1,4 @@
+import { FakeDataFactory } from '@stevanfreeborn/onspring-models';
 import {
   EditEmailSendingDomainPageTargets,
   EmailSendingDomainPageTargets,
@@ -5,10 +6,9 @@ import {
   EmailSendingDomainTasks,
 } from '@stevanfreeborn/onspring-ui';
 import { Retry } from '@stevanfreeborn/screenplay-playwright';
+import { AddDnsRecordsResponse, CloudflareService, IDnsService } from '@stevanfreeborn/testing-services';
 import { env } from '../../env';
-import { FakeDataFactory } from '../../factories/fakeDataFactory';
 import { test as base, expect } from '../../fixtures';
-import { AddDnsRecordsResponse, CloudflareService, IDnsService } from '../../services/cloudflareService';
 import { AnnotationType } from '../annotations';
 import { Tags } from '../tags';
 
