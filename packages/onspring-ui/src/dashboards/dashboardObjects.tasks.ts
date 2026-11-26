@@ -3,6 +3,7 @@ import {
   CreateContentLinks,
   DashboardFormattedTextBlock,
   DashboardObjectItem,
+  TEST_DASHBOARD_OBJECT_NAME,
   WebPage,
 } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
@@ -136,4 +137,16 @@ export const DashboardObjectTasks = {
       await actor.browse().waitForState(DeleteDialogTargets.dialog, 'hidden');
       await actor.browse().waitForState(itemTarget, 'hidden');
     },
+
+  deleteAllTestDashboardObjects: (): Task<WebActor> => {
+    const pattern = new RegExp(TEST_DASHBOARD_OBJECT_NAME, 'i');
+    return DashboardTasks.deleteAllTestBankItems({
+      tabName: 'Objects',
+      bankName: 'object',
+      itemNamePattern: pattern,
+      loadMorePathRegex: DashboardDesignerTargets.resources.getMoreObjectsPathRegex,
+      deletePathRegex: DashboardObjectTargets.deletePathRegex,
+      deleteButtonInBank: DashboardObjectTargets.deleteLastObjectButtonInBank(pattern),
+    });
+  },
 };

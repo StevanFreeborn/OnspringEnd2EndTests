@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { LayoutItem, TextField } from '@stevanfreeborn/onspring-models';
+import { LayoutItem, TEST_APP_NAME, TextField } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { DualPaneSelector } from '../common/controls/dualPaneSelector.js';
@@ -882,5 +882,27 @@ export const AppTasks = {
           await actor.browse().waitForDetached(DeleteAppDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestApps:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        AppTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: AppsPageTargets.appGrid,
+          rowName: new RegExp(TEST_APP_NAME, 'i'),
+          deleteButtonTitle: 'Delete App',
+          deleteResponseMatcher: (url: string) => /\/Admin\/App\/\d+\/Delete/.test(url),
+          getListPagePath: AppsPageTargets.getAppsListPath,
+          pick: 'last',
+          confirmText: 'OK',
+          confirmDialog: {
+            input: DeleteAppDialogTargets.confirmationInput,
+            deleteButton: DeleteAppDialogTargets.deleteButton,
+            dialog: DeleteAppDialogTargets.dialog,
+          },
+        })
+      );
     },
 };

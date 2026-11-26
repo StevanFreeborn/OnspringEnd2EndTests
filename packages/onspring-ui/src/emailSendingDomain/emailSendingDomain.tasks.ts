@@ -92,6 +92,27 @@ export const EmailSendingDomainTasks = {
       }
     },
 
+  deleteAllTestEmailSendingDomains:
+    (customDomain: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const escapedDomain = customDomain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!escapedDomain) {
+        return;
+      }
+
+      await actor.attemptsTo(
+        EmailSendingDomainTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: EmailSendingDomainPageTargets.grid,
+          rowName: new RegExp(escapedDomain, 'i'),
+          deleteButtonTitle: 'Delete Email Sending Domain',
+          deleteResponseMatcher: (url: string) => EmailSendingDomainPageTargets.deletePathRegex.test(url),
+          getListPagePath: EmailSendingDomainPageTargets.getListPagePath,
+          pick: 'last',
+        })
+      );
+    },
+
   verifyRecord:
     (recordType: 'ownership' | 'dkim' | 'returnPath'): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {

@@ -4,6 +4,7 @@ import {
   DataConnector,
   DataConnectorType,
   SecureFileDataConnector,
+  TEST_CONNECTOR_NAME,
 } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
@@ -205,6 +206,22 @@ export const DataConnectorTasks = {
       for (const name of uniqueNames) {
         await actor.attemptsTo(DataConnectorTasks.delete(name));
       }
+    },
+
+  deleteAllTestConnectors:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        DataConnectorTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: DataConnectorsPageTargets.grid,
+          rowName: new RegExp(TEST_CONNECTOR_NAME, 'i'),
+          deleteButtonTitle: 'Delete Data Connector',
+          deleteResponseMatcher: (url: string) => DataConnectorsPageTargets.deletePathRegex.test(url),
+          getListPagePath: DataConnectorsPageTargets.getConnectorsPath,
+          pick: 'last',
+        })
+      );
     },
 
   configureBitsight:

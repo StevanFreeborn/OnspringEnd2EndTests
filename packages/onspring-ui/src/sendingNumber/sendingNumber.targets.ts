@@ -15,6 +15,14 @@ export const SendingNumberAdminPageTargets = {
     (name: string): Target =>
     (page: Page): Locator =>
       page.locator('#grid').getByRole('row', { name }).first().getByTitle('Delete SMS Sending Number'),
+  lastRowByName:
+    (name: string | RegExp): Target =>
+    (page: Page): Locator =>
+      page.locator('#grid').getByRole('row', { name }).last(),
+  deleteButtonInLastRow:
+    (name: string | RegExp): Target =>
+    (page: Page): Locator =>
+      page.locator('#grid').getByRole('row', { name }).last().getByTitle('Delete SMS Sending Number'),
 };
 
 export const AddSendingNumberPageTargets = {

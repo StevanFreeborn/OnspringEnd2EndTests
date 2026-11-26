@@ -3,6 +3,7 @@ import { Locator, Page } from '@playwright/test';
 export const EmailSyncPageTargets = {
   route: '/Admin/Integration/EmailSync',
   getEmailSyncsPath: '/Admin/Integration/EmailSync/EmailSyncList',
+  deleteSyncPathRegex: /\/Admin\/Integration\/EmailSync\/\d+\/Delete/,
   createEmailSyncButton: (page: Page): Locator => page.getByRole('button', { name: 'Create Email Integration (Sync)' }),
 
   grid: (page: Page): Locator => page.locator('#grid'),

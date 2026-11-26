@@ -1,5 +1,9 @@
 import { Response } from '@playwright/test';
+import { ApiKey, TEST_API_KEY_NAME } from '@stevanfreeborn/onspring-models';
+import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
+import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import { ApiKeyDetailTargets, ApiKeysPageTargets } from './apiKeys.targets.js';
@@ -114,15 +118,32 @@ export const ApiKeyTasks = {
     },
 
   assignRole:
-    (roleName: string) =>
+    (roleName: string): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().click(ApiKeyDetailTargets.generalTabButton);
       await actor.browse().click(ApiKeyDetailTargets.generalTab.roleSelect);
       await actor.browse().click(ApiKeyDetailTargets.generalTab.roleOption(roleName));
     },
 
+  update:
+    (apiKey: ApiKey): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(ApiKeyDetailTargets.generalTabButton);
+      await actor.browse().fill(ApiKeyDetailTargets.generalTab.nameInput, apiKey.name);
+      await actor.browse().fill(ApiKeyDetailTargets.generalTab.descriptionEditor, apiKey.description);
+      await actor.browse().click(ApiKeyDetailTargets.generalTab.roleSelect);
+      await actor.browse().click(ApiKeyDetailTargets.generalTab.roleOption(apiKey.role));
+      await actor.attemptsTo(
+        StatusSwitchTasks.setAriaSwitch({
+          switchTarget: ApiKeyDetailTargets.generalTab.statusSwitch,
+          toggleTarget: ApiKeyDetailTargets.generalTab.statusToggle,
+          enabled: apiKey.status,
+        })
+      );
+    },
+
   save:
-    () =>
+    (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       const saveResponse = actor
         .browse()
@@ -132,8 +153,23 @@ export const ApiKeyTasks = {
     },
 
   toggleStatus:
-    () =>
+    (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().click(ApiKeyDetailTargets.generalTab.statusToggle);
+    },
+
+  deleteAllTestApiKeys:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        ApiKeyTasks.gotoGrid(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: ApiKeysPageTargets.grid,
+          rowName: new RegExp(TEST_API_KEY_NAME, 'i'),
+          deleteButtonTitle: 'Delete API Key',
+          deleteResponseMatcher: (url: string) => ApiKeysPageTargets.deleteApiKeyPathRegex.test(url),
+          pick: 'first',
+        })
+      );
     },
 };

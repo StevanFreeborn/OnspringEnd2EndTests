@@ -251,6 +251,14 @@ export const DashboardDesignerTargets = {
           .locator('div.layoutItem')
           .filter({ hasText: itemName })
           .first(),
+    lastItemInBank:
+      (bankName: 'report' | 'object' | 'keymetric', itemName: string | RegExp): Target =>
+      (page: Page): Locator =>
+        designerFrame(page)
+          .locator(`[data-tab-content="${bankName}"]`)
+          .locator('div.layoutItem')
+          .filter({ hasText: itemName })
+          .last(),
   },
 
   canvas: {

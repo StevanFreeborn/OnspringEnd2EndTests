@@ -5,6 +5,7 @@ import {
   DialGaugeKeyMetric,
   DonutGaugeKeyMetric,
   KeyMetric,
+  TEST_KEY_METRIC_NAME,
 } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
@@ -250,6 +251,18 @@ export const KeyMetricTasks = {
       await actor.browse().waitForState(DeleteDialogTargets.dialog, 'hidden');
       await actor.browse().waitForState(itemTarget, 'hidden');
     },
+
+  deleteAllTestKeyMetrics: (): Task<WebActor> => {
+    const pattern = new RegExp(TEST_KEY_METRIC_NAME, 'i');
+    return DashboardTasks.deleteAllTestBankItems({
+      tabName: 'Key Metrics',
+      bankName: 'keymetric',
+      itemNamePattern: pattern,
+      loadMorePathRegex: DashboardDesignerTargets.resources.getMoreKeyMetricsPathRegex,
+      deletePathRegex: KeyMetricTargets.deletePathRegex,
+      deleteButtonInBank: KeyMetricTargets.deleteLastKeyMetricButtonInBank(pattern),
+    });
+  },
 
   normalizeTitleForScreenshot:
     (keyMetricName: string, placeholderName: string = 'Key Metric'): Task<WebActor> =>

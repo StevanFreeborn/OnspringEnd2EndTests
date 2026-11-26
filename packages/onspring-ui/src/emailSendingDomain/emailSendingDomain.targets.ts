@@ -4,6 +4,7 @@ import { Target } from '@stevanfreeborn/screenplay-playwright';
 export const EmailSendingDomainPageTargets = {
   route: '/Admin/EmailSendingDomain',
   getListPagePath: '/Admin/EmailSendingDomain/GetListPage',
+  deletePathRegex: /Admin\/EmailSendingDomain\/\d+\/Delete/,
   grid: (page: Page): Locator => page.locator('#grid'),
   gridScrollableContent: (page: Page): Locator => page.locator('#grid .k-grid-content.k-auto-scrollable').first(),
   gridPagerInfo: (page: Page): Locator => page.locator('#grid .k-pager-info').first(),

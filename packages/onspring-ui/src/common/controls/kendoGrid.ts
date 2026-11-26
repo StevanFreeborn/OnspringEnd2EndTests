@@ -1,10 +1,28 @@
 import { Page, Response } from '@playwright/test';
 import { Task } from '@stevanfreeborn/screenplay';
 import { resolveTarget, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { DeleteDialogTargets } from '../dialogs/dialogs.targets.js';
 
 export type ScrollKendoGridOptions = {
   grid: Target;
   getListPagePath: string;
+};
+
+export type DeleteAllMatchingGridRowsOptions = {
+  grid: Target;
+  rowName: string | RegExp;
+  deleteButtonTitle: string;
+  deleteResponseMatcher: (url: string) => boolean;
+  pick?: 'first' | 'last';
+  getListPagePath?: string;
+  confirmText?: string;
+  confirmDialog?: {
+    input?: Target;
+    deleteButton: Target;
+    dialog: Target;
+    overlay?: Target;
+  };
+  afterDeleteWaitMs?: number;
 };
 
 const kendoGridTargets = {
@@ -24,6 +42,16 @@ const kendoGridTargets = {
     (grid: Target): Target =>
     (page: Page) =>
       resolveTarget(page, grid).locator('.k-grid-content.k-auto-scrollable').first().getByRole('row').first(),
+  matchingRow:
+    (grid: Target, rowName: string | RegExp, pick: 'first' | 'last'): Target =>
+    (page: Page) => {
+      const rows = resolveTarget(page, grid).getByRole('row', { name: rowName });
+      return pick === 'first' ? rows.first() : rows.last();
+    },
+  deleteButtonInMatchingRow:
+    (matchingRow: Target, deleteButtonTitle: string): Target =>
+    (page: Page) =>
+      resolveTarget(page, matchingRow).getByTitle(deleteButtonTitle),
 };
 
 export const KendoGridTasks = {
@@ -67,6 +95,57 @@ export const KendoGridTasks = {
         }
 
         itemRowsCount = await actor.browse().count(rows);
+      }
+    },
+
+  deleteAllMatchingRows:
+    ({
+      grid,
+      rowName,
+      deleteButtonTitle,
+      deleteResponseMatcher,
+      pick = 'last',
+      getListPagePath,
+      confirmText,
+      confirmDialog = {
+        deleteButton: DeleteDialogTargets.deleteButton,
+        dialog: DeleteDialogTargets.dialog,
+        overlay: DeleteDialogTargets.overlay,
+      },
+      afterDeleteWaitMs,
+    }: DeleteAllMatchingGridRowsOptions): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      if (getListPagePath) {
+        await actor.attemptsTo(KendoGridTasks.scrollAllIntoView({ grid, getListPagePath }));
+      }
+
+      const matchingRow = kendoGridTargets.matchingRow(grid, rowName, pick);
+      const deleteButton = kendoGridTargets.deleteButtonInMatchingRow(matchingRow, deleteButtonTitle);
+
+      while (await actor.browse().isVisible(matchingRow)) {
+        await actor.browse().hover(matchingRow);
+        await actor.browse().click(deleteButton);
+
+        if (confirmText && confirmDialog.input) {
+          await actor.browse().type(confirmDialog.input, confirmText);
+        }
+
+        await actor.browse().check(confirmDialog.deleteButton).isVisible();
+
+        const deleteResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => deleteResponseMatcher(r.url()) && r.status() === 200);
+        await actor.browse().click(confirmDialog.deleteButton);
+        await deleteResponse;
+
+        const detachTargets = confirmDialog.overlay
+          ? [confirmDialog.dialog, confirmDialog.overlay]
+          : [confirmDialog.dialog];
+        await actor.browse().waitForDetached(...detachTargets);
+
+        if (afterDeleteWaitMs) {
+          await actor.browse().waitForTimeout(afterDeleteWaitMs);
+        }
       }
     },
 };

@@ -19,6 +19,7 @@ export * from './common/controls/treeviewSelector.js';
 
 // Feature domains
 export * from './apiKeys/apiKeys.targets.js';
+export * from './apiKeys/apiKey.questions.js';
 export * from './apiKeys/apiKey.tasks.js';
 export * from './apps/apps.targets.js';
 export * from './apps/app.questions.js';

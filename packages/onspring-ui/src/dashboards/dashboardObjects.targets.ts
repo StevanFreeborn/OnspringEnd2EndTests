@@ -6,10 +6,13 @@ const designerFrame = (page: Page) => page.frameLocator('.dialog');
 const objectModal = (page: Page): Locator => page.getByRole('dialog', { name: /Object/ });
 const objectInBank = (page: Page, name: string): Locator =>
   designerFrame(page).locator('[data-tab-content="object"] div.layoutItem').filter({ hasText: name }).first();
+const lastObjectInBank = (page: Page, name: string | RegExp): Locator =>
+  designerFrame(page).locator('[data-tab-content="object"] div.layoutItem').filter({ hasText: name }).last();
 const linksGridRows = (page: Page): Locator =>
   objectModal(page).locator('.label:has-text("Links") + .data .k-grid-content tr');
 
 export const DashboardObjectTargets = {
+  deletePathRegex: /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/,
   addObjectButton: (page: Page): Locator =>
     designerFrame(page).locator('.item-container').first().getByTitle('Add Object'),
   addObjectMenu: (page: Page): Locator => designerFrame(page).locator('[data-add-menu="object"]'),
@@ -25,6 +28,10 @@ export const DashboardObjectTargets = {
     (name: string): Target =>
     (page: Page): Locator =>
       objectInBank(page, name).getByTitle('Delete Object'),
+  deleteLastObjectButtonInBank:
+    (name: string | RegExp): Target =>
+    (page: Page): Locator =>
+      lastObjectInBank(page, name).getByTitle('Delete Object'),
 
   modal: {
     dialog: (page: Page): Locator => objectModal(page),

@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { SendingNumber } from '@stevanfreeborn/onspring-models';
+import { SendingNumber, TEST_SENDING_NUMBER_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
@@ -140,6 +140,43 @@ export const SendingNumberTasks = {
 
       for (const name of names) {
         await actor.attemptsTo(SendingNumberTasks.deleteFromAdminPage(name));
+      }
+    },
+
+  deleteAllTestNumbers:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(SendingNumberTasks.gotoAdminPage(), SendingNumberTasks.scrollAllIntoView());
+
+      const testNumberPattern = new RegExp(TEST_SENDING_NUMBER_NAME, 'i');
+      const row = SendingNumberAdminPageTargets.lastRowByName(testNumberPattern);
+
+      while (await actor.browse().isVisible(row)) {
+        await actor.browse().hover(row);
+        await actor.browse().click(SendingNumberAdminPageTargets.deleteButtonInLastRow(testNumberPattern));
+        await actor.browse().check(DeleteSendingNumberDialogTargets.dialog).isVisible();
+
+        const isReassignVisible = await actor
+          .browse()
+          .isVisibleWithin(DeleteSendingNumberDialogTargets.numberSelector, 2000);
+
+        if (isReassignVisible) {
+          await actor.browse().click(DeleteSendingNumberDialogTargets.numberSelector);
+          await actor.browse().click(DeleteSendingNumberDialogTargets.firstNumberOption);
+        }
+
+        await actor.browse().type(DeleteSendingNumberDialogTargets.okInput, 'OK', { delay: 150 });
+
+        const deleteResponse = actor
+          .browse()
+          .waitForResponse(
+            (r: Response) => r.url().includes(SendingNumberAdminPageTargets.deletePath) && r.status() === 200
+          );
+        await actor.browse().click(DeleteSendingNumberDialogTargets.deleteButton);
+        await deleteResponse;
+        await actor
+          .browse()
+          .waitForDetached(DeleteSendingNumberDialogTargets.dialog, DeleteSendingNumberDialogTargets.overlay);
       }
     },
 };

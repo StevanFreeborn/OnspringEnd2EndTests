@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { User, UserStatus } from '@stevanfreeborn/onspring-models';
+import { TEST_USER_NAME, User, UserStatus } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Retry, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
@@ -214,5 +214,21 @@ export const UserTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestUsers:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        UserTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: UsersPageTargets.userGrid,
+          rowName: new RegExp(TEST_USER_NAME, 'i'),
+          deleteButtonTitle: 'Delete User',
+          deleteResponseMatcher: (url: string) => UsersPageTargets.deleteUserPathRegex.test(url),
+          getListPagePath: UsersPageTargets.getUsersPath,
+          pick: 'last',
+        })
+      );
     },
 };

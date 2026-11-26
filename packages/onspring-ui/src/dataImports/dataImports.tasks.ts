@@ -1,4 +1,5 @@
 import { Response } from '@playwright/test';
+import { TEST_DATA_IMPORT_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
@@ -199,5 +200,21 @@ export const DataImportTasks = {
       for (const name of uniqueNames) {
         await actor.attemptsTo(DataImportTasks.delete(name));
       }
+    },
+
+  deleteAllTestImports:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        DataImportTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: DataImportsPageTargets.grid,
+          rowName: new RegExp(TEST_DATA_IMPORT_NAME, 'i'),
+          deleteButtonTitle: 'Delete Import Configuration',
+          deleteResponseMatcher: (url: string) => DataImportsPageTargets.deleteImportPathRegex.test(url),
+          getListPagePath: DataImportsPageTargets.getImportsPath,
+          pick: 'last',
+        })
+      );
     },
 };

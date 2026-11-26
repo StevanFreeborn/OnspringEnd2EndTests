@@ -1,6 +1,8 @@
 import { Response } from '@playwright/test';
+import { TEST_CONTAINER_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import {
@@ -116,5 +118,21 @@ export const ContainerTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestContainers:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        ContainerTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: ContainersPageTargets.containerGrid,
+          rowName: new RegExp(TEST_CONTAINER_NAME, 'i'),
+          deleteButtonTitle: 'Delete Container',
+          deleteResponseMatcher: (url: string) => ContainersPageTargets.deleteContainerPathRegex.test(url),
+          getListPagePath: ContainersPageTargets.getListPagePath,
+          pick: 'last',
+        })
+      );
     },
 };

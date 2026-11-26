@@ -1,6 +1,8 @@
 import { Response } from '@playwright/test';
+import { TEST_GROUP_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import {
@@ -142,5 +144,20 @@ export const GroupTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestGroups:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        GroupTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: GroupsPageTargets.groupsGrid,
+          rowName: new RegExp(TEST_GROUP_NAME, 'i'),
+          deleteButtonTitle: 'Delete Group',
+          deleteResponseMatcher: (url: string) => GroupsPageTargets.deleteGroupPathRegex.test(url),
+          pick: 'first',
+        })
+      );
     },
 };

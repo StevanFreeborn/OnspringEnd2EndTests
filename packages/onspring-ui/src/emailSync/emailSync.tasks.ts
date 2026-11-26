@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { EmailSync } from '@stevanfreeborn/onspring-models';
+import { EmailSync, TEST_EMAIL_SYNC_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
@@ -196,5 +196,21 @@ export const EmailSyncTasks = {
       for (const name of names) {
         await actor.attemptsTo(EmailSyncTasks.deleteEmailSync(name));
       }
+    },
+
+  deleteAllTestEmailSyncs:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        EmailSyncTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: EmailSyncPageTargets.grid,
+          rowName: new RegExp(TEST_EMAIL_SYNC_NAME, 'i'),
+          deleteButtonTitle: 'Delete Email Integration (Sync)',
+          deleteResponseMatcher: (url: string) => EmailSyncPageTargets.deleteSyncPathRegex.test(url),
+          getListPagePath: EmailSyncPageTargets.getEmailSyncsPath,
+          pick: 'last',
+        })
+      );
     },
 };

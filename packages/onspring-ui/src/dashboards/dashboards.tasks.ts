@@ -6,6 +6,7 @@ import {
   DashboardSchedule,
   KeyMetric,
   SavedReport,
+  TEST_DASHBOARD_NAME,
 } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { Retry, Target, WebActor } from '@stevanfreeborn/screenplay-playwright';
@@ -149,6 +150,72 @@ export const DashboardTasks = {
           break;
         }
       }
+    },
+
+  scrollResourceBankToEnd:
+    (bankName: 'report' | 'object' | 'keymetric', loadMorePathRegex: RegExp): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const scrollable = DashboardDesignerTargets.resources.bankScrollableList(bankName);
+
+      while (await actor.browse().canScrollDown(scrollable)) {
+        const moreResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => loadMorePathRegex.test(r.url()) && r.status() === 200, { timeout: 5000 })
+          .catch(() => null);
+        await actor.browse().scrollToBottom(scrollable);
+        const response = await moreResponse;
+
+        if (!response) {
+          break;
+        }
+      }
+    },
+
+  deleteAllTestBankItems:
+    ({
+      tabName,
+      bankName,
+      itemNamePattern,
+      loadMorePathRegex,
+      deletePathRegex,
+      deleteButtonInBank,
+    }: {
+      tabName: 'Reports' | 'Key Metrics' | 'Layouts' | 'Objects';
+      bankName: 'report' | 'object' | 'keymetric';
+      itemNamePattern: RegExp;
+      loadMorePathRegex: RegExp;
+      deletePathRegex: RegExp;
+      deleteButtonInBank: Target;
+    }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        DashboardTasks.gotoAdminPage(),
+        DashboardTasks.openDesignerFromAdminPage('Welcome to Onspring'),
+        DashboardTasks.selectResourceTab(tabName),
+        DashboardTasks.scrollResourceBankToEnd(bankName, loadMorePathRegex)
+      );
+
+      const lastItem = DashboardDesignerTargets.resources.lastItemInBank(bankName, itemNamePattern);
+
+      while (await actor.browse().isVisible(lastItem)) {
+        await actor.browse().hover(lastItem);
+        await actor.browse().click(deleteButtonInBank);
+        await actor.browse().waitForState(DeleteDialogTargets.dialog, 'visible');
+
+        const deleteResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => deletePathRegex.test(r.url()) && r.status() === 200);
+        const reloadResponse = actor
+          .browse()
+          .waitForResponse((r: Response) => loadMorePathRegex.test(r.url()) && r.status() === 200);
+        await actor.browse().click(DeleteDialogTargets.deleteButton);
+        await deleteResponse;
+        await actor.browse().waitForState(DeleteDialogTargets.dialog, 'hidden');
+        await reloadResponse;
+        await actor.attemptsTo(DashboardTasks.scrollResourceBankToEnd(bankName, loadMorePathRegex));
+      }
+
+      await actor.attemptsTo(DashboardTasks.closeDesigner());
     },
 
   waitForDesigner:
@@ -552,6 +619,23 @@ export const DashboardTasks = {
       for (const name of names) {
         await actor.attemptsTo(DashboardTasks.deleteDashboard(name));
       }
+    },
+
+  deleteAllTestDashboards:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        DashboardTasks.gotoAdminPage(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: DashboardsAdminPageTargets.grid,
+          rowName: new RegExp(TEST_DASHBOARD_NAME, 'i'),
+          deleteButtonTitle: 'Delete Dashboard',
+          deleteResponseMatcher: (url: string) => DashboardsAdminPageTargets.deletePathRegex.test(url),
+          getListPagePath: DashboardsAdminPageTargets.getListPagePath,
+          pick: 'last',
+          afterDeleteWaitMs: 1000,
+        })
+      );
     },
 
   gotoDashboard:

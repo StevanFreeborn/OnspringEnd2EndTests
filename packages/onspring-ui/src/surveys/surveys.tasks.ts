@@ -243,7 +243,7 @@ export const SurveyTasks = {
   deleteAllTestSurveys:
     (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.attemptsTo(SurveyTasks.goto());
+      await actor.attemptsTo(SurveyTasks.goto(), SurveyTasks.scrollAllIntoView());
       const testSurveyPattern = new RegExp(TEST_SURVEY_NAME, 'i');
       const testSurveyRow = SurveysPageTargets.surveyRow(testSurveyPattern);
 

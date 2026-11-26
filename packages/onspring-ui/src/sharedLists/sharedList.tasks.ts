@@ -1,7 +1,8 @@
 import { Response } from '@playwright/test';
-import { SharedList } from '@stevanfreeborn/onspring-models';
+import { SharedList, TEST_LIST_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -178,5 +179,21 @@ export const SharedListTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestLists:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        SharedListTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: SharedListsPageTargets.listsGrid,
+          rowName: new RegExp(TEST_LIST_NAME, 'i'),
+          deleteButtonTitle: 'Delete List',
+          deleteResponseMatcher: (url: string) => SharedListsPageTargets.deleteListPathRegex.test(url),
+          getListPagePath: SharedListsPageTargets.getListPath,
+          pick: 'last',
+        })
+      );
     },
 };

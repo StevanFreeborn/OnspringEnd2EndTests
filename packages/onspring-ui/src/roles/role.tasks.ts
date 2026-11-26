@@ -1,7 +1,8 @@
 import { Response } from '@playwright/test';
-import { Role } from '@stevanfreeborn/onspring-models';
+import { Role, TEST_ROLE_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
 import {
@@ -258,5 +259,20 @@ export const RoleTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestRoles:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        RoleTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: RolesSecurityPageTargets.roleGrid,
+          rowName: new RegExp(TEST_ROLE_NAME, 'i'),
+          deleteButtonTitle: 'Delete Role',
+          deleteResponseMatcher: (url: string) => RolesSecurityPageTargets.deleteRolePathRegex.test(url),
+          pick: 'first',
+        })
+      );
     },
 };

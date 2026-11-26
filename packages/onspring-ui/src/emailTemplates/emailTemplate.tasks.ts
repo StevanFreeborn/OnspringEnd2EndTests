@@ -1,7 +1,8 @@
 import { Response } from '@playwright/test';
-import { EmailTemplate } from '@stevanfreeborn/onspring-models';
+import { EmailTemplate, TEST_EMAIL_TEMPLATE_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { StatusSwitchTasks } from '../common/controls/statusSwitch.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -160,5 +161,21 @@ export const EmailTemplateTasks = {
           await actor.browse().waitForDetached(DeleteDialogTargets.dialog);
         }
       }
+    },
+
+  deleteAllTestTemplates:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        EmailTemplateTasks.goto(),
+        KendoGridTasks.deleteAllMatchingRows({
+          grid: EmailTemplatesPageTargets.grid,
+          rowName: new RegExp(TEST_EMAIL_TEMPLATE_NAME, 'i'),
+          deleteButtonTitle: 'Delete',
+          deleteResponseMatcher: (url: string) => EmailTemplatesPageTargets.deleteTemplatePathRegex.test(url),
+          getListPagePath: EmailTemplatesPageTargets.getListPagePath,
+          pick: 'last',
+        })
+      );
     },
 };

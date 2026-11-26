@@ -5,12 +5,15 @@ import { Target } from '@stevanfreeborn/screenplay-playwright';
 const designerFrame = (page: Page) => page.frameLocator('.dialog');
 const keyMetricInBank = (page: Page, name: string): Locator =>
   designerFrame(page).locator('[data-tab-content="keymetric"] div.layoutItem').filter({ hasText: name }).first();
+const lastKeyMetricInBank = (page: Page, name: string | RegExp): Locator =>
+  designerFrame(page).locator('[data-tab-content="keymetric"] div.layoutItem').filter({ hasText: name }).last();
 const keyMetricModal = (page: Page): Locator => page.getByRole('dialog', { name: 'Key Metric' });
 const valueRangesGrid = (page: Page): Locator =>
   keyMetricModal(page).locator('.label:has-text("Value Ranges") + .data .color-stops');
 const selectRecordDialog = (page: Page): Locator => page.getByRole('dialog', { name: 'Select a Record' });
 
 export const KeyMetricTargets = {
+  deletePathRegex: /\/Admin\/Dashboard\/DashboardObject\/\d+\/Delete/,
   addKeyMetricButton: (page: Page): Locator =>
     designerFrame(page).locator('.item-container').first().getByTitle('Add Key Metric'),
   addKeyMetricMenu: (page: Page): Locator => designerFrame(page).locator('[data-add-menu="keymetric"]'),
@@ -26,6 +29,10 @@ export const KeyMetricTargets = {
     (name: string): Target =>
     (page: Page): Locator =>
       keyMetricInBank(page, name).getByTitle('Delete Key Metric'),
+  deleteLastKeyMetricButtonInBank:
+    (name: string | RegExp): Target =>
+    (page: Page): Locator =>
+      lastKeyMetricInBank(page, name).getByTitle('Delete Key Metric'),
 
   modal: {
     savePathRegex:
