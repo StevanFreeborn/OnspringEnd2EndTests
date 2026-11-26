@@ -1,28 +1,37 @@
-import { APIRequestContext, APIResponse, expect, Page, Request, request, Tracing } from '@playwright/test';
+import { APIRequestContext, APIResponse, expect, Request, request, Tracing } from '@playwright/test';
+import {
+  ApiKey,
+  App,
+  AppPermission,
+  AttachmentField,
+  DateField,
+  DisplayField,
+  FakeDataFactory,
+  ImageField,
+  ListField,
+  ListFormulaField,
+  ListValue,
+  ReferenceField,
+  Report,
+  Role,
+  SavedReportAsReportDataOnly,
+  TextField,
+} from '@stevanfreeborn/onspring-models';
+import {
+  ApiKeyDetailTargets,
+  ApiKeyQuestions,
+  ApiKeyTasks,
+  AppTasks,
+  ReportQuestions,
+  ReportTasks,
+  RoleTasks,
+} from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { existsSync, mkdirSync, readFileSync, ReadStream, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { env } from '../env';
-import { FakeDataFactory } from '../factories/fakeDataFactory';
-import { ApiKey } from '../models/apiKey';
-import { App } from '../models/app';
-import { AttachmentField } from '../models/attachmentField';
-import { DateField } from '../models/dateField';
-import { ImageField } from '../models/imageField';
-import { ListField } from '../models/listField';
-import { ListFormulaField } from '../models/listFormulaField';
-import { ListValue } from '../models/listValue';
-import { ReferenceField } from '../models/referenceField';
-import { DisplayField, Report, SavedReportAsReportDataOnly } from '../models/report';
-import { AppPermission, Role } from '../models/role';
-import { TextField } from '../models/textField';
-import { ApiKeyAdminPage } from '../pageObjectModels/apiKeys/apiKeyAdminPage';
-import { ApiKeysAdminPage } from '../pageObjectModels/apiKeys/apiKeysAdminPage';
-import { AppsAdminPage } from '../pageObjectModels/apps/appsAdminPage';
-import { RolesSecurityAdminPage } from '../pageObjectModels/roles/rolesSecurityAdminPage';
-import { createApp } from './app.fixtures';
-import { createFields } from './field.fixtures';
-import { createReport } from './report.fixtures';
-import { createRole } from './role.fixures';
+import { createAppWithActor } from './app.fixtures';
+import { createFieldsWithActor } from './field.fixtures';
 
 export type ApiSetupResult = {
   app: App;
@@ -204,10 +213,10 @@ export async function createApiSetupFixture(use: (r: ApiSetupResult) => Promise<
 }
 
 export async function performApiTestsSetup({
-  sysAdminPage,
+  sysAdminActor,
   useCache = false,
 }: {
-  sysAdminPage: Page;
+  sysAdminActor: WebActor;
   useCache?: boolean;
 }) {
   if (useCache && existsSync(FILE_PATH)) {
@@ -215,30 +224,33 @@ export async function performApiTestsSetup({
   }
 
   const testFields = getTestFields();
-  const app = await createApp(sysAdminPage);
-  const createdFields = await createFields(sysAdminPage, app, Object.values(testFields));
+  const app: App = await createAppWithActor(sysAdminActor);
+  const createdFields = await createFieldsWithActor(sysAdminActor, app, Object.values(testFields));
 
-  const report = await createReport(
-    sysAdminPage,
-    app,
-    new SavedReportAsReportDataOnly({
-      appName: app.name,
-      name: FakeDataFactory.createFakeReportName(),
-      displayFields: createdFields.map(f => new DisplayField({ name: f.name })),
-      security: 'Public',
-    })
-  );
+  const report: Report = new SavedReportAsReportDataOnly({
+    appName: app.name,
+    name: FakeDataFactory.createFakeReportName(),
+    displayFields: createdFields.map(f => new DisplayField({ name: f.name })),
+    security: 'Public',
+  });
+  await sysAdminActor.attemptsTo(ReportTasks.createSavedDataReport(app.id, report as SavedReportAsReportDataOnly));
+  report.id = await sysAdminActor.asks(ReportQuestions.currentId());
 
-  const role = await createRole(sysAdminPage, 'Active', [
-    new AppPermission({
-      appName: app.name,
-      contentAdmin: { enable: true },
-      reportAdmin: { enable: true },
-    }),
-  ]);
+  const role = new Role({
+    name: FakeDataFactory.createFakeRoleName(),
+    status: 'Active',
+    appPermissions: [
+      new AppPermission({
+        appName: app.name,
+        contentAdmin: { enable: true },
+        reportAdmin: { enable: true },
+      }),
+    ],
+  });
+  await sysAdminActor.attemptsTo(RoleTasks.create(role));
 
   const apiKey = await createApiKey(
-    sysAdminPage,
+    sysAdminActor,
     new ApiKey({
       name: FakeDataFactory.createFakeApiKeyName(),
       role: role.name,
@@ -264,10 +276,10 @@ export async function performApiTestsSetup({
 }
 
 export async function performApiTestCleanup({
-  sysAdminPage,
+  sysAdminActor,
   useCache = false,
 }: {
-  sysAdminPage: Page;
+  sysAdminActor: WebActor;
   useCache?: boolean;
 }) {
   if (useCache) {
@@ -276,9 +288,11 @@ export async function performApiTestCleanup({
 
   const setup = getApiSetupResult();
 
-  await new ApiKeysAdminPage(sysAdminPage).deleteApiKeys([setup.apiKey.name]);
-  await new AppsAdminPage(sysAdminPage).deleteApps([setup.app.name]);
-  await new RolesSecurityAdminPage(sysAdminPage).deleteRoles([setup.role.name]);
+  await sysAdminActor.attemptsTo(
+    ApiKeyTasks.deleteKeys([setup.apiKey.name]),
+    AppTasks.deleteApps([setup.app.name]),
+    RoleTasks.deleteRoles([setup.role.name])
+  );
 
   rmSync(FILE_PATH);
 }
@@ -287,20 +301,14 @@ function getApiSetupResult() {
   return JSON.parse(readFileSync(FILE_PATH, 'utf8')) as ApiSetupResult;
 }
 
-async function createApiKey(sysAdminPage: Page, key: ApiKey) {
-  const apiKeysAdminPage = new ApiKeysAdminPage(sysAdminPage);
-  const apiKeyAdminPage = new ApiKeyAdminPage(sysAdminPage);
+async function createApiKey(sysAdminActor: WebActor, key: ApiKey) {
+  await sysAdminActor.attemptsTo(ApiKeyTasks.gotoGrid(), ApiKeyTasks.createFromGrid(key.name));
+  await sysAdminActor.browse().waitForUrl(ApiKeyDetailTargets.pathRegex);
+  await sysAdminActor.browse().waitForTimeout(5000);
 
-  await apiKeysAdminPage.goto();
-  await apiKeysAdminPage.createApiKey(key.name);
-  await apiKeysAdminPage.page.waitForURL(apiKeyAdminPage.pathRegex);
-  // eslint-disable-next-line playwright/no-wait-for-timeout
-  await apiKeyAdminPage.page.waitForTimeout(5000);
+  await sysAdminActor.attemptsTo(ApiKeyTasks.update(key), ApiKeyTasks.save());
 
-  await apiKeyAdminPage.updateApiKey(key);
-  await apiKeyAdminPage.save();
-
-  key.key = await apiKeyAdminPage.getApiKey();
+  key.key = await sysAdminActor.asks(ApiKeyQuestions.apiKey());
   return key;
 }
 

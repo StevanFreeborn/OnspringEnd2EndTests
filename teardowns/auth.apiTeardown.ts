@@ -1,18 +1,17 @@
-import { expect, test as teardownBase } from '@playwright/test';
+import { test as teardownBase } from '@playwright/test';
 import { User } from '@stevanfreeborn/onspring-models';
+import { AuthTasks, SidebarNavTargets } from '@stevanfreeborn/onspring-ui';
+import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { env } from '../env';
 import { ApiTestOptions } from '../fixtures';
 import { performApiTestCleanup } from '../fixtures/api.fixtures';
-import { LoginPage } from '../pageObjectModels/authentication/loginPage';
-import { DashboardPage } from '../pageObjectModels/dashboards/dashboardPage';
 
 const teardown = teardownBase.extend<ApiTestOptions>({
   useCachedApiSetup: [false, { option: true }],
 });
 
 teardown('Teardown after API tests', async ({ page, useCachedApiSetup }) => {
-  const loginPage = new LoginPage(page);
-  const dashboardPage = new DashboardPage(page);
+  const sysAdminActor = WebActor.using('SysAdmin', page);
   const sysAdminUser = new User({
     firstName: env.SYS_ADMIN_FIRST_NAME,
     lastName: env.SYS_ADMIN_LAST_NAME,
@@ -24,13 +23,12 @@ teardown('Teardown after API tests', async ({ page, useCachedApiSetup }) => {
   });
 
   await teardown.step('Login as system administrator', async () => {
-    await loginPage.login(sysAdminUser);
-
-    await expect(dashboardPage.sidebar.usersFullName).toHaveText(sysAdminUser.fullName);
+    await sysAdminActor.attemptsTo(AuthTasks.login(sysAdminUser.username, sysAdminUser.password));
+    await sysAdminActor.browse().check(SidebarNavTargets.usersFullName).hasText(sysAdminUser.fullName);
   });
 
   await teardown.step('Perform api test cleanup', async () => {
-    await performApiTestCleanup({ sysAdminPage: page, useCache: useCachedApiSetup });
+    await performApiTestCleanup({ sysAdminActor, useCache: useCachedApiSetup });
   });
 
   await page.close();
