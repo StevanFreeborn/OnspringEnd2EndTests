@@ -1,4 +1,3 @@
-import path from 'path';
 import { DataConnector, DataConnectorObject } from './dataConnector.js';
 
 type FileType =
@@ -151,7 +150,16 @@ export class SecureFileDataConnector extends DataConnector {
     }
   }
 
-  filePath() {
-    return path.join(this.fileLocation, this.fileName);
+  filePath(): string {
+    const normalizedLocation = this.fileLocation.replace(/\\/g, '/');
+    const hasLeadingSlash = normalizedLocation.startsWith('/');
+    const cleanLocation = normalizedLocation.replace(/^\.\/+/, '').replace(/\/+$/, '');
+    const cleanFile = this.fileName.replace(/\\/g, '/').replace(/^\/+/, '');
+
+    if (hasLeadingSlash && cleanLocation === '') {
+      return `/${cleanFile}`;
+    }
+
+    return cleanLocation ? `${cleanLocation}/${cleanFile}` : cleanFile;
   }
 }

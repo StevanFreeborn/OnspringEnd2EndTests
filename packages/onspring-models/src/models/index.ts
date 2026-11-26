@@ -29,7 +29,6 @@ export * from './formattedTextBlock.js';
 export * from './formulaField.js';
 export * from './generateDocumentOutcome.js';
 export * from './imageField.js';
-export * from './index.js';
 export * from './keyMetric.js';
 export * from './layoutItem.js';
 export * from './likertQuestion.js';

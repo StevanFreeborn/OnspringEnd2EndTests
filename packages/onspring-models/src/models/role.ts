@@ -1,21 +1,21 @@
 export type RoleStatus = 'Active' | 'Inactive';
 
-export interface ReadOnlyPermission {
+export type ReadOnlyPermission = {
   read: boolean;
-}
+};
 
-export interface ReadAndUpdatePermission extends ReadOnlyPermission {
+export type ReadAndUpdatePermission = ReadOnlyPermission & {
   update: boolean;
-}
+};
 
-export interface CRUDPermission extends ReadAndUpdatePermission {
+export type CRUDPermission = ReadAndUpdatePermission & {
   create: boolean;
   delete: boolean;
-}
+};
 
-export interface EnableOnlyPermission {
+export type EnableOnlyPermission = {
   enable: boolean;
-}
+};
 
 type PermissionObj = {
   create?: boolean;

@@ -1,15 +1,54 @@
 {
   "name": "@stevanfreeborn/onspring-models",
-  "version": "1.0.0",
-  "description": "Domain models and test data factories for Onspring test automation",
+  "version": "0.0.0",
+  "description": "Domain models and test data factories for Onspring test automation.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
+    "clean": "node -e \"import('node:fs').then(m=>{m.rmSync('dist',{recursive:true,force:true});m.rmSync('tsconfig.tsbuildinfo',{force:true})})\"",
     "build": "tsc -b",
-    "clean": "rimraf dist"
+    "test": "node --test tests/*.test.mjs",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
   },
   "dependencies": {
-    "@faker-js/faker": "^8.4.1"
+    "@faker-js/faker": "^10.4.0"
+  },
+  "keywords": [
+    "onspring",
+    "models",
+    "testing",
+    "faker",
+    "automation"
+  ],
+  "author": "Stevan Freeborn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StevanFreeborn/OnspringEnd2EndTests.git",
+    "directory": "packages/onspring-models"
+  },
+  "homepage": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/tree/main/packages/onspring-models#readme",
+  "bugs": {
+    "url": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/issues"
   }
 }
