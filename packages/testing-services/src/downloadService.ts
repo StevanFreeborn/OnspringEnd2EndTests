@@ -12,13 +12,17 @@ export class DownloadService {
   }
 
   async saveDownload(download: Download): Promise<string> {
+    if (existsSync(this.downloadsDir) === false) {
+      await mkdir(this.downloadsDir, { recursive: true });
+    }
+
     const downloadName = `${randomUUID()}-${download.suggestedFilename()}`;
     const downloadPath = path.join(this.downloadsDir, downloadName);
     await download.saveAs(downloadPath);
     return downloadPath;
   }
 
-  async saveBuffer(buffer: Buffer, fileName: string): Promise<string> {
+  async saveBuffer(buffer: Uint8Array, fileName: string): Promise<string> {
     const downloadName = `${randomUUID()}-${fileName}`;
 
     if (existsSync(this.downloadsDir) === false) {

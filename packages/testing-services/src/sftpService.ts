@@ -1,6 +1,6 @@
 import Client from 'ssh2-sftp-client';
 
-type Config = {
+export type SftpConfig = {
   host: string;
   port: number;
   username: string;
@@ -8,9 +8,9 @@ type Config = {
 };
 
 export class SftpService {
-  private readonly config: Config;
+  private readonly config: SftpConfig;
 
-  constructor(config: Config) {
+  constructor(config: SftpConfig) {
     this.config = config;
   }
 
@@ -36,26 +36,21 @@ export class SftpService {
     try {
       await client.connect(this.config);
       await client.put(sourcePath, remotePath);
-    } catch (e) {
-      if (e instanceof Error) {
-        // eslint-disable-next-line no-console
-        console.error(e.message);
-      }
     } finally {
       await client.end();
     }
   }
 
-  async deleteFile(remotePath: string) {
+  async deleteFile(remotePath: string, options: { ignoreMissing?: boolean } = {}) {
+    const { ignoreMissing = true } = options;
     const client = new Client();
 
     try {
       await client.connect(this.config);
       await client.delete(remotePath);
     } catch (e) {
-      if (e instanceof Error) {
-        // eslint-disable-next-line no-console
-        console.error(e.message);
+      if (!ignoreMissing) {
+        throw e;
       }
     } finally {
       await client.end();

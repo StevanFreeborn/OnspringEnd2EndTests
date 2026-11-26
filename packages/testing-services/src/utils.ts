@@ -1,5 +1,3 @@
-import { Locator } from '@playwright/test';
-
 export function toPascalCase(text: string): string {
   return text
     .split(' ')
@@ -10,7 +8,3 @@ export function toPascalCase(text: string): string {
 export function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-
-export type WaitForOptions = Parameters<Locator['waitFor']>[0];
-
-export type Orientation = 'Portrait' | 'Landscape';

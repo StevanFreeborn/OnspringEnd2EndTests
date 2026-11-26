@@ -16,10 +16,12 @@ export type AddDnsRecordsResponse = {
   returnPathRecordId: string;
 };
 
-export interface IDnsService {
+export type DnsService = {
   addDnsRecordsForCustomDomain(records: DnsRecords): Promise<AddDnsRecordsResponse>;
   deleteDnsRecord(recordId: string): Promise<void>;
-}
+};
+
+export type IDnsService = DnsService;
 
 export class CloudflareService implements IDnsService {
   private readonly baseUrl: string;

@@ -1,7 +1,7 @@
 {
   "name": "@stevanfreeborn/testing-services",
-  "version": "0.1.0",
-  "description": "Reusable testing services and utilities (Email, SFTP, PDF, Sheet, Cloudflare) for E2E automation.",
+  "version": "0.0.0",
+  "description": "Reusable testing services and utilities (Email, SFTP, PDF, Sheet, Cloudflare, Docx) for E2E automation.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,20 +9,85 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./cloudflare": {
+      "types": "./dist/cloudflareService.d.ts",
+      "import": "./dist/cloudflareService.js"
+    },
+    "./download": {
+      "types": "./dist/downloadService.d.ts",
+      "import": "./dist/downloadService.js"
+    },
+    "./dynamic-document": {
+      "types": "./dist/dynamicDocumentService.d.ts",
+      "import": "./dist/dynamicDocumentService.js"
+    },
+    "./email": {
+      "types": "./dist/emailService.d.ts",
+      "import": "./dist/emailService.js"
+    },
+    "./pdf": {
+      "types": "./dist/pdfParser.d.ts",
+      "import": "./dist/pdfParser.js"
+    },
+    "./remote-files": {
+      "types": "./dist/remoteTestFileService.d.ts",
+      "import": "./dist/remoteTestFileService.js"
+    },
+    "./sftp": {
+      "types": "./dist/sftpService.d.ts",
+      "import": "./dist/sftpService.js"
+    },
+    "./sheet": {
+      "types": "./dist/sheetParser.d.ts",
+      "import": "./dist/sheetParser.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
+    "clean": "node -e \"import('node:fs').then(m=>{m.rmSync('dist',{recursive:true,force:true});m.rmSync('tsconfig.tsbuildinfo',{force:true})})\"",
     "build": "tsc -b",
-    "prepublishOnly": "npm run build"
+    "test": "node --test tests/*.test.mjs",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
+  },
+  "dependencies": {
+    "@types/imap": "^0.8.43",
+    "@types/mailparser": "^3.4.6",
+    "docx": "^9.6.1",
+    "imap": "^0.8.17",
+    "mailparser": "^3.9.8",
+    "node-xlsx": "^0.24.0",
+    "pdfjs-dist": "^6.2.108",
+    "ssh2-sftp-client": "^12.1.1",
+    "ts-results-es": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "@types/ssh2-sftp-client": "^9.0.6"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
   },
   "keywords": [
     "testing",
@@ -30,6 +95,15 @@
     "playwright",
     "services"
   ],
-  "author": "stevan freeborn",
-  "license": "MIT"
+  "author": "Stevan Freeborn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StevanFreeborn/OnspringEnd2EndTests.git",
+    "directory": "packages/testing-services"
+  },
+  "homepage": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/tree/main/packages/testing-services#readme",
+  "bugs": {
+    "url": "https://github.com/StevanFreeborn/OnspringEnd2EndTests/issues"
+  }
 }
