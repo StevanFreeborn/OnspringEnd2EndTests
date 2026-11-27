@@ -91,4 +91,37 @@ test.describe('targeted recipient campaign', () => {
       await sysAdminActor.browse().check(SurveyCampaignsTabTargets.launchButtonInRow(expectedCopyName)).isVisible();
     });
   });
+
+  test('Delete a pre-launched targeted recipient campaign', async ({ sysAdminActor, targetSurvey }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-687',
+    });
+
+    const campaign = new SurveyCampaign({
+      name: FakeDataFactory.createFakeSurveyCampaignName(),
+      type: 'Targeted Recipients',
+    });
+
+    await test.step('Create a pre-launched targeted recipient campaign', async () => {
+      await sysAdminActor.attemptsTo(
+        SurveyTasks.gotoSurveyCampaignsTab(targetSurvey.id),
+        SurveyCampaignTasks.add(campaign),
+        SurveyCampaignTasks.closeEditDialog()
+      );
+      await sysAdminActor.browse().check(SurveyCampaignsTabTargets.campaignRow(campaign.name)).isVisible();
+      await sysAdminActor
+        .browse()
+        .check(SurveyCampaignsTabTargets.campaignRowCell(campaign.name, 'Pre-Launch'))
+        .isVisible();
+    });
+
+    await test.step('Delete the pre-launched targeted recipient campaign', async () => {
+      await sysAdminActor.attemptsTo(SurveyCampaignTasks.deletePreLaunch(campaign.name));
+    });
+
+    await test.step('Verify the deleted campaign is removed from the campaigns grid', async () => {
+      await sysAdminActor.browse().check(SurveyCampaignsTabTargets.campaignRow(campaign.name)).isHidden();
+    });
+  });
 });
