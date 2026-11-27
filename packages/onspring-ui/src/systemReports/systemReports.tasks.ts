@@ -507,6 +507,11 @@ export const SlackMessageHistoryReportTasks = {
         SlackMessageHistoryReportTargets.dataPath
       );
     },
+
+  exportReport: (): Task<WebActor> => async actor =>
+    waitForReportAction(actor, SlackMessageHistoryReportTargets.exportPath, () =>
+      exportViaDialog(actor, SlackMessageHistoryReportTargets.exportReportLink)
+    ),
 };
 
 export const InvalidFormulasReportTasks = {

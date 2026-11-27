@@ -377,6 +377,7 @@ export const EmailMessageHistoryReportTargets = {
 export const SlackMessageHistoryReportTargets = {
   route: '/Admin/Reporting/Messaging/SlackMessageHistory',
   dataPath: '/Admin/Reporting/Messaging/GetSlackHistoryPage',
+  exportPath: '/Admin/Reporting/Messaging/ExportSlackMessageHistory',
   sessionStorageKey: 'onx.grid/Admin/Reporting/Messaging/SlackMessageHistory.grid',
   appOrSurveySelector: listboxByLabel('App/Survey'),
   channelSelector: listboxByLabel('Slack Channel'),
