@@ -32,6 +32,8 @@ import {
   PageHistoryFilter,
   PageHistoryReportTargets,
   RoleConfigurationsReportTargets,
+  SlackMessageHistoryFilter,
+  SlackMessageHistoryReportTargets,
   SystemAdministratorListingFilter,
   SystemAdministratorListingReportTargets,
   SystemAdministratorListingSortColumn,
@@ -424,6 +426,66 @@ export const EmailMessageHistoryReportTasks = {
       const navPromise = actor.browse().waitForUrl(EditUserPageTargets.pathRegex);
       await actor.browse().click(EmailMessageHistoryReportTargets.toNameLinkInRow(subject));
       await navPromise;
+    },
+};
+
+export const SlackMessageHistoryReportTasks = {
+  goto: (): Task<WebActor> => async actor =>
+    gotoReport(actor, SlackMessageHistoryReportTargets.route, SlackMessageHistoryReportTargets.dataPath),
+
+  reload: (): Task<WebActor> => async actor =>
+    waitForReportAction(actor, SlackMessageHistoryReportTargets.dataPath, () => actor.browse().reload()),
+
+  filterReport:
+    ({
+      appOrSurvey = 'All Apps & Surveys',
+      dateFilter = { type: 'All Dates' },
+      channel = 'All Channels',
+      status = 'All Statuses',
+      messageContains = '',
+    }: SlackMessageHistoryFilter): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      const {
+        appOrSurveySelector,
+        channelSelector,
+        dateFilterSelector,
+        statusSelector,
+        messageContainsInput,
+        fromDateControl,
+        toDateControl,
+        dataPath,
+      } = SlackMessageHistoryReportTargets;
+
+      await selectListboxOptionIfChanged(actor, appOrSurveySelector, appOrSurvey, dataPath, {
+        matchMode: 'exactCaseInsensitive',
+        optionExact: true,
+      });
+      await selectListboxOptionIfChanged(actor, dateFilterSelector, dateFilter.type, dataPath, {
+        matchMode: 'includesCaseInsensitive',
+      });
+
+      if (dateFilter.type === 'Custom Dates') {
+        await waitForReportAction(actor, dataPath, () =>
+          actor.attemptsTo(DateFieldControlTasks.enterDate(fromDateControl, dateFilter.from))
+        );
+        await waitForReportAction(actor, dataPath, () =>
+          actor.attemptsTo(DateFieldControlTasks.enterDate(toDateControl, dateFilter.to))
+        );
+      }
+
+      await selectListboxOptionIfChanged(actor, channelSelector, channel, dataPath, {
+        matchMode: 'exactCaseInsensitive',
+        optionExact: true,
+      });
+      await selectListboxOptionIfChanged(actor, statusSelector, status, dataPath, {
+        matchMode: 'exactCaseInsensitive',
+        optionExact: true,
+      });
+
+      const currentMessageContains = await actor.browse().inputValue(messageContainsInput);
+      if (!matchesFilterValue(currentMessageContains, messageContains, 'exact')) {
+        await waitForReportAction(actor, dataPath, () => actor.browse().fill(messageContainsInput, messageContains));
+      }
     },
 };
 

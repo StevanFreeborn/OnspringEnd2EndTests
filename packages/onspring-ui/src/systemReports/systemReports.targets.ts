@@ -14,6 +14,16 @@ export type SystemReportDatePreset =
 
 export type SystemReportDateFilter = { type: SystemReportDatePreset } | { type: 'Custom Dates'; from: Date; to: Date };
 
+export type SlackMessageHistoryStatus = 'All Statuses' | 'Delivered' | 'Failed' | 'In Progress';
+
+export type SlackMessageHistoryFilter = {
+  appOrSurvey?: string;
+  dateFilter?: SystemReportDateFilter;
+  channel?: string;
+  status?: SlackMessageHistoryStatus;
+  messageContains?: string;
+};
+
 export type AuditHistoryItemType =
   | 'All Item Types'
   | 'API Key'
@@ -360,6 +370,30 @@ export const EmailMessageHistoryReportTargets = {
     okButton: (page: Page) => resendConfirmationDialog(page).getByRole('button', { name: 'OK' }),
     cancelButton: (page: Page) => resendConfirmationDialog(page).getByRole('button', { name: 'Cancel' }),
   },
+};
+
+export const SlackMessageHistoryReportTargets = {
+  route: '/Admin/Reporting/Messaging/SlackMessageHistory',
+  dataPath: '/Admin/Reporting/Messaging/GetSlackHistoryPage',
+  sessionStorageKey: 'onx.grid/Admin/Reporting/Messaging/SlackMessageHistory.grid',
+  appOrSurveySelector: listboxByLabel('App/Survey'),
+  channelSelector: listboxByLabel('Slack Channel'),
+  dateFilterSelector: listboxByLabel('Date'),
+  statusSelector: listboxByLabel('Status'),
+  fromDateControl: fromDatePicker,
+  toDateControl: toDatePicker,
+  messageContainsInput: (page: Page) => page.locator('#messageFilter').getByRole('textbox'),
+  gridHeader,
+  rows: gridRows,
+  rowAt:
+    (index: number): Target =>
+    (page: Page) =>
+      gridRows(page).nth(index),
+  appNameCells: (page: Page) => gridRows(page).locator('td:nth-child(1)'),
+  itemNameCells: (page: Page) => gridRows(page).locator('td:nth-child(2)'),
+  statusCells: (page: Page) => gridRows(page).locator('td:nth-child(3)'),
+  channelCells: (page: Page) => gridRows(page).locator('td:nth-child(4)'),
+  exportReportLink: (page: Page) => page.getByRole('link', { name: 'Export Report' }),
 };
 
 export const InvalidFormulasReportTargets = {
