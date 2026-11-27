@@ -40,10 +40,10 @@ Classical Screenplay creates separate classes for every action (`Click.on(...)`)
 Playwright locators already auto-wait, and its `expect` matchers already retry. We keep the design lean:
 
 1. Low-level actions and primitive single-target reads (`isVisible`, `isDisabled`, `getAttribute`, `getText`, `textContent`, `count`, `isVisibleWithin`) live directly on the ability: `actor.browse().click(target)`, `actor.browse().isDisabled(target)`. Domain tasks and questions use these ability primitives for internal UI mechanics rather than reaching for raw Playwright locators.
-2. Assertions wrap Playwright's `expect` matchers directly: `actor.browse().check(target)...`.
+2. Assertions wrap Playwright's `expect` matchers directly: `actor.browse().check(target)...` (`isVisible`, `hasValue`, `hasText`, `containsText`, `isChecked`, etc.) and `actor.browse().checkPage()...` (`hasUrl`, `doesNotHaveUrl`). Never snapshot DOM inputs or text via `Question` solely to run synchronous `expect(...)` in a spec.
 3. Commands that cause state changes are modeled as `Task<TActor>` and performed via `actor.attemptsTo(...)`.
 4. Retrying task sequences (e.g. eventual consistency verification loops) are wrapped using `Retry.until(tasks, options)`.
-5. Queries that extract domain values or application state for specs, fixtures, or external services (e.g. reading DNS keys for Cloudflare or extracting the created record ID) are modeled as `Question<TActor, TAnswer>` and asked via `actor.asks(...)`.
+5. Queries (`Question<TActor, TAnswer>` via `actor.asks(...)`) are reserved for extracting non-DOM / derived values needed by fixtures, external services, multi-row list/order checks, or later navigation/assertions (e.g., created record/campaign IDs, public URLs, downloaded files, IMAP emails, or Cloudflare DNS records).
 
 ## System Layers
 

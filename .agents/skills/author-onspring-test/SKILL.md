@@ -80,7 +80,7 @@ Follow layer boundaries strictly downward:
 1. **Domain models & fake data (`packages/onspring-models/src/`)**: Add/extend models (`*.ts` re-exported from `src/models/index.ts`) or `FakeDataFactory` generators / `TEST_*` constants only if missing. Use `.js` on relative imports. Zero Playwright or Node imports.
 2. **Screenplay UI layer (`packages/onspring-ui/src/<domain>/`)**:
    - Prefer accessible selectors (`getByRole`, `getByLabel`, `getByPlaceholder`, `getByTitle`) in `*.targets.ts`, scoped via semantic containers or `FrameOwner` for iframe dialogs.
-   - Implement `*.tasks.ts` (`Task<WebActor>`) and `*.questions.ts` (`Question<WebActor, TAnswer>`) without creating circular imports between questions and tasks.
+   - Implement `*.tasks.ts` (`Task<WebActor>`) and `*.questions.ts` (`Question<WebActor, TAnswer>`) without creating circular imports between questions and tasks. Never create a `Question` that snapshots DOM form inputs or text into a DTO solely for synchronous `expect(...)`; open the view/dialog cleanly and let the spec assert with `actor.browse().check(...)`.
    - Export all new modules from `packages/onspring-ui/src/index.ts`.
    - Use `.js` extensions on all relative imports; keep `"types": []` clean; prefer `type` over `interface`.
 3. **Rebuild workspace packages**:
@@ -96,7 +96,7 @@ Follow layer boundaries strictly downward:
    - Extend `test` from `../../fixtures`.
    - Push `AnnotationType.TestId` annotation inside each test.
    - Avoid test titles starting with `"Test "` (e.g., `"Verify a public campaign in test mode"` instead of `"Test a public campaign"`), which trips ESLint's `playwright/valid-title` rule.
-   - Compose `await test.step(...)` blocks using `actor.attemptsTo(...)`, `actor.asks(...)`, and `actor.browse().check(...)`.
+   - Compose `await test.step(...)` blocks using `actor.attemptsTo(...)`, `actor.asks(...)`, and web-first actor assertions (`actor.browse().check(...)` / `actor.browse().checkPage()` such as `hasValue`, `hasText`, `containsText`, `isChecked`, `isNotChecked`, `hasUrl`, `doesNotHaveUrl`). Reserve `expect(...)` strictly for non-DOM / extracted values (parsed PDFs/spreadsheets, emails, HTTP responses, or IDs/URLs reused later).
    - Zero raw `page.` / `.locator(` / `networkidle` / `test.only`.
 6. **Tenant cleanup (`cleanup/global.cleanup.ts`)**: Wire a `deleteAllTest*` sweep if the test creates a new top-level admin entity that could be orphaned on an interrupted run.
 

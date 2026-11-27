@@ -422,6 +422,10 @@ export class TargetAssertions {
     await expect(this.locator).not.toHaveText(expected, options);
   }
 
+  async containsText(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.locator).toContainText(expected, options);
+  }
+
   async hasClass(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
     await expect(this.locator).toHaveClass(expected, options);
   }
@@ -507,6 +511,10 @@ export class PageAssertions {
 
   async hasUrl(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
     await expect(this.page).toHaveURL(expected, options);
+  }
+
+  async doesNotHaveUrl(expected: string | RegExp, options?: TimeoutOptions): Promise<void> {
+    await expect(this.page).not.toHaveURL(expected, options);
   }
 }
 

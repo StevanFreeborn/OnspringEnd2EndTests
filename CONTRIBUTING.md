@@ -117,8 +117,9 @@ export const WidgetTasks = {
 
 ### Strict Driver Encapsulation & Assertions
 
-- **Do**: Assert exclusively via `await actor.browse().check(target).isVisible()`, `.hasText(...)`, `.hasValue(...)`, or `await actor.browse().checkPage().hasUrl(...)`.
-- **Don't**: Expose `page`, `context`, or raw `Locator` to specs or fixtures, and never wrap a target in raw Playwright `expect(locator)`.
+- **Do**: Assert all DOM, form, dialog, and page URL state exclusively via `await actor.browse().check(target)...` (`isVisible`, `isHidden`, `isChecked`, `isNotChecked`, `hasValue`, `hasText`, `containsText`, etc.) and `await actor.browse().checkPage()...` (`hasUrl`, `doesNotHaveUrl`).
+- **Don't**: Expose `page`, `context`, or raw `Locator` to specs or fixtures, wrap a target in raw Playwright `expect(locator)`, or create a `Question` that snapshots DOM form fields/text into a DTO solely to run synchronous `expect(...)` in a spec (that drops Playwright auto-retry).
+- **When `expect(...)` belongs in specs**: Reserve `expect(...)` (imported from `../../fixtures`) for non-DOM outputs (parsed PDFs, Excel sheets, IMAP emails, HTTP API responses), multi-item array/ordering invariants, `expect(async () => ...).toPass(...)`, or extracted scalar values needed by subsequent steps (such as an entity ID or generated URL).
 
 ### Fluent Fixtures (`fixtures/<domain>.fixtures.ts`)
 
@@ -159,7 +160,7 @@ export class WidgetFixtureBuilder<TDeps extends { sysAdminActor: WebActor } = { 
 
 ### Spec Structure (`tests/<domain>/<feature>.spec.ts`)
 
-- Extend base `test` from `../../fixtures` for test-scoped fixtures; import `expect` from `../../fixtures` when using synchronous assertions on extracted values or `expect(async () => ...).toPass(...)`.
+- Extend base `test` from `../../fixtures` for test-scoped fixtures; import `expect` from `../../fixtures` only for non-DOM / extracted-value assertions or `expect(async () => ...).toPass(...)`. Use `actor.browse().check(...)` and `actor.browse().checkPage()` for all DOM and URL checks.
 - Annotate every test with `AnnotationType.TestId` ([annotations.ts](tests/annotations.ts)) and apply `Tags` ([tags.ts](tests/tags.ts)) when needed (`Tags.NotFedRAMP`, `Tags.Snapshot`).
 - Structure the scenario in clear `await test.step('...', async () => { ... })` blocks written in user-intent language.
 

@@ -91,4 +91,13 @@ describe('screenplay-playwright', () => {
       ['pressSequentially', 'xyz', { delay: 0 }],
     ]);
   });
+
+  it('exposes containsText on TargetAssertions and doesNotHaveUrl on PageAssertions', () => {
+    const page = createFakePage();
+    const locator = createFakeLocator();
+    const actor = WebActor.using('Alice', page);
+
+    assert.equal(typeof actor.browse().check(locator).containsText, 'function');
+    assert.equal(typeof actor.browse().checkPage().doesNotHaveUrl, 'function');
+  });
 });
