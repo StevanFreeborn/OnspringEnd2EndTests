@@ -7,7 +7,7 @@ This guide is the practical handbook for contributing tests, fixtures, and Scree
 Each top-level document owns one concern:
 
 | Document                                     | Responsibility                                                  |
-|:---------------------------------------------|:----------------------------------------------------------------|
+| :------------------------------------------- | :-------------------------------------------------------------- |
 | [README.md](README.md)                       | Environment setup, CLI commands, and CI workflows               |
 | [docs/architecture.md](docs/architecture.md) | Conceptual Screenplay model, layer diagram, and core rules      |
 | [CONTRIBUTING.md](CONTRIBUTING.md)           | Developer workflow, code placement, conventions, and guardrails |
@@ -26,7 +26,7 @@ Before creating new helpers, fixtures, or models, search the canonical entry poi
 Dependencies flow strictly downward. Lower layers must never import from higher layers or reach for Node/Playwright globals outside their boundary.
 
 | Need                                                                                  | Destination                                            | Key Constraints                                                                                                                   |
-|:--------------------------------------------------------------------------------------|:-------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------|
+| :------------------------------------------------------------------------------------ | :----------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
 | Core Screenplay types (`Actor`, `Ability`, `Task`, `Question`)                        | `packages/screenplay/src/`                             | Zero external dependencies; `"types": []`                                                                                         |
 | Generic browser primitives, `TargetAssertions`, `PageAssertions`, `WebActor`, `Retry` | `packages/screenplay-playwright/src/`                  | Playwright adapter only; zero Onspring knowledge; `"types": []`                                                                   |
 | Onspring domain entities, string-union types, `TEST_*` prefixes, `FakeDataFactory`    | `packages/onspring-models/src/`                        | Isomorphic TypeScript; zero Playwright or Node (`fs`, `path`) imports; `"types": []`                                              |

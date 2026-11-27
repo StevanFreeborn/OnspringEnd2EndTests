@@ -11,7 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui",
+    "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui tools/agent",
+    "build:agent": "tsc -b tools/agent",
     "clean:packages": "npm run clean --workspaces --if-present",
     "build:packages:clean": "npm run clean:packages && npm run build:packages",
     "test:packages": "npm run test --workspaces --if-present",
@@ -30,7 +31,8 @@
     "format:fix": "prettier . --write",
     "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/ ./dynamic-documents/ ./apiSetupResults/",
     "generate-example-env": "node ./scripts/generateExampleEnv.js",
-    "line-count": "node ./scripts/countLines.js"
+    "line-count": "node ./scripts/countLines.js",
+    "agent": "node tools/agent/dist/cli.js"
   },
   "keywords": [
     "onspring",

@@ -65,6 +65,10 @@ const envSchema = z
     CUSTOM_EMAIL_SENDING_DOMAIN: z.string().min(1),
     CLOUDFLARE_ZONE_ID: z.string().optional(),
     CLOUDFLARE_API_KEY: z.string().optional(),
+    ONSPRING_HELP_DOCS_DIR: z
+      .string()
+      .transform(v => (!v ? undefined : v))
+      .optional(),
   })
   .refine(data => {
     const testEnv = data.TEST_ENV;
