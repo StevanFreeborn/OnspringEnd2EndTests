@@ -24,6 +24,8 @@ export type SlackMessageHistoryFilter = {
   messageContains?: string;
 };
 
+export type SlackMessageHistorySortColumn = 'Status' | 'Slack Channel' | 'Time Created' | 'Time Sent';
+
 export type AuditHistoryItemType =
   | 'All Item Types'
   | 'API Key'

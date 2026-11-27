@@ -34,6 +34,7 @@ import {
   RoleConfigurationsReportTargets,
   SlackMessageHistoryFilter,
   SlackMessageHistoryReportTargets,
+  SlackMessageHistorySortColumn,
   SystemAdministratorListingFilter,
   SystemAdministratorListingReportTargets,
   SystemAdministratorListingSortColumn,
@@ -486,6 +487,25 @@ export const SlackMessageHistoryReportTasks = {
       if (!matchesFilterValue(currentMessageContains, messageContains, 'exact')) {
         await waitForReportAction(actor, dataPath, () => actor.browse().fill(messageContainsInput, messageContains));
       }
+    },
+
+  clearGridSorting: (): Task<WebActor> => async actor =>
+    clearKendoGridSortByLink(
+      actor,
+      SlackMessageHistoryReportTargets.gridHeader,
+      SlackMessageHistoryReportTargets.dataPath
+    ),
+
+  sortGridBy:
+    (column: SlackMessageHistorySortColumn, direction: SystemReportSortDirection = 'ascending'): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await sortKendoGrid(
+        actor,
+        SlackMessageHistoryReportTargets.gridHeader,
+        column,
+        direction,
+        SlackMessageHistoryReportTargets.dataPath
+      );
     },
 };
 
