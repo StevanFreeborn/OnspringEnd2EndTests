@@ -164,4 +164,50 @@ test.describe('survey answer field', () => {
       await cleanupSurveyAnswerField(sysAdminActor, survey.id, creation);
     }
   });
+
+  test('Delete a survey answer field', async ({ sysAdminActor, survey }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-655',
+    });
+
+    const questionText = FakeDataFactory.createFakeQuestionId('survey-answer-delete-question');
+    const question = new TextQuestion({
+      questionId: questionText,
+      questionText,
+    });
+    const field = new SurveyAnswerField({
+      name: FakeDataFactory.createFakeFieldName('survey-answer-delete-test'),
+      description: 'Survey answer field deleted by Test-655.',
+      questionText,
+    });
+    const creation: FieldCreationState = {};
+
+    try {
+      await test.step('Add a question to the survey', async () => {
+        await sysAdminActor.attemptsTo(
+          SurveyTasks.gotoSurveyDesignTab(survey.id),
+          SurveyTasks.openSurveyDesigner(),
+          SurveyDesignerTasks.addQuestion(question),
+          SurveyDesignerTasks.close()
+        );
+      });
+
+      await test.step('Create the survey answer field from the default layout', async () => {
+        await sysAdminActor.attemptsTo(SurveyAnswerFieldTasks.addFromSurveyLayout({ field }), AppTasks.closeLayout());
+        creation.fieldName = field.name;
+      });
+
+      await test.step('Delete the survey answer field', async () => {
+        await sysAdminActor.attemptsTo(FieldTasks.deleteFromGrid(field.name));
+        creation.fieldName = undefined;
+      });
+
+      await test.step('Verify the field was deleted', async () => {
+        await sysAdminActor.browse().check(FieldTargets.rowByName(field.name)).isHidden();
+      });
+    } finally {
+      await cleanupSurveyAnswerField(sysAdminActor, survey.id, creation);
+    }
+  });
 });

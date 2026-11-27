@@ -38,6 +38,24 @@ async function openEditModal(actor: WebActor, fieldName: string): Promise<void> 
   await actor.browse().waitForState(FieldTargets.modal.nameInput(0), 'visible');
 }
 
+async function openAddFieldMenu(actor: WebActor, fieldType: string): Promise<void> {
+  const designer = AppLayoutTabTargets.designer;
+  const option = designer.addFieldMenuOption(fieldType);
+
+  if (await actor.browse().isVisible(option)) {
+    return;
+  }
+
+  await actor.browse().click(designer.addFieldButton);
+
+  // The first click can be swallowed while the designer iframe binds its popover
+  // handlers. Synchronize on the option being visible and retry the trigger once.
+  if (!(await actor.browse().isVisibleWithin(option, 2_000))) {
+    await actor.browse().click(designer.addFieldButton);
+    await actor.browse().waitForState(option, 'visible');
+  }
+}
+
 export const SurveyAnswerFieldTasks = {
   addFromSurveyLayout:
     ({
@@ -51,7 +69,7 @@ export const SurveyAnswerFieldTasks = {
       await openDefaultLayoutDesigner(actor);
 
       const designer = AppLayoutTabTargets.designer;
-      await actor.browse().click(designer.addFieldButton);
+      await openAddFieldMenu(actor, 'Survey Answer');
       await actor.browse().click(designer.addFieldMenuOption('Survey Answer'));
 
       await actor.browse().waitForState(SurveyAnswerFieldTargets.dialog, 'visible');
