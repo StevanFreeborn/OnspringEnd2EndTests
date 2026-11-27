@@ -6,6 +6,7 @@ export type WorktreeHandle = {
   path: string;
   branch: string;
   created: boolean;
+  reused?: boolean;
 };
 
 export type CreateWorktreeOptions = {
@@ -13,6 +14,7 @@ export type CreateWorktreeOptions = {
   baseRef: string;
   installDeps: boolean;
   branchName?: string;
+  reuseExisting?: boolean;
 };
 
 export function slugify(input: string, maxLength = 48): string {
@@ -244,14 +246,131 @@ export function unlinkWorktreeNodeModules(worktreeNodeModules: string): void {
   fs.unlinkSync(worktreeNodeModules);
 }
 
+function isPathInsideDir(parentDir: string, candidatePath: string): boolean {
+  const normalize = (p: string): string => {
+    const resolved = path.resolve(p);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const rel = path.relative(normalize(parentDir), normalize(candidatePath));
+  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
+/**
+ * Locate the registered git worktree path currently checked out on `branchName`, if any.
+ */
+export async function findWorktreeForBranch(repoRoot: string, branchName: string): Promise<string | null> {
+  const res = await runCommand('git', ['worktree', 'list', '--porcelain'], { cwd: repoRoot });
+  if (res.exitCode !== 0) {
+    return null;
+  }
+
+  const expectedBranchRef = `refs/heads/${branchName.trim()}`;
+  let currentWorktreePath: string | null = null;
+  let currentBranchRef: string | null = null;
+
+  const flush = (): string | null => {
+    if (currentWorktreePath && currentBranchRef === expectedBranchRef) {
+      return path.resolve(currentWorktreePath);
+    }
+    currentWorktreePath = null;
+    currentBranchRef = null;
+    return null;
+  };
+
+  for (const rawLine of res.stdout.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) {
+      const match = flush();
+      if (match) {
+        return match;
+      }
+      continue;
+    }
+    if (line.startsWith('worktree ')) {
+      currentWorktreePath = line.slice('worktree '.length).trim();
+    } else if (line.startsWith('branch ')) {
+      currentBranchRef = line.slice('branch '.length).trim();
+    }
+  }
+
+  return flush();
+}
+
+async function prepareWorktreeEnvironment(repoRoot: string, worktreePath: string, installDeps: boolean): Promise<void> {
+  const rootEnv = path.join(repoRoot, '.env');
+  if (fs.existsSync(rootEnv)) {
+    fs.copyFileSync(rootEnv, path.join(worktreePath, '.env'));
+  }
+
+  const rootAuth = path.join(repoRoot, '.auth', 'sysAdmin.json');
+  if (fs.existsSync(rootAuth)) {
+    const worktreeAuthDir = path.join(worktreePath, '.auth');
+    fs.mkdirSync(worktreeAuthDir, { recursive: true });
+    fs.copyFileSync(rootAuth, path.join(worktreeAuthDir, 'sysAdmin.json'));
+  }
+
+  const rootNodeModules = path.join(repoRoot, 'node_modules');
+  const worktreeNodeModules = path.join(worktreePath, 'node_modules');
+  if (installDeps) {
+    const ciRes = await runCommand('npm', ['ci'], { cwd: worktreePath });
+    if (ciRes.exitCode !== 0) {
+      throw new Error(`npm ci failed in worktree '${worktreePath}':\n${ciRes.stderr || ciRes.stdout}`);
+    }
+  } else if (fs.existsSync(rootNodeModules) && !fs.existsSync(worktreeNodeModules)) {
+    linkWorktreeNodeModules(repoRoot, worktreePath);
+  }
+
+  const buildRes = await runCommand('npm', ['run', 'build:packages'], { cwd: worktreePath });
+  if (buildRes.exitCode !== 0) {
+    throw new Error(
+      `npm run build:packages failed in worktree '${worktreePath}':\n${buildRes.stderr || buildRes.stdout}`
+    );
+  }
+}
+
 export async function createAgentWorktree(
   repoRoot: string,
-  { slug, baseRef, installDeps, branchName }: CreateWorktreeOptions
+  { slug, baseRef, installDeps, branchName, reuseExisting }: CreateWorktreeOptions
 ): Promise<WorktreeHandle> {
   const worktreesRoot = path.join(repoRoot, '.agent-worktrees');
   fs.mkdirSync(worktreesRoot, { recursive: true });
 
   const requestedBranch = branchName?.trim();
+  if (requestedBranch) {
+    const checkedOutPath = await findWorktreeForBranch(repoRoot, requestedBranch);
+    if (checkedOutPath) {
+      if (!isPathInsideDir(worktreesRoot, checkedOutPath)) {
+        throw new Error(
+          `Branch '${requestedBranch}' is already checked out at '${checkedOutPath}' (outside .agent-worktrees/). Switch branches there first or pass a different --shared-branch.`
+        );
+      }
+      if (!reuseExisting) {
+        throw new Error(
+          `Branch '${requestedBranch}' already has an interrupted worktree at '${checkedOutPath}'. Re-run with --resume to reset and continue from committed tests.`
+        );
+      }
+
+      const resetRes = await runCommand('git', ['reset', '--hard', 'HEAD'], { cwd: checkedOutPath });
+      if (resetRes.exitCode !== 0) {
+        throw new Error(
+          `Failed to reset interrupted worktree '${checkedOutPath}':\n${resetRes.stderr || resetRes.stdout}`
+        );
+      }
+
+      const cleanRes = await runCommand('git', ['clean', '-fd', '-e', '.env', '-e', '.auth', '-e', 'node_modules'], {
+        cwd: checkedOutPath,
+      });
+      if (cleanRes.exitCode !== 0) {
+        throw new Error(
+          `Failed to clean interrupted worktree '${checkedOutPath}':\n${cleanRes.stderr || cleanRes.stdout}`
+        );
+      }
+
+      await prepareWorktreeEnvironment(repoRoot, checkedOutPath, installDeps);
+      return { path: checkedOutPath, branch: requestedBranch, created: true, reused: true };
+    }
+  }
+
   let uniqueSlug = slugify(slug);
   let worktreePath = path.join(worktreesRoot, uniqueSlug);
   let branch = requestedBranch || `agent/${uniqueSlug}`;
@@ -277,36 +396,7 @@ export async function createAgentWorktree(
   }
 
   try {
-    const rootEnv = path.join(repoRoot, '.env');
-    if (fs.existsSync(rootEnv)) {
-      fs.copyFileSync(rootEnv, path.join(worktreePath, '.env'));
-    }
-
-    const rootAuth = path.join(repoRoot, '.auth', 'sysAdmin.json');
-    if (fs.existsSync(rootAuth)) {
-      const worktreeAuthDir = path.join(worktreePath, '.auth');
-      fs.mkdirSync(worktreeAuthDir, { recursive: true });
-      fs.copyFileSync(rootAuth, path.join(worktreeAuthDir, 'sysAdmin.json'));
-    }
-
-    const rootNodeModules = path.join(repoRoot, 'node_modules');
-    const worktreeNodeModules = path.join(worktreePath, 'node_modules');
-    if (installDeps) {
-      const ciRes = await runCommand('npm', ['ci'], { cwd: worktreePath });
-      if (ciRes.exitCode !== 0) {
-        throw new Error(`npm ci failed in worktree '${worktreePath}':\n${ciRes.stderr || ciRes.stdout}`);
-      }
-    } else if (fs.existsSync(rootNodeModules) && !fs.existsSync(worktreeNodeModules)) {
-      linkWorktreeNodeModules(repoRoot, worktreePath);
-    }
-
-    const buildRes = await runCommand('npm', ['run', 'build:packages'], { cwd: worktreePath });
-    if (buildRes.exitCode !== 0) {
-      throw new Error(
-        `npm run build:packages failed in worktree '${worktreePath}':\n${buildRes.stderr || buildRes.stdout}`
-      );
-    }
-
+    await prepareWorktreeEnvironment(repoRoot, worktreePath, installDeps);
     return { path: worktreePath, branch, created: true };
   } catch (err) {
     await removeAgentWorktree(repoRoot, { path: worktreePath, branch, created: true }, true);

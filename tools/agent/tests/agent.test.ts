@@ -16,6 +16,7 @@ import { buildCatalog } from '../src/catalog.js';
 import { parseExploreScriptFunction } from '../src/explore.js';
 import { indexMarkdownSections, parseFrontmatter, rankSections } from '../src/helpSearch.js';
 import {
+  collectPriorBranchCommits,
   buildAttemptPrompt,
   collectPlaywrightErrorContexts,
   executeBatchOrchestrator,
@@ -41,7 +42,14 @@ import {
 } from '../src/ui.js';
 import { parseCliArgs, runCommand } from '../src/utils.js';
 import { runArchitectureGuardrails } from '../src/verify.js';
-import { slugify, linkWorktreeNodeModules, unlinkWorktreeNodeModules } from '../src/worktree.js';
+import {
+  createAgentWorktree,
+  findWorktreeForBranch,
+  linkWorktreeNodeModules,
+  removeAgentWorktree,
+  slugify,
+  unlinkWorktreeNodeModules,
+} from '../src/worktree.js';
 
 const tempDirs: string[] = [];
 
@@ -340,6 +348,74 @@ void describe('worktree & porcelain helpers', () => {
     assert.equal(fs.existsSync(path.join(wt, 'node_modules')), false);
     assert.equal(fs.existsSync(path.join(repo, 'node_modules', 'some-dep', 'index.js')), true);
     assert.equal(fs.existsSync(path.join(wt, 'packages', 'onspring-models', 'package.json')), true);
+  });
+
+  void it('detects, resets, and reuses an interrupted agent worktree cleanly when reuseExisting is true', async () => {
+    const repo = createTempDir('agent-wt-reuse-');
+    writeTempFile(
+      repo,
+      'package.json',
+      JSON.stringify({ name: 'wt-reuse', workspaces: ['packages/*'], scripts: { 'build:packages': 'node -e ""' } })
+    );
+    writeTempFile(repo, 'packages/onspring-ui/src/index.ts', 'export const ok = true;\n');
+    writeTempFile(repo, '.env', 'TEST_ENV=ALPHA\n');
+    writeTempFile(repo, '.auth/sysAdmin.json', '{"cookies":[]}');
+    writeTempFile(repo, 'node_modules/dep/index.js', 'export const d = 1;');
+
+    await runCommand('git', ['init'], { cwd: repo });
+    await runCommand('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
+    await runCommand('git', ['config', 'user.name', 'Test User'], { cwd: repo });
+    await runCommand('git', ['add', 'package.json', 'packages'], { cwd: repo });
+    await runCommand('git', ['commit', '-m', 'init'], { cwd: repo });
+
+    const first = await createAgentWorktree(repo, {
+      slug: 'shared-reuse',
+      baseRef: 'HEAD',
+      installDeps: false,
+      branchName: 'feat/shared-reuse',
+    });
+
+    assert.equal(await findWorktreeForBranch(repo, 'feat/shared-reuse'), path.resolve(first.path));
+
+    // Commit one piece of work, then leave dirty tracked + untracked interrupted state.
+    writeTempFile(first.path, 'tests/sample/test1.spec.ts', 'export const one = 1;\n');
+    await runCommand('git', ['add', '-A'], { cwd: first.path });
+    await runCommand('git', ['commit', '-m', 'test(sample): Test-1'], { cwd: first.path });
+    writeTempFile(first.path, 'packages/onspring-ui/src/index.ts', 'dirty uncommitted edit\n');
+    writeTempFile(first.path, 'tests/sample/partial-untracked.spec.ts', 'partial\n');
+
+    await assert.rejects(
+      () =>
+        createAgentWorktree(repo, {
+          slug: 'shared-reuse',
+          baseRef: 'HEAD',
+          installDeps: false,
+          branchName: 'feat/shared-reuse',
+        }),
+      /Re-run with --resume/
+    );
+
+    const reused = await createAgentWorktree(repo, {
+      slug: 'shared-reuse',
+      baseRef: 'HEAD',
+      installDeps: false,
+      branchName: 'feat/shared-reuse',
+      reuseExisting: true,
+    });
+
+    assert.equal(reused.reused, true);
+    assert.equal(reused.path, first.path);
+    assert.equal(fs.existsSync(path.join(reused.path, 'tests/sample/test1.spec.ts')), true);
+    assert.equal(fs.existsSync(path.join(reused.path, 'tests/sample/partial-untracked.spec.ts')), false);
+    assert.equal(
+      fs.readFileSync(path.join(reused.path, 'packages/onspring-ui/src/index.ts'), 'utf8').trim(),
+      'export const ok = true;'
+    );
+    assert.equal(fs.existsSync(path.join(reused.path, '.env')), true);
+    assert.equal(fs.existsSync(path.join(reused.path, '.auth/sysAdmin.json')), true);
+    assert.equal(fs.existsSync(path.join(reused.path, 'node_modules/dep/index.js')), true);
+
+    await removeAgentWorktree(repo, reused, true);
   });
 });
 
@@ -1080,10 +1156,103 @@ fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({
     assert.equal(resumed.report.runs[0]?.status, 'skipped');
     assert.equal(resumed.report.runs[1]?.status, 'passed');
 
+    const promptForItem2 = fs.readFileSync(
+      path.join(repo, resumed.report.runs[1]?.attempts[0]?.promptFile ?? ''),
+      'utf8'
+    );
+    assert.match(promptForItem2, /## Prior Batch Commits on This Branch/);
+    assert.match(promptForItem2, /tests\/sample\/test-31\.spec\.ts/);
+
+    const priorCommits = await collectPriorBranchCommits(repo, 'HEAD', 'feat/resumable');
+    assert.equal(priorCommits.length, 2);
+
     const mdReport = fs.readFileSync(path.join(resumed.report.runDir, 'batch-report.md'), 'utf8');
     assert.match(mdReport, /\| # \| Status \| Attempts \| Duration \|/);
     assert.match(mdReport, /SKIPPED/);
     assert.match(mdReport, /PASSED/);
+  });
+
+  void it('automatically resets and reuses an interrupted shared worktree in one --resume batch call', async () => {
+    const repo = await initTempRepo('agent-batch-interrupted-');
+    const mockScript = path.join(repo, 'interrupted-runner.mjs');
+    writeTempFile(
+      repo,
+      'interrupted-runner.mjs',
+      `import fs from 'node:fs';
+const promptText = fs.readFileSync(process.argv[2], 'utf8');
+const idMatch = /Test-\\d+/.exec(promptText);
+const id = idMatch ? idMatch[0].toLowerCase() : 'demo';
+fs.mkdirSync('tests/sample', { recursive: true });
+fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: '" + (idMatch?.[0] ?? 'Test-0') + "' }); await sysAdminActor.browse().checkPage().hasUrl(/ok/); });\\n", 'utf8');
+`
+    );
+
+    const interruptedWt = await createAgentWorktree(repo, {
+      slug: 'feat-interrupted',
+      baseRef: 'HEAD',
+      installDeps: false,
+      branchName: 'feat/interrupted',
+    });
+    writeTempFile(
+      interruptedWt.path,
+      'tests/sample/test-41.spec.ts',
+      "test('test-41', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: 'Test-41' }); await sysAdminActor.browse().checkPage().hasUrl(/ok/); });\n"
+    );
+    await runCommand('git', ['add', '-A'], { cwd: interruptedWt.path });
+    await runCommand('git', ['commit', '-m', 'test(sample): Test-41 First'], { cwd: interruptedWt.path });
+    writeTempFile(interruptedWt.path, 'tests/sample/dirty-partial.spec.ts', 'interrupted work\n');
+
+    const briefs = [
+      { testId: 'Test-41', title: 'First interrupted test', domain: 'sample', source: 'md#1' },
+      { testId: 'Test-42', title: 'Second interrupted test', domain: 'sample', source: 'md#2' },
+    ];
+
+    const resumed = await executeBatchOrchestrator(
+      repo,
+      briefs,
+      {
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockScript) ? `"${mockScript}"` : mockScript} {{promptFile}}`,
+        domain: 'sample',
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: false,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: true,
+        draftPr: false,
+        cleanupWorktree: true,
+        dryRun: false,
+        quiet: true,
+        sharedBranch: 'feat/interrupted',
+        resume: true,
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(resumed.exitCode, 0);
+    assert.equal(resumed.report.status, 'passed');
+    assert.equal(resumed.report.skipped, 1);
+    assert.equal(resumed.report.passed, 1);
+    assert.equal(fs.existsSync(interruptedWt.path), false);
+    const secondPrompt = fs.readFileSync(
+      path.join(repo, resumed.report.runs[1]?.attempts[0]?.promptFile ?? ''),
+      'utf8'
+    );
+    assert.match(secondPrompt, /Test-41 First/);
+    assert.match(secondPrompt, /tests\/sample\/test-41\.spec\.ts/);
   });
 });
 
@@ -1212,9 +1381,47 @@ void describe('terminal ui', () => {
     ].join('\n');
     assert.equal(extractRunnerActivityLine(noisyChunk), 'Read packages/onspring-ui/src/fields/fields.tasks.ts');
     assert.equal(extractRunnerActivityLine('{\n  "id": 1\n}'), null);
+    assert.equal(extractRunnerActivityLine('(no output)'), null);
+    assert.equal(extractRunnerActivityLine('running...'), null);
 
     const guttered = formatGutterLines('line 1\nline 2', { color: false });
     assert.equal(guttered, '│ line 1\n│ line 2');
+  });
+
+  void it('renders TTY spinner frames atomically, clamps width, and avoids redraws on update', () => {
+    const prevCi = process.env.CI;
+    const prevTerm = process.env.TERM;
+    delete process.env.CI;
+    process.env.TERM = 'xterm-256color';
+
+    try {
+      const writes: string[] = [];
+      const spinner = createSpinner({
+        stream: { write: chunk => writes.push(chunk), isTTY: true, columns: 50 },
+        color: false,
+        indent: '  ',
+      });
+
+      spinner.start('opencode (Attempt 1/3) · 12s · ' + 'x'.repeat(80));
+      assert.equal(writes.length, 1);
+      assert.equal(writes[0]?.includes('\u001b[?25l'), true);
+      assert.equal(writes[0]?.includes('\u001b[0K'), true);
+      assert.equal(writes[0]?.includes('\u001b[2K'), false);
+      assert.equal(stripAnsi(writes[0] ?? '').replace(/^\r/, '').length <= 48, true);
+
+      const writeCountBeforeUpdate = writes.length;
+      spinner.update('opencode (Attempt 1/3) · 13s');
+      assert.equal(writes.length, writeCountBeforeUpdate);
+
+      spinner.succeed('opencode exited 0 in 13.0s');
+      const last = writes[writes.length - 1] ?? '';
+      assert.equal(last.includes('\u001b[?25h'), true);
+      assert.equal(last.includes('\u001b[0K\n'), true);
+    } finally {
+      if (prevCi !== undefined) process.env.CI = prevCi;
+      if (prevTerm !== undefined) process.env.TERM = prevTerm;
+      else delete process.env.TERM;
+    }
   });
 
   void it('writes clean non-TTY spinner status lines without carriage returns and renders run summaries', () => {

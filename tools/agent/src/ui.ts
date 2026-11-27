@@ -15,6 +15,7 @@ export type UiTableAlign = 'left' | 'right';
 export type UiStream = {
   write: (chunk: string) => unknown;
   isTTY?: boolean;
+  columns?: number;
 };
 
 export type UiStyler = {
@@ -285,10 +286,18 @@ export function formatGutterLines(chunk: string, options?: { color?: boolean; pr
     .join('');
 }
 
+function clampVisibleLine(text: string, maxCols: number): string {
+  const plain = stripAnsi(text);
+  if (plain.length <= maxCols) {
+    return text;
+  }
+  return truncateText(plain, maxCols);
+}
+
 /**
  * Extract the latest concise, human-readable status/tool line from raw runner output.
  */
-export function extractRunnerActivityLine(chunk: string, maxChars = 68): string | null {
+export function extractRunnerActivityLine(chunk: string, maxChars = 64): string | null {
   const clean = stripAnsi(chunk);
   const lines = clean.split(/\r?\n/);
 
@@ -300,6 +309,8 @@ export function extractRunnerActivityLine(chunk: string, maxChars = 68): string 
     if (
       /^[{}[\]<>/|@+-]/.test(trimmed) ||
       /^"[^"]+"\s*:/.test(trimmed) ||
+      /^\(no output\)$/i.test(trimmed) ||
+      /^running\.{0,3}$/i.test(trimmed) ||
       /^```/.test(trimmed) ||
       /^=+$/.test(trimmed) ||
       /^> build /.test(trimmed) ||
@@ -310,7 +321,7 @@ export function extractRunnerActivityLine(chunk: string, maxChars = 68): string 
       continue;
     }
     const withoutBullet = trimmed.replace(/^[→←✱✗$%•]+\s*/, '').trim();
-    if (withoutBullet.length < 4) {
+    if (withoutBullet.length < 4 || /^\(no output\)$/i.test(withoutBullet)) {
       continue;
     }
     return truncateText(withoutBullet, maxChars);
@@ -335,25 +346,27 @@ export function createSpinner(options?: {
   const tty = isInteractiveTty(stream);
   const s = createStyler(color);
 
+  const HIDE_CURSOR = `${ESC}[?25l`;
+  const SHOW_CURSOR = `${ESC}[?25h`;
+  const CLEAR_EOL = `${ESC}[0K`;
+  const CLEAR_LINE = `${ESC}[2K`;
+
   let timer: ReturnType<typeof setInterval> | null = null;
   let frameIdx = 0;
   let currentText = '';
   let active = false;
+  let cursorHidden = false;
 
-  const clearLine = (): void => {
-    if (tty) {
-      stream.write(`\r${ESC}[2K`);
-    }
-  };
+  const getMaxCols = (): number => Math.max(40, (stream.columns ?? 100) - 2);
 
-  const renderFrame = (): void => {
+  const renderFrame = (hideCursorPrefix = ''): void => {
     if (!tty || !active || quiet) {
       return;
     }
     const frame = s.cyan(SPINNER_FRAMES[frameIdx % SPINNER_FRAMES.length]);
     frameIdx++;
-    clearLine();
-    stream.write(`${indent}${frame} ${currentText}`);
+    const line = clampVisibleLine(`${indent}${frame} ${currentText}`, getMaxCols());
+    stream.write(`${hideCursorPrefix}\r${line}${CLEAR_EOL}`);
   };
 
   const stopTimer = (): void => {
@@ -365,13 +378,21 @@ export function createSpinner(options?: {
   };
 
   const settle = (icon: string, text: string): void => {
+    stopTimer();
+    const restore = tty && cursorHidden ? SHOW_CURSOR : '';
+    cursorHidden = false;
     if (quiet) {
-      stopTimer();
+      if (restore) {
+        stream.write(restore);
+      }
       return;
     }
-    stopTimer();
-    clearLine();
-    stream.write(`${indent}${icon} ${text}\n`);
+    if (tty) {
+      const line = clampVisibleLine(`${indent}${icon} ${text}`, getMaxCols());
+      stream.write(`\r${line}${CLEAR_EOL}\n${restore}`);
+    } else {
+      stream.write(`${indent}${icon} ${text}\n`);
+    }
   };
 
   return {
@@ -381,8 +402,10 @@ export function createSpinner(options?: {
       if (tty) {
         stopTimer();
         active = true;
-        renderFrame();
-        timer = setInterval(renderFrame, 100);
+        const hidePrefix = cursorHidden ? '' : HIDE_CURSOR;
+        cursorHidden = true;
+        renderFrame(hidePrefix);
+        timer = setInterval(() => renderFrame(), 120);
         timer.unref?.();
       } else {
         active = true;
@@ -392,9 +415,6 @@ export function createSpinner(options?: {
     update: (text: string): void => {
       if (quiet || !active) return;
       currentText = text;
-      if (tty) {
-        renderFrame();
-      }
     },
     succeed: (text: string): void => settle(s.green('✔'), text),
     fail: (text: string): void => settle(s.red('✖'), text),
@@ -402,10 +422,10 @@ export function createSpinner(options?: {
     info: (text: string): void => settle(s.cyan('•'), text),
     stop: (): void => {
       stopTimer();
-      if (!quiet && active) {
-        clearLine();
-      } else {
-        clearLine();
+      if (tty) {
+        const restore = cursorHidden ? SHOW_CURSOR : '';
+        cursorHidden = false;
+        stream.write(`\r${CLEAR_LINE}${restore}`);
       }
     },
   };

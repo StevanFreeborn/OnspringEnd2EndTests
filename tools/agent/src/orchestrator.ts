@@ -450,6 +450,64 @@ export async function findExistingTestIds(
   return found;
 }
 
+export async function collectPriorBranchCommits(
+  worktreeDir: string,
+  baseRef: string,
+  sharedBranch: string
+): Promise<PriorBatchRunSummary[]> {
+  const res = await runCommand(
+    'git',
+    ['log', '--reverse', '--name-only', '--format=___COMMIT___%h|%s', `${baseRef}..${sharedBranch}`],
+    { cwd: worktreeDir }
+  );
+  if (res.exitCode !== 0 || !res.stdout.trim()) {
+    return [];
+  }
+
+  const summaries: PriorBatchRunSummary[] = [];
+  let current: PriorBatchRunSummary | null = null;
+  let seenFiles = new Set<string>();
+
+  for (const rawLine of res.stdout.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    if (line.startsWith('___COMMIT___')) {
+      if (current) {
+        summaries.push(current);
+      }
+      const rest = line.slice('___COMMIT___'.length);
+      const sepIdx = rest.indexOf('|');
+      const sha = sepIdx >= 0 ? rest.slice(0, sepIdx).trim() : '';
+      const subject = sepIdx >= 0 ? rest.slice(sepIdx + 1).trim() : rest.trim();
+      const cleanedSubject = subject.replace(/^test\([^)]+\):\s*/i, '').trim();
+      current = {
+        headline: cleanedSubject || subject,
+        ...(sha ? { commitSha: sha } : {}),
+        changedFiles: [],
+      };
+      seenFiles = new Set<string>();
+      continue;
+    }
+
+    if (current) {
+      const normalized = line.replace(/\\/g, '/');
+      if (!seenFiles.has(normalized)) {
+        seenFiles.add(normalized);
+        current.changedFiles.push(normalized);
+      }
+    }
+  }
+
+  if (current) {
+    summaries.push(current);
+  }
+
+  return summaries;
+}
+
 async function detectChangedFiles(worktreeDir: string): Promise<{ changedFiles: string[]; detectedSpecs: string[] }> {
   const statusRes = await runCommand('git', ['status', '--porcelain', '-uall'], { cwd: worktreeDir });
   if (statusRes.exitCode !== 0) {
@@ -641,6 +699,14 @@ export function renderRunSummaryTerminal(
   return `${lines.join('\n')}\n`;
 }
 
+function formatLiveElapsed(seconds: number): string {
+  const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+  if (safe < 60) {
+    return `${Math.floor(safe)}s`;
+  }
+  return formatDuration(safe);
+}
+
 function formatRunTimestamp(date = new Date()): string {
   const pad = (n: number): string => String(n).padStart(2, '0');
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
@@ -813,7 +879,7 @@ export async function executeOrchestrator(
           : null;
 
       const formatRunnerStatus = (): string => {
-        const elapsed = formatDuration((Date.now() - attemptStartedAt) / 1000);
+        const elapsed = formatLiveElapsed((Date.now() - attemptStartedAt) / 1000);
         const parts = [`${s.bold(config.runner)} ${s.dim(`(Attempt ${attempt}/${config.maxAttempts})`)}`, elapsed];
         if (liveChangedCount > 0) {
           parts.push(`${liveChangedCount} file(s) changed`);
@@ -1150,15 +1216,19 @@ export async function executeBatchOrchestrator(
         baseRef: config.baseRef,
         installDeps: config.installDeps,
         branchName: sharedBranch,
+        reuseExisting: Boolean(config.resume),
       })
     : null;
 
   if (!config.quiet) {
+    const modeValue = sharedHandle
+      ? `shared-branch (${sharedHandle.branch})${sharedHandle.reused ? ' · reused interrupted worktree' : ''}`
+      : 'isolated';
     logProgress(
       renderHeaderBox(
         'Onspring Agent Batch',
         [
-          { label: 'Mode', value: sharedHandle ? `shared-branch (${sharedHandle.branch})` : 'isolated' },
+          { label: 'Mode', value: modeValue },
           { label: 'Runner', value: config.runner },
           { label: 'Briefs', value: `${briefs.length} item(s)${config.resume ? ' (resume enabled)' : ''}` },
           { label: 'Output', value: config.verbose ? 'verbose (raw stream)' : 'compact (spinner · --verbose for raw)' },
@@ -1190,11 +1260,22 @@ export async function executeBatchOrchestrator(
   };
 
   try {
+    let resolvedBaseRef = config.baseRef;
+    if (sharedHandle) {
+      const baseShaRes = await runCommand('git', ['rev-parse', '--verify', config.baseRef], { cwd: repoRoot });
+      if (baseShaRes.exitCode === 0 && baseShaRes.stdout.trim()) {
+        resolvedBaseRef = baseShaRes.stdout.trim();
+      }
+    }
+
     const existingTestIds =
       config.resume && sharedHandle
-        ? await findExistingTestIds(sharedHandle.path, config.baseRef, sharedHandle.branch)
+        ? await findExistingTestIds(sharedHandle.path, resolvedBaseRef, sharedHandle.branch)
         : new Set<string>();
-    const priorBatchRuns: PriorBatchRunSummary[] = [];
+    const priorBatchRuns: PriorBatchRunSummary[] =
+      config.resume && sharedHandle
+        ? await collectPriorBranchCommits(sharedHandle.path, resolvedBaseRef, sharedHandle.branch)
+        : [];
 
     for (let i = 0; i < briefs.length; i++) {
       const brief = briefs[i];
