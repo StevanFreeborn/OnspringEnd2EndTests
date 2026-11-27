@@ -69,6 +69,18 @@ const envSchema = z
       .string()
       .transform(v => (!v ? undefined : v))
       .optional(),
+    ONSPRING_CORP_API_URL: z
+      .string()
+      .transform(v => (!v ? undefined : v))
+      .optional(),
+    ONSPRING_CORP_API_KEY: z
+      .string()
+      .transform(v => (!v ? undefined : v))
+      .optional(),
+    ONSPRING_CORP_CONFIG: z
+      .string()
+      .transform(v => (!v ? undefined : v))
+      .optional(),
   })
   .refine(data => {
     const testEnv = data.TEST_ENV;

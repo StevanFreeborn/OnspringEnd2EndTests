@@ -12,6 +12,7 @@ export type CreateWorktreeOptions = {
   slug: string;
   baseRef: string;
   installDeps: boolean;
+  branchName?: string;
 };
 
 export function slugify(input: string, maxLength = 48): string {
@@ -245,25 +246,32 @@ export function unlinkWorktreeNodeModules(worktreeNodeModules: string): void {
 
 export async function createAgentWorktree(
   repoRoot: string,
-  { slug, baseRef, installDeps }: CreateWorktreeOptions
+  { slug, baseRef, installDeps, branchName }: CreateWorktreeOptions
 ): Promise<WorktreeHandle> {
   const worktreesRoot = path.join(repoRoot, '.agent-worktrees');
   fs.mkdirSync(worktreesRoot, { recursive: true });
 
+  const requestedBranch = branchName?.trim();
   let uniqueSlug = slugify(slug);
   let worktreePath = path.join(worktreesRoot, uniqueSlug);
-  let branch = `agent/${uniqueSlug}`;
+  let branch = requestedBranch || `agent/${uniqueSlug}`;
 
-  if (fs.existsSync(worktreePath) || (await branchExists(repoRoot, branch))) {
+  const existingRequestedBranch = requestedBranch ? await branchExists(repoRoot, branch) : false;
+
+  if (fs.existsSync(worktreePath) || (!requestedBranch && (await branchExists(repoRoot, branch)))) {
     const suffix = Date.now().toString(36);
     uniqueSlug = `${slugify(slug, 36)}-${suffix}`;
     worktreePath = path.join(worktreesRoot, uniqueSlug);
-    branch = `agent/${uniqueSlug}`;
+    if (!requestedBranch) {
+      branch = `agent/${uniqueSlug}`;
+    }
   }
 
-  const addRes = await runCommand('git', ['worktree', 'add', '-b', branch, worktreePath, baseRef], {
-    cwd: repoRoot,
-  });
+  const addArgs = existingRequestedBranch
+    ? ['worktree', 'add', worktreePath, branch]
+    : ['worktree', 'add', '-b', branch, worktreePath, baseRef];
+
+  const addRes = await runCommand('git', addArgs, { cwd: repoRoot });
   if (addRes.exitCode !== 0) {
     throw new Error(`Failed to create git worktree at '${worktreePath}':\n${addRes.stderr || addRes.stdout}`);
   }

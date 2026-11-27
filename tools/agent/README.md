@@ -21,8 +21,10 @@ npm run agent -- catalog --domain apps
 npm run agent -- help-search "survey designer" --top 5
 npm run agent -- explore --route /Admin/App --script ./explore-temp.js
 npm run agent -- verify tests/survey/surveyCampaign.spec.ts
+npm run agent -- ingest --input ./backlog.csv --domain survey --json
 npm run agent -- runners
 npm run agent -- run --brief "Test-678 Add a new public campaign" --domain survey --runner agy
+npm run agent -- run --input ./backlog.csv --shared-branch feat/campaign-tests --runner opencode --cleanup-worktree
 ```
 
 ### Subcommands
@@ -31,9 +33,34 @@ npm run agent -- run --brief "Test-678 Add a new public campaign" --domain surve
 - `help-search`: Strips YAML frontmatter while indexing `title`/`summary`, ranking Markdown sections from `--docs-dir` or `ONSPRING_HELP_DOCS_DIR` using BM25 + heading weighting.
 - `explore`: Resolves `TEST_ENV` + `<TEST_ENV>_INSTANCE_URL`, creates/refreshes `.auth/sysAdmin.json` (`KEEP_AUTH_STATE=true`, auto-refreshing when older than `--max-age` minutes, default `45`), and either prints/launches `playwright-cli` commands or runs `--script <file.js>` in a single `try / finally` session.
 - `verify`: Runs `build:packages:clean`, `test:packages`, `format:test`, `tsc --noEmit`, `eslint --max-warnings 0 .`, TypeScript AST Screenplay architecture guardrails, and sequential Chrome (`--workers 2 --repeat-each 2`) + Edge (`--workers 2`) E2E tests (skipping Edge on Chrome failure unless `--no-fail-fast` is passed), streaming per-stage `[verify]` progress on `stderr` unless `--quiet` is passed.
+- `ingest`: Parses and normalizes single or batch test briefs from Markdown (`.md`), RFC-4180 CSV (`.csv`), JSON (`.json`), YAML (`.yml`/`.yaml`), GitHub Issues (`gh` CLI via `--issue`/`--label`/`--query`), or Onspring v2 REST API (`--record-id`, `--app-id [--filter]`, or `--report-id` with `--onspring-config` / `--field-map`). Unchecked `- [ ] Test-NNN` task-checklist items in Markdown and GitHub issues automatically expand into individual briefs (skipping completed `- [x]` items).
 - `runners`: Detects which headless agent CLIs (`agy`, `opencode`, `copilot`, `claude`, `codex`) are installed on `PATH`.
-- `run`: Orchestrates an autonomous test-authoring run in an isolated `.agent-worktrees/<slug>` worktree (linked `node_modules` by default, `--install` for `npm ci`, `--in-place` opt-out), executes the selected runner with pre-flight context while streaming live output to `stderr` + `.agent-runs/<runId>/attempt-<n>-runner.log` (with a 30s silent heartbeat fallback; pass `--quiet` to suppress), independently verifies changed specs with bounded retries (`--max-attempts 3`), writes run artifacts under `.agent-runs/`, and supports opt-in `--commit` and `--draft-pr`.
+- `run`: Orchestrates single or batch autonomous test-authoring runs from `--brief`, `--brief-file`, or any `ingest` source in isolated `.agent-worktrees/<slug>` worktrees (default one branch/worktree per brief, or `--shared-branch <name>` to stack passing tests sequentially), streams live runner output + 30s heartbeat to `stderr` (`--quiet` opt-out), independently verifies changed specs with bounded retries (`--max-attempts 3`), writes consolidated `.agent-runs/` reports, and supports opt-in `--commit` and `--draft-pr`.
 
 ### Environment Variables
 
 - `ONSPRING_HELP_DOCS_DIR`: Optional path to your local Onspring Help Center Markdown directory (used by `help-search` unless `--docs-dir` is passed).
+- `ONSPRING_CORP_API_URL`, `ONSPRING_CORP_API_KEY`, `ONSPRING_CORP_CONFIG`: Optional Onspring REST API v2 base URL, API key, and default JSON field/column mapping config path for the `onspring` adapter.
+
+Example Onspring field-mapping JSON (`--onspring-config`):
+
+```json
+{
+  "appId": 100,
+  "reportId": 250,
+  "fields": {
+    "testId": 1001,
+    "title": 1002,
+    "domain": 1003,
+    "preconditions": 1004,
+    "steps": 1005,
+    "assertions": 1006,
+    "cleanup": 1007
+  },
+  "columns": {
+    "testId": "Test ID",
+    "title": "Name",
+    "assertions": "Expected Result"
+  }
+}
+```

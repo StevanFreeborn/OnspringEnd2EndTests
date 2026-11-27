@@ -3,9 +3,18 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
+import {
+  fetchGitHubIssueBriefs,
+  fetchOnspringBriefs,
+  parseCsvBriefs,
+  parseJsonBriefs,
+  parseMarkdownBriefs,
+  parseYamlBriefs,
+} from '../src/adapters.js';
+import { formatBriefAsMarkdown } from '../src/briefs.js';
 import { buildCatalog } from '../src/catalog.js';
 import { indexMarkdownSections, parseFrontmatter, rankSections } from '../src/helpSearch.js';
-import { executeOrchestrator, parseChangedFilesFromPorcelain } from '../src/orchestrator.js';
+import { executeBatchOrchestrator, executeOrchestrator, parseChangedFilesFromPorcelain } from '../src/orchestrator.js';
 import { getRunnerAdapter, isValidRunnerName } from '../src/runners.js';
 import { parseCliArgs, runCommand } from '../src/utils.js';
 import { runArchitectureGuardrails } from '../src/verify.js';
@@ -491,5 +500,436 @@ setTimeout(() => {
     assert.equal(report.status, 'passed');
     const logContent = fs.readFileSync(path.join(report.runDir, 'attempt-1-runner.log'), 'utf8');
     assert.match(logContent, /runner-finished/);
+  });
+});
+
+void describe('input adapters', () => {
+  void it('parses single and multi-brief Markdown files and formats canonical brief', () => {
+    const md = `## Test-688 Modify an existing targeted recipient campaign
+- **Test ID**: Test-688
+- **Title**: Modify an existing targeted recipient campaign
+- **Domain**: survey
+- **Tags**: @notfedramp
+
+### Steps
+1. Open campaign edit dialog
+2. Save updates
+
+### Expected Assertions
+1. Updated values persist
+
+---
+
+## Test-689 Verify a targeted recipient campaign in test mode
+- **Domain**: survey
+`;
+    const briefs = parseMarkdownBriefs(md, 'backlog.md');
+    assert.equal(briefs.length, 2);
+    assert.equal(briefs[0]?.testId, 'Test-688');
+    assert.equal(briefs[0]?.domain, 'survey');
+    assert.deepEqual(briefs[0]?.tags, ['@notfedramp']);
+    assert.deepEqual(briefs[0]?.steps, ['Open campaign edit dialog', 'Save updates']);
+    assert.deepEqual(briefs[0]?.assertions, ['Updated values persist']);
+    assert.equal(briefs[1]?.testId, 'Test-689');
+
+    const rendered = formatBriefAsMarkdown(briefs[0]);
+    assert.match(rendered, /- \*\*Test ID\*\*: Test-688/);
+    assert.match(rendered, /### Expected Assertions/);
+  });
+
+  void it('parses RFC-4180 CSV with quotes, commas, and multi-line steps', () => {
+    const csv = `\uFEFFTest ID,Title,Domain,Tags,Steps,Expected Result
+Test-690,"Launch, verify, and archive campaign",Survey,"notfedramp","1. Save notifier\n2. Click Launch","Status shows ""Running""; Launch button hidden"
+`;
+    const briefs = parseCsvBriefs(csv, 'backlog.csv');
+    assert.equal(briefs.length, 1);
+    assert.equal(briefs[0]?.testId, 'Test-690');
+    assert.equal(briefs[0]?.title, 'Launch, verify, and archive campaign');
+    assert.equal(briefs[0]?.domain, 'survey');
+    assert.deepEqual(briefs[0]?.tags, ['@notfedramp']);
+    assert.deepEqual(briefs[0]?.steps, ['Save notifier', 'Click Launch']);
+    assert.deepEqual(briefs[0]?.assertions, ['Status shows "Running"', 'Launch button hidden']);
+  });
+
+  void it('parses JSON and multi-document YAML briefs', () => {
+    const jsonBriefs = parseJsonBriefs(
+      JSON.stringify({
+        briefs: [{ testId: 'Test-101', title: 'Add app', domain: 'apps', steps: ['Create app'] }],
+      }),
+      'briefs.json'
+    );
+    assert.equal(jsonBriefs.length, 1);
+    assert.equal(jsonBriefs[0]?.testId, 'Test-101');
+    assert.equal(jsonBriefs[0]?.domain, 'apps');
+
+    const yaml = `# Sample YAML batch
+- testId: Test-201
+  title: Create role # inline comment
+  domain: role
+  tags: [notfedramp, snapshot]
+  steps:
+    - Open roles page
+    - Save role
+---
+testId: Test-202
+title: "Edit role: \\"Admin\\""
+domain: role
+notes: |
+  Line one
+  Line two
+`;
+    const yamlBriefs = parseYamlBriefs(yaml, 'briefs.yaml');
+    assert.equal(yamlBriefs.length, 2);
+    assert.equal(yamlBriefs[0]?.testId, 'Test-201');
+    assert.deepEqual(yamlBriefs[0]?.tags, ['@notfedramp', '@snapshot']);
+    assert.deepEqual(yamlBriefs[0]?.steps, ['Open roles page', 'Save role']);
+    assert.equal(yamlBriefs[1]?.testId, 'Test-202');
+    assert.equal(yamlBriefs[1]?.title, 'Edit role: "Admin"');
+    assert.match(yamlBriefs[1]?.notes ?? '', /Line one\nLine two/);
+  });
+
+  void it('fetches GitHub issues via mocked gh CLI', async () => {
+    const briefs = await fetchGitHubIssueBriefs(
+      process.cwd(),
+      { label: 'e2e-test', limit: 5 },
+      {
+        runGh: async args => {
+          assert.equal(args.includes('--label'), true);
+          return {
+            exitCode: 0,
+            seconds: 0.05,
+            stderr: '',
+            stdout: JSON.stringify([
+              {
+                number: 42,
+                title: 'Test-900 Archive record via action bar',
+                body: '### Steps\n1. Open record\n2. Archive record',
+                labels: [{ name: 'domain:contentRecord' }, { name: 'not-fedramp' }],
+                url: 'https://github.com/org/repo/issues/42',
+              },
+            ]),
+          };
+        },
+      }
+    );
+
+    assert.equal(briefs.length, 1);
+    assert.equal(briefs[0]?.testId, 'Test-900');
+    assert.equal(briefs[0]?.domain, 'contentrecord');
+    assert.deepEqual(briefs[0]?.tags, ['@notfedramp']);
+    assert.deepEqual(briefs[0]?.steps, ['Open record', 'Archive record']);
+    assert.equal(briefs[0]?.source, 'github-issue#42');
+  });
+
+  void it('splits unchecked Markdown task-checklist items while preserving context', () => {
+    const md = `Survey answer field test coverage:
+- [x] Test-652 Existing completed item
+- [ ] Test-653 Create a survey answer field
+- [ ] **Test-654**: Update a survey answer field
+`;
+    const briefs = parseMarkdownBriefs(md, 'checklist.md');
+    assert.equal(briefs.length, 2);
+    assert.equal(briefs[0]?.testId, 'Test-653');
+    assert.equal(briefs[0]?.title, 'Create a survey answer field');
+    assert.equal(briefs[0]?.source, 'checklist.md#item-1');
+    assert.match(briefs[0]?.notes ?? '', /Survey answer field test coverage:/);
+    assert.equal(briefs[1]?.testId, 'Test-654');
+    assert.equal(briefs[1]?.title, 'Update a survey answer field');
+    assert.equal(briefs[1]?.source, 'checklist.md#item-2');
+  });
+
+  void it('expands GitHub issue Test-ID checklists into isolated briefs and rejects all-checked issues', async () => {
+    const briefs = await fetchGitHubIssueBriefs(
+      process.cwd(),
+      { issue: '325' },
+      {
+        runGh: async () => ({
+          exitCode: 0,
+          seconds: 0.04,
+          stderr: '',
+          stdout: JSON.stringify({
+            number: 325,
+            title: '[FEAT]: Add tests for survey answer field',
+            body: [
+              'Scope note: verify field grid behavior.',
+              '- [x] Test-652 Already done',
+              '- [ ] Test-653 Create a survey answer field',
+              '- [ ] Test-654 Update a survey answer field',
+            ].join('\n'),
+            labels: [{ name: 'domain:fields' }, { name: 'not-fedramp' }],
+            url: 'https://github.com/org/repo/issues/325',
+          }),
+        }),
+      }
+    );
+
+    assert.equal(briefs.length, 2);
+    assert.equal(briefs[0]?.testId, 'Test-653');
+    assert.equal(briefs[0]?.title, 'Create a survey answer field');
+    assert.equal(briefs[0]?.source, 'github-issue#325#item-1');
+    assert.equal(briefs[0]?.domain, 'fields');
+    assert.deepEqual(briefs[0]?.tags, ['@notfedramp']);
+    assert.equal(briefs[0]?.rawText, undefined);
+    assert.match(briefs[0]?.notes ?? '', /Parent issue: \[FEAT\]: Add tests for survey answer field/);
+    assert.match(briefs[0]?.notes ?? '', /Issue URL: https:\/\/github\.com\/org\/repo\/issues\/325/);
+    assert.match(briefs[0]?.notes ?? '', /Scope note: verify field grid behavior\./);
+
+    assert.equal(briefs[1]?.testId, 'Test-654');
+    assert.equal(briefs[1]?.title, 'Update a survey answer field');
+    assert.equal(briefs[1]?.source, 'github-issue#325#item-2');
+    assert.equal(briefs[1]?.rawText, undefined);
+
+    await assert.rejects(
+      () =>
+        fetchGitHubIssueBriefs(
+          process.cwd(),
+          { issue: '326' },
+          {
+            runGh: async () => ({
+              exitCode: 0,
+              seconds: 0.02,
+              stderr: '',
+              stdout: JSON.stringify({
+                number: 326,
+                title: '[FEAT]: Completed checklist',
+                body: '- [x] Test-655 Delete a survey answer field',
+                labels: [],
+              }),
+            }),
+          }
+        ),
+      /already checked/
+    );
+  });
+
+  void it('fetches Onspring single record, query, and report data with field-ID mapping', async () => {
+    const repo = createTempDir('agent-onspring-ingest-');
+    writeTempFile(
+      repo,
+      'onspring.map.json',
+      JSON.stringify({
+        appId: 50,
+        fields: { testId: 101, title: 102, domain: 103, steps: 104, assertions: 105 },
+        columns: { testId: 'Test Case ID', title: 'Scenario', assertions: 'Expected' },
+      })
+    );
+    writeTempFile(repo, '.env', 'ONSPRING_CORP_API_URL=https://api.example.com\nONSPRING_CORP_API_KEY=secret-key\n');
+
+    const prevUrl = process.env.ONSPRING_CORP_API_URL;
+    const prevKey = process.env.ONSPRING_CORP_API_KEY;
+    delete process.env.ONSPRING_CORP_API_URL;
+    delete process.env.ONSPRING_CORP_API_KEY;
+
+    try {
+      const singleBriefs = await fetchOnspringBriefs(
+        repo,
+        { onspringConfigPath: 'onspring.map.json', recordId: 77 },
+        {
+          fetchFn: async (input, init) => {
+            assert.equal(String(input), 'https://api.example.com/v2/records/appId/50/recordId/77?dataFormat=Formatted');
+            const hdrs = init?.headers as Record<string, string>;
+            assert.equal(hdrs['x-apikey'], 'secret-key');
+            assert.equal(hdrs['x-api-version'], '2');
+            return new Response(
+              JSON.stringify({
+                recordId: 77,
+                fieldData: [
+                  { fieldId: 101, value: 'Test-701' },
+                  { fieldId: 102, value: 'Add dashboard widget' },
+                  { fieldId: 103, value: { name: 'dashboard' } },
+                  { fieldId: 104, value: '<p>1. Open designer</p><p>2. Drag widget</p>' },
+                  { fieldId: 105, value: 'Widget saves cleanly' },
+                ],
+              }),
+              { status: 200 }
+            );
+          },
+        }
+      );
+
+      assert.equal(singleBriefs.length, 1);
+      assert.equal(singleBriefs[0]?.testId, 'Test-701');
+      assert.equal(singleBriefs[0]?.domain, 'dashboard');
+      assert.deepEqual(singleBriefs[0]?.steps, ['Open designer', 'Drag widget']);
+
+      const reportBriefs = await fetchOnspringBriefs(
+        repo,
+        { onspringConfigPath: 'onspring.map.json', reportId: 99 },
+        {
+          fetchFn: async input => {
+            assert.equal(
+              String(input),
+              'https://api.example.com/v2/reports/id/99?apiDataFormat=ReportData&dataFormat=Formatted'
+            );
+            return new Response(
+              JSON.stringify({
+                columns: ['Test Case ID', 'Scenario', 'Domain', 'Expected'],
+                rows: [{ recordId: 88, cells: ['Test-702', 'Filter grid rows', 'apps', 'Rows match filter'] }],
+              }),
+              { status: 200 }
+            );
+          },
+        }
+      );
+
+      assert.equal(reportBriefs.length, 1);
+      assert.equal(reportBriefs[0]?.testId, 'Test-702');
+      assert.equal(reportBriefs[0]?.domain, 'apps');
+      assert.deepEqual(reportBriefs[0]?.assertions, ['Rows match filter']);
+    } finally {
+      if (prevUrl !== undefined) process.env.ONSPRING_CORP_API_URL = prevUrl;
+      if (prevKey !== undefined) process.env.ONSPRING_CORP_API_KEY = prevKey;
+    }
+  });
+});
+
+void describe('executeBatchOrchestrator', () => {
+  async function initTempRepo(prefix: string): Promise<string> {
+    const repo = createTempDir(prefix);
+    writeTempFile(
+      repo,
+      'package.json',
+      JSON.stringify({ name: 'batch-test', workspaces: ['packages/*'], scripts: { 'build:packages': 'node -e ""' } })
+    );
+    writeTempFile(repo, 'packages/onspring-ui/src/index.ts', '');
+
+    const initRes = await runCommand('git', ['init'], { cwd: repo });
+    assert.equal(initRes.exitCode, 0);
+    await runCommand('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
+    await runCommand('git', ['config', 'user.name', 'Test User'], { cwd: repo });
+    await runCommand('git', ['add', '-A'], { cwd: repo });
+    await runCommand('git', ['commit', '-m', 'init'], { cwd: repo });
+    return repo;
+  }
+
+  void it('stacks batch briefs sequentially onto one shared branch and cleans up worktree', async () => {
+    const repo = await initTempRepo('agent-batch-shared-');
+    const mockScript = path.join(repo, 'batch-runner.mjs');
+    writeTempFile(
+      repo,
+      'batch-runner.mjs',
+      `import fs from 'node:fs';
+const promptText = fs.readFileSync(process.argv[2], 'utf8');
+const idMatch = /Test-\\d+/.exec(promptText);
+const id = idMatch ? idMatch[0].toLowerCase() : 'demo';
+fs.mkdirSync('tests/sample', { recursive: true });
+fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: '" + id + "' }); await sysAdminActor.browse().checkPage().hasUrl(/ok/); });\\n", 'utf8');
+`
+    );
+
+    const briefs = [
+      { testId: 'Test-11', title: 'First shared scenario', domain: 'sample', source: 'csv#1' },
+      { testId: 'Test-12', title: 'Second shared scenario', domain: 'sample', source: 'csv#2' },
+    ];
+
+    const { exitCode, report } = await executeBatchOrchestrator(
+      repo,
+      briefs,
+      {
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockScript) ? `"${mockScript}"` : mockScript} {{promptFile}}`,
+        domain: 'sample',
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: false,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: false,
+        draftPr: false,
+        cleanupWorktree: true,
+        dryRun: false,
+        quiet: true,
+        sharedBranch: 'feat/shared-batch',
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(report.status, 'passed');
+    assert.equal(report.mode, 'shared-branch');
+    assert.equal(report.sharedBranch, 'feat/shared-batch');
+    assert.equal(report.passed, 2);
+    assert.equal(Boolean(report.runs[0]?.commitSha), true);
+    assert.equal(Boolean(report.runs[1]?.commitSha), true);
+    assert.notEqual(report.runs[0]?.commitSha, report.runs[1]?.commitSha);
+    assert.equal(fs.existsSync(path.join(report.runDir, 'batch-report.json')), true);
+    assert.equal(fs.existsSync(path.join(report.runDir, 'batch-report.md')), true);
+    assert.equal(report.sharedWorktreeDir ? fs.existsSync(report.sharedWorktreeDir) : false, false);
+
+    const logRes = await runCommand('git', ['log', '--oneline', 'feat/shared-batch'], { cwd: repo });
+    assert.match(logRes.stdout, /Test-11 First shared scenario/);
+    assert.match(logRes.stdout, /Test-12 Second shared scenario/);
+  });
+
+  void it('runs batch briefs on separate isolated branches by default', async () => {
+    const repo = await initTempRepo('agent-batch-iso-');
+    const mockScript = path.join(repo, 'iso-runner.mjs');
+    writeTempFile(
+      repo,
+      'iso-runner.mjs',
+      `import fs from 'node:fs';
+const promptText = fs.readFileSync(process.argv[2], 'utf8');
+const idMatch = /Test-\\d+/.exec(promptText);
+const id = idMatch ? idMatch[0].toLowerCase() : 'demo';
+fs.mkdirSync('tests/sample', { recursive: true });
+fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: '" + id + "' }); await sysAdminActor.browse().checkPage().hasUrl(/ok/); });\\n", 'utf8');
+`
+    );
+
+    const briefs = [
+      { testId: 'Test-21', title: 'Isolated alpha', domain: 'sample', source: 'json#1' },
+      { testId: 'Test-22', title: 'Isolated beta', domain: 'sample', source: 'json#2' },
+    ];
+
+    const { exitCode, report } = await executeBatchOrchestrator(
+      repo,
+      briefs,
+      {
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockScript) ? `"${mockScript}"` : mockScript} {{promptFile}}`,
+        domain: 'sample',
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: false,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: true,
+        draftPr: false,
+        cleanupWorktree: true,
+        dryRun: false,
+        quiet: true,
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(report.mode, 'isolated');
+    assert.equal(report.passed, 2);
+    assert.equal(report.runs[0]?.branch, 'agent/test-21-isolated-alpha');
+    assert.equal(report.runs[1]?.branch, 'agent/test-22-isolated-beta');
   });
 });

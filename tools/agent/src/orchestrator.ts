@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { AdapterSource, ingestBriefs, isValidAdapterSource } from './adapters.js';
+import { formatBriefAsMarkdown, formatBriefHeadline, NormalizedTestBrief } from './briefs.js';
 import { buildCatalog } from './catalog.js';
 import { indexMarkdownSections, rankSections } from './helpSearch.js';
 import { getRunnerAdapter, isValidRunnerName, resolveDefaultRunner, RunnerName } from './runners.js';
@@ -62,6 +64,37 @@ export type OrchestratorConfig = {
   dryRun: boolean;
   quiet?: boolean;
   heartbeatSeconds?: number;
+  slugTitle?: string;
+  runDirOverride?: string;
+  existingWorktree?: {
+    path: string;
+    branch: string | null;
+  };
+  skipWorktreeCleanup?: boolean;
+};
+
+export type BatchOrchestratorConfig = Omit<
+  OrchestratorConfig,
+  'brief' | 'existingWorktree' | 'skipWorktreeCleanup' | 'runDirOverride' | 'slugTitle'
+> & {
+  sharedBranch?: string;
+  failFast?: boolean;
+};
+
+export type BatchOrchestratorReport = {
+  batchId: string;
+  status: 'passed' | 'failed' | 'dry-run';
+  mode: 'isolated' | 'shared-branch';
+  runner: RunnerName;
+  sharedBranch: string | null;
+  sharedWorktreeDir: string | null;
+  runDir: string;
+  total: number;
+  passed: number;
+  failed: number;
+  runs: OrchestratorReport[];
+  draftPrUrl?: string;
+  error?: string;
 };
 
 export type OrchestratorTestDeps = {
@@ -357,6 +390,27 @@ function formatElapsed(ms: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
+async function pushBranchAndCreateDraftPr(
+  worktreeDir: string,
+  branchName: string,
+  title: string,
+  bodyFilePath: string
+): Promise<string> {
+  const pushRes = await runCommand('git', ['push', '-u', 'origin', branchName], { cwd: worktreeDir });
+  if (pushRes.exitCode !== 0) {
+    throw new Error(`git push failed: ${pushRes.stderr || pushRes.stdout}`);
+  }
+
+  const prRes = await runCommand('gh', ['pr', 'create', '--draft', '--title', title, '--body-file', bodyFilePath], {
+    cwd: worktreeDir,
+  });
+  if (prRes.exitCode !== 0) {
+    throw new Error(`gh pr create failed: ${prRes.stderr || prRes.stdout}`);
+  }
+
+  return prRes.stdout.trim();
+}
+
 export async function executeOrchestrator(
   repoRoot: string,
   config: OrchestratorConfig,
@@ -368,20 +422,31 @@ export async function executeOrchestrator(
     }
   };
 
-  const slug = slugify(config.brief.split(/\r?\n/)[0] ?? 'task');
+  const slugInput = config.slugTitle?.trim() || (config.brief.split(/\r?\n/)[0] ?? 'task');
+  const slug = slugify(slugInput);
   const runId = `${formatRunTimestamp()}-${slug}`;
-  const runDir = path.join(repoRoot, '.agent-runs', runId);
+  const runDir = config.runDirOverride ?? path.join(repoRoot, '.agent-runs', runId);
   fs.mkdirSync(runDir, { recursive: true });
   fs.writeFileSync(path.join(runDir, 'brief.md'), config.brief, 'utf8');
 
-  const worktreeHandle: WorktreeHandle | null = config.inPlace
-    ? null
-    : await createAgentWorktree(repoRoot, {
-        slug,
-        baseRef: config.baseRef,
-        installDeps: config.installDeps,
-      });
-  const worktreeDir = worktreeHandle ? worktreeHandle.path : repoRoot;
+  const worktreeHandle: WorktreeHandle | null =
+    config.existingWorktree || config.inPlace
+      ? null
+      : await createAgentWorktree(repoRoot, {
+          slug,
+          baseRef: config.baseRef,
+          installDeps: config.installDeps,
+        });
+  const worktreeDir = config.existingWorktree
+    ? config.existingWorktree.path
+    : worktreeHandle
+      ? worktreeHandle.path
+      : repoRoot;
+  const activeBranch = config.existingWorktree
+    ? config.existingWorktree.branch
+    : worktreeHandle
+      ? worktreeHandle.branch
+      : null;
 
   if (worktreeHandle) {
     logProgress(`[agent] Created worktree '${worktreeHandle.path}' on branch '${worktreeHandle.branch}'.`);
@@ -393,7 +458,7 @@ export async function executeOrchestrator(
     runner: config.runner,
     brief: config.brief,
     worktreeDir,
-    branch: worktreeHandle ? worktreeHandle.branch : null,
+    branch: activeBranch,
     runDir,
     attempts: [],
     changedFiles: [],
@@ -549,7 +614,7 @@ export async function executeOrchestrator(
 
     if (report.status === 'passed' && (config.commit || config.draftPr)) {
       const commitScope = config.domain ? slugify(config.domain, 24) : 'e2e';
-      const titleLine = config.brief.split(/\r?\n/)[0]?.trim() || 'add automated test';
+      const titleLine = config.slugTitle?.trim() || config.brief.split(/\r?\n/)[0]?.trim() || 'add automated test';
       const commitMessage = `test(${commitScope}): ${titleLine.slice(0, 72)}`;
 
       const addRes = await runCommand('git', ['add', '-A'], { cwd: worktreeDir });
@@ -568,26 +633,12 @@ export async function executeOrchestrator(
       }
 
       if (config.draftPr) {
-        if (!worktreeHandle) {
+        if (!activeBranch) {
           throw new Error('--draft-pr requires an isolated worktree branch (cannot run with --in-place).');
         }
-        const pushRes = await runCommand('git', ['push', '-u', 'origin', worktreeHandle.branch], { cwd: worktreeDir });
-        if (pushRes.exitCode !== 0) {
-          throw new Error(`git push failed: ${pushRes.stderr || pushRes.stdout}`);
-        }
-
         const reportMdPath = path.join(runDir, 'report.md');
         fs.writeFileSync(reportMdPath, buildRunReportMarkdown(report), 'utf8');
-
-        const prRes = await runCommand(
-          'gh',
-          ['pr', 'create', '--draft', '--title', commitMessage, '--body-file', reportMdPath],
-          { cwd: worktreeDir }
-        );
-        if (prRes.exitCode !== 0) {
-          throw new Error(`gh pr create failed: ${prRes.stderr || prRes.stdout}`);
-        }
-        report.draftPrUrl = prRes.stdout.trim();
+        report.draftPrUrl = await pushBranchAndCreateDraftPr(worktreeDir, activeBranch, commitMessage, reportMdPath);
       }
     }
   } catch (err) {
@@ -599,11 +650,163 @@ export async function executeOrchestrator(
 
     const safeToDeleteWorktree =
       worktreeHandle !== null &&
+      !config.skipWorktreeCleanup &&
       config.cleanupWorktree &&
       (config.dryRun || Boolean(report.commitSha) || report.changedFiles.length === 0);
 
     if (worktreeHandle && safeToDeleteWorktree) {
       await removeAgentWorktree(repoRoot, worktreeHandle, config.dryRun);
+    }
+  }
+
+  const exitCode = report.status === 'passed' || report.status === 'dry-run' ? 0 : 1;
+  return { exitCode, report };
+}
+
+function buildBatchReportMarkdown(report: BatchOrchestratorReport): string {
+  const lines = [
+    `# Agent Batch Run: \`${report.batchId}\``,
+    '',
+    `- **Status**: ${report.status.toUpperCase()}`,
+    `- **Mode**: \`${report.mode}\``,
+    `- **Runner**: \`${report.runner}\``,
+    report.sharedBranch ? `- **Shared Branch**: \`${report.sharedBranch}\`` : '',
+    report.sharedWorktreeDir ? `- **Shared Worktree**: \`${report.sharedWorktreeDir}\`` : '',
+    `- **Counts**: ${report.passed}/${report.total} passed (${report.failed} failed)`,
+    report.draftPrUrl ? `- **Draft PR**: ${report.draftPrUrl}` : '',
+    report.error ? `- **Error**: ${report.error}` : '',
+    '',
+    '## Runs',
+    '| # | Status | Branch | Commit | Changed Specs | Summary / Run Dir |',
+    '| :--- | :--- | :--- | :--- | :--- | :--- |',
+    ...report.runs.map((r, i) => {
+      const specs = r.detectedSpecs.length > 0 ? r.detectedSpecs.map(s => `\`${s}\``).join(', ') : '(none)';
+      const summary = r.error ? r.error.replace(/\|/g, '\\|') : `\`${r.runId}\``;
+      return `| ${i + 1} | ${r.status.toUpperCase()} | ${r.branch ? `\`${r.branch}\`` : '(in-place)'} | ${r.commitSha ? `\`${r.commitSha}\`` : '-'} | ${specs} | ${summary} |`;
+    }),
+  ].filter(Boolean);
+
+  return `${lines.join('\n')}\n`;
+}
+
+export async function executeBatchOrchestrator(
+  repoRoot: string,
+  briefs: readonly NormalizedTestBrief[],
+  config: BatchOrchestratorConfig,
+  deps?: OrchestratorTestDeps
+): Promise<{ exitCode: number; report: BatchOrchestratorReport }> {
+  const logProgress = (line: string): void => {
+    if (!config.quiet) {
+      writeErr(line);
+    }
+  };
+
+  const sharedBranch = config.sharedBranch?.trim() || null;
+  if (sharedBranch && config.inPlace) {
+    throw new Error('--shared-branch cannot be combined with --in-place.');
+  }
+
+  const batchSlug = slugify(sharedBranch || config.domain || 'batch');
+  const batchId = `${formatRunTimestamp()}-batch-${batchSlug}`;
+  const runDir = path.join(repoRoot, '.agent-runs', batchId);
+  fs.mkdirSync(runDir, { recursive: true });
+
+  const sharedHandle: WorktreeHandle | null = sharedBranch
+    ? await createAgentWorktree(repoRoot, {
+        slug: slugify(sharedBranch),
+        baseRef: config.baseRef,
+        installDeps: config.installDeps,
+        branchName: sharedBranch,
+      })
+    : null;
+
+  if (sharedHandle) {
+    logProgress(`[agent] Created shared batch worktree '${sharedHandle.path}' on branch '${sharedHandle.branch}'.`);
+  }
+
+  const report: BatchOrchestratorReport = {
+    batchId,
+    status: config.dryRun ? 'dry-run' : 'failed',
+    mode: sharedBranch ? 'shared-branch' : 'isolated',
+    runner: config.runner,
+    sharedBranch: sharedHandle ? sharedHandle.branch : sharedBranch,
+    sharedWorktreeDir: sharedHandle ? sharedHandle.path : null,
+    runDir,
+    total: briefs.length,
+    passed: 0,
+    failed: 0,
+    runs: [],
+  };
+
+  try {
+    for (let i = 0; i < briefs.length; i++) {
+      const brief = briefs[i];
+      const headline = formatBriefHeadline(brief);
+      const itemDomain = brief.domain ?? config.domain;
+      logProgress(`[agent] Batch item ${i + 1}/${briefs.length}: ${headline}`);
+
+      const subRunDir = path.join(runDir, `brief-${String(i + 1).padStart(2, '0')}-${slugify(headline, 36)}`);
+      const itemOutcome = await executeOrchestrator(
+        repoRoot,
+        {
+          ...config,
+          brief: formatBriefAsMarkdown(brief),
+          slugTitle: headline,
+          domain: itemDomain,
+          commit: sharedHandle ? !config.dryRun : config.commit,
+          draftPr: sharedHandle ? false : config.draftPr,
+          cleanupWorktree: sharedHandle ? false : config.cleanupWorktree,
+          skipWorktreeCleanup: Boolean(sharedHandle),
+          runDirOverride: subRunDir,
+          existingWorktree: sharedHandle ? { path: sharedHandle.path, branch: sharedHandle.branch } : undefined,
+        },
+        deps
+      );
+
+      report.runs.push(itemOutcome.report);
+      if (itemOutcome.exitCode === 0) {
+        report.passed++;
+      } else {
+        report.failed++;
+        if (sharedHandle || config.failFast) {
+          logProgress(`[agent] Batch stopping after failure on item ${i + 1}/${briefs.length} (${headline}).`);
+          break;
+        }
+      }
+    }
+
+    if (config.dryRun) {
+      report.status = 'dry-run';
+    } else if (report.failed === 0 && report.passed === report.total) {
+      report.status = 'passed';
+      if (sharedHandle && config.draftPr) {
+        const batchMdPath = path.join(runDir, 'batch-report.md');
+        fs.writeFileSync(batchMdPath, buildBatchReportMarkdown(report), 'utf8');
+        const prTitle = `test(${config.domain ? slugify(config.domain, 24) : 'e2e'}): add ${report.total} automated test(s)`;
+        report.draftPrUrl = await pushBranchAndCreateDraftPr(
+          sharedHandle.path,
+          sharedHandle.branch,
+          prTitle,
+          batchMdPath
+        );
+      }
+    } else {
+      report.status = 'failed';
+    }
+  } catch (err) {
+    report.status = 'failed';
+    report.error = err instanceof Error ? err.message : String(err);
+  } finally {
+    fs.writeFileSync(path.join(runDir, 'batch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+    fs.writeFileSync(path.join(runDir, 'batch-report.md'), buildBatchReportMarkdown(report), 'utf8');
+
+    const safeToDeleteShared =
+      sharedHandle !== null &&
+      config.cleanupWorktree &&
+      (config.dryRun || report.failed === 0 || report.runs.every(r => r.changedFiles.length === 0));
+
+    if (sharedHandle && safeToDeleteShared) {
+      await removeAgentWorktree(repoRoot, sharedHandle, config.dryRun);
     }
   }
 
@@ -620,6 +823,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
         '--install',
         '--skip-e2e',
         '--no-fail-fast',
+        '--fail-fast',
         '--commit',
         '--draft-pr',
         '--cleanup-worktree',
@@ -630,6 +834,20 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
       options: new Set([
         '--brief',
         '--brief-file',
+        '--input',
+        '--source',
+        '--issue',
+        '--label',
+        '--query',
+        '--repo',
+        '--onspring-config',
+        '--app-id',
+        '--record-id',
+        '--report-id',
+        '--filter',
+        '--field-map',
+        '--limit',
+        '--shared-branch',
         '--runner',
         '--runner-cmd',
         '--model',
@@ -646,25 +864,71 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
 
   const briefText = parsed.options.get('--brief')?.trim();
   const briefFileArg = parsed.options.get('--brief-file')?.trim();
-  if (!briefText && !briefFileArg) {
-    writeErr('Error: Provide --brief "<description>" or --brief-file <path>.');
+  const inputPath = parsed.options.get('--input')?.trim();
+  const sourceArg = parsed.options.get('--source')?.toLowerCase();
+  const issue = parsed.options.get('--issue')?.trim();
+  const label = parsed.options.get('--label')?.trim();
+  const query = parsed.options.get('--query')?.trim();
+  const onspringConfigPath = parsed.options.get('--onspring-config')?.trim();
+  const filter = parsed.options.get('--filter')?.trim();
+  const fieldMapRaw = parsed.options.get('--field-map')?.trim();
+
+  const hasAdapterFlags = Boolean(
+    inputPath ||
+    sourceArg ||
+    issue ||
+    label ||
+    query ||
+    onspringConfigPath ||
+    parsed.options.has('--app-id') ||
+    parsed.options.has('--record-id') ||
+    parsed.options.has('--report-id') ||
+    filter ||
+    fieldMapRaw
+  );
+
+  if (sourceArg && !isValidAdapterSource(sourceArg)) {
+    writeErr(`Invalid --source '${sourceArg}'. Expected: markdown, csv, json, yaml, github, onspring.`);
     return 2;
   }
+
   if (briefText && briefFileArg) {
     writeErr('Error: Pass either --brief or --brief-file, not both.');
     return 2;
   }
+  if ((briefText || briefFileArg) && hasAdapterFlags) {
+    writeErr('Error: Do not combine --brief/--brief-file with input adapter flags (--input/--issue/--record-id/...).');
+    return 2;
+  }
+  if (!briefText && !briefFileArg && !hasAdapterFlags) {
+    writeErr(
+      'Error: Provide --brief "<description>", --brief-file <path>, --input <file>, GitHub flags, or Onspring flags.'
+    );
+    return 2;
+  }
 
-  let brief = briefText ?? '';
-  if (briefFileArg) {
-    const resolvedBriefPath = fs.existsSync(path.resolve(process.cwd(), briefFileArg))
-      ? path.resolve(process.cwd(), briefFileArg)
-      : path.resolve(repoRoot, briefFileArg);
-    if (!fs.existsSync(resolvedBriefPath)) {
-      writeErr(`Error: Brief file not found: '${briefFileArg}'.`);
-      return 1;
+  const parseOptionalPositiveInt = (optName: string): number | undefined => {
+    const raw = parsed.options.get(optName);
+    if (raw === undefined) return undefined;
+    const val = Number.parseInt(raw, 10);
+    if (!Number.isFinite(val) || val <= 0) {
+      throw new Error(`Invalid ${optName} value '${raw}'.`);
     }
-    brief = fs.readFileSync(resolvedBriefPath, 'utf8');
+    return val;
+  };
+
+  let limit: number | undefined;
+  let appId: number | undefined;
+  let recordId: number | undefined;
+  let reportId: number | undefined;
+  try {
+    limit = parseOptionalPositiveInt('--limit');
+    appId = parseOptionalPositiveInt('--app-id');
+    recordId = parseOptionalPositiveInt('--record-id');
+    reportId = parseOptionalPositiveInt('--report-id');
+  } catch (err) {
+    writeErr(err instanceof Error ? err.message : String(err));
+    return 2;
   }
 
   const maxAttemptsRaw = parsed.options.get('--max-attempts') ?? '3';
@@ -699,8 +963,8 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     return 2;
   }
 
-  const { exitCode, report } = await executeOrchestrator(repoRoot, {
-    brief,
+  const sharedBranch = parsed.options.get('--shared-branch')?.trim();
+  const baseConfig = {
     runner,
     runnerCmd,
     model: parsed.options.get('--model')?.trim(),
@@ -716,14 +980,107 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     cleanupWorktree: parsed.flags.has('--cleanup-worktree'),
     quiet: parsed.flags.has('--quiet'),
     dryRun: parsed.flags.has('--dry-run'),
-  });
+  };
 
+  if (sharedBranch && baseConfig.inPlace) {
+    writeErr('Error: --shared-branch cannot be combined with --in-place.');
+    return 2;
+  }
+
+  if (briefText || briefFileArg) {
+    let brief = briefText ?? '';
+    if (briefFileArg) {
+      const resolvedBriefPath = fs.existsSync(path.resolve(process.cwd(), briefFileArg))
+        ? path.resolve(process.cwd(), briefFileArg)
+        : path.resolve(repoRoot, briefFileArg);
+      if (!fs.existsSync(resolvedBriefPath)) {
+        writeErr(`Error: Brief file not found: '${briefFileArg}'.`);
+        return 1;
+      }
+      brief = fs.readFileSync(resolvedBriefPath, 'utf8');
+    }
+
+    if (sharedBranch) {
+      const singleBrief: NormalizedTestBrief = {
+        title: brief.split(/\r?\n/)[0]?.trim() || 'Automated test scenario',
+        domain: baseConfig.domain,
+        source: briefFileArg ?? 'cli-brief',
+        rawText: brief,
+      };
+      const { exitCode, report } = await executeBatchOrchestrator(repoRoot, [singleBrief], {
+        ...baseConfig,
+        sharedBranch,
+        failFast: parsed.flags.has('--fail-fast'),
+      });
+      if (parsed.flags.has('--json')) {
+        writeOut(JSON.stringify(report, null, 2));
+        return exitCode;
+      }
+      writeOut(buildBatchReportMarkdown(report));
+      writeOut(`Batch artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+      return exitCode;
+    }
+
+    const { exitCode, report } = await executeOrchestrator(repoRoot, { ...baseConfig, brief });
+    if (parsed.flags.has('--json')) {
+      writeOut(JSON.stringify(report, null, 2));
+      return exitCode;
+    }
+    writeOut(buildRunReportMarkdown(report));
+    writeOut(`Run artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+    return exitCode;
+  }
+
+  let briefs: NormalizedTestBrief[];
+  try {
+    briefs = await ingestBriefs(repoRoot, {
+      inputPath,
+      source: sourceArg as AdapterSource | undefined,
+      domainOverride: baseConfig.domain,
+      issue,
+      label,
+      query,
+      repo: parsed.options.get('--repo')?.trim(),
+      limit,
+      onspringConfigPath,
+      appId,
+      recordId,
+      reportId,
+      filter,
+      fieldMapRaw,
+    });
+  } catch (err) {
+    writeErr(err instanceof Error ? err.message : String(err));
+    return 1;
+  }
+
+  if (briefs.length === 1 && !sharedBranch) {
+    const single = briefs[0];
+    const { exitCode, report } = await executeOrchestrator(repoRoot, {
+      ...baseConfig,
+      brief: formatBriefAsMarkdown(single),
+      slugTitle: formatBriefHeadline(single),
+      domain: single.domain ?? baseConfig.domain,
+    });
+    if (parsed.flags.has('--json')) {
+      writeOut(JSON.stringify(report, null, 2));
+      return exitCode;
+    }
+    writeOut(buildRunReportMarkdown(report));
+    writeOut(`Run artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+    return exitCode;
+  }
+
+  const { exitCode, report } = await executeBatchOrchestrator(repoRoot, briefs, {
+    ...baseConfig,
+    sharedBranch,
+    failFast: parsed.flags.has('--fail-fast'),
+  });
   if (parsed.flags.has('--json')) {
     writeOut(JSON.stringify(report, null, 2));
     return exitCode;
   }
-
-  writeOut(buildRunReportMarkdown(report));
-  writeOut(`Run artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+  writeOut(buildBatchReportMarkdown(report));
+  writeOut(`Batch artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
   return exitCode;
 }
