@@ -7,17 +7,6 @@ import {
   SurveyCampaignsTabTargets,
 } from './surveyCampaigns.targets.js';
 
-export type SurveyCampaignEditState = {
-  name: string;
-  endDate: string;
-  archived: boolean;
-  allowPageSkipping: boolean;
-  saveProgressButtonText: string;
-  nextButtonText: string;
-  completeAndSubmitButtonText: string;
-  previousButtonText: string;
-};
-
 export const SurveyCampaignQuestions = {
   openTestCampaign:
     (campaignName: string): Question<WebActor, WebActor> =>
@@ -60,41 +49,16 @@ export const SurveyCampaignQuestions = {
 
       await actor.browse().waitForState(LaunchCampaignDialogTargets.closeButton, 'visible');
       const dialogText = await actor.browse().getText(LaunchCampaignDialogTargets.content);
+
+      await actor.browse().click(LaunchCampaignDialogTargets.closeButton);
+      await actor.browse().waitForState(LaunchCampaignDialogTargets.dialog, 'hidden');
+
       const urlMatch = /https:\/\/\S+/.exec(dialogText);
 
       if (!urlMatch) {
         throw new Error(`Could not extract public survey URL from Campaign Launch dialog: "${dialogText}"`);
       }
 
-      await actor.browse().click(LaunchCampaignDialogTargets.closeButton);
-      await actor.browse().waitForState(LaunchCampaignDialogTargets.dialog, 'hidden');
-
       return urlMatch[0];
-    },
-
-  campaignEditState:
-    (campaignName: string): Question<WebActor, SurveyCampaignEditState> =>
-    async (actor: WebActor): Promise<SurveyCampaignEditState> => {
-      await actor.browse().hover(SurveyCampaignsTabTargets.campaignRow(campaignName));
-      await actor.browse().click(SurveyCampaignsTabTargets.editButtonInRow(campaignName));
-      await actor.browse().waitForState(EditCampaignDialogTargets.nameInput, 'visible');
-
-      const state: SurveyCampaignEditState = {
-        name: await actor.browse().inputValue(EditCampaignDialogTargets.nameInput),
-        endDate: await actor.browse().inputValue(EditCampaignDialogTargets.endDateInput),
-        archived: await actor.browse().isChecked(EditCampaignDialogTargets.archiveCheckbox),
-        allowPageSkipping: await actor.browse().isChecked(EditCampaignDialogTargets.allowPageSkippingCheckbox),
-        saveProgressButtonText: await actor.browse().inputValue(EditCampaignDialogTargets.saveProgressButtonTextInput),
-        nextButtonText: await actor.browse().inputValue(EditCampaignDialogTargets.nextButtonTextInput),
-        completeAndSubmitButtonText: await actor
-          .browse()
-          .inputValue(EditCampaignDialogTargets.completeAndSubmitButtonTextInput),
-        previousButtonText: await actor.browse().inputValue(EditCampaignDialogTargets.previousButtonTextInput),
-      };
-
-      await actor.browse().click(EditCampaignDialogTargets.cancelButton);
-      await actor.browse().waitForState(EditCampaignDialogTargets.dialog, 'hidden');
-
-      return state;
     },
 };

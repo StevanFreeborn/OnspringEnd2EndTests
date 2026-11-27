@@ -1,5 +1,6 @@
 import { FakeDataFactory, Survey, SurveyCampaign, TextQuestion } from '@stevanfreeborn/onspring-models';
 import {
+  EditCampaignDialogTargets,
   PublicSurveyPageTargets,
   SurveyCampaignQuestions,
   SurveyCampaignsTabTargets,
@@ -151,11 +152,18 @@ test.describe('public campaign', () => {
       await sysAdminActor.browse().check(SurveyCampaignsTabTargets.campaignRow(updatedName)).isVisible();
       await sysAdminActor.browse().check(SurveyCampaignsTabTargets.campaignRow(campaign.name)).isHidden();
 
-      const state = await sysAdminActor.asks(SurveyCampaignQuestions.campaignEditState(updatedName));
-      expect(state.name).toBe(updatedName);
-      expect(state.allowPageSkipping).toBe(false);
-      expect(state.saveProgressButtonText).toBe('Save Draft');
-      expect(state.nextButtonText).toBe('Forward');
+      await sysAdminActor.attemptsTo(SurveyCampaignTasks.openEditDialog(updatedName));
+      try {
+        await sysAdminActor.browse().check(EditCampaignDialogTargets.nameInput).hasValue(updatedName);
+        await sysAdminActor.browse().check(EditCampaignDialogTargets.allowPageSkippingCheckbox).isNotChecked();
+        await sysAdminActor
+          .browse()
+          .check(EditCampaignDialogTargets.saveProgressButtonTextInput)
+          .hasValue('Save Draft');
+        await sysAdminActor.browse().check(EditCampaignDialogTargets.nextButtonTextInput).hasValue('Forward');
+      } finally {
+        await sysAdminActor.attemptsTo(SurveyCampaignTasks.closeEditDialog());
+      }
     });
   });
 

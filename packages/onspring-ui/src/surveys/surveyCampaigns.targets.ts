@@ -8,6 +8,8 @@ export const SurveyCampaignsTabTargets = {
   reloadCampaignsPathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/ReloadCampaigns/,
   deletePathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/Delete/,
   editPublicPathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/EditPublic/,
+  editTargetedPathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/EditTargeted/,
+  editSavePathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/Edit(?:Public|Targeted)(?:\?|$)/,
   launchPromptPathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/LaunchPrompt/,
   launchPathRegex: /\/Admin\/App\/\d+\/SurveyCampaign\/\d+\/Launch(?:\?|$)/,
   addCampaignLink: (page: Page): Locator => page.getByRole('link', { name: 'Add Campaign' }),
@@ -158,6 +160,24 @@ export const EditCampaignDialogTargets = {
     resolveFrameOwner(page, editCampaignFrameOwner).locator('#PreviousButtonText'),
   surveyUrlCell: (page: Page): Locator =>
     resolveFrameOwner(page, editCampaignFrameOwner).locator('tr:has(td:has-text("Survey URL")) td').nth(1),
+  generalTab: (page: Page): Locator =>
+    resolveFrameOwner(page, editCampaignFrameOwner)
+      .locator('#dialog-tab-strip')
+      .getByRole('tab', { name: 'General', exact: true }),
+  surveyPoolTab: (page: Page): Locator =>
+    resolveFrameOwner(page, editCampaignFrameOwner)
+      .locator('#dialog-tab-strip')
+      .getByRole('tab', { name: 'Survey Pool', exact: true }),
+  notifierTab: (page: Page): Locator =>
+    resolveFrameOwner(page, editCampaignFrameOwner)
+      .locator('#dialog-tab-strip')
+      .getByRole('tab', { name: 'Notifier', exact: true }),
+  fromNameInput: (page: Page): Locator => resolveFrameOwner(page, editCampaignFrameOwner).locator('#FromName'),
+  fromAddressLocalPartInput: (page: Page): Locator =>
+    resolveFrameOwner(page, editCampaignFrameOwner).locator('#local-part'),
+  subjectInput: (page: Page): Locator => resolveFrameOwner(page, editCampaignFrameOwner).locator('#Subject'),
+  notifierBodyEditor: (page: Page): Locator =>
+    resolveFrameOwner(page, editCampaignFrameOwner).locator('.rich-text-editor:has(#Body) .mce-content-body'),
 };
 
 export const LaunchCampaignDialogTargets = {

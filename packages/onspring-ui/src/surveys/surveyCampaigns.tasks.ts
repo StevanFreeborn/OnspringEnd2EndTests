@@ -7,8 +7,16 @@ import {
   CopyCampaignDialogTargets,
   DeleteCampaignDialogTargets,
   EditCampaignDialogTargets,
+  LaunchCampaignDialogTargets,
   SurveyCampaignsTabTargets,
 } from './surveyCampaigns.targets.js';
+
+export type TargetedCampaignNotifierOptions = {
+  fromName?: string;
+  fromAddressLocalPart?: string;
+  subject?: string;
+  body?: string;
+};
 
 export type EditSurveyCampaignOptions = {
   name?: string;
@@ -16,6 +24,7 @@ export type EditSurveyCampaignOptions = {
   archive?: boolean;
   allowPageSkipping?: boolean;
   actionButtons?: SurveyCampaignActionButtons;
+  notifier?: TargetedCampaignNotifierOptions;
 };
 
 export type CopySurveyCampaignOptions = {
@@ -154,11 +163,9 @@ export const SurveyCampaignTasks = {
       await actor.browse().waitForState(SurveyCampaignsTabTargets.campaignRow(campaignName), 'hidden');
     },
 
-  edit:
-    (campaignName: string, updates: EditSurveyCampaignOptions): Task<WebActor> =>
+  saveOpenEditDialog:
+    (updates: EditSurveyCampaignOptions): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
-      await actor.browse().hover(SurveyCampaignsTabTargets.campaignRow(campaignName));
-      await actor.browse().click(SurveyCampaignsTabTargets.editButtonInRow(campaignName));
       await actor.browse().waitForState(EditCampaignDialogTargets.nameInput, 'visible');
 
       if (updates.name !== undefined) {
@@ -198,10 +205,33 @@ export const SurveyCampaignTasks = {
         await actor.browse().fill(EditCampaignDialogTargets.previousButtonTextInput, updates.actionButtons.previous);
       }
 
+      if (updates.notifier) {
+        await actor.attemptsTo(SurveyCampaignTasks.openEditNotifierTab());
+
+        if (updates.notifier.fromName !== undefined) {
+          await actor.browse().fill(EditCampaignDialogTargets.fromNameInput, updates.notifier.fromName);
+        }
+
+        if (updates.notifier.fromAddressLocalPart !== undefined) {
+          await actor
+            .browse()
+            .fill(EditCampaignDialogTargets.fromAddressLocalPartInput, updates.notifier.fromAddressLocalPart);
+        }
+
+        if (updates.notifier.subject !== undefined) {
+          await actor.browse().fill(EditCampaignDialogTargets.subjectInput, updates.notifier.subject);
+        }
+
+        if (updates.notifier.body !== undefined) {
+          await actor.browse().click(EditCampaignDialogTargets.notifierBodyEditor);
+          await actor.browse().fill(EditCampaignDialogTargets.notifierBodyEditor, updates.notifier.body);
+        }
+      }
+
       const saveResponse = actor
         .browse()
         .waitForResponse(
-          (r: Response) => SurveyCampaignsTabTargets.editPublicPathRegex.test(r.url()) && r.status() === 200
+          (r: Response) => SurveyCampaignsTabTargets.editSavePathRegex.test(r.url()) && r.status() === 200
         );
       const reloadResponse = actor
         .browse()
@@ -213,6 +243,60 @@ export const SurveyCampaignTasks = {
       await saveResponse;
       await reloadResponse;
       await actor.browse().waitForState(EditCampaignDialogTargets.dialog, 'hidden');
+    },
+
+  openEditDialog:
+    (campaignName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().hover(SurveyCampaignsTabTargets.campaignRow(campaignName));
+      await actor.browse().click(SurveyCampaignsTabTargets.editButtonInRow(campaignName));
+      await actor.browse().waitForState(EditCampaignDialogTargets.nameInput, 'visible');
+    },
+
+  openEditNotifierTab:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(EditCampaignDialogTargets.notifierTab);
+      await actor.browse().waitForState(EditCampaignDialogTargets.fromNameInput, 'visible');
+    },
+
+  edit:
+    (campaignName: string, updates: EditSurveyCampaignOptions): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(
+        SurveyCampaignTasks.openEditDialog(campaignName),
+        SurveyCampaignTasks.saveOpenEditDialog(updates)
+      );
+    },
+
+  launchTargetedCampaign:
+    (campaignName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyCampaignsTabTargets.launchButtonInRow(campaignName));
+      await actor.browse().waitForState(LaunchCampaignDialogTargets.launchButton, 'visible');
+
+      const launchResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => SurveyCampaignsTabTargets.launchPathRegex.test(r.url()) && r.status() === 200
+        );
+      const reloadResponse = actor
+        .browse()
+        .waitForResponse(
+          (r: Response) => SurveyCampaignsTabTargets.reloadCampaignsPathRegex.test(r.url()) && r.status() === 200
+        );
+
+      await actor.browse().click(LaunchCampaignDialogTargets.launchButton);
+      await launchResponse;
+      await reloadResponse;
+
+      await actor.browse().waitForState(LaunchCampaignDialogTargets.closeButton, 'visible');
+      await actor
+        .browse()
+        .check(LaunchCampaignDialogTargets.content)
+        .containsText('The Survey Campaign has been launched.');
+      await actor.browse().click(LaunchCampaignDialogTargets.closeButton);
+      await actor.browse().waitForState(LaunchCampaignDialogTargets.dialog, 'hidden');
     },
 
   endAndArchive:
