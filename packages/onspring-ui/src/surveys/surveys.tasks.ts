@@ -2,6 +2,7 @@ import { Response } from '@playwright/test';
 import { TEST_SURVEY_NAME } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
+import { AppLayoutTabTargets } from '../apps/apps.targets.js';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
@@ -137,6 +138,19 @@ export const SurveyTasks = {
     (surveyId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.attemptsTo(SurveyTasks.gotoSurvey(surveyId), SurveyTasks.openDesignTab());
+    },
+
+  openLayoutsTab:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDetailTargets.layoutsTabButton);
+      await actor.browse().waitForState(AppLayoutTabTargets.layoutsGrid, 'visible');
+    },
+
+  gotoSurveyLayoutsTab:
+    (surveyId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(SurveyTasks.gotoSurvey(surveyId), SurveyTasks.openLayoutsTab());
     },
 
   openCampaignsTab:

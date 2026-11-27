@@ -71,6 +71,7 @@ export * from './stopCalculationOutcome.js';
 export * from './survey.js';
 export * from './surveyCampaign.js';
 export * from './surveyPage.js';
+export * from './surveyAnswerField.js';
 export * from './textField.js';
 export * from './textFormulaField.js';
 export * from './textMessage.js';

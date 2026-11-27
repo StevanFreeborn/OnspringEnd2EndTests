@@ -39,6 +39,7 @@ export const SurveyDetailTargets = {
   designTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Design'),
   campaignsTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Campaigns'),
   layoutTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Layout'),
+  layoutsTabButton: (page: Page): Locator => page.locator('#tab-strip').getByText('Layouts', { exact: true }),
   designSurveyLink: (page: Page): Locator => page.getByRole('link', { name: 'Design Survey' }),
 };
 

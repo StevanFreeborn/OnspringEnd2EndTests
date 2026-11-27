@@ -62,6 +62,8 @@ export const SurveyDesignerTargets = {
   movePageItemPathRegex: /\/Admin\/App\/\d+\/SurveyPageItem\/Move/,
 
   modal: (page: Page): Locator => page.getByRole('dialog', { name: /Survey Designer/ }),
+  doneButton: (page: Page): Locator =>
+    page.getByRole('dialog', { name: /Survey Designer/ }).getByRole('button', { name: 'Done' }),
 
   attachmentButton: (page: Page): Locator => designerFrame(page).getByRole('button', { name: 'Attachment' }),
   dateButton: (page: Page): Locator => designerFrame(page).getByRole('button', { name: 'Date/Time' }),

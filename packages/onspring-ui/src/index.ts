@@ -27,6 +27,8 @@ export * from './apps/app.tasks.js';
 export * from './fields/fields.targets.js';
 export * from './fields/fields.questions.js';
 export * from './fields/fields.tasks.js';
+export * from './fields/surveyAnswerField.targets.js';
+export * from './fields/surveyAnswerField.tasks.js';
 export * from './layoutObjects/layoutObjects.targets.js';
 export * from './layoutObjects/layoutObjects.tasks.js';
 export * from './dynamicDocuments/dynamicDocuments.targets.js';

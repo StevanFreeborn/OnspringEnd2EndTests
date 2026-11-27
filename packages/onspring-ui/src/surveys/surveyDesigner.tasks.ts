@@ -274,6 +274,13 @@ async function moveDesignerItemAbove(actor: WebActor, options: MoveDesignerItemO
 }
 
 export const SurveyDesignerTasks = {
+  close:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDesignerTargets.doneButton);
+      await actor.browse().waitForState(SurveyDesignerTargets.modal, 'hidden');
+    },
+
   saveInlineEdit:
     (): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {

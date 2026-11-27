@@ -13,6 +13,7 @@ export enum FieldTypeEnum {
   ParallelReference = 'Parallel Reference',
   AutoNumber = 'AutoNumber',
   System = 'System',
+  SurveyAnswer = 'Survey Answer',
 }
 
 export type FieldType =
@@ -27,7 +28,8 @@ export type FieldType =
   | 'Formula'
   | 'Parallel Reference'
   | 'AutoNumber'
-  | 'System';
+  | 'System'
+  | 'Survey Answer';
 
 export type ObjectType = 'Formatted Text Block' | 'Section Label';
 
