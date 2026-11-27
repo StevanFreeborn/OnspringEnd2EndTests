@@ -322,7 +322,7 @@ test.describe('content record', () => {
     });
 
     await test.step('Verify the record was closed and saved', async () => {
-      expect(sysAdminActor.browse().url()).not.toMatch(ContentRecordTargets.editPathRegex);
+      await sysAdminActor.browse().checkPage().doesNotHaveUrl(ContentRecordTargets.editPathRegex);
 
       await sysAdminActor.attemptsTo(ContentTasks.gotoView(targetApp.id, 1));
       const section = await sysAdminActor.asks(

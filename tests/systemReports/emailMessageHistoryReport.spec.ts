@@ -173,15 +173,14 @@ test.describe('email message history report', () => {
     });
 
     await test.step('Verify the email message history report is sorted', async () => {
-      const firstEmailSubject = await sysAdminActor
+      await sysAdminActor
         .browse()
-        .getText(EmailMessageHistoryReportTargets.firstRowSubjectCell);
-      const lastEmailSubject = await sysAdminActor
+        .check(EmailMessageHistoryReportTargets.firstRowSubjectCell)
+        .containsText(emailBodies[0].subject);
+      await sysAdminActor
         .browse()
-        .getText(EmailMessageHistoryReportTargets.lastRowSubjectCell);
-
-      expect(firstEmailSubject).toContain(emailBodies[0].subject);
-      expect(lastEmailSubject).toContain(emailBodies[1].subject);
+        .check(EmailMessageHistoryReportTargets.lastRowSubjectCell)
+        .containsText(emailBodies[1].subject);
     });
   });
 
