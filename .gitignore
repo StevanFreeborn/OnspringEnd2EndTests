@@ -21,3 +21,5 @@ apiSetupResults/
 fixtures/testFiles/remote/
 **/dist/
 *.tsbuildinfo
+.agent-worktrees/
+.agent-runs/

@@ -21,6 +21,8 @@ npm run agent -- catalog --domain apps
 npm run agent -- help-search "survey designer" --top 5
 npm run agent -- explore --route /Admin/App --script ./explore-temp.js
 npm run agent -- verify tests/survey/surveyCampaign.spec.ts
+npm run agent -- runners
+npm run agent -- run --brief "Test-678 Add a new public campaign" --domain survey --runner agy
 ```
 
 ### Subcommands
@@ -29,6 +31,8 @@ npm run agent -- verify tests/survey/surveyCampaign.spec.ts
 - `help-search`: Strips YAML frontmatter while indexing `title`/`summary`, ranking Markdown sections from `--docs-dir` or `ONSPRING_HELP_DOCS_DIR` using BM25 + heading weighting.
 - `explore`: Resolves `TEST_ENV` + `<TEST_ENV>_INSTANCE_URL`, creates/refreshes `.auth/sysAdmin.json` (`KEEP_AUTH_STATE=true`, auto-refreshing when older than `--max-age` minutes, default `45`), and either prints/launches `playwright-cli` commands or runs `--script <file.js>` in a single `try / finally` session.
 - `verify`: Runs `build:packages:clean`, `test:packages`, `format:test`, `tsc --noEmit`, `eslint --max-warnings 0 .`, TypeScript AST Screenplay architecture guardrails, and sequential Chrome (`--workers 2 --repeat-each 2`) + Edge (`--workers 2`) E2E tests (skipping Edge on Chrome failure unless `--no-fail-fast` is passed).
+- `runners`: Detects which headless agent CLIs (`agy`, `opencode`, `copilot`, `claude`, `codex`) are installed on `PATH`.
+- `run`: Orchestrates an autonomous test-authoring run in an isolated `.agent-worktrees/<slug>` worktree (linked `node_modules` by default, `--install` for `npm ci`, `--in-place` opt-out), executes the selected runner with pre-flight context, independently verifies changed specs with bounded retries (`--max-attempts 3`), writes run artifacts under `.agent-runs/`, and supports opt-in `--commit` and `--draft-pr`.
 
 ### Environment Variables
 

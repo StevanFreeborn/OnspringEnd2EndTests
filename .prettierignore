@@ -6,3 +6,5 @@ cleanup-results/
 node_modules/
 palywright-report/
 test-results/
+.agent-worktrees/
+.agent-runs/

@@ -128,7 +128,14 @@ function needsWindowsShell(command: string): boolean {
   }
   const lower = command.toLowerCase();
   return (
-    lower === 'npm' || lower === 'npx' || lower === 'playwright-cli' || lower.endsWith('.cmd') || lower.endsWith('.bat')
+    lower === 'npm' ||
+    lower === 'npx' ||
+    lower === 'playwright-cli' ||
+    lower === 'opencode' ||
+    lower === 'claude' ||
+    lower === 'codex' ||
+    lower.endsWith('.cmd') ||
+    lower.endsWith('.bat')
   );
 }
 
@@ -159,6 +166,7 @@ export function runCommand(
     const child = spawn(spawnExe, spawnArgs, {
       cwd,
       env: extraEnv ? { ...process.env, ...extraEnv } : process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
       shell: false,
       windowsVerbatimArguments: useWinCmd,
       windowsHide: true,
@@ -193,6 +201,75 @@ export function runCommand(
       });
     });
   });
+}
+
+/**
+ * Execute an arbitrary shell command line (for custom runner templates).
+ */
+export function runShellCommand(
+  commandLine: string,
+  { cwd, extraEnv }: RunCommandOptions = {}
+): Promise<CommandResult> {
+  return new Promise(resolve => {
+    const startedAt = Date.now();
+    const isWin = process.platform === 'win32';
+    const exe = isWin ? 'cmd.exe' : 'sh';
+    const args = isWin ? ['/d', '/s', '/c', `"${commandLine}"`] : ['-c', commandLine];
+
+    const child = spawn(exe, args, {
+      cwd,
+      env: extraEnv ? { ...process.env, ...extraEnv } : process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+      windowsVerbatimArguments: isWin,
+      windowsHide: true,
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout?.on('data', (chunk: Buffer | string) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr?.on('data', (chunk: Buffer | string) => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', err => {
+      resolve({
+        exitCode: 1,
+        stdout,
+        stderr: stderr ? `${stderr}\n${err.message}` : err.message,
+        seconds: (Date.now() - startedAt) / 1000,
+      });
+    });
+
+    child.on('close', code => {
+      resolve({
+        exitCode: code ?? 1,
+        stdout,
+        stderr,
+        seconds: (Date.now() - startedAt) / 1000,
+      });
+    });
+  });
+}
+
+/**
+ * Resolve an executable on PATH, returning its first resolved path or null.
+ */
+export async function whichExecutable(executable: string, cwd: string): Promise<string | null> {
+  const checker = process.platform === 'win32' ? 'where.exe' : 'which';
+  const res = await runCommand(checker, [executable], { cwd });
+  if (res.exitCode !== 0) {
+    return null;
+  }
+  const firstLine = res.stdout
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .find(Boolean);
+  return firstLine ?? null;
 }
 
 /**

@@ -1,6 +1,8 @@
 import { runCatalog } from './catalog.js';
 import { runExplore } from './explore.js';
 import { runHelpSearch } from './helpSearch.js';
+import { runOrchestratorCommand } from './orchestrator.js';
+import { runRunnersCommand } from './runners.js';
 import { findRepoRoot, writeErr, writeOut } from './utils.js';
 import { runVerify } from './verify.js';
 
@@ -15,6 +17,8 @@ Commands:
   help-search  Search local Onspring Help Center Markdown docs (ONSPRING_HELP_DOCS_DIR)
   explore      Ensure .auth/sysAdmin.json session and prepare/launch playwright-cli exploration
   verify       Run package build, unit tests, format, typecheck, ESLint, TS AST guardrails, and E2E verification
+  runners      Detect available headless agent CLIs on PATH
+  run          Orchestrate an autonomous headless agent run in an isolated worktree with bounded self-heal
 
 Run 'npm run agent -- <command> --help' for command-specific options.`;
 
@@ -27,6 +31,10 @@ const COMMAND_HELP: Record<string, string> = {
   npm run agent -- explore [--route <path>] [--refresh-auth] [--max-age <minutes>] [--launch] [--script <file.js>] [--session <name>] [--json]`,
   verify: `Usage:
   npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat <n>] [--browsers both|chrome|edge] [--json]`,
+  runners: `Usage:
+  npm run agent -- runners [--json]`,
+  run: `Usage:
+  npm run agent -- run (--brief "<text>" | --brief-file <path>) [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--dry-run] [--json]`,
 };
 
 function isHelp(arg: string): boolean {
@@ -65,6 +73,10 @@ async function main(): Promise<number> {
       return runExplore(repoRoot, rest);
     case 'verify':
       return runVerify(repoRoot, rest);
+    case 'runners':
+      return runRunnersCommand(repoRoot, rest);
+    case 'run':
+      return runOrchestratorCommand(repoRoot, rest);
     default:
       writeErr(`Unknown command: '${command}'.\n`);
       writeOut(HELP_TEXT);

@@ -22,6 +22,9 @@ Prefer the deterministic TypeScript CLI over manual grep when authoring or verif
   `npm run agent -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>]`
 - Run full verification (package builds, unit tests, Prettier, TypeScript, zero-warning ESLint, Screenplay guardrails, and sequential fail-fast Chrome/Edge E2E):
   `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat 2] [--json]`
+- List available headless agent CLIs or orchestrate an isolated worktree run with bounded self-heal:
+  `npm run agent -- runners [--json]`
+  `npm run agent -- run (--brief "<text>" | --brief-file <path>) [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--dry-run]`
 
 ## Non-Negotiable Architecture Rules
 

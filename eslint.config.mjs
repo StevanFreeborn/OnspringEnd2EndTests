@@ -26,6 +26,8 @@ export default defineConfig([
     '**/test-results',
     '**/scripts',
     '**/dist',
+    '**/.agent-worktrees',
+    '**/.agent-runs',
     'eslint.config.mjs',
   ]),
   {

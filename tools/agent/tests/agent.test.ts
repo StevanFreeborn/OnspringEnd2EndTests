@@ -5,8 +5,11 @@ import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { buildCatalog } from '../src/catalog.js';
 import { indexMarkdownSections, parseFrontmatter, rankSections } from '../src/helpSearch.js';
-import { parseCliArgs } from '../src/utils.js';
+import { executeOrchestrator, parseChangedFilesFromPorcelain } from '../src/orchestrator.js';
+import { getRunnerAdapter, isValidRunnerName } from '../src/runners.js';
+import { parseCliArgs, runCommand } from '../src/utils.js';
 import { runArchitectureGuardrails } from '../src/verify.js';
+import { slugify, linkWorktreeNodeModules, unlinkWorktreeNodeModules } from '../src/worktree.js';
 
 const tempDirs: string[] = [];
 
@@ -227,5 +230,180 @@ test('login listener', async ({ page }) => {
     assert.match(result.output ?? '', /relative specifier `\.\/apps\.targets` must end with `\.js`/);
     assert.match(result.output ?? '', /missing required `AnnotationType\.TestId`/);
     assert.match(result.output ?? '', /avoid `waitForTimeout\(\)`/);
+  });
+});
+
+void describe('worktree & porcelain helpers', () => {
+  void it('slugifies test brief titles cleanly', () => {
+    assert.equal(slugify('Test-678 Add a new public campaign!'), 'test-678-add-a-new-public-campaign');
+    assert.equal(slugify('   '), 'task');
+  });
+
+  void it('parses git status --porcelain without trimming leading status spaces', () => {
+    const sample = [
+      ' M packages/onspring-ui/src/index.ts',
+      '?? tests/survey/newSpec.spec.ts',
+      'R  tests/old.spec.ts -> tests/survey/renamed.spec.ts',
+    ].join('\n');
+
+    const { changedFiles, detectedSpecs } = parseChangedFilesFromPorcelain(sample);
+    assert.deepEqual(changedFiles, [
+      'packages/onspring-ui/src/index.ts',
+      'tests/survey/newSpec.spec.ts',
+      'tests/survey/renamed.spec.ts',
+    ]);
+    assert.deepEqual(detectedSpecs, ['tests/survey/newSpec.spec.ts', 'tests/survey/renamed.spec.ts']);
+  });
+
+  void it('isolates workspace packages per worktree and unlinks safely', () => {
+    const repo = createTempDir('agent-wt-repo-');
+    const wt = createTempDir('agent-wt-checkout-');
+
+    const rootPkgJson = JSON.stringify({ name: 'test-root', workspaces: ['packages/*'] });
+    writeTempFile(repo, 'package.json', rootPkgJson);
+    writeTempFile(wt, 'package.json', rootPkgJson);
+
+    writeTempFile(repo, 'packages/onspring-models/package.json', '{"name":"@stevanfreeborn/onspring-models"}');
+    writeTempFile(wt, 'packages/onspring-models/package.json', '{"name":"@stevanfreeborn/onspring-models"}');
+    writeTempFile(repo, 'node_modules/some-dep/index.js', 'export const dep = 1;');
+
+    const repoScopeDir = path.join(repo, 'node_modules', '@stevanfreeborn');
+    fs.mkdirSync(repoScopeDir, { recursive: true });
+    fs.symlinkSync(
+      path.join(repo, 'packages', 'onspring-models'),
+      path.join(repoScopeDir, 'onspring-models'),
+      process.platform === 'win32' ? 'junction' : 'dir'
+    );
+
+    linkWorktreeNodeModules(repo, wt);
+
+    const wtModelLink = path.join(wt, 'node_modules', '@stevanfreeborn', 'onspring-models');
+    const wtDepLink = path.join(wt, 'node_modules', 'some-dep');
+    const repoModelLink = path.join(repoScopeDir, 'onspring-models');
+
+    assert.equal(fs.realpathSync(wtModelLink), fs.realpathSync(path.join(wt, 'packages', 'onspring-models')));
+    assert.equal(fs.realpathSync(wtDepLink), fs.realpathSync(path.join(repo, 'node_modules', 'some-dep')));
+    assert.equal(fs.realpathSync(repoModelLink), fs.realpathSync(path.join(repo, 'packages', 'onspring-models')));
+
+    unlinkWorktreeNodeModules(path.join(wt, 'node_modules'));
+    assert.equal(fs.existsSync(path.join(wt, 'node_modules')), false);
+    assert.equal(fs.existsSync(path.join(repo, 'node_modules', 'some-dep', 'index.js')), true);
+    assert.equal(fs.existsSync(path.join(wt, 'packages', 'onspring-models', 'package.json')), true);
+  });
+});
+
+void describe('runners', () => {
+  void it('builds valid headless invocations for built-in and custom adapters', () => {
+    assert.equal(isValidRunnerName('agy'), true);
+    assert.equal(isValidRunnerName('opencode'), true);
+    assert.equal(isValidRunnerName('unknown'), false);
+
+    const agyInv = getRunnerAdapter('agy').buildInvocation({
+      promptFile: '/tmp/p.md',
+      runDir: '/tmp/run',
+      worktreeDir: '/tmp/wt',
+      model: 'gemini-pro',
+    });
+    assert.equal(agyInv.command, 'agy');
+    assert.equal(agyInv.args.includes('--print'), true);
+    assert.equal(agyInv.args.includes('--model'), true);
+
+    const openCodeInv = getRunnerAdapter('opencode').buildInvocation({
+      promptFile: '/tmp/p.md',
+      runDir: '/tmp/run',
+      worktreeDir: '/tmp/wt',
+    });
+    assert.equal(openCodeInv.command, 'opencode');
+    assert.equal(openCodeInv.args[0], 'run');
+    assert.equal(openCodeInv.args.includes('--file'), true);
+
+    const customInv = getRunnerAdapter('custom').buildInvocation({
+      promptFile: '/tmp/my prompt.md',
+      runDir: '/tmp/run',
+      worktreeDir: '/tmp/wt',
+      customCmd: 'node mock.js {{promptFile}} {{worktree}}',
+    });
+    assert.equal(customInv.shellCommand, 'node mock.js "/tmp/my prompt.md" /tmp/wt');
+    assert.throws(
+      () =>
+        getRunnerAdapter('custom').buildInvocation({
+          promptFile: '/tmp/p.md',
+          runDir: '/tmp/run',
+          worktreeDir: '/tmp/wt',
+        }),
+      /requires --runner-cmd/
+    );
+  });
+});
+
+void describe('executeOrchestrator self-heal loop', () => {
+  void it('retries with failure diagnostics when guardrails fail and succeeds on attempt 2', async () => {
+    const repo = createTempDir('agent-orch-');
+    writeTempFile(repo, 'package.json', '{"name":"orch-test"}');
+    writeTempFile(repo, 'packages/onspring-ui/src/index.ts', '');
+
+    const initRes = await runCommand('git', ['init'], { cwd: repo });
+    assert.equal(initRes.exitCode, 0);
+    await runCommand('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
+    await runCommand('git', ['config', 'user.name', 'Test User'], { cwd: repo });
+    await runCommand('git', ['add', '-A'], { cwd: repo });
+    await runCommand('git', ['commit', '-m', 'init'], { cwd: repo });
+
+    const mockRunnerPath = path.join(repo, 'mock-runner.mjs');
+    writeTempFile(
+      repo,
+      'mock-runner.mjs',
+      `import fs from 'node:fs';
+const promptText = fs.readFileSync(process.argv[2], 'utf8');
+const target = 'tests/sample/demo.spec.ts';
+fs.mkdirSync('tests/sample', { recursive: true });
+if (promptText.includes('Previous Verification Failed')) {
+  fs.writeFileSync(target, "test('demo', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: 'Test-1' }); await sysAdminActor.browse().checkPage().hasUrl(/demo/); });\\n", 'utf8');
+} else {
+  fs.writeFileSync(target, "test('bad', async ({ page }) => { await page.goto('/Admin'); });\\n", 'utf8');
+}
+`
+    );
+
+    const { exitCode, report } = await executeOrchestrator(
+      repo,
+      {
+        brief: 'Test-1 Demo scenario',
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockRunnerPath) ? `"${mockRunnerPath}"` : mockRunnerPath} {{promptFile}}`,
+        maxAttempts: 3,
+        baseRef: 'HEAD',
+        inPlace: true,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: false,
+        draftPr: false,
+        cleanupWorktree: false,
+        dryRun: false,
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(report.status, 'passed');
+    assert.equal(report.attempts.length, 2);
+    assert.equal(report.attempts[0]?.verifyPassed, false);
+    assert.equal(report.attempts[1]?.verifyPassed, true);
+    assert.deepEqual(report.detectedSpecs, ['tests/sample/demo.spec.ts']);
+    assert.equal(fs.existsSync(path.join(report.runDir, 'report.json')), true);
+    assert.equal(fs.existsSync(path.join(report.runDir, 'report.md')), true);
+    assert.equal(fs.existsSync(path.join(report.runDir, 'attempt-2-prompt.md')), true);
   });
 });
