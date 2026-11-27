@@ -25,7 +25,7 @@ const STOP_WORDS = new Set([
 const HEADING_RE = /^(#{1,4})\s+(.+?)\s*$/;
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
-function parseFrontmatter(raw: string): { body: string; title: string; summary: string } {
+export function parseFrontmatter(raw: string): { body: string; title: string; summary: string } {
   const match = FRONTMATTER_RE.exec(raw);
   if (!match) {
     return { body: raw, title: '', summary: '' };
@@ -37,13 +37,13 @@ function parseFrontmatter(raw: string): { body: string; title: string; summary: 
   const unquote = (v: string | undefined): string => (v ? v.trim().replace(/^['"]|['"]$/g, '') : '');
 
   return {
-    body: raw.slice(match[0].length),
+    body: raw.slice(match[0].length).trimStart(),
     title: unquote(titleMatch?.[1]),
     summary: unquote(summaryMatch?.[1]),
   };
 }
 
-type IndexedSection = {
+export type IndexedSection = {
   file: string;
   breadcrumb: string;
   content: string;
@@ -52,7 +52,7 @@ type IndexedSection = {
   headingCounts: Map<string, number>;
 };
 
-type RankedSection = {
+export type RankedSection = {
   section: IndexedSection;
   score: number;
 };
@@ -62,7 +62,7 @@ function tokenize(input: string): string[] {
   return matches.filter(token => token.length >= 2 && !STOP_WORDS.has(token));
 }
 
-function indexMarkdownSections(docsDir: string): IndexedSection[] {
+export function indexMarkdownSections(docsDir: string): IndexedSection[] {
   const files = walkFiles(docsDir, f => {
     const lower = f.toLowerCase();
     return lower.endsWith('.md') || lower.endsWith('.markdown');
@@ -131,7 +131,7 @@ function indexMarkdownSections(docsDir: string): IndexedSection[] {
   return sections;
 }
 
-function rankSections(sections: readonly IndexedSection[], query: string, top: number): RankedSection[] {
+export function rankSections(sections: readonly IndexedSection[], query: string, top: number): RankedSection[] {
   const queryTokens = [...new Set(tokenize(query))];
   if (queryTokens.length === 0 || sections.length === 0) {
     return [];

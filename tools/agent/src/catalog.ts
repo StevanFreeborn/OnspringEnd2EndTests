@@ -5,7 +5,7 @@ import { parseCliArgs, toRepoRel, walkFiles, writeErr, writeOut } from './utils.
 
 const VALID_KINDS = new Set(['all', 'targets', 'tasks', 'questions', 'controls', 'models', 'fixtures', 'tags']);
 
-type UiModuleEntry = {
+export type UiModuleEntry = {
   domain: string;
   kind: string;
   file: string;
@@ -13,28 +13,28 @@ type UiModuleEntry = {
   members: Record<string, string[]>;
 };
 
-type ModelEntry = {
+export type ModelEntry = {
   file: string;
   symbols: string[];
 };
 
-type ModelsSummary = {
+export type ModelsSummary = {
   entities: ModelEntry[];
   testConstants: string[];
   fakeDataFactoryMethods: string[];
 };
 
-type FixturesSummary = {
+export type FixturesSummary = {
   builtInKeys: string[];
   builders: ModelEntry[];
 };
 
-type TagsAndAnnotationsSummary = {
+export type TagsAndAnnotationsSummary = {
   tags: string[];
   annotations: string[];
 };
 
-type CatalogPayload = {
+export type CatalogPayload = {
   domainFilter: string | null;
   kind: string;
   uiModules: UiModuleEntry[];
@@ -391,6 +391,22 @@ function printMarkdownCatalog({
   }
 }
 
+export function buildCatalog(repoRoot: string, domainFilter: string | null = null, kind = 'all'): CatalogPayload {
+  const uiModules = scanUiModules(repoRoot, domainFilter, kind);
+  const models = scanModels(repoRoot, domainFilter, kind);
+  const fixtures = scanFixtures(repoRoot, domainFilter, kind);
+  const tagsAndAnnotations = scanTagsAndAnnotations(repoRoot, domainFilter, kind);
+
+  return {
+    domainFilter,
+    kind,
+    uiModules,
+    models,
+    fixtures,
+    tagsAndAnnotations,
+  };
+}
+
 export async function runCatalog(repoRoot: string, argv: readonly string[]): Promise<number> {
   let parsed;
   try {
@@ -412,19 +428,7 @@ export async function runCatalog(repoRoot: string, argv: readonly string[]): Pro
   }
 
   const json = parsed.flags.has('--json');
-  const uiModules = scanUiModules(repoRoot, domainFilter, kind);
-  const models = scanModels(repoRoot, domainFilter, kind);
-  const fixtures = scanFixtures(repoRoot, domainFilter, kind);
-  const tagsAndAnnotations = scanTagsAndAnnotations(repoRoot, domainFilter, kind);
-
-  const payload: CatalogPayload = {
-    domainFilter,
-    kind,
-    uiModules,
-    models,
-    fixtures,
-    tagsAndAnnotations,
-  };
+  const payload = buildCatalog(repoRoot, domainFilter, kind);
 
   if (json) {
     writeOut(JSON.stringify(payload, null, 2));

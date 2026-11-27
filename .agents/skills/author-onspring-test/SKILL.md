@@ -59,16 +59,16 @@ If Help Center docs are not configured locally, proceed cleanly to live UI explo
 
 Never guess selectors, URLs, labels, or API response paths. Inspect the real page:
 
-1. Bootstrap `.auth/sysAdmin.json` (only runs setup if missing or `--refresh-auth` is passed) and get the resolved `BASE_URL` command sequence:
+1. Run a single-command pre-authenticated exploration script (automatically refreshes `.auth/sysAdmin.json` if missing or stale, runs `open` -> `state-load` -> `goto` -> `playwright-cli run-code --filename` -> `close` safely inside `try / finally`):
 
    ```sh
-   npm run agent -- explore --route /Admin
+   npm run agent -- explore --route /Admin --script path/to/explore-script.js
    ```
 
-   Pass `--launch` to automatically open, load `.auth/sysAdmin.json`, navigate, and take the initial accessibility snapshot.
+   Or print/launch an interactive session with `npm run agent -- explore --route /Admin [--launch]`.
 
-2. Navigate to the feature area with `playwright-cli`, click/fill through the scenario manually, and inspect accessibility snapshots + XHR/network endpoints (to find real `waitForResponse` URL regexes rather than timeouts).
-   - **Windows/subshell note**: `playwright-cli` background browser sessions may close when a shell invocation exits. Prefer chaining `open`, `state-load .auth/sysAdmin.json`, `goto`, interactions/snapshots, and `close` (inside a `try / finally`) within a single shell command rather than spanning separate tool calls.
+2. Navigate to the feature area, click/fill through the scenario manually, and inspect accessibility snapshots + XHR/network endpoints (to find real `waitForResponse` URL regexes rather than timeouts).
+   - Prefer `--script <temp-script.js>` (`playwright-cli run-code --filename=...`) for multi-step UI/iframe/XHR exploration rather than long inline shell arguments, and clean up temporary script files when finished.
 3. Close any open browser sessions when exploration completes (`playwright-cli close` or `close-all`).
 
 ---
@@ -95,6 +95,7 @@ Follow layer boundaries strictly downward:
 5. **Spec (`tests/<domain>/<feature>.spec.ts`)**:
    - Extend `test` from `../../fixtures`.
    - Push `AnnotationType.TestId` annotation inside each test.
+   - Avoid test titles starting with `"Test "` (e.g., `"Verify a public campaign in test mode"` instead of `"Test a public campaign"`), which trips ESLint's `playwright/valid-title` rule.
    - Compose `await test.step(...)` blocks using `actor.attemptsTo(...)`, `actor.asks(...)`, and `actor.browse().check(...)`.
    - Zero raw `page.` / `.locator(` / `networkidle` / `test.only`.
 6. **Tenant cleanup (`cleanup/global.cleanup.ts`)**: Wire a `deleteAllTest*` sweep if the test creates a new top-level admin entity that could be orphaned on an interrupted run.

@@ -12,16 +12,16 @@ Read these before making changes:
 
 ## Agent CLI (`tools/agent/src/cli.ts`)
 
-Prefer the deterministic TypeScript CLI over manual grep when authoring or verifying tests (compiled via `npm run build:packages` or `npm run build:agent`; invoked with `npm run agent -- ...` or `node tools/agent/dist/cli.js ...`):
+Prefer the deterministic TypeScript CLI over manual grep when authoring or verifying tests (compiled via `npm run build:packages` or `npm run build:agent`; invoked with `npm run agent -- ...` or `node tools/agent/dist/src/cli.js ...`):
 
 - Discover existing Targets, Tasks, Questions, Controls, Models, and Fixtures:
   `npm run agent -- catalog [--domain <name>] [--kind all|targets|tasks|questions|controls|models|fixtures|tags] [--json]`
 - Search local Onspring Help Center Markdown docs (`ONSPRING_HELP_DOCS_DIR`):
   `npm run agent -- help-search "<query>" [--top 5] [--json]`
-- Prepare/launch pre-authenticated browser exploration via `playwright-cli`:
-  `npm run agent -- explore --route /Admin/App [--refresh-auth] [--launch]`
-- Run full verification (package builds, unit tests, Prettier, TypeScript, zero-warning ESLint, Screenplay guardrails, and sequential Chrome/Edge E2E):
-  `npm run agent -- verify [spec-path] [--skip-e2e] [--repeat 2] [--json]`
+- Prepare/launch pre-authenticated browser exploration or execute a script via `playwright-cli`:
+  `npm run agent -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>]`
+- Run full verification (package builds, unit tests, Prettier, TypeScript, zero-warning ESLint, Screenplay guardrails, and sequential fail-fast Chrome/Edge E2E):
+  `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat 2] [--json]`
 
 ## Non-Negotiable Architecture Rules
 

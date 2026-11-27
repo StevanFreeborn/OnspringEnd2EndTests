@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadEnv, parseCliArgs, runCommand, writeErr, writeOut } from './utils.js';
 
+const DEFAULT_AUTH_MAX_AGE_MINUTES = 45;
+
 async function detectPlaywrightCli(repoRoot: string): Promise<{ exe: string; prefixArgs: readonly string[] }> {
   const checker = process.platform === 'win32' ? 'where.exe' : 'which';
   const res = await runCommand(checker, ['playwright-cli'], { cwd: repoRoot });
@@ -11,12 +13,26 @@ async function detectPlaywrightCli(repoRoot: string): Promise<{ exe: string; pre
   return { exe: 'npx', prefixArgs: ['--yes', '@playwright/cli'] };
 }
 
+function resolveScriptPath(repoRoot: string, rawScriptPath: string): string | null {
+  const fromCwd = path.resolve(process.cwd(), rawScriptPath);
+  if (fs.existsSync(fromCwd)) {
+    return fromCwd;
+  }
+
+  const fromRepo = path.resolve(repoRoot, rawScriptPath);
+  if (fs.existsSync(fromRepo)) {
+    return fromRepo;
+  }
+
+  return null;
+}
+
 export async function runExplore(repoRoot: string, argv: readonly string[]): Promise<number> {
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
       flags: new Set(['--refresh-auth', '--launch', '--json']),
-      options: new Set(['--route', '--session']),
+      options: new Set(['--route', '--session', '--script', '--max-age']),
       maxPositionals: 0,
     });
   } catch (err) {
@@ -27,6 +43,24 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   const routeRaw = (parsed.options.get('--route') ?? '/').trim();
   const route = !routeRaw ? '/' : routeRaw.startsWith('/') ? routeRaw : `/${routeRaw}`;
   const session = parsed.options.get('--session')?.trim() || null;
+  const rawScript = parsed.options.get('--script')?.trim() || null;
+  const maxAgeRaw = parsed.options.get('--max-age');
+  const maxAgeMinutes = maxAgeRaw === undefined ? DEFAULT_AUTH_MAX_AGE_MINUTES : Number.parseFloat(maxAgeRaw);
+
+  if (!Number.isFinite(maxAgeMinutes) || maxAgeMinutes < 0) {
+    writeErr(`Invalid --max-age value '${maxAgeRaw ?? ''}'. Expected a non-negative number of minutes.`);
+    return 2;
+  }
+
+  let resolvedScript: string | null = null;
+  if (rawScript) {
+    resolvedScript = resolveScriptPath(repoRoot, rawScript);
+    if (!resolvedScript) {
+      writeErr(`Error: Script file not found: '${rawScript}'.`);
+      return 1;
+    }
+  }
+
   const refreshAuth = parsed.flags.has('--refresh-auth');
   const launch = parsed.flags.has('--launch');
   const json = parsed.flags.has('--json');
@@ -49,13 +83,19 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   const targetUrl = `${baseUrl}${route}`;
   const authRelPath = '.auth/sysAdmin.json';
   const authFullPath = path.join(repoRoot, '.auth', 'sysAdmin.json');
+  const authExists = fs.existsSync(authFullPath);
+  const existingAgeMinutes = authExists ? (Date.now() - fs.statSync(authFullPath).mtimeMs) / 60000 : Infinity;
+  const isStale = existingAgeMinutes > maxAgeMinutes;
   let authRefreshed = false;
 
-  if (refreshAuth || !fs.existsSync(authFullPath)) {
+  if (refreshAuth || !authExists || isStale) {
     if (!json) {
-      writeOut(
-        `Running auth setup (\`npx playwright test --project setup\`) with KEEP_AUTH_STATE=true to persist \`${authRelPath}\`...`
-      );
+      const reason = refreshAuth
+        ? '--refresh-auth requested'
+        : !authExists
+          ? 'missing auth state'
+          : `auth state older than ${maxAgeMinutes} min`;
+      writeOut(`Running auth setup (${reason}; KEEP_AUTH_STATE=true) to persist \`${authRelPath}\`...`);
     }
 
     const setupRes = await runCommand('npx', ['playwright', 'test', '--project', 'setup'], {
@@ -89,12 +129,44 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
     formatCmd('open', baseUrl),
     formatCmd('state-load', authRelPath),
     formatCmd('goto', targetUrl),
-    formatCmd('snapshot'),
+    resolvedScript ? formatCmd('run-code', `--filename=${resolvedScript}`) : formatCmd('snapshot'),
     formatCmd('close'),
   ];
 
   const launchOutput: string[] = [];
-  if (launch) {
+  let scriptOutput = '';
+
+  if (resolvedScript) {
+    const preSteps: string[][] = [
+      ['open', baseUrl],
+      ['state-load', authRelPath],
+      ['goto', targetUrl],
+    ];
+    try {
+      for (const step of preSteps) {
+        const fullArgs = buildArgs(...step);
+        const res = await runCommand(exe, fullArgs, { cwd: repoRoot });
+        if (res.exitCode !== 0) {
+          writeErr(`Error running \`${exe} ${fullArgs.join(' ')}\`:`);
+          if (res.stdout.trim()) writeErr(res.stdout.trim());
+          if (res.stderr.trim()) writeErr(res.stderr.trim());
+          return 1;
+        }
+      }
+
+      const scriptArgs = buildArgs('run-code', `--filename=${resolvedScript}`);
+      const scriptRes = await runCommand(exe, scriptArgs, { cwd: repoRoot });
+      scriptOutput = scriptRes.stdout.trim();
+      if (scriptRes.exitCode !== 0) {
+        writeErr(`Error running script \`${resolvedScript}\`:`);
+        if (scriptOutput) writeErr(scriptOutput);
+        if (scriptRes.stderr.trim()) writeErr(scriptRes.stderr.trim());
+        return 1;
+      }
+    } finally {
+      await runCommand(exe, buildArgs('close'), { cwd: repoRoot });
+    }
+  } else if (launch) {
     const steps: string[][] = [['open', baseUrl], ['state-load', authRelPath], ['goto', targetUrl], ['snapshot']];
     for (const step of steps) {
       const fullArgs = buildArgs(...step);
@@ -122,7 +194,9 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
           cliCommand: [exe, ...prefixArgs].join(' '),
           commands,
           launched: launch,
-          ...(launch ? { launchOutput } : {}),
+          scriptExecuted: Boolean(resolvedScript),
+          ...(resolvedScript ? { scriptPath: resolvedScript, scriptOutput } : {}),
+          ...(launch && !resolvedScript ? { launchOutput } : {}),
         },
         null,
         2
@@ -137,6 +211,15 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   writeOut(
     `- Auth state: \`${authRelPath}\` (age: ${authAgeMinutes.toFixed(1)} min${authRefreshed ? ', freshly generated' : ''})`
   );
+
+  if (resolvedScript) {
+    writeOut(`- Executed script: \`${resolvedScript}\` (session closed cleanly)`);
+    writeOut();
+    writeOut('## Script Output');
+    writeOut(scriptOutput || '(no output)');
+    return 0;
+  }
+
   writeOut();
   writeOut('## Playwright CLI Commands');
   writeOut('```sh');

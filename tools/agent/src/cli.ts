@@ -8,7 +8,7 @@ const HELP_TEXT = `onspring-agent — Harness-agnostic TypeScript CLI for explor
 
 Usage:
   npm run agent -- <command> [options]
-  node tools/agent/dist/cli.js <command> [options]
+  node tools/agent/dist/src/cli.js <command> [options]
 
 Commands:
   catalog      List existing UI Targets/Tasks/Questions/Controls, Models, Fixtures, Tags, and Annotations
@@ -24,9 +24,9 @@ const COMMAND_HELP: Record<string, string> = {
   'help-search': `Usage:
   npm run agent -- help-search <query> [--docs-dir <path>] [--top <n>] [--max-chars <n>] [--json]`,
   explore: `Usage:
-  npm run agent -- explore [--route <path>] [--refresh-auth] [--launch] [--session <name>] [--json]`,
+  npm run agent -- explore [--route <path>] [--refresh-auth] [--max-age <minutes>] [--launch] [--script <file.js>] [--session <name>] [--json]`,
   verify: `Usage:
-  npm run agent -- verify [spec-path] [--skip-e2e] [--repeat <n>] [--browsers both|chrome|edge] [--json]`,
+  npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat <n>] [--browsers both|chrome|edge] [--json]`,
 };
 
 function isHelp(arg: string): boolean {

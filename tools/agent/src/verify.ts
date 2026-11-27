@@ -14,9 +14,10 @@ const FORBIDDEN_CALL_METHODS = new Set([
   'frameLocator',
 ]);
 
-type VerifyStageResult = {
+export type VerifyStageResult = {
   name: string;
   passed: boolean;
+  skipped?: boolean;
   seconds: number;
   summary: string;
   output?: string;
@@ -186,7 +187,7 @@ function checkTargetSpecStrictness(repoRoot: string, targetSpecRel: string, viol
   }
 }
 
-function runArchitectureGuardrails(repoRoot: string, targetSpecRel: string | null): VerifyStageResult {
+export function runArchitectureGuardrails(repoRoot: string, targetSpecRel: string | null): VerifyStageResult {
   const startedAt = Date.now();
   const violations: string[] = [];
 
@@ -240,7 +241,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
-      flags: new Set(['--skip-e2e', '--json']),
+      flags: new Set(['--skip-e2e', '--no-fail-fast', '--json']),
       options: new Set(['--repeat', '--browsers']),
       maxPositionals: 1,
     });
@@ -251,6 +252,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
 
   const specArg = parsed.positionals[0] ?? null;
   const skipE2e = parsed.flags.has('--skip-e2e');
+  const noFailFast = parsed.flags.has('--no-fail-fast');
   const json = parsed.flags.has('--json');
 
   const repeatRaw = parsed.options.get('--repeat') ?? '2';
@@ -287,35 +289,48 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
 
   const staticPassed = stages.every(s => s.passed);
   if (!skipE2e && normalizedSpec && staticPassed) {
+    let chromePassed = true;
+
     if (browsers === 'both' || browsers === 'chrome') {
-      stages.push(
-        await runProcessStage(
-          'e2e:chrome',
-          'npx',
-          [
-            'playwright',
-            'test',
-            normalizedSpec,
-            '--project',
-            'chrome',
-            '--workers',
-            '2',
-            '--repeat-each',
-            String(repeat),
-          ],
-          repoRoot
-        )
+      const chromeStage = await runProcessStage(
+        'e2e:chrome',
+        'npx',
+        [
+          'playwright',
+          'test',
+          normalizedSpec,
+          '--project',
+          'chrome',
+          '--workers',
+          '2',
+          '--repeat-each',
+          String(repeat),
+        ],
+        repoRoot
       );
+      stages.push(chromeStage);
+      chromePassed = chromeStage.passed;
     }
+
     if (browsers === 'both' || browsers === 'edge') {
-      stages.push(
-        await runProcessStage(
-          'e2e:edge',
-          'npx',
-          ['playwright', 'test', normalizedSpec, '--project', 'edge', '--workers', '2'],
-          repoRoot
-        )
-      );
+      if (!chromePassed && !noFailFast) {
+        stages.push({
+          name: 'e2e:edge',
+          passed: false,
+          skipped: true,
+          seconds: 0,
+          summary: 'Skipped after e2e:chrome failure (pass --no-fail-fast to run both)',
+        });
+      } else {
+        stages.push(
+          await runProcessStage(
+            'e2e:edge',
+            'npx',
+            ['playwright', 'test', normalizedSpec, '--project', 'edge', '--workers', '2'],
+            repoRoot
+          )
+        );
+      }
     }
   }
 
@@ -345,7 +360,8 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   writeOut('| Stage | Status | Duration | Details |');
   writeOut('| :--- | :--- | :--- | :--- |');
   for (const s of stages) {
-    writeOut(`| \`${s.name}\` | ${s.passed ? 'PASS' : 'FAIL'} | ${s.seconds.toFixed(2)}s | ${s.summary} |`);
+    const statusLabel = s.skipped ? 'SKIP' : s.passed ? 'PASS' : 'FAIL';
+    writeOut(`| \`${s.name}\` | ${statusLabel} | ${s.seconds.toFixed(2)}s | ${s.summary} |`);
   }
 
   for (const failed of stages.filter(s => !s.passed && s.output)) {
