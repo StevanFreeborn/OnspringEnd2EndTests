@@ -512,6 +512,13 @@ export const SlackMessageHistoryReportTasks = {
     waitForReportAction(actor, SlackMessageHistoryReportTargets.exportPath, () =>
       exportViaDialog(actor, SlackMessageHistoryReportTargets.exportReportLink)
     ),
+
+  openMessageDetails:
+    (itemName: string | RegExp): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SlackMessageHistoryReportTargets.rowByName(itemName));
+      await actor.browse().waitForState(SlackMessageHistoryReportTargets.messageDetailModal.modal, 'visible');
+    },
 };
 
 export const InvalidFormulasReportTasks = {

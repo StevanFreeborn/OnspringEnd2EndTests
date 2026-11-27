@@ -288,4 +288,77 @@ test.describe('slack message history report', () => {
       );
     });
   });
+
+  test('View the details of a Slack message history report item', async ({ app, sysAdminActor }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-470',
+    });
+
+    const messagePrefix = FakeDataFactory.createFakeSlackMessageName();
+    const slackMessage = new SlackMessage({
+      appName: app.name,
+      name: messagePrefix,
+      messageTitle: `${messagePrefix} Title`,
+      message: `Slack history details message ${messagePrefix}`,
+      channelName: 'general',
+      status: true,
+      sendOnSave: 'Always',
+    });
+
+    await test.step('Configure and enable a Slack message for the app', async () => {
+      await sysAdminActor.attemptsTo(
+        SlackMessageTasks.goto(),
+        SlackMessageTasks.createFromAdminPage(app.name, slackMessage.name),
+        SlackMessageTasks.update(slackMessage),
+        SlackMessageTasks.save()
+      );
+    });
+
+    await test.step('Send a Slack message by adding a record to the app', async () => {
+      await sysAdminActor.attemptsTo(ContentTasks.gotoAdd(app.id), ContentTasks.saveRecord());
+    });
+
+    await test.step('Navigate to the Slack message history report', async () => {
+      await sysAdminActor.attemptsTo(SlackMessageHistoryReportTasks.goto());
+    });
+
+    await test.step('Filter the Slack message history report to the sent message', async () => {
+      await sysAdminActor.attemptsTo(
+        SlackMessageHistoryReportTasks.filterReport({
+          appOrSurvey: app.name,
+          messageContains: messagePrefix,
+        })
+      );
+    });
+
+    await test.step('Wait for the Slack message to appear in the report', async () => {
+      await sysAdminActor.attemptsTo(
+        Retry.until(
+          async actor => {
+            await actor.attemptsTo(SlackMessageHistoryReportTasks.reload());
+            await actor.browse().check(SlackMessageHistoryReportTargets.rows).hasCount(1);
+          },
+          { intervals: [2_000, 5_000, 10_000], timeout: 120_000 }
+        )
+      );
+    });
+
+    await test.step('Open the details of the Slack message history report item', async () => {
+      await sysAdminActor.attemptsTo(SlackMessageHistoryReportTasks.openMessageDetails(slackMessage.name));
+    });
+
+    await test.step('Verify the Slack message details are displayed', async () => {
+      const { messageDetailModal } = SlackMessageHistoryReportTargets;
+      const timestampPattern = /\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2} [AP]M/;
+
+      await sysAdminActor.browse().check(messageDetailModal.modal).isVisible();
+      await sysAdminActor.browse().check(messageDetailModal.timeCreated).hasText(timestampPattern);
+      await sysAdminActor.browse().check(messageDetailModal.timeSent).hasText(timestampPattern);
+      await sysAdminActor.browse().check(messageDetailModal.channel).hasText(slackMessage.channelName);
+      await sysAdminActor.browse().check(messageDetailModal.status).hasText('Failed');
+      await sysAdminActor.browse().check(messageDetailModal.messageTitle).containsText(slackMessage.messageTitle);
+      await sysAdminActor.browse().check(messageDetailModal.messageContent).containsText(slackMessage.message);
+    });
+  });
 });

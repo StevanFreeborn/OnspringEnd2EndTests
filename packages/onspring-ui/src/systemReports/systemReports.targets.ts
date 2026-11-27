@@ -374,6 +374,8 @@ export const EmailMessageHistoryReportTargets = {
   },
 };
 
+const slackMessageDetailModal = (page: Page) => page.getByRole('dialog', { name: 'Message Detail' });
+
 export const SlackMessageHistoryReportTargets = {
   route: '/Admin/Reporting/Messaging/SlackMessageHistory',
   dataPath: '/Admin/Reporting/Messaging/GetSlackHistoryPage',
@@ -392,11 +394,24 @@ export const SlackMessageHistoryReportTargets = {
     (index: number): Target =>
     (page: Page) =>
       gridRows(page).nth(index),
+  rowByName:
+    (name: string | RegExp): Target =>
+    (page: Page) =>
+      gridBody(page).getByRole('row', { name }),
   appNameCells: (page: Page) => gridRows(page).locator('td:nth-child(1)'),
   itemNameCells: (page: Page) => gridRows(page).locator('td:nth-child(2)'),
   statusCells: (page: Page) => gridRows(page).locator('td:nth-child(3)'),
   channelCells: (page: Page) => gridRows(page).locator('td:nth-child(4)'),
   exportReportLink: (page: Page) => page.getByRole('link', { name: 'Export Report' }),
+  messageDetailModal: {
+    modal: slackMessageDetailModal,
+    timeCreated: (page: Page) => slackMessageDetailModal(page).locator('.label:has-text("Time Created") + .data'),
+    timeSent: (page: Page) => slackMessageDetailModal(page).locator('.label:has-text("Time Sent") + .data'),
+    channel: (page: Page) => slackMessageDetailModal(page).locator('.label:has-text("Slack Channel") + .data'),
+    status: (page: Page) => slackMessageDetailModal(page).locator('.label:has-text("Status") + .data'),
+    messageTitle: (page: Page) => slackMessageDetailModal(page).locator('.slack-message-title'),
+    messageContent: (page: Page) => slackMessageDetailModal(page).locator('.slack-message-container .slack-message'),
+  },
 };
 
 export const InvalidFormulasReportTargets = {
