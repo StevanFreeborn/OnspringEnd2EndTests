@@ -1,5 +1,5 @@
 import { Response } from '@playwright/test';
-import { SurveyCampaign, SurveyCampaignActionButtons } from '@stevanfreeborn/onspring-models';
+import { SurveyCampaign, SurveyCampaignActionButtons, SurveyCampaignType } from '@stevanfreeborn/onspring-models';
 import { Task } from '@stevanfreeborn/screenplay';
 import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import {
@@ -16,6 +16,11 @@ export type EditSurveyCampaignOptions = {
   archive?: boolean;
   allowPageSkipping?: boolean;
   actionButtons?: SurveyCampaignActionButtons;
+};
+
+export type CopySurveyCampaignOptions = {
+  expectedType?: SurveyCampaignType;
+  updatedName?: string;
 };
 
 export const SurveyCampaignTasks = {
@@ -96,14 +101,18 @@ export const SurveyCampaignTasks = {
     },
 
   copyFromRow:
-    (sourceName: string, expectedCopyName: string, updatedName?: string): Task<WebActor> =>
+    (
+      sourceName: string,
+      expectedCopyName: string,
+      { expectedType = 'Public', updatedName }: CopySurveyCampaignOptions = {}
+    ): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.browse().hover(SurveyCampaignsTabTargets.campaignRow(sourceName));
       await actor.browse().click(SurveyCampaignsTabTargets.copyButtonInRow(sourceName));
 
       await actor.browse().waitForState(CopyCampaignDialogTargets.nameInput, 'visible');
       await actor.browse().check(CopyCampaignDialogTargets.nameInput).hasValue(expectedCopyName);
-      await actor.browse().check(CopyCampaignDialogTargets.typeDropdown).hasText('Public');
+      await actor.browse().check(CopyCampaignDialogTargets.typeDropdown).hasText(expectedType);
 
       if (updatedName !== undefined) {
         await actor.browse().fill(CopyCampaignDialogTargets.nameInput, updatedName);
