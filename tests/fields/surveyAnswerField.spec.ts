@@ -15,18 +15,6 @@ import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
-type FieldCreationState = {
-  fieldName?: string;
-};
-
-async function cleanupSurveyAnswerField(actor: WebActor, surveyId: number, state: FieldCreationState): Promise<void> {
-  if (!state.fieldName) {
-    return;
-  }
-
-  await actor.attemptsTo(SurveyTasks.gotoSurveyLayoutsTab(surveyId), FieldTasks.deleteFromGrid(state.fieldName));
-}
-
 const test = base.extend<{ survey: Survey }>({
   survey: SurveyFixture.create().build(),
 });
@@ -211,3 +199,15 @@ test.describe('survey answer field', () => {
     }
   });
 });
+
+type FieldCreationState = {
+  fieldName?: string;
+};
+
+async function cleanupSurveyAnswerField(actor: WebActor, surveyId: number, state: FieldCreationState): Promise<void> {
+  if (!state.fieldName) {
+    return;
+  }
+
+  await actor.attemptsTo(SurveyTasks.gotoSurveyLayoutsTab(surveyId), FieldTasks.deleteFromGrid(state.fieldName));
+}
