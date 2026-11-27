@@ -24,8 +24,21 @@ import {
   gatherPreFlightContext,
   inferSecondaryDomains,
   parseChangedFilesFromPorcelain,
+  renderBatchSummaryTerminal,
+  renderRunSummaryTerminal,
 } from '../src/orchestrator.js';
 import { getRunnerAdapter, isValidRunnerName } from '../src/runners.js';
+import {
+  createSpinner,
+  createStyler,
+  extractRunnerActivityLine,
+  formatDuration,
+  formatGutterLines,
+  renderHeaderBox,
+  renderTable,
+  statusBadge,
+  stripAnsi,
+} from '../src/ui.js';
 import { parseCliArgs, runCommand } from '../src/utils.js';
 import { runArchitectureGuardrails } from '../src/verify.js';
 import { slugify, linkWorktreeNodeModules, unlinkWorktreeNodeModules } from '../src/worktree.js';
@@ -1147,5 +1160,138 @@ void describe('orchestrator prompt & failure diagnostics', () => {
     const collected = collectPlaywrightErrorContexts(wt);
     assert.match(collected, /error-context\.md/);
     assert.match(collected, /Button not visible/);
+  });
+});
+
+void describe('terminal ui', () => {
+  void it('strips ANSI escape sequences and formats durations concisely', () => {
+    const s = createStyler(true);
+    const colored = s.green('PASS');
+    assert.notEqual(colored, 'PASS');
+    assert.equal(stripAnsi(colored), 'PASS');
+
+    assert.equal(formatDuration(0.34), '0.3s');
+    assert.equal(formatDuration(45.42), '45.4s');
+    assert.equal(formatDuration(128), '2m 08s');
+    assert.equal(formatDuration(3900), '1h 05m');
+  });
+
+  void it('aligns table columns accurately across ANSI-styled badges and renders header boxes', () => {
+    const table = renderTable(
+      ['Stage', 'Status', 'Duration'],
+      [
+        ['build', statusBadge('pass', true), formatDuration(4.2)],
+        ['eslint', statusBadge('fail', true), formatDuration(12.5)],
+      ],
+      { align: ['left', 'left', 'right'], color: true, indent: '' }
+    );
+    const plainLines = stripAnsi(table).split('\n');
+    assert.equal(plainLines.length, 4);
+    assert.equal(plainLines[2].length, plainLines[3].length);
+
+    const box = renderHeaderBox(
+      `Batch · ${statusBadge('passed', true)}`,
+      [
+        { label: 'Runner', value: 'opencode' },
+        { label: 'Counts', value: '3/3 passed' },
+      ],
+      { color: true }
+    );
+    const plainBox = stripAnsi(box);
+    assert.match(plainBox, /Batch · ✔ PASS/);
+    assert.match(plainBox, /Runner {2}opencode/);
+    assert.match(plainBox, /Counts {2}3\/3 passed/);
+  });
+
+  void it('extracts readable runner activity lines and prefixes verbose gutter bars', () => {
+    const noisyChunk = [
+      '{',
+      '  "html": "<div>ignore</div>"',
+      '}',
+      '→ Read packages/onspring-ui/src/fields/fields.tasks.ts',
+    ].join('\n');
+    assert.equal(extractRunnerActivityLine(noisyChunk), 'Read packages/onspring-ui/src/fields/fields.tasks.ts');
+    assert.equal(extractRunnerActivityLine('{\n  "id": 1\n}'), null);
+
+    const guttered = formatGutterLines('line 1\nline 2', { color: false });
+    assert.equal(guttered, '│ line 1\n│ line 2');
+  });
+
+  void it('writes clean non-TTY spinner status lines without carriage returns and renders run summaries', () => {
+    const output: string[] = [];
+    const spinner = createSpinner({
+      stream: { write: chunk => output.push(chunk), isTTY: false },
+      color: false,
+      indent: '  ',
+    });
+    spinner.start('eslint running');
+    spinner.update('ignored in non-tty');
+    spinner.succeed('eslint passed');
+
+    const combined = output.join('');
+    assert.equal(combined.includes('\r'), false);
+    assert.match(combined, /⋯ eslint running/);
+    assert.match(combined, /✔ eslint passed/);
+
+    const runSummary = renderRunSummaryTerminal(
+      {
+        runId: '20261127-sample',
+        status: 'passed',
+        runner: 'opencode',
+        brief: 'Test-1',
+        worktreeDir: '/repo/.agent-worktrees/sample',
+        branch: 'agent/sample',
+        runDir: '/repo/.agent-runs/sample',
+        startedAt: '2026-11-27T00:00:00Z',
+        finishedAt: '2026-11-27T00:01:00Z',
+        durationSeconds: 60,
+        attempts: [
+          {
+            attempt: 1,
+            runnerExitCode: 0,
+            runnerSeconds: 45,
+            detectedSpecs: ['tests/fields/demo.spec.ts'],
+            changedFiles: ['tests/fields/demo.spec.ts'],
+            verifyPassed: true,
+            verifySummary: 'Verified 1 spec',
+            failingStages: [],
+            promptFile: '.agent-runs/sample/attempt-1-prompt.md',
+            runnerLogFile: '.agent-runs/sample/attempt-1-runner.log',
+            verifyReportFile: '.agent-runs/sample/attempt-1-verify.json',
+          },
+        ],
+        changedFiles: ['tests/fields/demo.spec.ts'],
+        detectedSpecs: ['tests/fields/demo.spec.ts'],
+        commitSha: 'abc1234',
+      },
+      '/repo',
+      false
+    );
+    assert.match(runSummary, /Agent Run · ✔ PASS/);
+    assert.match(runSummary, /abc1234/);
+
+    const batchSummary = renderBatchSummaryTerminal(
+      {
+        batchId: 'batch-1',
+        status: 'passed',
+        mode: 'shared-branch',
+        runner: 'opencode',
+        sharedBranch: 'feat/demo',
+        sharedWorktreeDir: null,
+        runDir: '/repo/.agent-runs/batch-1',
+        startedAt: '2026-11-27T00:00:00Z',
+        finishedAt: '2026-11-27T00:01:00Z',
+        durationSeconds: 60,
+        total: 1,
+        passed: 1,
+        skipped: 0,
+        failed: 0,
+        runs: [],
+      },
+      '/repo',
+      false
+    );
+    assert.match(batchSummary, /Batch Run · ✔ PASS/);
+    assert.match(batchSummary, /shared-branch \(feat\/demo\)/);
   });
 });

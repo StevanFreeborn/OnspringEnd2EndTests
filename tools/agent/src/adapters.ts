@@ -9,6 +9,7 @@ import {
   splitListValues,
 } from './briefs.js';
 import { CommandResult, loadEnv, parseCliArgs, runCommand, writeErr, writeOut } from './utils.js';
+import { createStyler, renderHeaderBox, renderTable, supportsColor, truncateText } from './ui.js';
 
 export type AdapterSource = 'markdown' | 'csv' | 'json' | 'yaml' | 'github' | 'onspring';
 
@@ -1194,7 +1195,7 @@ export async function runIngestCommand(repoRoot: string, argv: readonly string[]
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
-      flags: new Set(['--json']),
+      flags: new Set(['--json', '--markdown']),
       options: new Set([
         '--input',
         '--source',
@@ -1262,11 +1263,44 @@ export async function runIngestCommand(repoRoot: string, argv: readonly string[]
     return 0;
   }
 
-  writeOut(`# Ingested ${briefs.length} Test Brief(s)`);
-  briefs.forEach((b, idx) => {
-    writeOut();
-    writeOut(`<!-- Brief ${idx + 1}: ${formatBriefHeadline(b)} -->`);
-    writeOut(formatBriefAsMarkdown(b).trimEnd());
-  });
+  if (parsed.flags.has('--markdown')) {
+    writeOut(`# Ingested ${briefs.length} Test Brief(s)`);
+    briefs.forEach((b, idx) => {
+      writeOut();
+      writeOut(`<!-- Brief ${idx + 1}: ${formatBriefHeadline(b)} -->`);
+      writeOut(formatBriefAsMarkdown(b).trimEnd());
+    });
+    return 0;
+  }
+
+  const outColor = supportsColor(process.stdout);
+  const s = createStyler(outColor);
+  writeOut(
+    renderHeaderBox(
+      'Ingested Test Briefs',
+      [
+        { label: 'Count', value: `${briefs.length} brief(s)` },
+        { label: 'Sources', value: Array.from(new Set(briefs.map(b => b.source.split('#')[0]))).join(', ') },
+      ],
+      { color: outColor }
+    )
+  );
+  writeOut();
+  writeOut(
+    renderTable(
+      ['#', 'Test ID', 'Title', 'Domain', 'Tags', 'Source'],
+      briefs.map((b, idx) => [
+        String(idx + 1),
+        b.testId ? s.cyan(b.testId) : s.dim('-'),
+        truncateText(b.title, 42),
+        b.domain ?? s.dim('infer'),
+        b.tags && b.tags.length > 0 ? b.tags.join(', ') : s.dim('none'),
+        truncateText(b.source, 26),
+      ]),
+      { align: ['right', 'left', 'left', 'left', 'left', 'left'], color: outColor }
+    )
+  );
+  writeOut();
+  writeOut(s.dim('  Tip: pass --markdown for full brief details or --json for machine-readable output.'));
   return 0;
 }

@@ -1,4 +1,5 @@
 import { parseCliArgs, whichExecutable, writeErr, writeOut } from './utils.js';
+import { createStyler, renderHeaderBox, renderTable, statusBadge, supportsColor, truncateText } from './ui.js';
 
 export type RunnerName = 'agy' | 'opencode' | 'copilot' | 'claude' | 'codex' | 'custom';
 
@@ -215,15 +216,31 @@ export async function runRunnersCommand(repoRoot: string, argv: readonly string[
     return 0;
   }
 
-  writeOut('# Available Agent Runners');
+  const outColor = supportsColor(process.stdout);
+  const s = createStyler(outColor);
+  const installedCount = statuses.filter(st => st.available && st.name !== 'custom').length;
+  const totalBuiltIn = statuses.filter(st => st.name !== 'custom').length;
+
+  writeOut(
+    renderHeaderBox(
+      'Available Agent Runners',
+      [{ label: 'Detected', value: `${installedCount}/${totalBuiltIn} CLI runner(s) on PATH` }],
+      { color: outColor }
+    )
+  );
   writeOut();
-  writeOut('| Runner | Installed | Description | Path |');
-  writeOut('| :--- | :--- | :--- | :--- |');
-  for (const status of statuses) {
-    writeOut(
-      `| \`${status.name}\` | ${status.available ? 'YES' : 'NO'} | ${status.description} | ${status.resolvedPath ?? '-'} |`
-    );
-  }
+  writeOut(
+    renderTable(
+      ['Runner', 'Status', 'Description', 'Path'],
+      statuses.map(st => [
+        st.available ? s.bold(st.name) : s.dim(st.name),
+        statusBadge(st.available ? 'yes' : 'no', outColor),
+        truncateText(st.description, 44),
+        st.resolvedPath ? s.dim(truncateText(st.resolvedPath, 38)) : s.dim('-'),
+      ]),
+      { color: outColor }
+    )
+  );
 
   return 0;
 }

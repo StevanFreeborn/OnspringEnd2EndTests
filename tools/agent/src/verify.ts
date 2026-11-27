@@ -2,6 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { parseCliArgs, runCommand, toRepoRel, walkFiles, writeErr, writeOut } from './utils.js';
+import {
+  createSpinner,
+  createStyler,
+  formatDuration,
+  renderHeaderBox,
+  renderTable,
+  statusBadge,
+  supportsColor,
+  truncateText,
+} from './ui.js';
 
 const FORBIDDEN_CALL_METHODS = new Set([
   'locator',
@@ -30,17 +40,15 @@ async function runProcessStage(
   repoRoot: string,
   quiet = false
 ): Promise<VerifyStageResult> {
-  if (!quiet) {
-    writeErr(`[verify] ${name}...`);
-  }
+  const errColor = supportsColor(process.stderr);
+  const s = createStyler(errColor);
+  const spinner = createSpinner({ stream: process.stderr, quiet, color: errColor, indent: '  ' });
+  spinner.start(`${name.padEnd(24)} ${s.dim('running...')}`);
 
   const res = await runCommand(command, args, { cwd: repoRoot });
-  const outcome = res.exitCode === 0 ? 'PASS' : 'FAIL';
-  if (!quiet) {
-    writeErr(`[verify] ${name} ${outcome} (${res.seconds.toFixed(2)}s)`);
-  }
-
+  const duration = formatDuration(res.seconds).padStart(6);
   if (res.exitCode === 0) {
+    spinner.succeed(`${name.padEnd(24)} ${s.dim(duration)}`);
     return {
       name,
       passed: true,
@@ -48,6 +56,8 @@ async function runProcessStage(
       summary: `${command} ${args.join(' ')}`,
     };
   }
+
+  spinner.fail(`${name.padEnd(24)} ${s.dim(duration)}  ${s.red(`(exit ${res.exitCode})`)}`);
 
   const combined = `${res.stdout}\n${res.stderr}`.trim();
   const trimmed = combined.length > 4000 ? `... [truncated]\n${combined.slice(-4000)}` : combined;
@@ -290,13 +300,17 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
     normalizedSpec = toRepoRel(repoRoot, fullSpec);
   }
 
+  const errColor = supportsColor(process.stderr);
+  const errStyler = createStyler(errColor);
   const guardrailsResult = () => {
-    if (!quiet) {
-      writeErr('[verify] architecture:guardrails...');
-    }
+    const spinner = createSpinner({ stream: process.stderr, quiet, color: errColor, indent: '  ' });
+    spinner.start(`${'architecture:guardrails'.padEnd(24)} ${errStyler.dim('running...')}`);
     const result = runArchitectureGuardrails(repoRoot, normalizedSpec);
-    if (!quiet) {
-      writeErr(`[verify] architecture:guardrails ${result.passed ? 'PASS' : 'FAIL'} (${result.seconds.toFixed(2)}s)`);
+    const duration = formatDuration(result.seconds).padStart(6);
+    if (result.passed) {
+      spinner.succeed(`${'architecture:guardrails'.padEnd(24)} ${errStyler.dim(`${duration}  (${result.summary})`)}`);
+    } else {
+      spinner.fail(`${'architecture:guardrails'.padEnd(24)} ${errStyler.dim(`${duration}  (${result.summary})`)}`);
     }
     return result;
   };
@@ -340,7 +354,9 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
     if (browsers === 'both' || browsers === 'edge') {
       if (!chromePassed && !noFailFast) {
         if (!quiet) {
-          writeErr('[verify] e2e:edge SKIP (0.00s)');
+          writeErr(
+            `  ${errStyler.yellow('○')} ${'e2e:edge'.padEnd(24)} ${errStyler.dim(`${formatDuration(0).padStart(6)}  (skipped after e2e:chrome failure)`)}`
+          );
         }
         stages.push({
           name: 'e2e:edge',
@@ -381,24 +397,46 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
     return passed ? 0 : 1;
   }
 
-  writeOut('# Verification Report');
-  if (normalizedSpec) {
-    writeOut(`Spec: \`${normalizedSpec}\``);
-  }
-  writeOut();
-  writeOut('| Stage | Status | Duration | Details |');
-  writeOut('| :--- | :--- | :--- | :--- |');
-  for (const s of stages) {
-    const statusLabel = s.skipped ? 'SKIP' : s.passed ? 'PASS' : 'FAIL';
-    writeOut(`| \`${s.name}\` | ${statusLabel} | ${s.seconds.toFixed(2)}s | ${s.summary} |`);
-  }
+  const outColor = supportsColor(process.stdout);
+  const s = createStyler(outColor);
+  const totalSeconds = stages.reduce((sum, st) => sum + st.seconds, 0);
+  const passedCount = stages.filter(st => st.passed).length;
+  const skippedCount = stages.filter(st => st.skipped).length;
+  const failedCount = stages.filter(st => !st.passed && !st.skipped).length;
 
-  for (const failed of stages.filter(s => !s.passed && s.output)) {
+  writeOut();
+  writeOut(
+    renderHeaderBox(
+      `Verification Report · ${statusBadge(passed ? 'passed' : 'failed', outColor)}`,
+      [
+        ...(normalizedSpec ? [{ label: 'Spec', value: normalizedSpec }] : []),
+        {
+          label: 'Stages',
+          value: `${passedCount} passed · ${skippedCount} skipped · ${failedCount} failed`,
+        },
+        { label: 'Duration', value: formatDuration(totalSeconds) },
+      ],
+      { color: outColor }
+    )
+  );
+  writeOut();
+  writeOut(
+    renderTable(
+      ['Stage', 'Status', 'Duration', 'Details'],
+      stages.map(st => [
+        st.name,
+        statusBadge(st.skipped ? 'skip' : st.passed ? 'pass' : 'fail', outColor),
+        formatDuration(st.seconds),
+        truncateText(st.summary, 48),
+      ]),
+      { align: ['left', 'left', 'right', 'left'], color: outColor }
+    )
+  );
+
+  for (const failed of stages.filter(st => !st.passed && st.output)) {
     writeOut();
-    writeOut(`## Failure Details: \`${failed.name}\``);
-    writeOut('```text');
+    writeOut(`  ${s.red('✖')} ${s.bold(`Failure Details: ${failed.name}`)}`);
     writeOut(failed.output);
-    writeOut('```');
   }
 
   return passed ? 0 : 1;

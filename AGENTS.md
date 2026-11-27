@@ -24,8 +24,8 @@ Prefer the deterministic TypeScript CLI over manual grep when authoring or verif
   `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--no-clean] [--repeat 2] [--json]`
 - List available headless agent CLIs, ingest briefs, or orchestrate single/batch runs:
   `npm run agent -- runners [--json]`
-  `npm run agent -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--json]`
-  `npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--dry-run]`
+  `npm run agent -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--markdown] [--json]`
+  `npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--verbose] [--dry-run]`
 
 ## Non-Negotiable Architecture Rules
 

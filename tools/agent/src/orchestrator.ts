@@ -16,6 +16,20 @@ import {
   writeOut,
 } from './utils.js';
 import { createAgentWorktree, removeAgentWorktree, slugify, WorktreeHandle } from './worktree.js';
+import {
+  createSpinner,
+  createStyler,
+  extractRunnerActivityLine,
+  formatDuration,
+  formatGutterLines,
+  isInteractiveTty,
+  renderHeaderBox,
+  renderSectionRule,
+  renderTable,
+  statusBadge,
+  supportsColor,
+  truncateText,
+} from './ui.js';
 
 export type PriorBatchRunSummary = {
   headline: string;
@@ -82,6 +96,7 @@ export type OrchestratorConfig = {
   cleanupWorktree: boolean;
   dryRun: boolean;
   quiet?: boolean;
+  verbose?: boolean;
   heartbeatSeconds?: number;
   slugTitle?: string;
   runDirOverride?: string;
@@ -586,6 +601,46 @@ function buildRunReportMarkdown(report: OrchestratorReport): string {
   return `${lines.join('\n')}\n`;
 }
 
+export function renderRunSummaryTerminal(
+  report: OrchestratorReport,
+  repoRoot: string,
+  colorEnabled = supportsColor(process.stdout)
+): string {
+  const s = createStyler(colorEnabled);
+  const badge = statusBadge(report.status, colorEnabled);
+  const meta = [
+    { label: 'Runner', value: report.runner },
+    { label: 'Duration', value: formatDuration(report.durationSeconds) },
+    { label: 'Branch', value: report.branch ?? '(in-place)' },
+    { label: 'Specs', value: report.detectedSpecs.length > 0 ? report.detectedSpecs.join(', ') : '(none)' },
+    ...(report.commitSha ? [{ label: 'Commit', value: report.commitSha }] : []),
+    ...(report.draftPrUrl ? [{ label: 'Draft PR', value: report.draftPrUrl }] : []),
+    ...(report.error ? [{ label: 'Error', value: s.red(report.error) }] : []),
+  ];
+
+  const lines = ['', renderHeaderBox(`Agent Run · ${badge}`, meta, { color: colorEnabled })];
+
+  if (report.attempts.length > 0) {
+    lines.push(
+      '',
+      renderTable(
+        ['Attempt', 'Exit', 'Runner Time', 'Verify', 'Summary'],
+        report.attempts.map(a => [
+          `${a.attempt}/${report.attempts.length}`,
+          a.runnerExitCode === 0 ? s.green('0') : s.red(String(a.runnerExitCode)),
+          formatDuration(a.runnerSeconds),
+          statusBadge(a.verifyPassed ? 'pass' : 'fail', colorEnabled),
+          truncateText(a.verifySummary, 48),
+        ]),
+        { align: ['left', 'right', 'right', 'left', 'left'], color: colorEnabled }
+      )
+    );
+  }
+
+  lines.push('', s.dim(`  Report  ${toRepoRel(repoRoot, path.join(report.runDir, 'report.md'))}`));
+  return `${lines.join('\n')}\n`;
+}
+
 function formatRunTimestamp(date = new Date()): string {
   const pad = (n: number): string => String(n).padStart(2, '0');
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
@@ -627,6 +682,8 @@ export async function executeOrchestrator(
   config: OrchestratorConfig,
   deps?: OrchestratorTestDeps
 ): Promise<{ exitCode: number; report: OrchestratorReport }> {
+  const errColor = supportsColor(process.stderr);
+  const s = createStyler(errColor);
   const logProgress = (line: string): void => {
     if (!config.quiet) {
       writeErr(line);
@@ -659,8 +716,20 @@ export async function executeOrchestrator(
       ? worktreeHandle.branch
       : null;
 
-  if (worktreeHandle) {
-    logProgress(`[agent] Created worktree '${worktreeHandle.path}' on branch '${worktreeHandle.branch}'.`);
+  if (!config.existingWorktree && !config.quiet) {
+    logProgress(
+      renderHeaderBox(
+        'Onspring Agent Run',
+        [
+          { label: 'Runner', value: config.runner },
+          { label: 'Branch', value: activeBranch ?? '(in-place)' },
+          { label: 'Domain', value: config.domain ?? 'infer from catalog' },
+          { label: 'Output', value: config.verbose ? 'verbose (raw stream)' : 'compact (spinner · --verbose for raw)' },
+          { label: 'Logs', value: toRepoRel(repoRoot, runDir) },
+        ],
+        { color: errColor }
+      )
+    );
   }
 
   const startedMs = Date.now();
@@ -705,10 +774,14 @@ export async function executeOrchestrator(
 
       if (config.dryRun) {
         report.status = 'dry-run';
+        logProgress(`  ${s.cyan('◇')} Dry-run prompt generated (${toRepoRel(repoRoot, promptFile)})`);
         break;
       }
 
-      logProgress(`[agent] Attempt ${attempt}/${config.maxAttempts}: launching '${config.runner}'...`);
+      if (!config.existingWorktree || attempt > 1) {
+        logProgress('');
+        logProgress(renderSectionRule(`Attempt ${attempt}/${config.maxAttempts}`, { color: errColor }));
+      }
 
       const adapter = getRunnerAdapter(config.runner);
       const invocation = adapter.buildInvocation({
@@ -720,45 +793,120 @@ export async function executeOrchestrator(
       });
 
       const heartbeatMs = (config.heartbeatSeconds ?? 30) * 1000;
-      const pollMs = Math.max(10, Math.min(heartbeatMs, 5000));
       const attemptStartedAt = Date.now();
       let lastOutputAt = attemptStartedAt;
-      let heartbeatInFlight = false;
+      let lastNonTtyStatusAt = attemptStartedAt;
+      let lastFilesPollAt = 0;
+      let pollInFlight = false;
+      let liveChangedCount = 0;
+      let latestActivity = '';
+      let runnerFinished = false;
 
       const logStream = fs.createWriteStream(runnerLogFile, { encoding: 'utf8' });
       const commandDisplay = invocation.shellCommand ?? `${invocation.command} ${invocation.args.join(' ')}`;
       logStream.write(`$ ${commandDisplay}\n\n`);
 
+      const tty = isInteractiveTty(process.stderr);
+      const spinner =
+        !config.verbose && !config.quiet
+          ? createSpinner({ stream: process.stderr, quiet: config.quiet, color: errColor, indent: '  ' })
+          : null;
+
+      const formatRunnerStatus = (): string => {
+        const elapsed = formatDuration((Date.now() - attemptStartedAt) / 1000);
+        const parts = [`${s.bold(config.runner)} ${s.dim(`(Attempt ${attempt}/${config.maxAttempts})`)}`, elapsed];
+        if (liveChangedCount > 0) {
+          parts.push(`${liveChangedCount} file(s) changed`);
+        }
+        if (latestActivity) {
+          parts.push(s.dim(latestActivity));
+        }
+        return parts.join(` ${s.dim('·')} `);
+      };
+
+      if (spinner) {
+        spinner.start(formatRunnerStatus());
+      } else {
+        logProgress(`  ${s.cyan('▶')} Launching ${s.bold(config.runner)} (Attempt ${attempt}/${config.maxAttempts})`);
+      }
+
       const handleChunk = (chunk: string): void => {
         lastOutputAt = Date.now();
         logStream.write(chunk);
-        if (!config.quiet) {
-          process.stderr.write(chunk);
+        if (config.quiet) {
+          return;
+        }
+        if (config.verbose) {
+          process.stderr.write(formatGutterLines(chunk, { color: errColor }));
+          return;
+        }
+        const extracted = extractRunnerActivityLine(chunk);
+        if (extracted) {
+          latestActivity = extracted;
+          if (tty) {
+            spinner?.update(formatRunnerStatus());
+          }
         }
       };
 
-      const heartbeatTimer =
-        !config.quiet && heartbeatMs > 0
+      const pollMs = tty && !config.verbose ? 1000 : Math.max(10, Math.min(heartbeatMs || 5000, 5000));
+      const statusTimer =
+        !config.quiet && (tty || heartbeatMs > 0)
           ? setInterval(() => {
-              if (heartbeatInFlight || Date.now() - lastOutputAt < heartbeatMs) {
+              const now = Date.now();
+              const shouldRefreshFiles = !pollInFlight && now - lastFilesPollAt >= 4000;
+              if (shouldRefreshFiles) {
+                pollInFlight = true;
+                lastFilesPollAt = now;
+                void (async () => {
+                  try {
+                    const { changedFiles: liveChanged } = await detectChangedFiles(worktreeDir);
+                    if (runnerFinished) {
+                      return;
+                    }
+                    liveChangedCount = liveChanged.length;
+                    if (!config.verbose && tty) {
+                      spinner?.update(formatRunnerStatus());
+                    }
+                  } finally {
+                    pollInFlight = false;
+                  }
+                })();
+              }
+
+              if (!config.verbose && tty) {
+                spinner?.update(formatRunnerStatus());
                 return;
               }
-              heartbeatInFlight = true;
-              void (async () => {
-                try {
-                  const { changedFiles: liveChanged } = await detectChangedFiles(worktreeDir);
-                  lastOutputAt = Date.now();
-                  logProgress(
-                    `[agent] Attempt ${attempt}/${config.maxAttempts} still running (${formatElapsed(Date.now() - attemptStartedAt)}, ${liveChanged.length} changed file(s) in worktree, log: ${toRepoRel(repoRoot, runnerLogFile)})`
-                  );
-                } finally {
-                  heartbeatInFlight = false;
+
+              const silentTooLong = heartbeatMs > 0 && now - lastOutputAt >= heartbeatMs;
+              const periodicNonTty = !tty && heartbeatMs > 0 && now - lastNonTtyStatusAt >= heartbeatMs;
+              if ((config.verbose && silentTooLong) || (!config.verbose && periodicNonTty)) {
+                lastOutputAt = now;
+                lastNonTtyStatusAt = now;
+                if (!pollInFlight) {
+                  pollInFlight = true;
+                  void (async () => {
+                    try {
+                      const { changedFiles: liveChanged } = await detectChangedFiles(worktreeDir);
+                      if (runnerFinished) {
+                        return;
+                      }
+                      liveChangedCount = liveChanged.length;
+                      logProgress(
+                        `  ${s.dim('⋯')} ${config.runner} (Attempt ${attempt}/${config.maxAttempts}) running ${formatDuration((Date.now() - attemptStartedAt) / 1000)}, ${liveChangedCount} changed file(s), log: ${toRepoRel(repoRoot, runnerLogFile)}`
+                      );
+                    } finally {
+                      pollInFlight = false;
+                    }
+                  })();
                 }
-              })();
+              }
             }, pollMs)
           : null;
+      statusTimer?.unref?.();
 
-      let runnerRes;
+      let runnerRes: { exitCode: number; seconds: number } | null = null;
       try {
         runnerRes = invocation.shellCommand
           ? await runShellCommand(invocation.shellCommand, {
@@ -774,8 +922,21 @@ export async function executeOrchestrator(
               onStderr: handleChunk,
             });
       } finally {
-        if (heartbeatTimer) {
-          clearInterval(heartbeatTimer);
+        runnerFinished = true;
+        if (statusTimer) {
+          clearInterval(statusTimer);
+        }
+        if (spinner) {
+          if (runnerRes) {
+            const summaryText = `${s.bold(config.runner)} exited ${runnerRes.exitCode} in ${formatDuration(runnerRes.seconds)}`;
+            if (runnerRes.exitCode === 0) {
+              spinner.succeed(summaryText);
+            } else {
+              spinner.fail(summaryText);
+            }
+          } else {
+            spinner.stop();
+          }
         }
         await new Promise<void>(resolve => logStream.end(resolve));
       }
@@ -784,9 +945,10 @@ export async function executeOrchestrator(
       report.changedFiles = changedFiles;
       report.detectedSpecs = detectedSpecs;
 
-      logProgress(
-        `[agent] Attempt ${attempt}/${config.maxAttempts}: '${config.runner}' exited ${runnerRes.exitCode} in ${runnerRes.seconds.toFixed(1)}s (${changedFiles.length} changed file(s), ${detectedSpecs.length} spec(s)). Verifying...`
-      );
+      if (!config.quiet) {
+        const specCountLabel = `${detectedSpecs.length} spec(s)`;
+        logProgress(`  ${s.dim(`  Changed: ${changedFiles.length} file(s) · ${specCountLabel} · Verifying...`)}`);
+      }
 
       const verifyOutcome = deps?.verifyWorktree
         ? await deps.verifyWorktree(worktreeDir, detectedSpecs)
@@ -798,9 +960,11 @@ export async function executeOrchestrator(
             Boolean(config.quiet)
           );
 
-      logProgress(
-        `[agent] Attempt ${attempt}/${config.maxAttempts}: verify ${verifyOutcome.passed ? 'PASSED' : 'FAILED'} — ${verifyOutcome.summary}`
-      );
+      if (verifyOutcome.passed) {
+        logProgress(`  ${s.green('✔')} Verify passed ${s.dim(`— ${verifyOutcome.summary}`)}`);
+      } else {
+        logProgress(`  ${s.red('✖')} Verify failed ${s.dim(`— ${verifyOutcome.summary}`)}`);
+      }
 
       fs.writeFileSync(verifyReportFile, JSON.stringify(verifyOutcome.rawReport, null, 2), 'utf8');
 
@@ -848,6 +1012,7 @@ export async function executeOrchestrator(
       const shaRes = await runCommand('git', ['rev-parse', '--short', 'HEAD'], { cwd: worktreeDir });
       if (shaRes.exitCode === 0) {
         report.commitSha = shaRes.stdout.trim();
+        logProgress(`  ${s.green('✔')} Committed ${s.cyan(report.commitSha)} onto ${activeBranch ?? 'HEAD'}`);
       }
 
       if (config.draftPr) {
@@ -857,6 +1022,7 @@ export async function executeOrchestrator(
         const reportMdPath = path.join(runDir, 'report.md');
         fs.writeFileSync(reportMdPath, buildRunReportMarkdown(report), 'utf8');
         report.draftPrUrl = await pushBranchAndCreateDraftPr(worktreeDir, activeBranch, commitMessage, reportMdPath);
+        logProgress(`  ${s.green('✔')} Created draft PR: ${report.draftPrUrl}`);
       }
     }
   } catch (err) {
@@ -913,12 +1079,55 @@ function buildBatchReportMarkdown(report: BatchOrchestratorReport): string {
   return `${lines.join('\n')}\n`;
 }
 
+export function renderBatchSummaryTerminal(
+  report: BatchOrchestratorReport,
+  repoRoot: string,
+  colorEnabled = supportsColor(process.stdout)
+): string {
+  const s = createStyler(colorEnabled);
+  const badge = statusBadge(report.status, colorEnabled);
+  const countsText = `${s.green(`${report.passed}/${report.total} passed`)} · ${s.yellow(`${report.skipped} skipped`)} · ${report.failed > 0 ? s.red(`${report.failed} failed`) : `${report.failed} failed`}`;
+  const meta = [
+    { label: 'Mode', value: report.sharedBranch ? `${report.mode} (${report.sharedBranch})` : report.mode },
+    { label: 'Runner', value: report.runner },
+    { label: 'Duration', value: formatDuration(report.durationSeconds) },
+    { label: 'Counts', value: countsText },
+    ...(report.draftPrUrl ? [{ label: 'Draft PR', value: report.draftPrUrl }] : []),
+    ...(report.error ? [{ label: 'Error', value: s.red(report.error) }] : []),
+  ];
+
+  const lines = ['', renderHeaderBox(`Batch Run · ${badge}`, meta, { color: colorEnabled })];
+
+  if (report.runs.length > 0) {
+    lines.push(
+      '',
+      renderTable(
+        ['#', 'Status', 'Attempts', 'Duration', 'Commit', 'Changed Specs'],
+        report.runs.map((r, idx) => [
+          String(idx + 1),
+          statusBadge(r.status, colorEnabled),
+          r.status === 'skipped' || r.status === 'dry-run' ? s.dim('-') : String(r.attempts.length),
+          r.status === 'skipped' ? s.dim('-') : formatDuration(r.durationSeconds),
+          r.commitSha ? s.cyan(r.commitSha) : s.dim('-'),
+          r.detectedSpecs.length > 0 ? r.detectedSpecs.map(spec => truncateText(spec, 40)).join(', ') : s.dim('(none)'),
+        ]),
+        { align: ['right', 'left', 'right', 'right', 'left', 'left'], color: colorEnabled }
+      )
+    );
+  }
+
+  lines.push('', s.dim(`  Report  ${toRepoRel(repoRoot, path.join(report.runDir, 'batch-report.md'))}`));
+  return `${lines.join('\n')}\n`;
+}
+
 export async function executeBatchOrchestrator(
   repoRoot: string,
   briefs: readonly NormalizedTestBrief[],
   config: BatchOrchestratorConfig,
   deps?: OrchestratorTestDeps
 ): Promise<{ exitCode: number; report: BatchOrchestratorReport }> {
+  const errColor = supportsColor(process.stderr);
+  const s = createStyler(errColor);
   const logProgress = (line: string): void => {
     if (!config.quiet) {
       writeErr(line);
@@ -944,8 +1153,20 @@ export async function executeBatchOrchestrator(
       })
     : null;
 
-  if (sharedHandle) {
-    logProgress(`[agent] Created shared batch worktree '${sharedHandle.path}' on branch '${sharedHandle.branch}'.`);
+  if (!config.quiet) {
+    logProgress(
+      renderHeaderBox(
+        'Onspring Agent Batch',
+        [
+          { label: 'Mode', value: sharedHandle ? `shared-branch (${sharedHandle.branch})` : 'isolated' },
+          { label: 'Runner', value: config.runner },
+          { label: 'Briefs', value: `${briefs.length} item(s)${config.resume ? ' (resume enabled)' : ''}` },
+          { label: 'Output', value: config.verbose ? 'verbose (raw stream)' : 'compact (spinner · --verbose for raw)' },
+          { label: 'Logs', value: toRepoRel(repoRoot, runDir) },
+        ],
+        { color: errColor }
+      )
+    );
   }
 
   const startedMs = Date.now();
@@ -981,9 +1202,9 @@ export async function executeBatchOrchestrator(
       const itemDomain = brief.domain ?? config.domain;
 
       if (config.resume && brief.testId && existingTestIds.has(brief.testId)) {
-        logProgress(
-          `[agent] Batch item ${i + 1}/${briefs.length}: skipping ${brief.testId} (already present on branch).`
-        );
+        logProgress('');
+        logProgress(renderSectionRule(`[${i + 1}/${briefs.length}] ${headline}`, { color: errColor }));
+        logProgress(`  ${s.yellow('○')} Skipped ${brief.testId} (already present on branch)`);
         const nowIso = new Date().toISOString();
         report.skipped++;
         report.runs.push({
@@ -1005,7 +1226,8 @@ export async function executeBatchOrchestrator(
         continue;
       }
 
-      logProgress(`[agent] Batch item ${i + 1}/${briefs.length}: ${headline}`);
+      logProgress('');
+      logProgress(renderSectionRule(`[${i + 1}/${briefs.length}] ${headline}`, { color: errColor }));
 
       const subRunDir = path.join(runDir, `brief-${String(i + 1).padStart(2, '0')}-${slugify(headline, 36)}`);
       const itemOutcome = await executeOrchestrator(
@@ -1040,7 +1262,7 @@ export async function executeBatchOrchestrator(
       } else {
         report.failed++;
         if (sharedHandle || config.failFast) {
-          logProgress(`[agent] Batch stopping after failure on item ${i + 1}/${briefs.length} (${headline}).`);
+          logProgress(`  ${s.red('✖')} Batch stopping after failure on item ${i + 1}/${briefs.length} (${headline})`);
           break;
         }
       }
@@ -1102,6 +1324,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
         '--commit',
         '--draft-pr',
         '--cleanup-worktree',
+        '--verbose',
         '--quiet',
         '--dry-run',
         '--json',
@@ -1254,6 +1477,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     commit: parsed.flags.has('--commit'),
     draftPr: parsed.flags.has('--draft-pr'),
     cleanupWorktree: parsed.flags.has('--cleanup-worktree'),
+    verbose: parsed.flags.has('--verbose'),
     quiet: parsed.flags.has('--quiet'),
     dryRun: parsed.flags.has('--dry-run'),
   };
@@ -1293,8 +1517,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
         writeOut(JSON.stringify(report, null, 2));
         return exitCode;
       }
-      writeOut(buildBatchReportMarkdown(report));
-      writeOut(`Batch artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+      writeOut(renderBatchSummaryTerminal(report, repoRoot).trimEnd());
       return exitCode;
     }
 
@@ -1303,8 +1526,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
       writeOut(JSON.stringify(report, null, 2));
       return exitCode;
     }
-    writeOut(buildRunReportMarkdown(report));
-    writeOut(`Run artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+    writeOut(renderRunSummaryTerminal(report, repoRoot).trimEnd());
     return exitCode;
   }
 
@@ -1344,8 +1566,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
       writeOut(JSON.stringify(report, null, 2));
       return exitCode;
     }
-    writeOut(buildRunReportMarkdown(report));
-    writeOut(`Run artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+    writeOut(renderRunSummaryTerminal(report, repoRoot).trimEnd());
     return exitCode;
   }
 
@@ -1359,7 +1580,6 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     writeOut(JSON.stringify(report, null, 2));
     return exitCode;
   }
-  writeOut(buildBatchReportMarkdown(report));
-  writeOut(`Batch artifacts written to: \`${toRepoRel(repoRoot, report.runDir)}\``);
+  writeOut(renderBatchSummaryTerminal(report, repoRoot).trimEnd());
   return exitCode;
 }

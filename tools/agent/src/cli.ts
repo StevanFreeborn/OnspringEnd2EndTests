@@ -34,11 +34,11 @@ const COMMAND_HELP: Record<string, string> = {
   verify: `Usage:
   npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--no-clean] [--repeat <n>] [--browsers both|chrome|edge] [--quiet] [--json]`,
   ingest: `Usage:
-  npm run agent -- ingest [--input <file>] [--source markdown|csv|json|yaml|github|onspring] [--domain <name>] [--issue <num> | --label <name> | --query <q>] [--repo owner/repo] [--onspring-config <json>] [--app-id <id>] [--record-id <id> | --report-id <id> | --filter <query>] [--field-map k=id,...] [--limit <n>] [--json]`,
+  npm run agent -- ingest [--input <file>] [--source markdown|csv|json|yaml|github|onspring] [--domain <name>] [--issue <num> | --label <name> | --query <q>] [--repo owner/repo] [--onspring-config <json>] [--app-id <id>] [--record-id <id> | --report-id <id> | --filter <query>] [--field-map k=id,...] [--limit <n>] [--markdown] [--json]`,
   runners: `Usage:
   npm run agent -- runners [--json]`,
   run: `Usage:
-  npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id> | --app-id <id>) [--source markdown|csv|json|yaml|github|onspring] [--shared-branch <name>] [--resume] [--fail-fast] [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--quiet] [--dry-run] [--json]`,
+  npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id> | --app-id <id>) [--source markdown|csv|json|yaml|github|onspring] [--shared-branch <name>] [--resume] [--fail-fast] [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--verbose] [--quiet] [--dry-run] [--json]`,
 };
 
 function isHelp(arg: string): boolean {
