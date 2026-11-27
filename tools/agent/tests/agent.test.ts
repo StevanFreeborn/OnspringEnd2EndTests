@@ -13,8 +13,18 @@ import {
 } from '../src/adapters.js';
 import { formatBriefAsMarkdown } from '../src/briefs.js';
 import { buildCatalog } from '../src/catalog.js';
+import { parseExploreScriptFunction } from '../src/explore.js';
 import { indexMarkdownSections, parseFrontmatter, rankSections } from '../src/helpSearch.js';
-import { executeBatchOrchestrator, executeOrchestrator, parseChangedFilesFromPorcelain } from '../src/orchestrator.js';
+import {
+  buildAttemptPrompt,
+  collectPlaywrightErrorContexts,
+  executeBatchOrchestrator,
+  executeOrchestrator,
+  extractHelpSearchQuery,
+  gatherPreFlightContext,
+  inferSecondaryDomains,
+  parseChangedFilesFromPorcelain,
+} from '../src/orchestrator.js';
 import { getRunnerAdapter, isValidRunnerName } from '../src/runners.js';
 import { parseCliArgs, runCommand } from '../src/utils.js';
 import { runArchitectureGuardrails } from '../src/verify.js';
@@ -128,6 +138,25 @@ Open an app and click Add Record.
     assert.equal(ranked.length > 0, true);
     assert.equal(ranked[0]?.section.file, 'surveys/public-campaign.md');
     assert.equal(ranked[0]?.section.content.includes('---'), false);
+  });
+
+  void it('boosts multi-word heading coverage and phrase bigrams', () => {
+    const docsDir = createTempDir('agent-help-phrase-');
+    writeTempFile(
+      docsDir,
+      'connectors/security-scorecard.md',
+      '---\ntitle: Configure SecurityScorecard\n---\n## Steps to Create\nField survey answer option can appear once here while field field field repeats.\n'
+    );
+    writeTempFile(
+      docsDir,
+      'surveys/add-survey-answer-fields.md',
+      '---\ntitle: Add Survey Answer Fields\n---\n## Create a Survey Answer Field\nOpen the default layout in the survey and add a Survey Answer field mapped to a survey question.\n'
+    );
+
+    const sections = indexMarkdownSections(docsDir);
+    const ranked = rankSections(sections, 'Create a survey answer field', 2);
+    assert.equal(ranked.length, 2);
+    assert.equal(ranked[0]?.section.file, 'surveys/add-survey-answer-fields.md');
   });
 });
 
@@ -325,6 +354,10 @@ void describe('runners', () => {
     assert.equal(openCodeInv.command, 'opencode');
     assert.equal(openCodeInv.args[0], 'run');
     assert.equal(openCodeInv.args.includes('--file'), true);
+    assert.match(
+      openCodeInv.args[openCodeInv.args.length - 1] ?? '',
+      /do not attempt to read the prompt file from disk/i
+    );
 
     const customInv = getRunnerAdapter('custom').buildInvocation({
       promptFile: '/tmp/my prompt.md',
@@ -670,8 +703,9 @@ notes: |
     assert.equal(briefs[0]?.domain, 'fields');
     assert.deepEqual(briefs[0]?.tags, ['@notfedramp']);
     assert.equal(briefs[0]?.rawText, undefined);
+    assert.equal(briefs[0]?.referenceUrl, 'https://github.com/org/repo/issues/325');
     assert.match(briefs[0]?.notes ?? '', /Parent issue: \[FEAT\]: Add tests for survey answer field/);
-    assert.match(briefs[0]?.notes ?? '', /Issue URL: https:\/\/github\.com\/org\/repo\/issues\/325/);
+    assert.equal((briefs[0]?.notes ?? '').includes('https://'), false);
     assert.match(briefs[0]?.notes ?? '', /Scope note: verify field grid behavior\./);
 
     assert.equal(briefs[1]?.testId, 'Test-654');
@@ -931,5 +965,187 @@ fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({
     assert.equal(report.passed, 2);
     assert.equal(report.runs[0]?.branch, 'agent/test-21-isolated-alpha');
     assert.equal(report.runs[1]?.branch, 'agent/test-22-isolated-beta');
+  });
+
+  void it('passes prior batch commits to subsequent briefs, records telemetry, and supports --resume', async () => {
+    const repo = await initTempRepo('agent-batch-resume-');
+    const mockScript = path.join(repo, 'resume-runner.mjs');
+    writeTempFile(
+      repo,
+      'resume-runner.mjs',
+      `import fs from 'node:fs';
+const promptText = fs.readFileSync(process.argv[2], 'utf8');
+const idMatch = /Test-\\d+/.exec(promptText);
+const id = idMatch ? idMatch[0].toLowerCase() : 'demo';
+fs.mkdirSync('tests/sample', { recursive: true });
+fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: '" + (idMatch?.[0] ?? 'Test-0') + "' }); await sysAdminActor.browse().checkPage().hasUrl(/ok/); });\\n", 'utf8');
+`
+    );
+
+    const briefs = [
+      { testId: 'Test-31', title: 'First resumable test', domain: 'sample', source: 'md#1' },
+      { testId: 'Test-32', title: 'Second resumable test', domain: 'sample', source: 'md#2' },
+    ];
+
+    const firstPass = await executeBatchOrchestrator(
+      repo,
+      [briefs[0]],
+      {
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockScript) ? `"${mockScript}"` : mockScript} {{promptFile}}`,
+        domain: 'sample',
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: false,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: false,
+        draftPr: false,
+        cleanupWorktree: true,
+        dryRun: false,
+        quiet: true,
+        sharedBranch: 'feat/resumable',
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+    assert.equal(firstPass.exitCode, 0);
+    assert.equal(typeof firstPass.report.startedAt, 'string');
+    assert.equal(typeof firstPass.report.finishedAt, 'string');
+    assert.equal(typeof firstPass.report.durationSeconds, 'number');
+
+    const resumed = await executeBatchOrchestrator(
+      repo,
+      briefs,
+      {
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockScript) ? `"${mockScript}"` : mockScript} {{promptFile}}`,
+        domain: 'sample',
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: false,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: false,
+        draftPr: false,
+        cleanupWorktree: true,
+        dryRun: false,
+        quiet: true,
+        sharedBranch: 'feat/resumable',
+        resume: true,
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(resumed.exitCode, 0);
+    assert.equal(resumed.report.status, 'passed');
+    assert.equal(resumed.report.skipped, 1);
+    assert.equal(resumed.report.passed, 1);
+    assert.equal(resumed.report.runs[0]?.status, 'skipped');
+    assert.equal(resumed.report.runs[1]?.status, 'passed');
+
+    const mdReport = fs.readFileSync(path.join(resumed.report.runDir, 'batch-report.md'), 'utf8');
+    assert.match(mdReport, /\| # \| Status \| Attempts \| Duration \|/);
+    assert.match(mdReport, /SKIPPED/);
+    assert.match(mdReport, /PASSED/);
+  });
+});
+
+void describe('explore', () => {
+  void it('parses explore scripts across arrow, ESM default, and CommonJS formats', async () => {
+    const arrowFn = parseExploreScriptFunction('async page => ({ ok: page })');
+    assert.deepEqual(await arrowFn('mock-page'), { ok: 'mock-page' });
+
+    const esmFn = parseExploreScriptFunction('export default async (page) => `seen:${String(page)}`;');
+    assert.equal(await esmFn('abc'), 'seen:abc');
+
+    const cjsFn = parseExploreScriptFunction('module.exports = async function (page) { return [page, 42]; };');
+    assert.deepEqual(await cjsFn('p'), ['p', 42]);
+
+    assert.throws(() => parseExploreScriptFunction('42'), /evaluate to a function/);
+  });
+});
+
+void describe('orchestrator prompt & failure diagnostics', () => {
+  void it('builds scoped prompts without duplicate headers and infers cross-domain pre-flight context', () => {
+    const fakeRepo = createTempDir('agent-preflight-');
+    writeTempFile(fakeRepo, 'package.json', '{}');
+    writeTempFile(
+      fakeRepo,
+      'packages/onspring-ui/src/fields/field.targets.ts',
+      'export const FieldTargets = { root: "#grid" };\n'
+    );
+    writeTempFile(
+      fakeRepo,
+      'packages/onspring-ui/src/surveys/survey.tasks.ts',
+      'export const SurveyTasks = { open: () => {} };\n'
+    );
+    writeTempFile(fakeRepo, 'fixtures/survey.fixtures.ts', 'export class SurveyFixture {}\n');
+
+    const cleanQuery = extractHelpSearchQuery(
+      'Test-653 Create a survey answer field',
+      '## Test Brief\n\n- **Title**: Create a survey answer field\n'
+    );
+    assert.equal(cleanQuery, 'Create a survey answer field');
+    assert.deepEqual(inferSecondaryDomains(fakeRepo, cleanQuery, 'fields'), ['surveys']);
+
+    const preFlight = gatherPreFlightContext(
+      fakeRepo,
+      'Create a survey answer field',
+      'fields',
+      'Test-653 Create a survey answer field'
+    );
+    assert.match(preFlight, /FieldTargets/);
+    assert.match(preFlight, /SurveyTasks/);
+    assert.match(preFlight, /SurveyFixture/);
+
+    const prompt = buildAttemptPrompt({
+      brief: '## Test Brief\n\n- **Test ID**: Test-654\n- **Title**: Update a survey answer field\n',
+      attempt: 1,
+      maxAttempts: 3,
+      preFlightContext: preFlight,
+      priorBatchRuns: [
+        {
+          headline: 'Test-653 Create a survey answer field',
+          commitSha: '36e8586',
+          changedFiles: ['tests/fields/surveyAnswerField.spec.ts'],
+        },
+      ],
+    });
+    assert.equal(prompt.match(/## Test Brief/g)?.length, 1);
+    assert.match(prompt, /## Prior Batch Commits on This Branch/);
+    assert.match(prompt, /36e8586/);
+    assert.match(prompt, /Implement \*\*ONLY\*\* the single test case/);
+  });
+
+  void it('collects Playwright error-context.md files for retry prompts', () => {
+    const wt = createTempDir('agent-errctx-');
+    writeTempFile(wt, 'test-results/fail-1/error-context.md', '# Page snapshot\nButton not visible');
+    const collected = collectPlaywrightErrorContexts(wt);
+    assert.match(collected, /error-context\.md/);
+    assert.match(collected, /Button not visible/);
   });
 });

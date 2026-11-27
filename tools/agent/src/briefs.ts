@@ -10,6 +10,7 @@ export type NormalizedTestBrief = {
   steps?: string[];
   assertions?: string[];
   cleanup?: string;
+  referenceUrl?: string;
   notes?: string;
   rawText?: string;
 };

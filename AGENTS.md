@@ -18,14 +18,14 @@ Prefer the deterministic TypeScript CLI over manual grep when authoring or verif
   `npm run agent -- catalog [--domain <name>] [--kind all|targets|tasks|questions|controls|models|fixtures|tags] [--json]`
 - Search local Onspring Help Center Markdown docs (`ONSPRING_HELP_DOCS_DIR`):
   `npm run agent -- help-search "<query>" [--top 5] [--json]`
-- Prepare/launch pre-authenticated browser exploration or execute a script via `playwright-cli`:
-  `npm run agent -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>]`
+- Prepare/launch pre-authenticated browser exploration or execute a script (direct Node Playwright by default, or `--engine cli` for `playwright-cli`):
+  `npm run agent -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>] [--engine node|cli]`
 - Run full verification (package builds, unit tests, Prettier, TypeScript, zero-warning ESLint, Screenplay guardrails, and sequential fail-fast Chrome/Edge E2E):
-  `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat 2] [--json]`
+  `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--no-clean] [--repeat 2] [--json]`
 - List available headless agent CLIs, ingest briefs, or orchestrate single/batch runs:
   `npm run agent -- runners [--json]`
   `npm run agent -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--json]`
-  `npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--dry-run]`
+  `npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--dry-run]`
 
 ## Non-Negotiable Architecture Rules
 

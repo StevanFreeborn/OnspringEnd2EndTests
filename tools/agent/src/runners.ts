@@ -75,7 +75,7 @@ const ADAPTERS: Record<RunnerName, RunnerAdapter> = {
         ...(model ? ['--model', model] : []),
         '--file',
         promptFile,
-        'Read and follow all instructions in the attached prompt file. Do not commit changes.',
+        'Follow all instructions in the attached prompt above. The full prompt is already attached inline—do not attempt to read the prompt file from disk, and do not commit changes.',
       ],
     }),
   },

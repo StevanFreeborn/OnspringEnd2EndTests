@@ -783,11 +783,7 @@ export async function fetchGitHubIssueBriefs(
         continue;
       }
 
-      const sharedNotes = [
-        `Parent issue: ${issue.title.trim()}`,
-        issue.url ? `Issue URL: ${issue.url}` : '',
-        checklist.contextLines.join('\n').trim(),
-      ]
+      const sharedNotes = [`Parent issue: ${issue.title.trim()}`, checklist.contextLines.join('\n').trim()]
         .filter(Boolean)
         .join('\n');
 
@@ -801,6 +797,7 @@ export async function fetchGitHubIssueBriefs(
           ...(parsedBody?.fedRampSupport ? { fedRampSupport: parsedBody.fedRampSupport } : {}),
           ...(parsedBody?.preconditions ? { preconditions: parsedBody.preconditions } : {}),
           ...(parsedBody?.cleanup ? { cleanup: parsedBody.cleanup } : {}),
+          ...(issue.url ? { referenceUrl: issue.url } : {}),
           notes: sharedNotes,
         });
       });
@@ -830,7 +827,8 @@ export async function fetchGitHubIssueBriefs(
       ...(parsedBody?.steps ? { steps: parsedBody.steps } : {}),
       ...(parsedBody?.assertions ? { assertions: parsedBody.assertions } : {}),
       ...(parsedBody?.cleanup ? { cleanup: parsedBody.cleanup } : {}),
-      ...(issue.url ? { notes: `Issue URL: ${issue.url}` } : {}),
+      ...(issue.url ? { referenceUrl: issue.url } : {}),
+      ...(parsedBody?.notes ? { notes: parsedBody.notes } : {}),
       ...(bodyText ? { rawText: bodyText } : {}),
     });
   }

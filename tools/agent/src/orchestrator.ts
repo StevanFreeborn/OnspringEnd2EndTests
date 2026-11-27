@@ -1,12 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { AdapterSource, ingestBriefs, isValidAdapterSource } from './adapters.js';
-import { formatBriefAsMarkdown, formatBriefHeadline, NormalizedTestBrief } from './briefs.js';
+import { extractTestIdFromText, formatBriefAsMarkdown, formatBriefHeadline, NormalizedTestBrief } from './briefs.js';
 import { buildCatalog } from './catalog.js';
 import { indexMarkdownSections, rankSections } from './helpSearch.js';
 import { getRunnerAdapter, isValidRunnerName, resolveDefaultRunner, RunnerName } from './runners.js';
-import { loadEnv, parseCliArgs, runCommand, runShellCommand, toRepoRel, writeErr, writeOut } from './utils.js';
+import {
+  loadEnv,
+  parseCliArgs,
+  runCommand,
+  runShellCommand,
+  toRepoRel,
+  walkFiles,
+  writeErr,
+  writeOut,
+} from './utils.js';
 import { createAgentWorktree, removeAgentWorktree, slugify, WorktreeHandle } from './worktree.js';
+
+export type PriorBatchRunSummary = {
+  headline: string;
+  commitSha?: string;
+  changedFiles: string[];
+};
 
 export type OrchestratorAttemptRecord = {
   attempt: number;
@@ -24,12 +39,16 @@ export type OrchestratorAttemptRecord = {
 
 export type OrchestratorReport = {
   runId: string;
-  status: 'passed' | 'failed' | 'dry-run';
+  status: 'passed' | 'failed' | 'dry-run' | 'skipped';
   runner: RunnerName;
   brief: string;
   worktreeDir: string;
   branch: string | null;
   runDir: string;
+  startedAt: string;
+  finishedAt: string;
+  durationSeconds: number;
+  referenceUrl?: string;
   attempts: OrchestratorAttemptRecord[];
   changedFiles: string[];
   detectedSpecs: string[];
@@ -71,14 +90,23 @@ export type OrchestratorConfig = {
     branch: string | null;
   };
   skipWorktreeCleanup?: boolean;
+  priorBatchRuns?: readonly PriorBatchRunSummary[];
+  referenceUrl?: string;
 };
 
 export type BatchOrchestratorConfig = Omit<
   OrchestratorConfig,
-  'brief' | 'existingWorktree' | 'skipWorktreeCleanup' | 'runDirOverride' | 'slugTitle'
+  | 'brief'
+  | 'existingWorktree'
+  | 'skipWorktreeCleanup'
+  | 'runDirOverride'
+  | 'slugTitle'
+  | 'priorBatchRuns'
+  | 'referenceUrl'
 > & {
   sharedBranch?: string;
   failFast?: boolean;
+  resume?: boolean;
 };
 
 export type BatchOrchestratorReport = {
@@ -89,8 +117,12 @@ export type BatchOrchestratorReport = {
   sharedBranch: string | null;
   sharedWorktreeDir: string | null;
   runDir: string;
+  startedAt: string;
+  finishedAt: string;
+  durationSeconds: number;
   total: number;
   passed: number;
+  skipped: number;
   failed: number;
   runs: OrchestratorReport[];
   draftPrUrl?: string;
@@ -134,28 +166,120 @@ export function parseChangedFilesFromPorcelain(stdout: string): {
   return { changedFiles, detectedSpecs };
 }
 
-function gatherPreFlightContext(repoRoot: string, brief: string, domain?: string): string {
-  const sections: string[] = [];
+export function extractHelpSearchQuery(slugTitle: string | undefined, brief: string): string {
+  let raw = slugTitle?.trim() || '';
+  if (!raw) {
+    for (const line of brief.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || /^##\s+Test Brief\b/i.test(trimmed)) {
+        continue;
+      }
+      const titleMeta = /^[-*]\s+\*\*Title\*\*\s*:\s*(.+)$/i.exec(trimmed);
+      if (titleMeta) {
+        raw = titleMeta[1].trim();
+        break;
+      }
+      if (/^[-*]\s+\*\*/.test(trimmed) || /^###\s+/.test(trimmed)) {
+        continue;
+      }
+      raw = trimmed;
+      break;
+    }
+  }
 
-  if (domain) {
-    try {
-      const catalog = buildCatalog(repoRoot, domain, 'all');
-      const moduleLines = catalog.uiModules.slice(0, 12).map(m => `- \`${m.file}\`: ${m.exports.join(', ')}`);
-      const modelLines = catalog.models.entities.slice(0, 8).map(m => `- \`${m.file}\`: ${m.symbols.join(', ')}`);
-      const fixtureLines = catalog.fixtures.builders.slice(0, 8).map(f => `- \`${f.file}\`: ${f.symbols.join(', ')}`);
+  return raw
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/\bTest-\d+\b/gi, ' ')
+    .replace(/[#*`_>[\]()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function inferSecondaryDomains(repoRoot: string, query: string, primaryDomain?: string): string[] {
+  const uiSrc = path.join(repoRoot, 'packages', 'onspring-ui', 'src');
+  if (!fs.existsSync(uiSrc)) {
+    return [];
+  }
+
+  const primaryLower = primaryDomain?.trim().toLowerCase() ?? '';
+  const queryTokens = new Set((query.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(t => t.length >= 3));
+  if (queryTokens.size === 0) {
+    return [];
+  }
+
+  const matched: string[] = [];
+  for (const entry of fs.readdirSync(uiSrc, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === 'common') {
+      continue;
+    }
+    const folderLower = entry.name.toLowerCase();
+    if (folderLower === primaryLower || folderLower === `${primaryLower}s` || `${folderLower}s` === primaryLower) {
+      continue;
+    }
+
+    const folderSingular = folderLower.endsWith('s') ? folderLower.slice(0, -1) : folderLower;
+    for (const token of queryTokens) {
+      const tokenSingular = token.endsWith('s') ? token.slice(0, -1) : token;
+      if (token === folderLower || token === folderSingular || tokenSingular === folderSingular) {
+        matched.push(entry.name);
+        break;
+      }
+    }
+  }
+
+  return matched.sort();
+}
+
+export function gatherPreFlightContext(repoRoot: string, brief: string, domain?: string, slugTitle?: string): string {
+  const sections: string[] = [];
+  const cleanQuery = extractHelpSearchQuery(slugTitle, brief);
+  const secondaryDomains = inferSecondaryDomains(repoRoot, cleanQuery, domain);
+  const domainsToScan = Array.from(
+    new Set([domain?.trim(), ...secondaryDomains].filter((d): d is string => Boolean(d)))
+  );
+
+  try {
+    const uiSeen = new Set<string>();
+    const modelSeen = new Set<string>();
+    const moduleLines: string[] = [];
+    const modelLines: string[] = [];
+
+    for (const targetDomain of domainsToScan) {
+      const catalog = buildCatalog(repoRoot, targetDomain, 'all');
+      for (const m of catalog.uiModules) {
+        if (!uiSeen.has(m.file)) {
+          uiSeen.add(m.file);
+          moduleLines.push(`- \`${m.file}\`: ${m.exports.join(', ')}`);
+        }
+      }
+      for (const m of catalog.models.entities) {
+        if (!modelSeen.has(m.file)) {
+          modelSeen.add(m.file);
+          modelLines.push(`- \`${m.file}\`: ${m.symbols.join(', ')}`);
+        }
+      }
+    }
+
+    const fixtureCatalog = buildCatalog(repoRoot, null, 'fixtures');
+    const fixtureLines = fixtureCatalog.fixtures.builders
+      .slice(0, 40)
+      .map(f => `- \`${f.file}\`: ${f.symbols.join(', ')}`);
+
+    if (moduleLines.length > 0 || modelLines.length > 0 || fixtureLines.length > 0) {
+      const label = domainsToScan.length > 0 ? domainsToScan.join(', ') : 'fixtures';
       sections.push(
         [
-          `## Pre-Flight Catalog (\`domain=${domain}\`)`,
-          moduleLines.length > 0 ? `### UI Modules\n${moduleLines.join('\n')}` : '',
-          modelLines.length > 0 ? `### Models\n${modelLines.join('\n')}` : '',
+          `## Pre-Flight Catalog (\`domain=${label}\`)`,
+          moduleLines.length > 0 ? `### UI Modules\n${moduleLines.slice(0, 18).join('\n')}` : '',
+          modelLines.length > 0 ? `### Models\n${modelLines.slice(0, 12).join('\n')}` : '',
           fixtureLines.length > 0 ? `### Fixtures\n${fixtureLines.join('\n')}` : '',
         ]
           .filter(Boolean)
           .join('\n\n')
       );
-    } catch {
-      // Pre-flight catalog lookup is best-effort.
     }
+  } catch {
+    // Pre-flight catalog lookup is best-effort.
   }
 
   try {
@@ -163,7 +287,7 @@ function gatherPreFlightContext(repoRoot: string, brief: string, domain?: string
     const docsDir = env.ONSPRING_HELP_DOCS_DIR?.trim();
     if (docsDir && fs.existsSync(docsDir)) {
       const indexed = indexMarkdownSections(docsDir);
-      const ranked = rankSections(indexed, brief, 3);
+      const ranked = rankSections(indexed, cleanQuery || brief, 3);
       if (ranked.length > 0) {
         const helpBlocks = ranked.map(
           (r, i) => `### ${i + 1}. \`${r.section.file}\` — ${r.section.breadcrumb}\n${r.section.content.slice(0, 800)}`
@@ -183,30 +307,45 @@ export function buildAttemptPrompt({
   attempt,
   maxAttempts,
   preFlightContext,
+  priorBatchRuns,
   previousFailure,
 }: {
   brief: string;
   attempt: number;
   maxAttempts: number;
   preFlightContext: string;
+  priorBatchRuns?: readonly PriorBatchRunSummary[];
   previousFailure?: {
     failingStages: readonly string[];
     changedFiles: readonly string[];
     failureDetails: string;
   };
 }): string {
+  const trimmedBrief = brief.trim();
+  const hasBriefHeader = /^##\s+Test Brief\b/i.test(trimmedBrief);
+
   const parts: string[] = [
     `# Automated Test Authoring Task (Attempt ${attempt}/${maxAttempts})`,
     '',
-    '## Test Brief',
-    brief.trim(),
+    ...(hasBriefHeader ? [trimmedBrief] : ['## Test Brief', trimmedBrief]),
     '',
     '## Required Instructions',
     '1. Read `AGENTS.md`, `CONTRIBUTING.md`, and `.agents/skills/author-onspring-test/SKILL.md` before making changes.',
-    '2. Follow all Screenplay layer boundaries (`onspring-models` -> `onspring-ui` -> `fixtures` -> `tests`), ESM `.js` relative imports in `packages/*`, `"types": []`, `type` over `interface`, and `AnnotationType.TestId`.',
-    '3. Discover existing helpers with `npm run agent -- catalog` and inspect the live UI with `npm run agent -- explore --script <temp.js>` before writing `*.targets.ts`.',
-    '4. Do NOT run `git commit` or modify unrelated specs/files.',
+    '2. Implement **ONLY** the single test case specified in this brief. Do NOT fetch parent issue URLs or implement sibling test cases.',
+    '3. Follow all Screenplay layer boundaries (`onspring-models` -> `onspring-ui` -> `fixtures` -> `tests`), ESM `.js` relative imports in `packages/*`, `"types": []`, `type` over `interface`, and `AnnotationType.TestId`.',
+    '4. Use the Pre-Flight Catalog and Help Center Excerpts below first; when running additional CLI queries, invoke `node tools/agent/dist/src/cli.js ...` directly (`catalog`, `help-search`, `explore --script`).',
+    '5. Iterate with fast targeted checks (`npm run build:packages`, `node tools/agent/dist/src/cli.js verify <spec> --skip-e2e --no-clean`, or `--browsers chrome --repeat 1 --no-clean`). The orchestrator automatically runs full Chrome x2 + Edge verification after you exit.',
+    '6. Do NOT run `git commit` or modify unrelated specs/files.',
   ];
+
+  if (priorBatchRuns && priorBatchRuns.length > 0) {
+    const priorLines = priorBatchRuns.map(run => {
+      const files = run.changedFiles.length > 0 ? run.changedFiles.map(f => `\`${f}\``).join(', ') : '(none)';
+      const sha = run.commitSha ? ` (\`${run.commitSha}\`)` : '';
+      return `- ${run.headline}${sha}: ${files}`;
+    });
+    parts.push('', '## Prior Batch Commits on This Branch', ...priorLines);
+  }
 
   if (attempt === 1 && preFlightContext.trim()) {
     parts.push('', preFlightContext.trim());
@@ -222,12 +361,78 @@ export function buildAttemptPrompt({
       '',
       '### Failure Output',
       '```text',
-      previousFailure.failureDetails.slice(0, 6000),
+      previousFailure.failureDetails.slice(0, 8000),
       '```'
     );
   }
 
   return `${parts.join('\n')}\n`;
+}
+
+export function collectPlaywrightErrorContexts(worktreeDir: string, maxFiles = 2, maxCharsPerFile = 2000): string {
+  const resultsDir = path.join(worktreeDir, 'test-results');
+  if (!fs.existsSync(resultsDir)) {
+    return '';
+  }
+
+  const files = walkFiles(resultsDir, f => path.basename(f).toLowerCase() === 'error-context.md');
+  if (files.length === 0) {
+    return '';
+  }
+
+  const sorted = files
+    .map(file => ({ file, mtimeMs: fs.statSync(file).mtimeMs }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    .slice(0, maxFiles);
+
+  return sorted
+    .map(({ file }) => {
+      const rel = toRepoRel(worktreeDir, file);
+      const raw = fs.readFileSync(file, 'utf8').trim();
+      const excerpt =
+        raw.length > maxCharsPerFile ? `${raw.slice(0, maxCharsPerFile).trimEnd()}\n... [truncated]` : raw;
+      return `--- Playwright Error Context: ${rel} ---\n${excerpt}`;
+    })
+    .join('\n\n');
+}
+
+export async function findExistingTestIds(
+  worktreeDir: string,
+  baseRef?: string,
+  sharedBranch?: string
+): Promise<Set<string>> {
+  const found = new Set<string>();
+  const testsDir = path.join(worktreeDir, 'tests');
+  if (fs.existsSync(testsDir)) {
+    const specFiles = walkFiles(testsDir, f => f.endsWith('.spec.ts'));
+    for (const file of specFiles) {
+      const content = fs.readFileSync(file, 'utf8');
+      const matches = content.match(/\btest-\d+\b/gi) ?? [];
+      for (const rawId of matches) {
+        const canonical = extractTestIdFromText(rawId);
+        if (canonical) {
+          found.add(canonical);
+        }
+      }
+    }
+  }
+
+  if (baseRef && sharedBranch) {
+    const logRes = await runCommand('git', ['log', '--format=%s', `${baseRef}..${sharedBranch}`], {
+      cwd: worktreeDir,
+    });
+    if (logRes.exitCode === 0) {
+      const matches = logRes.stdout.match(/\btest-\d+\b/gi) ?? [];
+      for (const rawId of matches) {
+        const canonical = extractTestIdFromText(rawId);
+        if (canonical) {
+          found.add(canonical);
+        }
+      }
+    }
+  }
+
+  return found;
 }
 
 async function detectChangedFiles(worktreeDir: string): Promise<{ changedFiles: string[]; detectedSpecs: string[] }> {
@@ -323,10 +528,14 @@ async function runDefaultVerifyWorktree(
     perSpecReports.push(parsed);
     if (!parsed.passed) {
       const failingStages = parsed.stages.filter(s => !s.passed && !s.skipped).map(s => s.name);
-      const failureDetails = parsed.stages
+      const baseFailureDetails = parsed.stages
         .filter(s => !s.passed && !s.skipped)
         .map(s => `[${s.name}] ${s.summary}\n${s.output ?? ''}`.trim())
         .join('\n\n');
+      const errorContexts = failingStages.some(stage => stage === 'e2e:chrome' || stage === 'e2e:edge')
+        ? collectPlaywrightErrorContexts(worktreeDir)
+        : '';
+      const failureDetails = errorContexts ? `${baseFailureDetails}\n\n${errorContexts}` : baseFailureDetails;
 
       return {
         passed: false,
@@ -353,9 +562,11 @@ function buildRunReportMarkdown(report: OrchestratorReport): string {
     '',
     `- **Status**: ${report.status.toUpperCase()}`,
     `- **Runner**: \`${report.runner}\``,
+    `- **Duration**: ${formatElapsed(report.durationSeconds * 1000)}`,
     `- **Worktree**: \`${report.worktreeDir}\``,
     `- **Branch**: ${report.branch ? `\`${report.branch}\`` : '(in-place)'}`,
     `- **Changed Specs**: ${report.detectedSpecs.length > 0 ? report.detectedSpecs.map(s => `\`${s}\``).join(', ') : '(none)'}`,
+    report.referenceUrl ? `- **Reference URL**: ${report.referenceUrl}` : '',
     report.commitSha ? `- **Commit**: \`${report.commitSha}\`` : '',
     report.draftPrUrl ? `- **Draft PR**: ${report.draftPrUrl}` : '',
     report.error ? `- **Error**: ${report.error}` : '',
@@ -452,6 +663,8 @@ export async function executeOrchestrator(
     logProgress(`[agent] Created worktree '${worktreeHandle.path}' on branch '${worktreeHandle.branch}'.`);
   }
 
+  const startedMs = Date.now();
+  const startedAt = new Date(startedMs).toISOString();
   const report: OrchestratorReport = {
     runId,
     status: config.dryRun ? 'dry-run' : 'failed',
@@ -460,13 +673,17 @@ export async function executeOrchestrator(
     worktreeDir,
     branch: activeBranch,
     runDir,
+    startedAt,
+    finishedAt: startedAt,
+    durationSeconds: 0,
+    ...(config.referenceUrl ? { referenceUrl: config.referenceUrl } : {}),
     attempts: [],
     changedFiles: [],
     detectedSpecs: [],
   };
 
   try {
-    const preFlightContext = gatherPreFlightContext(worktreeDir, config.brief, config.domain);
+    const preFlightContext = gatherPreFlightContext(worktreeDir, config.brief, config.domain, config.slugTitle);
     let previousFailure:
       | { failingStages: readonly string[]; changedFiles: readonly string[]; failureDetails: string }
       | undefined;
@@ -477,6 +694,7 @@ export async function executeOrchestrator(
         attempt,
         maxAttempts: config.maxAttempts,
         preFlightContext,
+        priorBatchRuns: config.priorBatchRuns,
         previousFailure,
       });
 
@@ -645,6 +863,9 @@ export async function executeOrchestrator(
     report.status = 'failed';
     report.error = err instanceof Error ? err.message : String(err);
   } finally {
+    const finishedMs = Date.now();
+    report.finishedAt = new Date(finishedMs).toISOString();
+    report.durationSeconds = Number(((finishedMs - startedMs) / 1000).toFixed(2));
     fs.writeFileSync(path.join(runDir, 'report.json'), JSON.stringify(report, null, 2), 'utf8');
     fs.writeFileSync(path.join(runDir, 'report.md'), buildRunReportMarkdown(report), 'utf8');
 
@@ -670,19 +891,22 @@ function buildBatchReportMarkdown(report: BatchOrchestratorReport): string {
     `- **Status**: ${report.status.toUpperCase()}`,
     `- **Mode**: \`${report.mode}\``,
     `- **Runner**: \`${report.runner}\``,
+    `- **Duration**: ${formatElapsed(report.durationSeconds * 1000)}`,
     report.sharedBranch ? `- **Shared Branch**: \`${report.sharedBranch}\`` : '',
     report.sharedWorktreeDir ? `- **Shared Worktree**: \`${report.sharedWorktreeDir}\`` : '',
-    `- **Counts**: ${report.passed}/${report.total} passed (${report.failed} failed)`,
+    `- **Counts**: ${report.passed}/${report.total} passed, ${report.skipped} skipped, ${report.failed} failed`,
     report.draftPrUrl ? `- **Draft PR**: ${report.draftPrUrl}` : '',
     report.error ? `- **Error**: ${report.error}` : '',
     '',
     '## Runs',
-    '| # | Status | Branch | Commit | Changed Specs | Summary / Run Dir |',
-    '| :--- | :--- | :--- | :--- | :--- | :--- |',
+    '| # | Status | Attempts | Duration | Branch | Commit | Changed Specs | Summary / Run Dir |',
+    '| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |',
     ...report.runs.map((r, i) => {
       const specs = r.detectedSpecs.length > 0 ? r.detectedSpecs.map(s => `\`${s}\``).join(', ') : '(none)';
       const summary = r.error ? r.error.replace(/\|/g, '\\|') : `\`${r.runId}\``;
-      return `| ${i + 1} | ${r.status.toUpperCase()} | ${r.branch ? `\`${r.branch}\`` : '(in-place)'} | ${r.commitSha ? `\`${r.commitSha}\`` : '-'} | ${specs} | ${summary} |`;
+      const attemptsDisplay = r.status === 'skipped' || r.status === 'dry-run' ? '-' : String(r.attempts.length);
+      const durationDisplay = r.status === 'skipped' ? '-' : formatElapsed(r.durationSeconds * 1000);
+      return `| ${i + 1} | ${r.status.toUpperCase()} | ${attemptsDisplay} | ${durationDisplay} | ${r.branch ? `\`${r.branch}\`` : '(in-place)'} | ${r.commitSha ? `\`${r.commitSha}\`` : '-'} | ${specs} | ${summary} |`;
     }),
   ].filter(Boolean);
 
@@ -724,6 +948,8 @@ export async function executeBatchOrchestrator(
     logProgress(`[agent] Created shared batch worktree '${sharedHandle.path}' on branch '${sharedHandle.branch}'.`);
   }
 
+  const startedMs = Date.now();
+  const startedAt = new Date(startedMs).toISOString();
   const report: BatchOrchestratorReport = {
     batchId,
     status: config.dryRun ? 'dry-run' : 'failed',
@@ -732,17 +958,53 @@ export async function executeBatchOrchestrator(
     sharedBranch: sharedHandle ? sharedHandle.branch : sharedBranch,
     sharedWorktreeDir: sharedHandle ? sharedHandle.path : null,
     runDir,
+    startedAt,
+    finishedAt: startedAt,
+    durationSeconds: 0,
     total: briefs.length,
     passed: 0,
+    skipped: 0,
     failed: 0,
     runs: [],
   };
 
   try {
+    const existingTestIds =
+      config.resume && sharedHandle
+        ? await findExistingTestIds(sharedHandle.path, config.baseRef, sharedHandle.branch)
+        : new Set<string>();
+    const priorBatchRuns: PriorBatchRunSummary[] = [];
+
     for (let i = 0; i < briefs.length; i++) {
       const brief = briefs[i];
       const headline = formatBriefHeadline(brief);
       const itemDomain = brief.domain ?? config.domain;
+
+      if (config.resume && brief.testId && existingTestIds.has(brief.testId)) {
+        logProgress(
+          `[agent] Batch item ${i + 1}/${briefs.length}: skipping ${brief.testId} (already present on branch).`
+        );
+        const nowIso = new Date().toISOString();
+        report.skipped++;
+        report.runs.push({
+          runId: `skipped-${slugify(headline, 36)}`,
+          status: 'skipped',
+          runner: config.runner,
+          brief: formatBriefAsMarkdown(brief),
+          worktreeDir: sharedHandle ? sharedHandle.path : repoRoot,
+          branch: sharedHandle ? sharedHandle.branch : null,
+          runDir,
+          startedAt: nowIso,
+          finishedAt: nowIso,
+          durationSeconds: 0,
+          ...(brief.referenceUrl ? { referenceUrl: brief.referenceUrl } : {}),
+          attempts: [],
+          changedFiles: [],
+          detectedSpecs: [],
+        });
+        continue;
+      }
+
       logProgress(`[agent] Batch item ${i + 1}/${briefs.length}: ${headline}`);
 
       const subRunDir = path.join(runDir, `brief-${String(i + 1).padStart(2, '0')}-${slugify(headline, 36)}`);
@@ -753,6 +1015,8 @@ export async function executeBatchOrchestrator(
           brief: formatBriefAsMarkdown(brief),
           slugTitle: headline,
           domain: itemDomain,
+          referenceUrl: brief.referenceUrl,
+          priorBatchRuns: sharedHandle ? priorBatchRuns : undefined,
           commit: sharedHandle ? !config.dryRun : config.commit,
           draftPr: sharedHandle ? false : config.draftPr,
           cleanupWorktree: sharedHandle ? false : config.cleanupWorktree,
@@ -766,6 +1030,13 @@ export async function executeBatchOrchestrator(
       report.runs.push(itemOutcome.report);
       if (itemOutcome.exitCode === 0) {
         report.passed++;
+        if (sharedHandle && !config.dryRun) {
+          priorBatchRuns.push({
+            headline,
+            commitSha: itemOutcome.report.commitSha,
+            changedFiles: itemOutcome.report.changedFiles,
+          });
+        }
       } else {
         report.failed++;
         if (sharedHandle || config.failFast) {
@@ -777,12 +1048,12 @@ export async function executeBatchOrchestrator(
 
     if (config.dryRun) {
       report.status = 'dry-run';
-    } else if (report.failed === 0 && report.passed === report.total) {
+    } else if (report.failed === 0 && report.passed + report.skipped === report.total) {
       report.status = 'passed';
-      if (sharedHandle && config.draftPr) {
+      if (sharedHandle && config.draftPr && report.passed > 0) {
         const batchMdPath = path.join(runDir, 'batch-report.md');
         fs.writeFileSync(batchMdPath, buildBatchReportMarkdown(report), 'utf8');
-        const prTitle = `test(${config.domain ? slugify(config.domain, 24) : 'e2e'}): add ${report.total} automated test(s)`;
+        const prTitle = `test(${config.domain ? slugify(config.domain, 24) : 'e2e'}): add ${report.passed} automated test(s)`;
         report.draftPrUrl = await pushBranchAndCreateDraftPr(
           sharedHandle.path,
           sharedHandle.branch,
@@ -797,6 +1068,9 @@ export async function executeBatchOrchestrator(
     report.status = 'failed';
     report.error = err instanceof Error ? err.message : String(err);
   } finally {
+    const finishedMs = Date.now();
+    report.finishedAt = new Date(finishedMs).toISOString();
+    report.durationSeconds = Number(((finishedMs - startedMs) / 1000).toFixed(2));
     fs.writeFileSync(path.join(runDir, 'batch-report.json'), JSON.stringify(report, null, 2), 'utf8');
     fs.writeFileSync(path.join(runDir, 'batch-report.md'), buildBatchReportMarkdown(report), 'utf8');
 
@@ -824,6 +1098,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
         '--skip-e2e',
         '--no-fail-fast',
         '--fail-fast',
+        '--resume',
         '--commit',
         '--draft-pr',
         '--cleanup-worktree',
@@ -964,6 +1239,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
   }
 
   const sharedBranch = parsed.options.get('--shared-branch')?.trim();
+  const resume = parsed.flags.has('--resume');
   const baseConfig = {
     runner,
     runnerCmd,
@@ -1010,6 +1286,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
       const { exitCode, report } = await executeBatchOrchestrator(repoRoot, [singleBrief], {
         ...baseConfig,
         sharedBranch,
+        resume,
         failFast: parsed.flags.has('--fail-fast'),
       });
       if (parsed.flags.has('--json')) {
@@ -1061,6 +1338,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
       brief: formatBriefAsMarkdown(single),
       slugTitle: formatBriefHeadline(single),
       domain: single.domain ?? baseConfig.domain,
+      referenceUrl: single.referenceUrl,
     });
     if (parsed.flags.has('--json')) {
       writeOut(JSON.stringify(report, null, 2));
@@ -1074,6 +1352,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
   const { exitCode, report } = await executeBatchOrchestrator(repoRoot, briefs, {
     ...baseConfig,
     sharedBranch,
+    resume,
     failFast: parsed.flags.has('--fail-fast'),
   });
   if (parsed.flags.has('--json')) {

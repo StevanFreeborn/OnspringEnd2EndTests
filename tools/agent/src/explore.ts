@@ -1,8 +1,113 @@
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+import vm from 'node:vm';
 import { loadEnv, parseCliArgs, runCommand, writeErr, writeOut } from './utils.js';
 
 const DEFAULT_AUTH_MAX_AGE_MINUTES = 45;
+
+type ExploreEngine = 'node' | 'cli';
+
+type ExplorePage = {
+  goto: (
+    url: string,
+    options?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' | 'commit' }
+  ) => Promise<unknown>;
+};
+
+type ExploreContext = {
+  newPage: () => Promise<ExplorePage>;
+  close: () => Promise<void>;
+};
+
+type ExploreBrowser = {
+  newContext: (options?: {
+    storageState?: string;
+    viewport?: { width: number; height: number };
+  }) => Promise<ExploreContext>;
+  close: () => Promise<void>;
+};
+
+type ExplorePlaywrightModule = {
+  chromium: {
+    launch: (options?: { headless?: boolean }) => Promise<ExploreBrowser>;
+  };
+};
+
+export function parseExploreScriptFunction(
+  scriptSource: string,
+  filename = 'explore-script.js'
+): (page: unknown) => Promise<unknown> {
+  const cleaned = scriptSource.replace(/^\uFEFF/, '').trim();
+  if (!cleaned) {
+    throw new Error(`Explore script '${filename}' is empty.`);
+  }
+
+  if (/\bmodule\.exports\b/.test(cleaned) || /\bexports\.default\b/.test(cleaned)) {
+    const mod: { exports: unknown } = { exports: {} };
+    const wrapper = vm.runInThisContext(`(function(module, exports) {\n${cleaned}\n})`, { filename }) as (
+      m: { exports: unknown },
+      e: unknown
+    ) => void;
+    wrapper(mod, mod.exports);
+    let candidate = mod.exports;
+    if (candidate && typeof candidate === 'object' && 'default' in candidate) {
+      candidate = (candidate as { default: unknown }).default;
+    }
+    if (typeof candidate !== 'function') {
+      throw new Error(`Explore script '${filename}' must export a function.`);
+    }
+    return candidate as (page: unknown) => Promise<unknown>;
+  }
+
+  const expr = cleaned.replace(/^export\s+default\s+/, '').replace(/;+\s*$/, '');
+  const evaluated = vm.runInThisContext(`(${expr})`, { filename }) as unknown;
+  if (typeof evaluated !== 'function') {
+    throw new Error(`Explore script '${filename}' must evaluate to a function (for example: async page => { ... }).`);
+  }
+  return evaluated as (page: unknown) => Promise<unknown>;
+}
+
+async function executeExploreScriptDirect(
+  repoRoot: string,
+  {
+    targetUrl,
+    authFullPath,
+    resolvedScript,
+    headed,
+  }: {
+    targetUrl: string;
+    authFullPath: string;
+    resolvedScript: string;
+    headed: boolean;
+  }
+): Promise<string> {
+  const requireFromRepo = createRequire(path.join(repoRoot, 'package.json'));
+  const pw = requireFromRepo('@playwright/test') as ExplorePlaywrightModule;
+  const scriptSource = fs.readFileSync(resolvedScript, 'utf8');
+  const scriptFn = parseExploreScriptFunction(scriptSource, resolvedScript);
+
+  const browser = await pw.chromium.launch({ headless: !headed });
+  try {
+    const context = await browser.newContext({
+      storageState: authFullPath,
+      viewport: { width: 1440, height: 900 },
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+      const result = await scriptFn(page);
+      if (result === undefined) {
+        return '';
+      }
+      return typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+    } finally {
+      await context.close();
+    }
+  } finally {
+    await browser.close();
+  }
+}
 
 async function detectPlaywrightCli(repoRoot: string): Promise<{ exe: string; prefixArgs: readonly string[] }> {
   const checker = process.platform === 'win32' ? 'where.exe' : 'which';
@@ -31,8 +136,8 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
-      flags: new Set(['--refresh-auth', '--launch', '--json']),
-      options: new Set(['--route', '--session', '--script', '--max-age']),
+      flags: new Set(['--refresh-auth', '--launch', '--headed', '--json']),
+      options: new Set(['--route', '--session', '--script', '--max-age', '--engine']),
       maxPositionals: 0,
     });
   } catch (err) {
@@ -46,9 +151,15 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   const rawScript = parsed.options.get('--script')?.trim() || null;
   const maxAgeRaw = parsed.options.get('--max-age');
   const maxAgeMinutes = maxAgeRaw === undefined ? DEFAULT_AUTH_MAX_AGE_MINUTES : Number.parseFloat(maxAgeRaw);
+  const rawEngine = parsed.options.get('--engine')?.trim().toLowerCase();
 
   if (!Number.isFinite(maxAgeMinutes) || maxAgeMinutes < 0) {
     writeErr(`Invalid --max-age value '${maxAgeRaw ?? ''}'. Expected a non-negative number of minutes.`);
+    return 2;
+  }
+
+  if (rawEngine !== undefined && rawEngine !== 'node' && rawEngine !== 'cli') {
+    writeErr(`Invalid --engine value '${rawEngine}'. Expected: node or cli.`);
     return 2;
   }
 
@@ -63,7 +174,9 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
 
   const refreshAuth = parsed.flags.has('--refresh-auth');
   const launch = parsed.flags.has('--launch');
+  const headed = parsed.flags.has('--headed');
   const json = parsed.flags.has('--json');
+  const engine: ExploreEngine = rawEngine ? (rawEngine as ExploreEngine) : resolvedScript ? 'node' : 'cli';
 
   const env = loadEnv(repoRoot);
   const testEnv = env.TEST_ENV?.trim();
@@ -125,18 +238,36 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   ];
   const formatCmd = (...cmdArgs: string[]): string => [exe, ...buildArgs(...cmdArgs)].join(' ');
 
-  const commands = [
-    formatCmd('open', baseUrl),
-    formatCmd('state-load', authRelPath),
-    formatCmd('goto', targetUrl),
-    resolvedScript ? formatCmd('run-code', `--filename=${resolvedScript}`) : formatCmd('snapshot'),
-    formatCmd('close'),
-  ];
+  const commands =
+    resolvedScript && engine === 'node'
+      ? [
+          `node tools/agent/dist/src/cli.js explore --route ${route} --script ${resolvedScript}${headed ? ' --headed' : ''}`,
+        ]
+      : [
+          formatCmd('open', baseUrl),
+          formatCmd('state-load', authRelPath),
+          formatCmd('goto', targetUrl),
+          resolvedScript ? formatCmd('run-code', `--filename=${resolvedScript}`) : formatCmd('snapshot'),
+          formatCmd('close'),
+        ];
 
   const launchOutput: string[] = [];
   let scriptOutput = '';
 
-  if (resolvedScript) {
+  if (resolvedScript && engine === 'node') {
+    try {
+      scriptOutput = await executeExploreScriptDirect(repoRoot, {
+        targetUrl,
+        authFullPath,
+        resolvedScript,
+        headed,
+      });
+    } catch (err) {
+      writeErr(`Error running script \`${resolvedScript}\`:`);
+      writeErr(err instanceof Error ? (err.stack ?? err.message) : String(err));
+      return 1;
+    }
+  } else if (resolvedScript) {
     const preSteps: string[][] = [
       ['open', baseUrl],
       ['state-load', authRelPath],
@@ -188,6 +319,7 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
           testEnv,
           baseUrl,
           targetUrl,
+          engine,
           authStatePath: authRelPath,
           authRefreshed,
           authAgeMinutes,
@@ -208,12 +340,14 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   writeOut('# Onspring UI Exploration Session');
   writeOut(`- Environment: \`${testEnv}\` (\`${baseUrl}\`)`);
   writeOut(`- Target URL: \`${targetUrl}\``);
+  writeOut(`- Engine: \`${engine}\``);
   writeOut(
     `- Auth state: \`${authRelPath}\` (age: ${authAgeMinutes.toFixed(1)} min${authRefreshed ? ', freshly generated' : ''})`
   );
 
   if (resolvedScript) {
-    writeOut(`- Executed script: \`${resolvedScript}\` (session closed cleanly)`);
+    const closeNote = engine === 'node' ? 'direct Playwright Node session closed' : 'session closed cleanly';
+    writeOut(`- Executed script: \`${resolvedScript}\` (${closeNote})`);
     writeOut();
     writeOut('## Script Output');
     writeOut(scriptOutput || '(no output)');

@@ -132,9 +132,15 @@ export function indexMarkdownSections(docsDir: string): IndexedSection[] {
 }
 
 export function rankSections(sections: readonly IndexedSection[], query: string, top: number): RankedSection[] {
-  const queryTokens = [...new Set(tokenize(query))];
+  const orderedTokens = tokenize(query);
+  const queryTokens = [...new Set(orderedTokens)];
   if (queryTokens.length === 0 || sections.length === 0) {
     return [];
+  }
+
+  const bigrams: string[] = [];
+  for (let i = 0; i < orderedTokens.length - 1; i++) {
+    bigrams.push(`${orderedTokens[i]} ${orderedTokens[i + 1]}`);
   }
 
   const avgDocLen = sections.reduce((sum, s) => sum + s.length, 0) / sections.length || 1;
@@ -157,9 +163,13 @@ export function rankSections(sections: readonly IndexedSection[], query: string,
 
   for (const sec of sections) {
     let score = 0;
+    let headingMatches = 0;
     for (const qt of queryTokens) {
       const tf = sec.tokenCounts.get(qt) ?? 0;
       const headingTf = sec.headingCounts.get(qt) ?? 0;
+      if (headingTf > 0) {
+        headingMatches++;
+      }
       const combinedTf = tf + headingTf * 2;
       if (combinedTf <= 0) continue;
 
@@ -170,6 +180,22 @@ export function rankSections(sections: readonly IndexedSection[], query: string,
     }
 
     if (score > 0) {
+      if (queryTokens.length >= 2 && headingMatches > 0) {
+        score += (headingMatches / queryTokens.length) * 3;
+      }
+
+      if (bigrams.length > 0) {
+        const headingText = `${sec.file} ${sec.breadcrumb}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+        const bodyText = sec.content.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+        for (const bigram of bigrams) {
+          if (headingText.includes(bigram)) {
+            score += 4;
+          } else if (bodyText.includes(bigram)) {
+            score += 1.5;
+          }
+        }
+      }
+
       if (sec.breadcrumb.toLowerCase().includes(trimmedLower) || sec.content.toLowerCase().includes(trimmedLower)) {
         score += 3;
       }

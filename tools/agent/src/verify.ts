@@ -251,7 +251,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
-      flags: new Set(['--skip-e2e', '--no-fail-fast', '--json', '--quiet']),
+      flags: new Set(['--skip-e2e', '--no-fail-fast', '--no-clean', '--json', '--quiet']),
       options: new Set(['--repeat', '--browsers']),
       maxPositionals: 1,
     });
@@ -263,6 +263,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   const specArg = parsed.positionals[0] ?? null;
   const skipE2e = parsed.flags.has('--skip-e2e');
   const noFailFast = parsed.flags.has('--no-fail-fast');
+  const noClean = parsed.flags.has('--no-clean');
   const json = parsed.flags.has('--json');
   const quiet = parsed.flags.has('--quiet');
 
@@ -300,8 +301,9 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
     return result;
   };
 
+  const buildScript = noClean ? 'build:packages' : 'build:packages:clean';
   const stages: VerifyStageResult[] = [
-    await runProcessStage('build:packages', 'npm', ['run', 'build:packages:clean'], repoRoot, quiet),
+    await runProcessStage('build:packages', 'npm', ['run', buildScript], repoRoot, quiet),
     await runProcessStage('test:packages', 'npm', ['run', 'test:packages'], repoRoot, quiet),
     await runProcessStage('format:test', 'npm', ['run', 'format:test'], repoRoot, quiet),
     await runProcessStage('typecheck', 'npx', ['tsc', '--noEmit'], repoRoot, quiet),
