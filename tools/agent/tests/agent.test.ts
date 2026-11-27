@@ -381,6 +381,7 @@ if (promptText.includes('Previous Verification Failed')) {
         draftPr: false,
         cleanupWorktree: false,
         dryRun: false,
+        quiet: true,
       },
       {
         verifyWorktree: async (wtDir, specs) => {
@@ -405,5 +406,90 @@ if (promptText.includes('Previous Verification Failed')) {
     assert.equal(fs.existsSync(path.join(report.runDir, 'report.json')), true);
     assert.equal(fs.existsSync(path.join(report.runDir, 'report.md')), true);
     assert.equal(fs.existsSync(path.join(report.runDir, 'attempt-2-prompt.md')), true);
+    const runLog = fs.readFileSync(path.join(report.runDir, 'attempt-1-runner.log'), 'utf8');
+    assert.match(runLog, /^\$ node /);
+  });
+
+  void it('streams stdout and stderr chunks incrementally via runCommand callbacks', async () => {
+    const stdoutChunks: string[] = [];
+    const stderrChunks: string[] = [];
+    const res = await runCommand(
+      'node',
+      ['-e', 'process.stdout.write("hello-out\\n"); process.stderr.write("hello-err\\n");'],
+      {
+        onStdout: chunk => stdoutChunks.push(chunk),
+        onStderr: chunk => stderrChunks.push(chunk),
+      }
+    );
+
+    assert.equal(res.exitCode, 0);
+    assert.equal(stdoutChunks.join(''), res.stdout);
+    assert.equal(stderrChunks.join(''), res.stderr);
+    assert.match(stdoutChunks.join(''), /hello-out/);
+    assert.match(stderrChunks.join(''), /hello-err/);
+  });
+
+  void it('emits heartbeat while quiet runner works and flushes live runner log', async () => {
+    const repo = createTempDir('agent-orch-stream-');
+    writeTempFile(repo, 'package.json', '{"name":"orch-stream-test"}');
+    writeTempFile(repo, 'packages/onspring-ui/src/index.ts', '');
+
+    const initRes = await runCommand('git', ['init'], { cwd: repo });
+    assert.equal(initRes.exitCode, 0);
+    await runCommand('git', ['config', 'user.email', 'test@example.com'], { cwd: repo });
+    await runCommand('git', ['config', 'user.name', 'Test User'], { cwd: repo });
+    await runCommand('git', ['add', '-A'], { cwd: repo });
+    await runCommand('git', ['commit', '-m', 'init'], { cwd: repo });
+
+    const mockRunnerPath = path.join(repo, 'quiet-runner.mjs');
+    writeTempFile(
+      repo,
+      'quiet-runner.mjs',
+      `import fs from 'node:fs';
+setTimeout(() => {
+  fs.mkdirSync('tests/sample', { recursive: true });
+  fs.writeFileSync('tests/sample/demo.spec.ts', "test('demo', async ({ sysAdminActor }) => { test.info().annotations.push({ type: AnnotationType.TestId, description: 'Test-1' }); await sysAdminActor.browse().checkPage().hasUrl(/demo/); });\\n", 'utf8');
+  console.log('runner-finished');
+}, 140);
+`
+    );
+
+    const { exitCode, report } = await executeOrchestrator(
+      repo,
+      {
+        brief: 'Test-2 Streaming heartbeat check',
+        runner: 'custom',
+        runnerCmd: `node ${/\s/.test(mockRunnerPath) ? `"${mockRunnerPath}"` : mockRunnerPath}`,
+        maxAttempts: 1,
+        baseRef: 'HEAD',
+        inPlace: true,
+        installDeps: false,
+        skipE2e: true,
+        noFailFast: false,
+        commit: false,
+        draftPr: false,
+        cleanupWorktree: false,
+        dryRun: false,
+        quiet: false,
+        heartbeatSeconds: 0.04,
+      },
+      {
+        verifyWorktree: async (wtDir, specs) => {
+          const guardrail = runArchitectureGuardrails(wtDir, specs[0] ?? null);
+          return {
+            passed: guardrail.passed,
+            summary: guardrail.summary,
+            failingStages: guardrail.passed ? [] : [guardrail.name],
+            rawReport: guardrail,
+            failureDetails: guardrail.output ?? '',
+          };
+        },
+      }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(report.status, 'passed');
+    const logContent = fs.readFileSync(path.join(report.runDir, 'attempt-1-runner.log'), 'utf8');
+    assert.match(logContent, /runner-finished/);
   });
 });

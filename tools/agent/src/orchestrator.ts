@@ -60,6 +60,8 @@ export type OrchestratorConfig = {
   draftPr: boolean;
   cleanupWorktree: boolean;
   dryRun: boolean;
+  quiet?: boolean;
+  heartbeatSeconds?: number;
 };
 
 export type OrchestratorTestDeps = {
@@ -221,7 +223,8 @@ async function runDefaultVerifyWorktree(
   worktreeDir: string,
   detectedSpecs: readonly string[],
   skipE2e: boolean,
-  noFailFast: boolean
+  noFailFast: boolean,
+  quiet = false
 ): Promise<VerifyWorktreeOutcome> {
   if (detectedSpecs.length === 0) {
     return {
@@ -255,10 +258,18 @@ async function runDefaultVerifyWorktree(
       spec,
       ...(skipE2e ? ['--skip-e2e'] : []),
       ...(noFailFast ? ['--no-fail-fast'] : []),
+      ...(quiet ? ['--quiet'] : []),
       '--json',
     ];
 
-    const res = await runCommand('node', verifyArgs, { cwd: worktreeDir });
+    const res = await runCommand('node', verifyArgs, {
+      cwd: worktreeDir,
+      onStderr: quiet
+        ? undefined
+        : chunk => {
+            process.stderr.write(chunk);
+          },
+    });
     let parsed: VerifyJsonPayload | null = null;
     try {
       parsed = JSON.parse(res.stdout) as VerifyJsonPayload;
@@ -336,11 +347,27 @@ function formatRunTimestamp(date = new Date()): string {
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 }
 
+function formatElapsed(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  if (totalSeconds < 60) {
+    return `${totalSeconds}s`;
+  }
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds}s`;
+}
+
 export async function executeOrchestrator(
   repoRoot: string,
   config: OrchestratorConfig,
   deps?: OrchestratorTestDeps
 ): Promise<{ exitCode: number; report: OrchestratorReport }> {
+  const logProgress = (line: string): void => {
+    if (!config.quiet) {
+      writeErr(line);
+    }
+  };
+
   const slug = slugify(config.brief.split(/\r?\n/)[0] ?? 'task');
   const runId = `${formatRunTimestamp()}-${slug}`;
   const runDir = path.join(repoRoot, '.agent-runs', runId);
@@ -357,7 +384,7 @@ export async function executeOrchestrator(
   const worktreeDir = worktreeHandle ? worktreeHandle.path : repoRoot;
 
   if (worktreeHandle) {
-    writeErr(`[agent] Created worktree '${worktreeHandle.path}' on branch '${worktreeHandle.branch}'.`);
+    logProgress(`[agent] Created worktree '${worktreeHandle.path}' on branch '${worktreeHandle.branch}'.`);
   }
 
   const report: OrchestratorReport = {
@@ -398,7 +425,7 @@ export async function executeOrchestrator(
         break;
       }
 
-      writeErr(`[agent] Attempt ${attempt}/${config.maxAttempts}: launching '${config.runner}'...`);
+      logProgress(`[agent] Attempt ${attempt}/${config.maxAttempts}: launching '${config.runner}'...`);
 
       const adapter = getRunnerAdapter(config.runner);
       const invocation = adapter.buildInvocation({
@@ -409,29 +436,86 @@ export async function executeOrchestrator(
         customCmd: config.runnerCmd,
       });
 
-      const runnerRes = invocation.shellCommand
-        ? await runShellCommand(invocation.shellCommand, { cwd: worktreeDir, extraEnv: invocation.env })
-        : await runCommand(invocation.command, invocation.args, { cwd: worktreeDir, extraEnv: invocation.env });
+      const heartbeatMs = (config.heartbeatSeconds ?? 30) * 1000;
+      const pollMs = Math.max(10, Math.min(heartbeatMs, 5000));
+      const attemptStartedAt = Date.now();
+      let lastOutputAt = attemptStartedAt;
+      let heartbeatInFlight = false;
 
-      fs.writeFileSync(
-        runnerLogFile,
-        `$ ${invocation.shellCommand ?? `${invocation.command} ${invocation.args.join(' ')}`}\n\n--- STDOUT ---\n${runnerRes.stdout}\n--- STDERR ---\n${runnerRes.stderr}\n`,
-        'utf8'
-      );
+      const logStream = fs.createWriteStream(runnerLogFile, { encoding: 'utf8' });
+      const commandDisplay = invocation.shellCommand ?? `${invocation.command} ${invocation.args.join(' ')}`;
+      logStream.write(`$ ${commandDisplay}\n\n`);
+
+      const handleChunk = (chunk: string): void => {
+        lastOutputAt = Date.now();
+        logStream.write(chunk);
+        if (!config.quiet) {
+          process.stderr.write(chunk);
+        }
+      };
+
+      const heartbeatTimer =
+        !config.quiet && heartbeatMs > 0
+          ? setInterval(() => {
+              if (heartbeatInFlight || Date.now() - lastOutputAt < heartbeatMs) {
+                return;
+              }
+              heartbeatInFlight = true;
+              void (async () => {
+                try {
+                  const { changedFiles: liveChanged } = await detectChangedFiles(worktreeDir);
+                  lastOutputAt = Date.now();
+                  logProgress(
+                    `[agent] Attempt ${attempt}/${config.maxAttempts} still running (${formatElapsed(Date.now() - attemptStartedAt)}, ${liveChanged.length} changed file(s) in worktree, log: ${toRepoRel(repoRoot, runnerLogFile)})`
+                  );
+                } finally {
+                  heartbeatInFlight = false;
+                }
+              })();
+            }, pollMs)
+          : null;
+
+      let runnerRes;
+      try {
+        runnerRes = invocation.shellCommand
+          ? await runShellCommand(invocation.shellCommand, {
+              cwd: worktreeDir,
+              extraEnv: invocation.env,
+              onStdout: handleChunk,
+              onStderr: handleChunk,
+            })
+          : await runCommand(invocation.command, invocation.args, {
+              cwd: worktreeDir,
+              extraEnv: invocation.env,
+              onStdout: handleChunk,
+              onStderr: handleChunk,
+            });
+      } finally {
+        if (heartbeatTimer) {
+          clearInterval(heartbeatTimer);
+        }
+        await new Promise<void>(resolve => logStream.end(resolve));
+      }
 
       const { changedFiles, detectedSpecs } = await detectChangedFiles(worktreeDir);
       report.changedFiles = changedFiles;
       report.detectedSpecs = detectedSpecs;
 
-      writeErr(
+      logProgress(
         `[agent] Attempt ${attempt}/${config.maxAttempts}: '${config.runner}' exited ${runnerRes.exitCode} in ${runnerRes.seconds.toFixed(1)}s (${changedFiles.length} changed file(s), ${detectedSpecs.length} spec(s)). Verifying...`
       );
 
       const verifyOutcome = deps?.verifyWorktree
         ? await deps.verifyWorktree(worktreeDir, detectedSpecs)
-        : await runDefaultVerifyWorktree(worktreeDir, detectedSpecs, config.skipE2e, config.noFailFast);
+        : await runDefaultVerifyWorktree(
+            worktreeDir,
+            detectedSpecs,
+            config.skipE2e,
+            config.noFailFast,
+            Boolean(config.quiet)
+          );
 
-      writeErr(
+      logProgress(
         `[agent] Attempt ${attempt}/${config.maxAttempts}: verify ${verifyOutcome.passed ? 'PASSED' : 'FAILED'} — ${verifyOutcome.summary}`
       );
 
@@ -539,6 +623,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
         '--commit',
         '--draft-pr',
         '--cleanup-worktree',
+        '--quiet',
         '--dry-run',
         '--json',
       ]),
@@ -629,6 +714,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     commit: parsed.flags.has('--commit'),
     draftPr: parsed.flags.has('--draft-pr'),
     cleanupWorktree: parsed.flags.has('--cleanup-worktree'),
+    quiet: parsed.flags.has('--quiet'),
     dryRun: parsed.flags.has('--dry-run'),
   });
 

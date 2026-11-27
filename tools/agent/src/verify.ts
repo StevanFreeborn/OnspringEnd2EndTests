@@ -27,9 +27,19 @@ async function runProcessStage(
   name: string,
   command: string,
   args: readonly string[],
-  repoRoot: string
+  repoRoot: string,
+  quiet = false
 ): Promise<VerifyStageResult> {
+  if (!quiet) {
+    writeErr(`[verify] ${name}...`);
+  }
+
   const res = await runCommand(command, args, { cwd: repoRoot });
+  const outcome = res.exitCode === 0 ? 'PASS' : 'FAIL';
+  if (!quiet) {
+    writeErr(`[verify] ${name} ${outcome} (${res.seconds.toFixed(2)}s)`);
+  }
+
   if (res.exitCode === 0) {
     return {
       name,
@@ -241,7 +251,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   let parsed;
   try {
     parsed = parseCliArgs(argv, {
-      flags: new Set(['--skip-e2e', '--no-fail-fast', '--json']),
+      flags: new Set(['--skip-e2e', '--no-fail-fast', '--json', '--quiet']),
       options: new Set(['--repeat', '--browsers']),
       maxPositionals: 1,
     });
@@ -254,6 +264,7 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
   const skipE2e = parsed.flags.has('--skip-e2e');
   const noFailFast = parsed.flags.has('--no-fail-fast');
   const json = parsed.flags.has('--json');
+  const quiet = parsed.flags.has('--quiet');
 
   const repeatRaw = parsed.options.get('--repeat') ?? '2';
   const repeat = Number.parseInt(repeatRaw, 10);
@@ -278,13 +289,24 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
     normalizedSpec = toRepoRel(repoRoot, fullSpec);
   }
 
+  const guardrailsResult = () => {
+    if (!quiet) {
+      writeErr('[verify] architecture:guardrails...');
+    }
+    const result = runArchitectureGuardrails(repoRoot, normalizedSpec);
+    if (!quiet) {
+      writeErr(`[verify] architecture:guardrails ${result.passed ? 'PASS' : 'FAIL'} (${result.seconds.toFixed(2)}s)`);
+    }
+    return result;
+  };
+
   const stages: VerifyStageResult[] = [
-    await runProcessStage('build:packages', 'npm', ['run', 'build:packages:clean'], repoRoot),
-    await runProcessStage('test:packages', 'npm', ['run', 'test:packages'], repoRoot),
-    await runProcessStage('format:test', 'npm', ['run', 'format:test'], repoRoot),
-    await runProcessStage('typecheck', 'npx', ['tsc', '--noEmit'], repoRoot),
-    await runProcessStage('eslint', 'npx', ['eslint', '--max-warnings', '0', '.'], repoRoot),
-    runArchitectureGuardrails(repoRoot, normalizedSpec),
+    await runProcessStage('build:packages', 'npm', ['run', 'build:packages:clean'], repoRoot, quiet),
+    await runProcessStage('test:packages', 'npm', ['run', 'test:packages'], repoRoot, quiet),
+    await runProcessStage('format:test', 'npm', ['run', 'format:test'], repoRoot, quiet),
+    await runProcessStage('typecheck', 'npx', ['tsc', '--noEmit'], repoRoot, quiet),
+    await runProcessStage('eslint', 'npx', ['eslint', '--max-warnings', '0', '.'], repoRoot, quiet),
+    guardrailsResult(),
   ];
 
   const staticPassed = stages.every(s => s.passed);
@@ -306,7 +328,8 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
           '--repeat-each',
           String(repeat),
         ],
-        repoRoot
+        repoRoot,
+        quiet
       );
       stages.push(chromeStage);
       chromePassed = chromeStage.passed;
@@ -314,6 +337,9 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
 
     if (browsers === 'both' || browsers === 'edge') {
       if (!chromePassed && !noFailFast) {
+        if (!quiet) {
+          writeErr('[verify] e2e:edge SKIP (0.00s)');
+        }
         stages.push({
           name: 'e2e:edge',
           passed: false,
@@ -327,7 +353,8 @@ export async function runVerify(repoRoot: string, argv: readonly string[]): Prom
             'e2e:edge',
             'npx',
             ['playwright', 'test', normalizedSpec, '--project', 'edge', '--workers', '2'],
-            repoRoot
+            repoRoot,
+            quiet
           )
         );
       }

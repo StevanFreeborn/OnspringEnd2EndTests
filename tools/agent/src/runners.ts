@@ -90,6 +90,8 @@ const ADAPTERS: Record<RunnerName, RunnerAdapter> = {
         '--allow-all-tools',
         '--no-ask-user',
         '--no-color',
+        '--stream',
+        'on',
         '--add-dir',
         runDir,
         ...(model ? ['--model', model] : []),

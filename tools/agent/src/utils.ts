@@ -14,6 +14,8 @@ export type CommandResult = {
 export type RunCommandOptions = {
   cwd?: string;
   extraEnv?: Record<string, string>;
+  onStdout?: (chunk: string) => void;
+  onStderr?: (chunk: string) => void;
 };
 
 export type CliArgSchema = {
@@ -155,7 +157,7 @@ function quoteCmdArg(value: string): string {
 export function runCommand(
   command: string,
   args: readonly string[] = [],
-  { cwd, extraEnv }: RunCommandOptions = {}
+  { cwd, extraEnv, onStdout, onStderr }: RunCommandOptions = {}
 ): Promise<CommandResult> {
   return new Promise(resolve => {
     const startedAt = Date.now();
@@ -176,11 +178,15 @@ export function runCommand(
     let stderr = '';
 
     child.stdout?.on('data', (chunk: Buffer | string) => {
-      stdout += chunk.toString();
+      const text = chunk.toString();
+      stdout += text;
+      onStdout?.(text);
     });
 
     child.stderr?.on('data', (chunk: Buffer | string) => {
-      stderr += chunk.toString();
+      const text = chunk.toString();
+      stderr += text;
+      onStderr?.(text);
     });
 
     child.on('error', err => {
@@ -208,7 +214,7 @@ export function runCommand(
  */
 export function runShellCommand(
   commandLine: string,
-  { cwd, extraEnv }: RunCommandOptions = {}
+  { cwd, extraEnv, onStdout, onStderr }: RunCommandOptions = {}
 ): Promise<CommandResult> {
   return new Promise(resolve => {
     const startedAt = Date.now();
@@ -229,11 +235,15 @@ export function runShellCommand(
     let stderr = '';
 
     child.stdout?.on('data', (chunk: Buffer | string) => {
-      stdout += chunk.toString();
+      const text = chunk.toString();
+      stdout += text;
+      onStdout?.(text);
     });
 
     child.stderr?.on('data', (chunk: Buffer | string) => {
-      stderr += chunk.toString();
+      const text = chunk.toString();
+      stderr += text;
+      onStderr?.(text);
     });
 
     child.on('error', err => {

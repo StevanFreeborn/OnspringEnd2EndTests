@@ -30,11 +30,11 @@ const COMMAND_HELP: Record<string, string> = {
   explore: `Usage:
   npm run agent -- explore [--route <path>] [--refresh-auth] [--max-age <minutes>] [--launch] [--script <file.js>] [--session <name>] [--json]`,
   verify: `Usage:
-  npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat <n>] [--browsers both|chrome|edge] [--json]`,
+  npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--repeat <n>] [--browsers both|chrome|edge] [--quiet] [--json]`,
   runners: `Usage:
   npm run agent -- runners [--json]`,
   run: `Usage:
-  npm run agent -- run (--brief "<text>" | --brief-file <path>) [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--dry-run] [--json]`,
+  npm run agent -- run (--brief "<text>" | --brief-file <path>) [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--quiet] [--dry-run] [--json]`,
 };
 
 function isHelp(arg: string): boolean {
