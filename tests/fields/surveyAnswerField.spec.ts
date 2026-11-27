@@ -6,6 +6,7 @@ import {
   FieldQuestions,
   FieldTargets,
   FieldTasks,
+  SurveyAnswerFieldTargets,
   SurveyAnswerFieldTasks,
   SurveyDesignerTasks,
   SurveyTasks,
@@ -15,20 +16,15 @@ import { test as base, SurveyFixture } from '../../fixtures';
 import { AnnotationType } from '../annotations';
 
 type FieldCreationState = {
-  created: boolean;
+  fieldName?: string;
 };
 
-async function cleanupSurveyAnswerField(
-  actor: WebActor,
-  surveyId: number,
-  fieldName: string,
-  state: FieldCreationState
-): Promise<void> {
-  if (!state.created) {
+async function cleanupSurveyAnswerField(actor: WebActor, surveyId: number, state: FieldCreationState): Promise<void> {
+  if (!state.fieldName) {
     return;
   }
 
-  await actor.attemptsTo(SurveyTasks.gotoSurveyLayoutsTab(surveyId), FieldTasks.deleteFromGrid(fieldName));
+  await actor.attemptsTo(SurveyTasks.gotoSurveyLayoutsTab(surveyId), FieldTasks.deleteFromGrid(state.fieldName));
 }
 
 const test = base.extend<{ survey: Survey }>({
@@ -59,7 +55,7 @@ test.describe('survey answer field', () => {
       row: 1,
     };
 
-    const creation: FieldCreationState = { created: false };
+    const creation: FieldCreationState = {};
 
     try {
       await test.step('Add a question to the survey', async () => {
@@ -73,7 +69,7 @@ test.describe('survey answer field', () => {
 
       await test.step('Create the survey answer field from the default layout', async () => {
         await sysAdminActor.attemptsTo(SurveyAnswerFieldTasks.addFromSurveyLayout({ field }));
-        creation.created = true;
+        creation.fieldName = field.name;
 
         const fieldInBank = AppLayoutTabTargets.designer.fieldFromBank(field.name);
         await sysAdminActor.browse().check(fieldInBank).isVisible();
@@ -101,7 +97,71 @@ test.describe('survey answer field', () => {
         expect(field.id).toBeGreaterThan(0);
       });
     } finally {
-      await cleanupSurveyAnswerField(sysAdminActor, survey.id, field.name, creation);
+      await cleanupSurveyAnswerField(sysAdminActor, survey.id, creation);
+    }
+  });
+
+  test('Update a survey answer field', async ({ sysAdminActor, survey }) => {
+    test.info().annotations.push({
+      type: AnnotationType.TestId,
+      description: 'Test-654',
+    });
+
+    const questionText = FakeDataFactory.createFakeQuestionId('survey-answer-update-question');
+    const question = new TextQuestion({
+      questionId: questionText,
+      questionText,
+    });
+    const field = new SurveyAnswerField({
+      name: FakeDataFactory.createFakeFieldName('survey-answer-update-test'),
+      description: 'Survey answer field before the Test-654 update.',
+      questionText,
+    });
+    const updatedField = new SurveyAnswerField({
+      name: FakeDataFactory.createFakeFieldName('survey-answer-updated-test'),
+      description: 'Survey answer field updated by Test-654.',
+      questionText,
+    });
+    const creation: FieldCreationState = {};
+
+    try {
+      await test.step('Add a question to the survey', async () => {
+        await sysAdminActor.attemptsTo(
+          SurveyTasks.gotoSurveyDesignTab(survey.id),
+          SurveyTasks.openSurveyDesigner(),
+          SurveyDesignerTasks.addQuestion(question),
+          SurveyDesignerTasks.close()
+        );
+      });
+
+      await test.step('Create the survey answer field from the default layout', async () => {
+        await sysAdminActor.attemptsTo(SurveyAnswerFieldTasks.addFromSurveyLayout({ field }), AppTasks.closeLayout());
+        creation.fieldName = field.name;
+      });
+
+      await test.step('Update the survey answer field', async () => {
+        await sysAdminActor.attemptsTo(
+          SurveyAnswerFieldTasks.updateFromGrid({ currentName: field.name, updatedField })
+        );
+        creation.fieldName = updatedField.name;
+      });
+
+      await test.step('Verify the updated field values persisted', async () => {
+        await sysAdminActor.browse().check(FieldTargets.rowByName(updatedField.name)).isVisible();
+        await sysAdminActor
+          .browse()
+          .check(FieldTargets.rowCellAt(updatedField.name, 1))
+          .containsText(updatedField.description);
+
+        await sysAdminActor.attemptsTo(SurveyAnswerFieldTasks.openFromGrid(updatedField.name));
+        await sysAdminActor.browse().check(FieldTargets.modal.nameInput(0)).hasValue(updatedField.name);
+        await sysAdminActor
+          .browse()
+          .check(SurveyAnswerFieldTargets.modal.descriptionEditor(0))
+          .containsText(updatedField.description);
+      });
+    } finally {
+      await cleanupSurveyAnswerField(sysAdminActor, survey.id, creation);
     }
   });
 });

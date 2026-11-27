@@ -32,6 +32,12 @@ async function openDefaultLayoutDesigner(actor: WebActor): Promise<void> {
   await ensureDesignerFieldsTabSelected(actor);
 }
 
+async function openEditModal(actor: WebActor, fieldName: string): Promise<void> {
+  await actor.browse().hover(FieldTargets.rowByName(fieldName));
+  await actor.browse().click(FieldTargets.editButtonInRow(fieldName));
+  await actor.browse().waitForState(FieldTargets.modal.nameInput(0), 'visible');
+}
+
 export const SurveyAnswerFieldTasks = {
   addFromSurveyLayout:
     ({
@@ -57,7 +63,7 @@ export const SurveyAnswerFieldTasks = {
       await actor.browse().fill(nameInput, field.name);
 
       if (field.description) {
-        await actor.browse().fill(SurveyAnswerFieldTargets.modal.descriptionEditor, field.description);
+        await actor.browse().fill(SurveyAnswerFieldTargets.modal.descriptionEditor(), field.description);
         await actor.browse().click(nameInput);
       }
 
@@ -68,5 +74,30 @@ export const SurveyAnswerFieldTasks = {
       await saveFieldResponse;
 
       await actor.browse().waitForState(designer.fieldFromBank(field.name), 'visible');
+    },
+
+  openFromGrid:
+    (fieldName: string): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await openEditModal(actor, fieldName);
+    },
+
+  updateFromGrid:
+    ({ currentName, updatedField }: { currentName: string; updatedField: SurveyAnswerField }): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await openEditModal(actor, currentName);
+
+      const nameInput = FieldTargets.modal.nameInput(0);
+      await actor.browse().fill(nameInput, updatedField.name);
+      await actor.browse().fill(SurveyAnswerFieldTargets.modal.descriptionEditor(0), updatedField.description);
+      await actor.browse().click(nameInput);
+
+      const saveFieldResponse = actor
+        .browse()
+        .waitForResponse((r: Response) => FieldTargets.addOrEditFieldPathRegex.test(r.url()) && r.status() === 200);
+      await actor.browse().click(FieldTargets.modal.saveButton);
+      await saveFieldResponse;
+
+      await actor.browse().waitForState(FieldTargets.rowByName(updatedField.name), 'visible');
     },
 };
