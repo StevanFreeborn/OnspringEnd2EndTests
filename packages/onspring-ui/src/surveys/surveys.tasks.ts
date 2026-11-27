@@ -5,6 +5,7 @@ import { WebActor } from '@stevanfreeborn/screenplay-playwright';
 import { KendoGridTasks } from '../common/controls/kendoGrid.js';
 import { CreateDialogTargets, DeleteDialogTargets } from '../common/dialogs/dialogs.targets.js';
 import { AdminNavTargets, AdminTileTargets } from '../common/navs/adminNav.targets.js';
+import { SurveyCampaignsTabTargets } from './surveyCampaigns.targets.js';
 import { AutoSaveDialogTargets, SurveyDesignerTargets } from './surveyDesigner.targets.js';
 import {
   CreateSurveyDialogTargets,
@@ -136,6 +137,19 @@ export const SurveyTasks = {
     (surveyId: number): Task<WebActor> =>
     async (actor: WebActor): Promise<void> => {
       await actor.attemptsTo(SurveyTasks.gotoSurvey(surveyId), SurveyTasks.openDesignTab());
+    },
+
+  openCampaignsTab:
+    (): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.browse().click(SurveyDetailTargets.campaignsTabButton);
+      await actor.browse().waitForState(SurveyCampaignsTabTargets.addCampaignLink, 'visible');
+    },
+
+  gotoSurveyCampaignsTab:
+    (surveyId: number): Task<WebActor> =>
+    async (actor: WebActor): Promise<void> => {
+      await actor.attemptsTo(SurveyTasks.gotoSurvey(surveyId), SurveyTasks.openCampaignsTab());
     },
 
   openSurveyDesigner:

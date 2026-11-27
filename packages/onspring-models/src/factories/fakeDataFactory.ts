@@ -3,6 +3,7 @@ import { User, UserStatus } from '../models/user.js';
 
 export const TEST_APP_NAME = 'app-test';
 export const TEST_SURVEY_NAME = 'survey-test';
+export const TEST_SURVEY_CAMPAIGN_NAME = 'survey-campaign-test';
 export const TEST_USER_NAME = 'user-test';
 export const TEST_ROLE_NAME = 'role-test';
 export const TEST_GROUP_NAME = 'group-test';
@@ -115,6 +116,11 @@ export class FakeDataFactory {
   static createFakeReportName() {
     const uniqueId = this.createUniqueIdentifier();
     return `${uniqueId}-${TEST_REPORT_NAME}`;
+  }
+
+  static createFakeSurveyCampaignName(): string {
+    const uniqueId = this.createUniqueIdentifier();
+    return `${uniqueId}-${TEST_SURVEY_CAMPAIGN_NAME}`;
   }
 
   static createFakeEmailTemplateName() {
