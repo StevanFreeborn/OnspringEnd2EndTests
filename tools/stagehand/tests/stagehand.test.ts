@@ -1052,8 +1052,8 @@ fs.writeFileSync('tests/sample/' + id + '.spec.ts', "test('" + id + "', async ({
     assert.equal(exitCode, 0);
     assert.equal(report.mode, 'isolated');
     assert.equal(report.passed, 2);
-    assert.equal(report.runs[0]?.branch, 'agent/test-21-isolated-alpha');
-    assert.equal(report.runs[1]?.branch, 'agent/test-22-isolated-beta');
+    assert.equal(report.runs[0]?.branch, 'stagehand/test-21-isolated-alpha');
+    assert.equal(report.runs[1]?.branch, 'stagehand/test-22-isolated-beta');
   });
 
   void it('passes prior batch commits to subsequent briefs, records telemetry, and supports --resume', async () => {
@@ -1446,9 +1446,9 @@ void describe('terminal ui', () => {
         status: 'passed',
         runner: 'opencode',
         brief: 'Test-1',
-        worktreeDir: '/repo/.agent-worktrees/sample',
-        branch: 'agent/sample',
-        runDir: '/repo/.agent-runs/sample',
+        worktreeDir: '/repo/.stagehand-worktrees/sample',
+        branch: 'stagehand/sample',
+        runDir: '/repo/.stagehand-runs/sample',
         startedAt: '2026-11-27T00:00:00Z',
         finishedAt: '2026-11-27T00:01:00Z',
         durationSeconds: 60,
@@ -1462,9 +1462,9 @@ void describe('terminal ui', () => {
             verifyPassed: true,
             verifySummary: 'Verified 1 spec',
             failingStages: [],
-            promptFile: '.agent-runs/sample/attempt-1-prompt.md',
-            runnerLogFile: '.agent-runs/sample/attempt-1-runner.log',
-            verifyReportFile: '.agent-runs/sample/attempt-1-verify.json',
+            promptFile: '.stagehand-runs/sample/attempt-1-prompt.md',
+            runnerLogFile: '.stagehand-runs/sample/attempt-1-runner.log',
+            verifyReportFile: '.stagehand-runs/sample/attempt-1-verify.json',
           },
         ],
         changedFiles: ['tests/fields/demo.spec.ts'],
@@ -1474,7 +1474,7 @@ void describe('terminal ui', () => {
       '/repo',
       false
     );
-    assert.match(runSummary, /Agent Run · ✔ PASS/);
+    assert.match(runSummary, /Stagehand Run · ✔ PASS/);
     assert.match(runSummary, /abc1234/);
 
     const batchSummary = renderBatchSummaryTerminal(
@@ -1485,7 +1485,7 @@ void describe('terminal ui', () => {
         runner: 'opencode',
         sharedBranch: 'feat/demo',
         sharedWorktreeDir: null,
-        runDir: '/repo/.agent-runs/batch-1',
+        runDir: '/repo/.stagehand-runs/batch-1',
         startedAt: '2026-11-27T00:00:00Z',
         finishedAt: '2026-11-27T00:01:00Z',
         durationSeconds: 60,
@@ -1498,7 +1498,7 @@ void describe('terminal ui', () => {
       '/repo',
       false
     );
-    assert.match(batchSummary, /Batch Run · ✔ PASS/);
+    assert.match(batchSummary, /Stagehand Batch · ✔ PASS/);
     assert.match(batchSummary, /shared-branch \(feat\/demo\)/);
   });
 });

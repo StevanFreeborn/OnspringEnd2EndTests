@@ -28,6 +28,8 @@ export default defineConfig([
     '**/dist',
     '**/.agent-worktrees',
     '**/.agent-runs',
+    '**/.stagehand-worktrees',
+    '**/.stagehand-runs',
     'eslint.config.mjs',
   ]),
   {

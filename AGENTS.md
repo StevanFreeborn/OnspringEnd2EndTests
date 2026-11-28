@@ -10,22 +10,22 @@ Read these before making changes:
 - Developer guide, conventions, and guardrails: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Agent test-authoring workflow skill: [.agents/skills/author-onspring-test/SKILL.md](.agents/skills/author-onspring-test/SKILL.md)
 
-## Agent CLI (`tools/agent/src/cli.ts`)
+## Stagehand CLI (`tools/stagehand/src/cli.ts`)
 
-Prefer the deterministic TypeScript CLI over manual grep when authoring or verifying tests (compiled via `npm run build:packages` or `npm run build:agent`; invoked with `npm run agent -- ...` or `node tools/agent/dist/src/cli.js ...`):
+Prefer Stagehand over manual grep when authoring or verifying tests (compiled via `npm run build:packages` or `npm run build:stagehand`; invoked with `npm run stagehand -- ...` or `node tools/stagehand/dist/src/cli.js ...`):
 
 - Discover existing Targets, Tasks, Questions, Controls, Models, and Fixtures:
-  `npm run agent -- catalog [--domain <name>] [--kind all|targets|tasks|questions|controls|models|fixtures|tags] [--json]`
+  `npm run stagehand -- catalog [--domain <name>] [--kind all|targets|tasks|questions|controls|models|fixtures|tags] [--json]`
 - Search local Onspring Help Center Markdown docs (`ONSPRING_HELP_DOCS_DIR`):
-  `npm run agent -- help-search "<query>" [--top 5] [--json]`
+  `npm run stagehand -- help-search "<query>" [--top 5] [--json]`
 - Prepare/launch pre-authenticated browser exploration or execute a script (direct Node Playwright by default, or `--engine cli` for `playwright-cli`):
-  `npm run agent -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>] [--engine node|cli]`
+  `npm run stagehand -- explore --route /Admin/App [--refresh-auth] [--max-age 45] [--launch] [--script <file.js>] [--engine node|cli]`
 - Run full verification (package builds, unit tests, Prettier, TypeScript, zero-warning ESLint, Screenplay guardrails, and sequential fail-fast Chrome/Edge E2E):
-  `npm run agent -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--no-clean] [--repeat 2] [--json]`
-- List available headless agent CLIs, ingest briefs, or orchestrate single/batch runs:
-  `npm run agent -- runners [--json]`
-  `npm run agent -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--markdown] [--json]`
-  `npm run agent -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--verbose] [--dry-run]`
+  `npm run stagehand -- verify [spec-path] [--skip-e2e] [--no-fail-fast] [--no-clean] [--repeat 2] [--json]`
+- List available headless runner CLIs, ingest briefs, or orchestrate single/batch runs:
+  `npm run stagehand -- runners [--json]`
+  `npm run stagehand -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--markdown] [--json]`
+  `npm run stagehand -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--verbose] [--dry-run]`
 
 ## Non-Negotiable Architecture Rules
 

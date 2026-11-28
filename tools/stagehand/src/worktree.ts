@@ -332,7 +332,7 @@ export async function createAgentWorktree(
   repoRoot: string,
   { slug, baseRef, installDeps, branchName, reuseExisting }: CreateWorktreeOptions
 ): Promise<WorktreeHandle> {
-  const worktreesRoot = path.join(repoRoot, '.agent-worktrees');
+  const worktreesRoot = path.join(repoRoot, '.stagehand-worktrees');
   fs.mkdirSync(worktreesRoot, { recursive: true });
 
   const requestedBranch = branchName?.trim();
@@ -341,7 +341,7 @@ export async function createAgentWorktree(
     if (checkedOutPath) {
       if (!isPathInsideDir(worktreesRoot, checkedOutPath)) {
         throw new Error(
-          `Branch '${requestedBranch}' is already checked out at '${checkedOutPath}' (outside .agent-worktrees/). Switch branches there first or pass a different --shared-branch.`
+          `Branch '${requestedBranch}' is already checked out at '${checkedOutPath}' (outside .stagehand-worktrees/). Switch branches there first or pass a different --shared-branch.`
         );
       }
       if (!reuseExisting) {
@@ -373,7 +373,7 @@ export async function createAgentWorktree(
 
   let uniqueSlug = slugify(slug);
   let worktreePath = path.join(worktreesRoot, uniqueSlug);
-  let branch = requestedBranch || `agent/${uniqueSlug}`;
+  let branch = requestedBranch || `stagehand/${uniqueSlug}`;
 
   const existingRequestedBranch = requestedBranch ? await branchExists(repoRoot, branch) : false;
 
@@ -382,7 +382,7 @@ export async function createAgentWorktree(
     uniqueSlug = `${slugify(slug, 36)}-${suffix}`;
     worktreePath = path.join(worktreesRoot, uniqueSlug);
     if (!requestedBranch) {
-      branch = `agent/${uniqueSlug}`;
+      branch = `stagehand/${uniqueSlug}`;
     }
   }
 

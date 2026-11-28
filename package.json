@@ -11,13 +11,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui tools/agent",
-    "build:agent": "tsc -b tools/agent",
-    "clean:agent": "node -e \"import('node:fs').then(m=>{m.rmSync('tools/agent/dist',{recursive:true,force:true});m.rmSync('tools/agent/tsconfig.tsbuildinfo',{force:true})})\"",
-    "clean:packages": "npm run clean --workspaces --if-present && npm run clean:agent",
+    "build:packages": "tsc -b packages/screenplay packages/screenplay-playwright packages/testing-services packages/onspring-models packages/onspring-ui tools/stagehand",
+    "build:stagehand": "tsc -b tools/stagehand",
+    "clean:stagehand": "node -e \"import('node:fs').then(m=>{m.rmSync('tools/stagehand/dist',{recursive:true,force:true});m.rmSync('tools/stagehand/tsconfig.tsbuildinfo',{force:true})})\"",
+    "clean:packages": "npm run clean --workspaces --if-present && npm run clean:stagehand",
     "build:packages:clean": "npm run clean:packages && npm run build:packages",
-    "test:agent": "node --test tools/agent/dist/tests/*.test.js",
-    "test:packages": "npm run test --workspaces --if-present && npm run test:agent",
+    "test:stagehand": "node --test tools/stagehand/dist/tests/*.test.js",
+    "test:packages": "npm run test --workspaces --if-present && npm run test:stagehand",
     "pack:check": "npm pack --dry-run --workspaces",
     "test": "npx playwright test",
     "test:pwservice": "npx playwright test --config=playwright.service.config.ts",
@@ -34,7 +34,7 @@
     "cleanup:outputs": "rimraf ./blob-report/ ./playwright-report/ ./test-results/ ./cleanup-results/ ./downloads/ ./data-import-files/ ./dynamic-documents/ ./apiSetupResults/",
     "generate-example-env": "node ./scripts/generateExampleEnv.js",
     "line-count": "node ./scripts/countLines.js",
-    "agent": "node tools/agent/dist/src/cli.js"
+    "stagehand": "node tools/stagehand/dist/src/cli.js"
   },
   "keywords": [
     "onspring",

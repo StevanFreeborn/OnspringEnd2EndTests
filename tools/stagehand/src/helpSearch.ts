@@ -227,7 +227,7 @@ export async function runHelpSearch(repoRoot: string, argv: readonly string[]): 
 
   const query = parsed.positionals.join(' ').trim();
   if (!query) {
-    writeErr('Error: Missing <query>. Example: npm run agent -- help-search "survey designer"');
+    writeErr('Error: Missing <query>. Example: npm run stagehand -- help-search "survey designer"');
     return 2;
   }
 

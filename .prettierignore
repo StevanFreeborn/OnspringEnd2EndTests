@@ -8,3 +8,5 @@ palywright-report/
 test-results/
 .agent-worktrees/
 .agent-runs/
+.stagehand-worktrees/
+.stagehand-runs/

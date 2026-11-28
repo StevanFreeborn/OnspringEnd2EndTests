@@ -241,7 +241,7 @@ export async function runExplore(repoRoot: string, argv: readonly string[]): Pro
   const commands =
     resolvedScript && engine === 'node'
       ? [
-          `node tools/agent/dist/src/cli.js explore --route ${route} --script ${resolvedScript}${headed ? ' --headed' : ''}`,
+          `node tools/stagehand/dist/src/cli.js explore --route ${route} --script ${resolvedScript}${headed ? ' --headed' : ''}`,
         ]
       : [
           formatCmd('open', baseUrl),

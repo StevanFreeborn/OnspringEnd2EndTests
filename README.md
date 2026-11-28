@@ -95,6 +95,23 @@ npm run build:packages
 npm run lint
 ```
 
+## Stagehand
+
+**Stagehand** ([tools/stagehand/README.md](tools/stagehand/README.md)) is the repository's backstage CLI & multi-runner orchestrator for test authoring, live UI exploration, Help Center lookup, and architectural guardrail verification:
+
+```sh
+# See which headless coding runners are installed (agy, opencode, copilot, claude, codex)
+npm run stagehand -- runners
+
+# Preview normalized test briefs from a GitHub issue (expands unchecked Test-NNN items)
+npm run stagehand -- ingest --issue 325
+
+# Implement and verify all tests in an issue sequentially on an isolated shared branch
+npm run stagehand -- run --issue 325 --shared-branch feat/survey-answer-field --domain fields --cleanup-worktree
+```
+
+See the full guide in [Stagehand Documentation](tools/stagehand/README.md) for CSV/Markdown/YAML/Onspring API adapters, `--resume`, `--verbose`, live UI exploration (`explore --script`), and `verify`.
+
 ## Workflows
 
 ### [Playwright_Tests](./.github/workflows/playwright.yml)

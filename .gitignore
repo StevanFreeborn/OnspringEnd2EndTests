@@ -23,3 +23,5 @@ fixtures/testFiles/remote/
 *.tsbuildinfo
 .agent-worktrees/
 .agent-runs/
+.stagehand-worktrees/
+.stagehand-runs/

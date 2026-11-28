@@ -348,8 +348,8 @@ export function buildAttemptPrompt({
     '1. Read `AGENTS.md`, `CONTRIBUTING.md`, and `.agents/skills/author-onspring-test/SKILL.md` before making changes.',
     '2. Implement **ONLY** the single test case specified in this brief. Do NOT fetch parent issue URLs or implement sibling test cases.',
     '3. Follow all Screenplay layer boundaries (`onspring-models` -> `onspring-ui` -> `fixtures` -> `tests`), ESM `.js` relative imports in `packages/*`, `"types": []`, `type` over `interface`, and `AnnotationType.TestId`.',
-    '4. Use the Pre-Flight Catalog and Help Center Excerpts below first; when running additional CLI queries, invoke `node tools/agent/dist/src/cli.js ...` directly (`catalog`, `help-search`, `explore --script`).',
-    '5. Iterate with fast targeted checks (`npm run build:packages`, `node tools/agent/dist/src/cli.js verify <spec> --skip-e2e --no-clean`, or `--browsers chrome --repeat 1 --no-clean`). The orchestrator automatically runs full Chrome x2 + Edge verification after you exit.',
+    '4. Use the Pre-Flight Catalog and Help Center Excerpts below first; when running additional CLI queries, invoke `node tools/stagehand/dist/src/cli.js ...` directly (`catalog`, `help-search`, `explore --script`).',
+    '5. Iterate with fast targeted checks (`npm run build:packages`, `node tools/stagehand/dist/src/cli.js verify <spec> --skip-e2e --no-clean`, or `--browsers chrome --repeat 1 --no-clean`). The orchestrator automatically runs full Chrome x2 + Edge verification after you exit.',
     '6. Do NOT run `git commit` or modify unrelated specs/files.',
   ];
 
@@ -547,14 +547,14 @@ async function runDefaultVerifyWorktree(
     };
   }
 
-  const cliJs = path.join(worktreeDir, 'tools', 'agent', 'dist', 'src', 'cli.js');
+  const cliJs = path.join(worktreeDir, 'tools', 'stagehand', 'dist', 'src', 'cli.js');
   if (!fs.existsSync(cliJs)) {
-    const buildRes = await runCommand('npm', ['run', 'build:agent'], { cwd: worktreeDir });
+    const buildRes = await runCommand('npm', ['run', 'build:stagehand'], { cwd: worktreeDir });
     if (buildRes.exitCode !== 0) {
       return {
         passed: false,
-        summary: 'Failed to compile tools/agent in worktree before verify.',
-        failingStages: ['build:agent'],
+        summary: 'Failed to compile tools/stagehand in worktree before verify.',
+        failingStages: ['build:stagehand'],
         rawReport: { passed: false, buildOutput: buildRes.stderr || buildRes.stdout },
         failureDetails: (buildRes.stdout + '\n' + buildRes.stderr).trim(),
       };
@@ -631,7 +631,7 @@ async function runDefaultVerifyWorktree(
 
 function buildRunReportMarkdown(report: OrchestratorReport): string {
   const lines = [
-    `# Agent Orchestrator Run: \`${report.runId}\``,
+    `# Stagehand Run: \`${report.runId}\``,
     '',
     `- **Status**: ${report.status.toUpperCase()}`,
     `- **Runner**: \`${report.runner}\``,
@@ -676,7 +676,7 @@ export function renderRunSummaryTerminal(
     ...(report.error ? [{ label: 'Error', value: s.red(report.error) }] : []),
   ];
 
-  const lines = ['', renderHeaderBox(`Agent Run · ${badge}`, meta, { color: colorEnabled })];
+  const lines = ['', renderHeaderBox(`Stagehand Run · ${badge}`, meta, { color: colorEnabled })];
 
   if (report.attempts.length > 0) {
     lines.push(
@@ -759,7 +759,7 @@ export async function executeOrchestrator(
   const slugInput = config.slugTitle?.trim() || (config.brief.split(/\r?\n/)[0] ?? 'task');
   const slug = slugify(slugInput);
   const runId = `${formatRunTimestamp()}-${slug}`;
-  const runDir = config.runDirOverride ?? path.join(repoRoot, '.agent-runs', runId);
+  const runDir = config.runDirOverride ?? path.join(repoRoot, '.stagehand-runs', runId);
   fs.mkdirSync(runDir, { recursive: true });
   fs.writeFileSync(path.join(runDir, 'brief.md'), config.brief, 'utf8');
 
@@ -785,7 +785,7 @@ export async function executeOrchestrator(
   if (!config.existingWorktree && !config.quiet) {
     logProgress(
       renderHeaderBox(
-        'Onspring Agent Run',
+        'Stagehand Run',
         [
           { label: 'Runner', value: config.runner },
           { label: 'Branch', value: activeBranch ?? '(in-place)' },
@@ -1118,7 +1118,7 @@ export async function executeOrchestrator(
 
 function buildBatchReportMarkdown(report: BatchOrchestratorReport): string {
   const lines = [
-    `# Agent Batch Run: \`${report.batchId}\``,
+    `# Stagehand Batch Run: \`${report.batchId}\``,
     '',
     `- **Status**: ${report.status.toUpperCase()}`,
     `- **Mode**: \`${report.mode}\``,
@@ -1162,7 +1162,7 @@ export function renderBatchSummaryTerminal(
     ...(report.error ? [{ label: 'Error', value: s.red(report.error) }] : []),
   ];
 
-  const lines = ['', renderHeaderBox(`Batch Run · ${badge}`, meta, { color: colorEnabled })];
+  const lines = ['', renderHeaderBox(`Stagehand Batch · ${badge}`, meta, { color: colorEnabled })];
 
   if (report.runs.length > 0) {
     lines.push(
@@ -1207,7 +1207,7 @@ export async function executeBatchOrchestrator(
 
   const batchSlug = slugify(sharedBranch || config.domain || 'batch');
   const batchId = `${formatRunTimestamp()}-batch-${batchSlug}`;
-  const runDir = path.join(repoRoot, '.agent-runs', batchId);
+  const runDir = path.join(repoRoot, '.stagehand-runs', batchId);
   fs.mkdirSync(runDir, { recursive: true });
 
   const sharedHandle: WorktreeHandle | null = sharedBranch
@@ -1226,7 +1226,7 @@ export async function executeBatchOrchestrator(
       : 'isolated';
     logProgress(
       renderHeaderBox(
-        'Onspring Agent Batch',
+        'Stagehand Batch',
         [
           { label: 'Mode', value: modeValue },
           { label: 'Runner', value: config.runner },

@@ -223,7 +223,7 @@ export async function runRunnersCommand(repoRoot: string, argv: readonly string[
 
   writeOut(
     renderHeaderBox(
-      'Available Agent Runners',
+      'Available Stagehand Runners',
       [{ label: 'Detected', value: `${installedCount}/${totalBuiltIn} CLI runner(s) on PATH` }],
       { color: outColor }
     )
