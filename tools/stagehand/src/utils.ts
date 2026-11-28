@@ -134,6 +134,7 @@ function needsWindowsShell(command: string): boolean {
     lower === 'npx' ||
     lower === 'playwright-cli' ||
     lower === 'opencode' ||
+    lower === 'pi' ||
     lower === 'claude' ||
     lower === 'codex' ||
     lower.endsWith('.cmd') ||

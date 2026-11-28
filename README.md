@@ -100,7 +100,7 @@ npm run lint
 **Stagehand** ([tools/stagehand/README.md](tools/stagehand/README.md)) is the repository's backstage CLI & multi-runner orchestrator for test authoring, live UI exploration, Help Center lookup, and architectural guardrail verification:
 
 ```sh
-# See which headless coding runners are installed (agy, opencode, copilot, claude, codex)
+# See which headless coding runners are installed
 npm run stagehand -- runners
 
 # Preview normalized test briefs from a GitHub issue (expands unchecked Test-NNN items)

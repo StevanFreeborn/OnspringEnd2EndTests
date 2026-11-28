@@ -1,7 +1,7 @@
 import { parseCliArgs, whichExecutable, writeErr, writeOut } from './utils.js';
 import { createStyler, renderHeaderBox, renderTable, statusBadge, supportsColor, truncateText } from './ui.js';
 
-export type RunnerName = 'agy' | 'opencode' | 'copilot' | 'claude' | 'codex' | 'custom';
+export type RunnerName = 'agy' | 'opencode' | 'pi' | 'copilot' | 'claude' | 'codex' | 'custom';
 
 export type RunnerInvocation = {
   command: string;
@@ -33,8 +33,11 @@ export type RunnerStatus = {
   resolvedPath: string | null;
 };
 
-const VALID_RUNNERS: readonly RunnerName[] = ['agy', 'opencode', 'copilot', 'claude', 'codex', 'custom'];
-const AUTO_DETECT_ORDER: readonly RunnerName[] = ['agy', 'opencode', 'copilot', 'claude', 'codex'];
+const VALID_RUNNERS: readonly RunnerName[] = ['agy', 'opencode', 'pi', 'copilot', 'claude', 'codex', 'custom'];
+const AUTO_DETECT_ORDER: readonly RunnerName[] = ['agy', 'opencode', 'pi', 'copilot', 'claude', 'codex'];
+
+const INLINE_PROMPT_MESSAGE =
+  'Follow all instructions in the attached prompt above. The full prompt is already attached inline—do not attempt to read the prompt file from disk, and do not commit changes.';
 
 function bootstrapMessage(promptFile: string): string {
   return `Read and execute all instructions in "${promptFile}". Follow AGENTS.md, CONTRIBUTING.md, and .agents/skills/author-onspring-test/SKILL.md. Do not commit changes.`;
@@ -76,7 +79,24 @@ const ADAPTERS: Record<RunnerName, RunnerAdapter> = {
         ...(model ? ['--model', model] : []),
         '--file',
         promptFile,
-        'Follow all instructions in the attached prompt above. The full prompt is already attached inline—do not attempt to read the prompt file from disk, and do not commit changes.',
+        INLINE_PROMPT_MESSAGE,
+      ],
+    }),
+  },
+  pi: {
+    name: 'pi',
+    executable: 'pi',
+    description: 'Pi coding agent (-p --no-session --approve)',
+    buildInvocation: ({ promptFile, model }) => ({
+      command: 'pi',
+      args: [
+        '--print',
+        '--no-session',
+        '--approve',
+        ...(model ? ['--model', model] : []),
+        '--',
+        `@${promptFile}`,
+        INLINE_PROMPT_MESSAGE,
       ],
     }),
   },

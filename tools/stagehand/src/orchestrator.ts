@@ -1521,7 +1521,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
   let runner: RunnerName;
   if (runnerArg) {
     if (!isValidRunnerName(runnerArg)) {
-      writeErr(`Invalid --runner '${runnerArg}'. Expected: agy, opencode, copilot, claude, codex, or custom.`);
+      writeErr(`Invalid --runner '${runnerArg}'. Expected: agy, opencode, pi, copilot, claude, codex, or custom.`);
       return 2;
     }
     runner = runnerArg;
@@ -1529,7 +1529,7 @@ export async function runOrchestratorCommand(repoRoot: string, argv: readonly st
     const detected = await resolveDefaultRunner(repoRoot);
     if (!detected) {
       writeErr(
-        'Error: No supported agent CLI (agy, opencode, copilot, claude, codex) found on PATH. Install one or pass --runner custom --runner-cmd "...".'
+        'Error: No supported agent CLI (agy, opencode, pi, copilot, claude, codex) found on PATH. Install one or pass --runner custom --runner-cmd "...".'
       );
       return 1;
     }

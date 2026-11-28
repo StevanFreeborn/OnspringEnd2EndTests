@@ -15,6 +15,8 @@ Check which AI runners are installed on your `PATH`:
 npm run stagehand -- runners
 ```
 
+See [Runners](#runners) for auto-detection priority, runner-specific options, and custom CLI templates.
+
 Preview how Stagehand parses a GitHub issue or backlog file:
 
 ```sh
@@ -91,7 +93,7 @@ npm run stagehand -- run --issue 322 --shared-branch feat/slack-message-history-
 Stagehand normalizes briefs from six sources:
 
 | Source           | Auto-Detection / Flag                                                           | Example                                                                              |
-|:-----------------|:--------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------|
+| :--------------- | :------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------- |
 | Markdown (`.md`) | Split on `---`, `## Test Brief` / `## Test-NNN`, or `- [ ] Test-NNN` checklists | `npm run stagehand -- ingest --input backlog.md`                                     |
 | CSV (`.csv`)     | RFC-4180 CSV (quotes, commas, multiline cells)                                  | `npm run stagehand -- ingest --input tests.csv`                                      |
 | JSON / YAML      | Single object, array, `{ briefs }`, or multi-doc YAML (`---`)                   | `npm run stagehand -- ingest --input batch.yaml`                                     |
@@ -140,6 +142,34 @@ git cherry-pick <first-sha>^..<last-sha>
 
 Or pass `--draft-pr` during `run` to push the finished branch and open a draft pull request using `gh pr create --draft`.
 
+## Runners
+
+When `--runner` is omitted, Stagehand automatically picks the first available CLI found on `PATH` in priority order:
+
+`agy` → `opencode` → `pi` → `copilot` → `claude` → `codex`
+
+Pass `--runner <name>` to pin a specific runner, or `--runner custom --runner-cmd "<template>"` to wrap any arbitrary CLI.
+
+| Runner     | Headless Invocation                 | Prompt Delivery                                      | Permissions / Session Behavior                                               |
+| :--------- | :---------------------------------- | :--------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `agy`      | `agy --print --mode auto`           | Bootstrap prompt referencing `attempt-<n>-prompt.md` | `--dangerously-skip-permissions`, `--add-dir <runDir>`                       |
+| `opencode` | `opencode run --auto`               | Inline via `--file <promptFile>`                     | `--archived` keeps automated runs out of interactive sessions                |
+| `pi`       | `pi --print --no-session --approve` | Inline via `-- @<promptFile>`                        | Ephemeral session, auto-trusts worktree `.agents/skills`, user default tools |
+| `copilot`  | `copilot -p`                        | Bootstrap prompt referencing `attempt-<n>-prompt.md` | `--trust-folder`, `--allow-all-tools`, `--no-ask-user`, `--add-dir <runDir>` |
+| `claude`   | `claude -p`                         | Bootstrap prompt referencing `attempt-<n>-prompt.md` | `--permission-mode acceptEdits`                                              |
+| `codex`    | `codex exec --full-auto`            | Bootstrap prompt referencing `attempt-<n>-prompt.md` | `--full-auto`                                                                |
+| `custom`   | Shell template (`--runner-cmd`)     | `{{promptFile}}` placeholder (quoted if spaces)      | User-defined (`{{promptFile}}`, `{{runDir}}`, `{{worktree}}`)                |
+
+### Runner-Specific Capabilities & Notes
+
+- **`agy`:** Uses `--print --mode auto --dangerously-skip-permissions --output-format text`, grants read access to `.stagehand-runs/<runId>` with `--add-dir`, and forwards `--model`.
+- **`opencode`:** Attaches `attempt-<n>-prompt.md` inline with `--file`, passes `--archived` to avoid cluttering interactive sessions, and forwards `--model`.
+- **`pi`:** Uses `--print`, `--no-session`, `--approve`, and `-- @<promptFile>` to inline the prompt. Stagehand leaves `--tools` unset so your configured `defaultTools` in `~/.pi/agent/settings.json` stay active, and `--model` accepts Pi's `provider/id` and `:<thinking>` syntax.
+- **`copilot`:** Runs `--trust-folder --allow-all-tools --no-ask-user --no-color --stream on -p`, exposes `.stagehand-runs/<runId>` with `--add-dir`, and forwards `--model`.
+- **`claude`:** Runs `-p` with `--permission-mode acceptEdits` and forwards `--model`.
+- **`codex`:** Runs `codex exec --full-auto` and forwards `--model`.
+- **`custom`:** Requires `--runner-cmd "<template>"`. Stagehand replaces `{{promptFile}}`, `{{runDir}}`, and `{{worktree}}` (automatically double-quoting paths containing whitespace) and runs the command via the system shell inside the worktree. `--model` is not interpolated into `--runner-cmd` automatically.
+
 ## Standalone Developer Tools
 
 Stagehand subcommands are also useful directly during everyday manual Playwright & Screenplay development:
@@ -186,7 +216,7 @@ npm run stagehand -- verify tests/fields/surveyAnswerField.spec.ts --skip-e2e --
 ## Command Reference
 
 | Command       | Purpose                                                                   | Key Options                                                                                                                                                                                                                                                                                                          |
-|:--------------|:--------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| :------------ | :------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `catalog`     | AST inventory of UI modules, models, `FakeDataFactory`, fixtures, tags    | `--domain <name>`, `--kind all\|targets\|tasks\|questions\|controls\|models\|fixtures\|tags`, `--json`                                                                                                                                                                                                               |
 | `help-search` | BM25 + bigram search of local Help Center Markdown docs                   | `<query>`, `--docs-dir <path>`, `--top <n>`, `--max-chars <n>`, `--json`                                                                                                                                                                                                                                             |
 | `explore`     | Authenticated UI probe (`--script`) or interactive `playwright-cli`       | `--route <path>`, `--script <file>`, `--engine node\|cli`, `--headed`, `--launch`, `--refresh-auth`, `--max-age <min>`, `--json`                                                                                                                                                                                     |
@@ -198,7 +228,7 @@ npm run stagehand -- verify tests/fields/surveyAnswerField.spec.ts --skip-e2e --
 ### Build & Test Scripts
 
 | Script                     | Description                                               |
-|:---------------------------|:----------------------------------------------------------|
+| :------------------------- | :-------------------------------------------------------- |
 | `npm run build:stagehand`  | Compile `tools/stagehand` TypeScript CLI & tests          |
 | `npm run test:stagehand`   | Run Stagehand's offline `node:test` suite                 |
 | `npm run clean:stagehand`  | Remove compiled `tools/stagehand/dist` and `.tsbuildinfo` |
@@ -207,7 +237,7 @@ npm run stagehand -- verify tests/fields/surveyAnswerField.spec.ts --skip-e2e --
 ## Environment Variables
 
 | Variable                                                                 | Purpose                                                                                      |
-|:-------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------|
+| :----------------------------------------------------------------------- | :------------------------------------------------------------------------------------------- |
 | `TEST_ENV`, `<ENV>_INSTANCE_URL`, `SYSADMIN_*`                           | Target Onspring instance and credentials used by `explore` and Playwright E2E `verify`       |
 | `ONSPRING_HELP_DOCS_DIR`                                                 | Path to local Onspring Help Center Markdown docs for `help-search` and pre-flight context    |
 | `ONSPRING_CORP_API_URL`, `ONSPRING_CORP_API_KEY`, `ONSPRING_CORP_CONFIG` | Optional Onspring REST API v2 URL, API key, and default field-mapping JSON path for `ingest` |

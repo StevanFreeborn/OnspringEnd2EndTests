@@ -423,6 +423,7 @@ void describe('runners', () => {
   void it('builds valid headless invocations for built-in and custom adapters', () => {
     assert.equal(isValidRunnerName('agy'), true);
     assert.equal(isValidRunnerName('opencode'), true);
+    assert.equal(isValidRunnerName('pi'), true);
     assert.equal(isValidRunnerName('unknown'), false);
 
     const agyInv = getRunnerAdapter('agy').buildInvocation({
@@ -447,6 +448,32 @@ void describe('runners', () => {
       openCodeInv.args[openCodeInv.args.length - 1] ?? '',
       /do not attempt to read the prompt file from disk/i
     );
+
+    const piInv = getRunnerAdapter('pi').buildInvocation({
+      promptFile: '/tmp/p.md',
+      runDir: '/tmp/run',
+      worktreeDir: '/tmp/wt',
+    });
+    assert.equal(piInv.command, 'pi');
+    assert.deepEqual(piInv.args.slice(0, 5), ['--print', '--no-session', '--approve', '--', '@/tmp/p.md']);
+    assert.equal(piInv.args.includes('--model'), false);
+    assert.match(piInv.args[piInv.args.length - 1] ?? '', /do not attempt to read the prompt file from disk/i);
+
+    const piModelInv = getRunnerAdapter('pi').buildInvocation({
+      promptFile: '/tmp/p.md',
+      runDir: '/tmp/run',
+      worktreeDir: '/tmp/wt',
+      model: 'anthropic/sonnet:high',
+    });
+    assert.deepEqual(piModelInv.args.slice(0, 7), [
+      '--print',
+      '--no-session',
+      '--approve',
+      '--model',
+      'anthropic/sonnet:high',
+      '--',
+      '@/tmp/p.md',
+    ]);
 
     const customInv = getRunnerAdapter('custom').buildInvocation({
       promptFile: '/tmp/my prompt.md',

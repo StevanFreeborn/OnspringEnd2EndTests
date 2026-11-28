@@ -38,7 +38,7 @@ const COMMAND_HELP: Record<string, string> = {
   runners: `Usage:
   npm run stagehand -- runners [--json]`,
   run: `Usage:
-  npm run stagehand -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id> | --app-id <id>) [--source markdown|csv|json|yaml|github|onspring] [--shared-branch <name>] [--resume] [--fail-fast] [--runner agy|opencode|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--verbose] [--quiet] [--dry-run] [--json]`,
+  npm run stagehand -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id> | --app-id <id>) [--source markdown|csv|json|yaml|github|onspring] [--shared-branch <name>] [--resume] [--fail-fast] [--runner agy|opencode|pi|copilot|claude|codex|custom] [--runner-cmd "<template>"] [--model <name>] [--domain <name>] [--max-attempts 3] [--base-ref HEAD] [--in-place] [--install] [--skip-e2e] [--no-fail-fast] [--commit] [--draft-pr] [--cleanup-worktree] [--verbose] [--quiet] [--dry-run] [--json]`,
 };
 
 function isHelp(arg: string): boolean {

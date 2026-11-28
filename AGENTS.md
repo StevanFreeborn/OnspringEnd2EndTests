@@ -25,7 +25,7 @@ Prefer Stagehand over manual grep when authoring or verifying tests (compiled vi
 - List available headless runner CLIs, ingest briefs, or orchestrate single/batch runs:
   `npm run stagehand -- runners [--json]`
   `npm run stagehand -- ingest (--input <file> | --issue <num> | --label <name> | --record-id <id> | --report-id <id>) [--markdown] [--json]`
-  `npm run stagehand -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|copilot|claude|codex|custom] [--domain <name>] [--verbose] [--dry-run]`
+  `npm run stagehand -- run (--brief "<text>" | --brief-file <path> | --input <file> | --issue <num> | --record-id <id>) [--shared-branch <name>] [--resume] [--runner agy|opencode|pi|copilot|claude|codex|custom] [--domain <name>] [--verbose] [--dry-run]`
 
 ## Non-Negotiable Architecture Rules
 
